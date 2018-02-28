@@ -336,8 +336,7 @@ class Environment(object):
 
         # An attribute holding tensors which could be run. It has the form of dictionary which keys are user specified
         # descriptors of tensors and are tensors themselves
-        self._pupil_hooks = dict()
-        self._meta_optimizer_hooks = dict()
+        self._hooks = dict()
 
         # List containing fuses. They are used for testing the model. You may feed them to the model and see how it
         # continues generating after that
@@ -487,7 +486,7 @@ class Environment(object):
 
         # getting default hooks
         default_hooks = self._pupil.get_default_hooks()
-        self._pupil_hooks.update(default_hooks)
+        self._hooks.update(default_hooks)
         self._register_default_builders()
 
     def _split_to_loss_and_not_loss_names(self, names):
@@ -503,37 +502,35 @@ class Environment(object):
     def _arguments_for_new_tensor_building(self, hooks, tensor_names):
         arguments = dict()
         for key, value in hooks.items():
-            if value not in self._pupil_hooks:
+            if value not in self._hooks:
                 stars = '\n**********\n'
                 msg = "Warning! Adding to hooks shapeless placeholder of type tf.float32 with alias '%s'" % value
                 print(stars + msg + stars)
-                self._pupil_hooks[value] = tf.placeholder(tf.float32)
-            arguments[key] = self._pupil_hooks[value]
+                self._hooks[value] = tf.placeholder(tf.float32)
+            arguments[key] = self._hooks[value]
         for key, value in tensor_names.items():
             arguments[key] = tf.get_default_graph().get_tensor_by_name(value)
         return arguments
 
-    def _add_hook(self, builder_name, model_type='pupil'):
+    def _add_hook(self, builder_name):
         if builder_name in self._builders:
             builder = self._builders[builder_name]
             kwargs = self._arguments_for_new_tensor_building(builder['hooks'],
                                                              builder['tensor_names'])
             kwargs['special_args'] = builder['special_args']
             new_tensor = builder['f'](**kwargs)
-            if model_type == 'pupil':
-                self._pupil_hooks[builder['output_hook_name']] = new_tensor
-            else:
-                self._meta_optimizer_hooks[builder['output_hook_name']] = new_tensor
+            self._hooks[builder['output_hook_name']] = new_tensor
         else:
             stars = '\n**********\n'
             msg = "Warning! Adding to hooks shapeless placeholder of type tf.float32 with alias '%s'" % builder_name
             print(stars + msg + stars)
-            if model_type == 'pupil':
-                self._pupil_hooks[builder_name] = tf.placeholder(tf.float32, name=builder_name)
-            else:
-                self._meta_optimizer_hooks[builder_name] = tf.placeholder(tf.float32, name=builder_name)
+            self._hooks[builder_name] = tf.placeholder(tf.float32, name=builder_name)
 
-    def add_hooks(self, builder_names_or_builders=[], tensor_names=[], model_type='pupil'):
+    def add_hooks(self, builder_names_or_builders=None, tensor_names=None):
+        if builder_names_or_builders is None:
+            builder_names_or_builders = list()
+        if tensor_names is None:
+            tensor_names = list()
         actual_names = list()
         for builder_name in builder_names_or_builders:
             if isinstance(builder_name, dict):
@@ -545,12 +542,11 @@ class Environment(object):
         #print('loss_builder_names:', loss_builder_names)
         #print('not_loss_builder_names:', not_loss_builder_names)
         for builder_name in loss_builder_names:
-            self._add_hook(builder_name, model_type=model_type)
+            self._add_hook(builder_name)
         for builder_name in not_loss_builder_names:
-            self._add_hook(builder_name, model_type=model_type)
-        if model_type == 'pupil':
-            for alias, name in tensor_names:
-                self._pupil_hooks[alias] = tf.get_default_graph().get_tensor_by_name(name)
+            self._add_hook(builder_name)
+        for alias, name in tensor_names:
+            self._hooks[alias] = tf.get_default_graph().get_tensor_by_name(name)
 
     def register_build_function(self, function, name):
         self._build_functions[name] = function
@@ -712,7 +708,7 @@ class Environment(object):
         path = checkpoints_path + '/' + str(step)
         print('\nCreating checkpoint at %s' % path)
         if model_type == 'pupil':
-            self._pupil_hooks['saver'].save(self._session, path)
+            self._hooks['saver'].save(self._session, path)
         elif model_type == 'meta_optimizer':
             self._meta_optimizer_hooks['saver'].save(self._session, path)
 
@@ -721,7 +717,7 @@ class Environment(object):
             print('restoring from %s' % restore_path)
         self._session.run(tf.global_variables_initializer())
         if restore_path is not None:
-            self._pupil_hooks['saver'].restore(self._session, restore_path)
+            self._hooks['saver'].restore(self._session, restore_path)
 
     def test(self,
              **kwargs):
@@ -748,10 +744,10 @@ class Environment(object):
         add_feed_dict = dict()
         # print("(Environment.test)work['additions_to_feed_dict']:", work['additions_to_feed_dict'])
         for addition in work['additions_to_feed_dict']:
-            add_feed_dict[self._pupil_hooks[addition['placeholder']]] = addition['value']
+            add_feed_dict[self._hooks[addition['placeholder']]] = addition['value']
         batch_generator_class = start_specs['batch_generator_class']
         self._handler = Handler(self,
-                                self._pupil_hooks,
+                                self._hooks,
                                 'test',
                                 start_specs['save_path'],
                                 start_specs['result_types'],
@@ -796,14 +792,14 @@ class Environment(object):
                 print('Number of processed fuses:', fuse_idx)
             self._handler.set_processed_fuse_index(fuse_idx)
             for repeat_idx in range(fuse['num_repeats']):
-                if 'randomize_sample_state' in self._pupil_hooks:
-                    self._session.run(self._pupil_hooks['randomize_sample_state'])
-                elif 'reset_validation_state' in self._pupil_hooks:
-                    self._session.run(self._pupil_hooks['reset_validation_state'])
+                if 'randomize_sample_state' in self._hooks:
+                    self._session.run(self._hooks['randomize_sample_state'])
+                elif 'reset_validation_state' in self._hooks:
+                    self._session.run(self._hooks['reset_validation_state'])
                 # print("fuse['text']:", [fuse['text']])
                 for char_idx, char in enumerate(fuse['text']):
                     vec = batch_generator.char2vec(char, batch_generator.character_positions_in_vocabulary)
-                    feed_dict = {self._pupil_hooks['validation_inputs']: vec}
+                    feed_dict = {self._hooks['validation_inputs']: vec}
                     feed_dict.update(additional_feed_dict)
                     fuse_operations = self._handler.get_tensors('fuse', char_idx)
                     # print('(_on_fuses)feed_dict:', feed_dict)
@@ -815,7 +811,7 @@ class Environment(object):
                 if fuse['fuse_stop'] == 'limit':
                     for char_idx in range(len(fuse['text']), len(fuse['text']) + fuse['max_num_of_chars'] - 1):
                         vec = batch_generator.pred2vec(fuse_res[0])
-                        feed_dict = {self._pupil_hooks['validation_inputs']: vec}
+                        feed_dict = {self._hooks['validation_inputs']: vec}
                         feed_dict.update(additional_feed_dict)
                         fuse_operations = self._handler.get_tensors('fuse', char_idx)
                         fuse_res = self._session.run(fuse_operations, feed_dict=feed_dict)
@@ -826,7 +822,7 @@ class Environment(object):
                     char_idx = len(fuse['text'])
                     while char != '\n' and counter < fuse['max_num_of_chars'] - 1:
                         vec = batch_generator.pred2vec(fuse_res[0])
-                        feed_dict = {self._pupil_hooks['validation_inputs']: vec}
+                        feed_dict = {self._hooks['validation_inputs']: vec}
                         feed_dict.update(additional_feed_dict)
                         fuse_operations = self._handler.get_tensors('fuse', char_idx)
                         fuse_res = self._session.run(fuse_operations, feed_dict=feed_dict)
@@ -856,7 +852,7 @@ class Environment(object):
                 self._vocabulary)[0]
             # print('(Environment._prediction_examples)inputs:', inputs)
             # print('(Environment._prediction_examples)input_str:', input_str)
-            feed_dict = {self._pupil_hooks['validation_inputs']: inputs}
+            feed_dict = {self._hooks['validation_inputs']: inputs}
             feed_dict.update(additional_feed_dict)
             example_operations = self._handler.get_tensors('example', c_idx)
             # print('(_prediction_examples)feed_dict:', feed_dict)
@@ -877,8 +873,8 @@ class Environment(object):
                   save_to_storage=None,
                   print_results=None):
         # print('valid_batch_kwargs:', valid_batch_kwargs)
-        if 'reset_validation_state' in self._pupil_hooks:
-            self._session.run(self._pupil_hooks['reset_validation_state'])
+        if 'reset_validation_state' in self._hooks:
+            self._session.run(self._hooks['reset_validation_state'])
         #print('batch_generator_class:', batch_generator_class)
         valid_batches = batch_generator_class(validation_dataset[0], validation_batch_size, **valid_batch_kwargs)
         length = valid_batches.get_dataset_length()
@@ -887,8 +883,8 @@ class Environment(object):
         self._handler.start_accumulation(validation_dataset[1], training_step=training_step)
         while step < length:
             validation_operations = self._handler.get_tensors('validation', step)
-            feed_dict = {self._pupil_hooks['validation_inputs']: inputs,
-                         self._pupil_hooks['validation_labels']: labels}
+            feed_dict = {self._hooks['validation_inputs']: inputs,
+                         self._hooks['validation_labels']: labels}
             if isinstance(additional_feed_dict, dict):
                 feed_dict.update(additional_feed_dict)
             valid_res = self._session.run(validation_operations, feed_dict=feed_dict)
@@ -913,8 +909,8 @@ class Environment(object):
             save_to_storage=None,
             print_results=None):
         # print('valid_batch_kwargs:', valid_batch_kwargs)
-        if 'reset_validation_state' in self._pupil_hooks:
-            self._session.run(self._pupil_hooks['reset_validation_state'])
+        if 'reset_validation_state' in self._hooks:
+            self._session.run(self._hooks['reset_validation_state'])
         #print('batch_generator_class:', batch_generator_class)
         valid_batches = batch_generator_class(validation_dataset[0], validation_batch_size, **valid_batch_kwargs)
         length = valid_batches.get_dataset_length()
@@ -923,8 +919,8 @@ class Environment(object):
         self._handler.start_accumulation(validation_dataset[1], training_step=training_step)
         while step < length:
             validation_operations = self._handler.get_tensors('validation', step)
-            feed_dict = {self._pupil_hooks['validation_inputs']: inputs,
-                         self._pupil_hooks['validation_labels']: labels}
+            feed_dict = {self._hooks['validation_inputs']: inputs,
+                         self._hooks['validation_labels']: labels}
             if isinstance(additional_feed_dict, dict):
                 feed_dict.update(additional_feed_dict)
             valid_res = self._session.run(validation_operations, feed_dict=feed_dict)
@@ -1005,16 +1001,12 @@ class Environment(object):
             self._tensor_aliases_from_schedule(work['validation_tensor_schedule']))
         return list_of_required_tensors_aliases
 
-    def _create_missing_hooks(self, list_of_tensor_aliases, model_type='pupil'):
+    def _create_missing_hooks(self, list_of_tensor_aliases):
         missing = list()
         for tensor_alias in list_of_tensor_aliases:
-            if model_type == 'pupil':
-                if tensor_alias not in self._pupil_hooks:
-                    missing.append(tensor_alias)
-            if model_type == 'meta_optimizer':
-                if tensor_alias not in self._meta_optimizer_hooks:
-                    missing.append(tensor_alias)
-        self.add_hooks(missing, model_type=model_type)
+            if tensor_alias not in self._hooks:
+                missing.append(tensor_alias)
+        self.add_hooks(missing)
 
     def _build_batch_kwargs(self, unprepareed_kwargs):
         kwargs = dict()
@@ -1032,9 +1024,9 @@ class Environment(object):
 
         valid_add_feed_dict = dict()
         for addition, add_controller in zip(train_feed_dict_additions, additional_controllers):
-            valid_add_feed_dict[self._pupil_hooks[addition['placeholder']]] = add_controller.get()
+            valid_add_feed_dict[self._hooks[addition['placeholder']]] = add_controller.get()
         for addition in validation_additional_feed_dict:
-            valid_add_feed_dict[self._pupil_hooks[addition['placeholder']]] = addition['value']
+            valid_add_feed_dict[self._hooks[addition['placeholder']]] = addition['value']
         return valid_add_feed_dict
 
     def _train(self,
@@ -1162,19 +1154,19 @@ class Environment(object):
 
             learning_rate = learning_rate_controller.get()
             train_inputs, train_labels = train_batches.next()
-            feed_dict[self._pupil_hooks['learning_rate']] = learning_rate
-            if isinstance(self._pupil_hooks['inputs'], list):
-                for input_tensor, input_value in zip(self._pupil_hooks['inputs'], train_inputs):
+            feed_dict[self._hooks['learning_rate']] = learning_rate
+            if isinstance(self._hooks['inputs'], list):
+                for input_tensor, input_value in zip(self._hooks['inputs'], train_inputs):
                     feed_dict[input_tensor] = input_value
             else:
-                feed_dict[self._pupil_hooks['inputs']] = train_inputs
-            if isinstance(self._pupil_hooks['labels'], list):
-                for label_tensor, label_value in zip(self._pupil_hooks['labels'], train_labels):
+                feed_dict[self._hooks['inputs']] = train_inputs
+            if isinstance(self._hooks['labels'], list):
+                for label_tensor, label_value in zip(self._hooks['labels'], train_labels):
                     feed_dict[label_tensor] = label_value
             else:
-                feed_dict[self._pupil_hooks['labels']] = train_labels
+                feed_dict[self._hooks['labels']] = train_labels
             for addition, add_controller in zip(train_feed_dict_additions, additional_controllers):
-                feed_dict[self._pupil_hooks[addition['placeholder']]] = add_controller.get()
+                feed_dict[self._hooks[addition['placeholder']]] = add_controller.get()
             train_operations = self._handler.get_tensors('train', step)
             # print('train_operations:', train_operations)
             # print('feed_dict:', feed_dict)
@@ -1266,7 +1258,7 @@ class Environment(object):
                         period: number of steps after which learning rate is being decreased
                 additions_to_feed_dict: If your model requires some special placeholders filling (e. g. probability
                     distribution for a stochastic node) it is provided through additions_to_feed_dict. It is a
-                    dictionary which keys are tensor aliases in _pupil_hooks attribute and values are dictionaries
+                    dictionary which keys are tensor aliases in _hooks attribute and values are dictionaries
                     of the same structure as learning_rate
                 stop: specifies when learning should be stopped. It is either an integer (number of steps after which
                     learning is being stopped) or a dictionary of the same structure as learning_rate where you may
@@ -1303,7 +1295,7 @@ class Environment(object):
                     console. Default printed is learning rate
                 fuses: specifies fuses from which model should periodically generate text. This option is not
                     available yet
-                fuse_tensors: tensor aliases from _pupil_hooks attribute which should be either saved or printed.
+                fuse_tensors: tensor aliases from _hooks attribute which should be either saved or printed.
                     not available
                 replicas: If dialog agent is trained it can be tested with consequently feeding it with few user
                     specified replicas. It can be used to check if agent is capable of dialog context accumulating
@@ -1345,7 +1337,7 @@ class Environment(object):
         # print('start_specs:', start_specs)
 
         self._handler = Handler(self,
-                                self._pupil_hooks,
+                                self._hooks,
                                 'train',
                                 start_specs['save_path'],
                                 start_specs['result_types'],
@@ -1407,7 +1399,7 @@ class Environment(object):
                         tr_res[key] = res[-1]
                 result['train'] = tr_res
             self._handler = Handler(self,
-                                    self._pupil_hooks,
+                                    self._hooks,
                                     'test',
                                     None,
                                     evaluation['result_types'])
@@ -1484,7 +1476,7 @@ class Environment(object):
         if len(other_hp_combs) > 0:
             hps.extend(list(other_hp_combs[0].keys()))
         self._handler = Handler(self,
-                                self._pupil_hooks,
+                                self._hooks,
                                 'several_launches',
                                 evaluation['save_path'],
                                 evaluation['result_types'],
@@ -1605,7 +1597,7 @@ class Environment(object):
         else:
             feed_dict_base = dict()
             for addition in additions_to_feed_dict:
-                feed_dict_base[self._pupil_hooks[addition['placeholder']]] = addition['value']
+                feed_dict_base[self._hooks[addition['placeholder']]] = addition['value']
 
         create_path(log_path, file_name_is_in_path=True)
         if not appending:
@@ -1619,7 +1611,7 @@ class Environment(object):
             print_and_log('Skipping variables restoring. Continuing on current variables values', fn=log_path)
         else:
             self._initialize_pupil(restore_path)
-        self._pupil_hooks['reset_validation_state'].run(session=self._session)
+        self._hooks['reset_validation_state'].run(session=self._session)
         if first_speaker == 'human':
             human_replica = input('Human: ')
         else:
@@ -1627,8 +1619,8 @@ class Environment(object):
 
         human_replica = self._prepare_replica(human_replica, batch_generator_class, bpe_codes, batch_gen_args)
 
-        sample_prediction = self._pupil_hooks['validation_predictions']
-        sample_input = self._pupil_hooks['validation_inputs']
+        sample_prediction = self._hooks['validation_predictions']
+        sample_input = self._hooks['validation_inputs']
         while not self._build_replica(human_replica) == 'FINISH':
             # print('(Environment.inference)human_replica:', human_replica)
             # print('(Environment.inference)self._build_replica(human_replica):', self._build_replica(human_replica))
@@ -1699,8 +1691,8 @@ class Environment(object):
             flag = 1
         else:
             flag = 0
-        sample_input = self._pupil_hooks['validation_inputs']
-        sample_prediction = self._pupil_hooks['validation_predictions']
+        sample_input = self._hooks['validation_inputs']
+        sample_prediction = self._hooks['validation_predictions']
         for char in replica:
             feed = batch_generator_class.char2vec(char, character_positions_in_vocabulary, flag, 2)
             # print('feed.shape:', feed.shape)
@@ -1725,8 +1717,8 @@ class Environment(object):
         counter = 0
         char = None
         bot_replica = ""
-        sample_input = self._pupil_hooks['validation_inputs']
-        sample_prediction = self._pupil_hooks['validation_predictions']
+        sample_input = self._hooks['validation_inputs']
+        sample_prediction = self._hooks['validation_predictions']
         # print('ord(\'\\n\'):', ord('\n'))
         while char != '\n' and counter < 250:
             feed = batch_generator_class.pred2vec(prediction, flag, 2, batch_gen_args)
@@ -1775,14 +1767,14 @@ class Environment(object):
         else:
             feed_dict_base = dict()
             for addition in additions_to_feed_dict:
-                feed_dict_base[self._pupil_hooks[addition['placeholder']]] = addition['value']
+                feed_dict_base[self._hooks[addition['placeholder']]] = addition['value']
         self._start_session(False,
                             False,
                             gpu_memory,
                             allow_growth,
                             '')
         self._initialize_pupil(restore_path)
-        self._pupil_hooks['reset_validation_state'].run(session=self._session)
+        self._hooks['reset_validation_state'].run(session=self._session)
         greeting = 'Здравствуйте, я бот.'
         # print_and_log('Bot: ' + greeting, _print=False, fn=log_path)
         print('(Environment.one_chat)inq:', inq)
