@@ -365,6 +365,7 @@ class Lstm(Model):
         return loss
 
     def _train_graph(self):
+        trainable = self._applicable_trainable
         tower_grads = list()
         preds = list()
         losses = list()
@@ -387,17 +388,18 @@ class Lstm(Model):
                             )
 
                         all_states = saved_states
-                        embeddings = self._embed(device_inputs, self._embedding_matrix)
+                        embeddings = self._embed(device_inputs, trainable['embedding_matrix'])
                         rnn_outputs, all_states = self._rnn_module(
-                            embeddings, all_states, self._lstm_matrices, self._lstm_biases)
-                        logits = self._output_module(rnn_outputs, self._output_matrices, self._output_biases)
+                            embeddings, all_states, trainable['lstm_matrices'], trainable['lstm_biases'])
+                        logits = self._output_module(
+                            rnn_outputs, trainable['output_matrices'], trainable['output_biases'])
 
                         save_ops = self._compose_save_list((saved_states, all_states))
 
                         with tf.control_dependencies(save_ops):
-                            all_matrices = [self._embedding_matrix]
-                            all_matrices.extend(self._lstm_matrices)
-                            all_matrices.extend(self._output_matrices)
+                            all_matrices = [trainable['embedding_matrix']]
+                            all_matrices.extend(trainable['lstm_matrices'])
+                            all_matrices.extend(trainable['output_matrices'])
                             l2_loss = self._l2_loss(all_matrices)
 
                             loss = tf.reduce_mean(
@@ -439,6 +441,7 @@ class Lstm(Model):
                     self._hooks['loss'] = self.loss
 
     def _validation_graph(self):
+        trainable = self._applicable_trainable
         with tf.device(self._gpu_names[0]):
             with tf.name_scope('validation'):
                 self.validation_labels = tf.placeholder(tf.int32, [1, 1])
@@ -476,11 +479,12 @@ class Lstm(Model):
                 self.randomize = tf.group(*randomize_list)
                 self._hooks['randomize_sample_state'] = self.randomize
 
-                embeddings = self._embed(sample_input, self._embedding_matrix)
+                embeddings = self._embed(sample_input, trainable['embedding_matrix'])
                 # print('embeddings:', embeddings)
                 rnn_output, sample_state = self._rnn_module(
-                    embeddings, saved_sample_state, self._lstm_matrices, self._lstm_biases)
-                sample_logit = self._output_module(rnn_output, self._output_matrices, self._output_biases)
+                    embeddings, saved_sample_state, trainable['lstm_matrices'], trainable['lstm_biases'])
+                sample_logit = self._output_module(
+                    rnn_output, trainable['output_matrices'], trainable['output_biases'])
 
                 sample_save_ops = self._compose_save_list((saved_sample_state, sample_state))
 
@@ -488,12 +492,61 @@ class Lstm(Model):
                     self.sample_prediction = tf.nn.softmax(sample_logit)
                     self._hooks['validation_predictions'] = self.sample_prediction
 
+    def _add_applicable_variables(self):
+        trainable = self._applicable_trainable
+
+        with tf.device(self._base_device):
+
+            embedding_matrix = tf.Variable(
+                tf.truncated_normal([self._vec_dim, self._embedding_size],
+                                    stddev=self._init_parameter * np.sqrt(1. / self._vec_dim)),
+                name='embedding_matrix')
+            lstm_matrices = list()
+            lstm_biases = list()
+            for layer_idx in range(self._num_layers):
+                input_dim, output_dim, stddev = self._compute_lstm_matrix_parameters(layer_idx)
+                lstm_matrices.append(
+                    tf.Variable(tf.truncated_normal([input_dim,
+                                                     output_dim],
+                                                    stddev=stddev),
+                                                    name='lstm_matrix_%s' % layer_idx))
+                lstm_biases.append(tf.Variable(tf.zeros([output_dim]), name='lstm_bias_%s' % layer_idx))
+            output_matrices = list()
+            output_biases = list()
+            for layer_idx in range(self._num_output_layers):
+                input_dim, output_dim, stddev = self._compute_output_matrix_parameters(layer_idx)
+                # print('input_dim:', input_dim)
+                # print('output_dim:', output_dim)
+                output_matrices.append(
+                    tf.Variable(tf.truncated_normal([input_dim, output_dim],
+                                                    stddev=stddev),
+                                                    name='output_matrix_%s' % layer_idx))
+                output_biases.append(tf.Variable(
+                    tf.zeros([output_dim]),
+                    name='output_bias_%s' % layer_idx))
+            trainable['embedding_matrix'] = embedding_matrix
+            trainable['lstm_matrices'] = lstm_matrices
+            trainable['lstm_biases'] = lstm_biases
+            trainable['output_matrices'] = output_matrices
+            trainable['output_biases'] = output_biases
+        with tf.device('/cpu:0'):
+            saved_vars = dict()
+            saved_vars['embedding_matrix'] = embedding_matrix
+            for layer_idx, lstm_matrix in enumerate(lstm_matrices):
+                saved_vars['lstm_matrix_%s' % layer_idx] = lstm_matrix
+                saved_vars['lstm_bias_%s' % layer_idx] = lstm_biases[layer_idx]
+            for layer_idx, (output_matrix, output_bias) in enumerate(zip(output_matrices, output_biases)):
+                saved_vars['output_matrix_%s' % layer_idx] = output_matrix
+                saved_vars['output_bias_%s' % layer_idx] = output_bias
+            self.saver = tf.train.Saver(saved_vars, max_to_keep=None)
+            self._hooks['saver'] = self.saver
+
     def __init__(self,
                  batch_size=64,
                  num_layers=2,
-                 num_nodes=[112, 113],
+                 num_nodes=None,
                  num_output_layers=1,
-                 num_output_nodes=[],
+                 num_output_nodes=None,
                  vocabulary_size=None,
                  embedding_size=128,
                  num_unrollings=10,
@@ -502,6 +555,11 @@ class Lstm(Model):
                  regularization_rate=.000006,
                  regime='train',
                  going_to_limit_memory=False):
+
+        if num_nodes is None:
+            num_nodes = [112, 113]
+        if num_output_nodes is None:
+            num_output_nodes = list()
 
         self._hooks = dict(inputs=None,
                            labels=None,
@@ -546,6 +604,18 @@ class Lstm(Model):
             self._base_device = '/gpu:0'
         else:
             self._base_device = '/cpu:0'
+
+        self._applicable_trainable = dict()
+        self._exercise_trainable = dict()
+        self._train_storage = dict()
+        self._inference_storage = dict()
+        self._applicable_placeholders = dict()
+        self._train_placeholders = dict()
+        self._inference_placeholders = dict()
+        self._exercise_placeholders = dict()
+
+        self._add_applicable_variables()
+
         with tf.device(self._base_device):
             self.dropout_keep_prob = tf.placeholder(tf.float32, name='dropout_keep_prob')
 
@@ -587,43 +657,6 @@ class Lstm(Model):
             self.learning_rate = tf.placeholder(tf.float32, name='learning_rate')
             self._hooks['learning_rate'] = self.learning_rate
 
-            self._embedding_matrix = tf.Variable(
-                tf.truncated_normal([self._vec_dim, self._embedding_size],
-                                    stddev=self._init_parameter * np.sqrt(1. / self._vec_dim)),
-                name='embedding_matrix')
-
-            self._lstm_matrices = list()
-            self._lstm_biases = list()
-            for layer_idx in range(self._num_layers):
-                input_dim, output_dim, stddev = self._compute_lstm_matrix_parameters(layer_idx)
-                self._lstm_matrices.append(tf.Variable(tf.truncated_normal([input_dim,
-                                                                            output_dim],
-                                                                           stddev=stddev),
-                                                       name='lstm_matrix_%s' % layer_idx))
-                self._lstm_biases.append(tf.Variable(tf.zeros([output_dim]), name='lstm_bias_%s' % layer_idx))
-            self._output_matrices = list()
-            self._output_biases = list()
-            for layer_idx in range(self._num_output_layers):
-                input_dim, output_dim, stddev = self._compute_output_matrix_parameters(layer_idx)
-                # print('input_dim:', input_dim)
-                # print('output_dim:', output_dim)
-                self._output_matrices.append(tf.Variable(tf.truncated_normal([input_dim, output_dim],
-                                                                             stddev=stddev),
-                                                         name='output_matrix_%s' % layer_idx))
-                self._output_biases.append(tf.Variable(
-                    tf.zeros([output_dim]),
-                    name='output_bias_%s' % layer_idx))
-        with tf.device('/cpu:0'):
-            saved_vars = dict()
-            saved_vars['embedding_matrix'] = self._embedding_matrix
-            for layer_idx, lstm_matrix in enumerate(self._lstm_matrices):
-                saved_vars['lstm_matrix_%s' % layer_idx] = lstm_matrix
-                saved_vars['lstm_bias_%s' % layer_idx] = self._lstm_biases[layer_idx]
-            for layer_idx, (output_matrix, output_bias) in enumerate(zip(self._output_matrices, self._output_biases)):
-                saved_vars['output_matrix_%s' % layer_idx] = output_matrix
-                saved_vars['output_bias_%s' % layer_idx] = output_bias
-            self.saver = tf.train.Saver(saved_vars, max_to_keep=None)
-            self._hooks['saver'] = self.saver
 
         if regime == 'train':
             self._train_graph()
