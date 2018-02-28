@@ -371,13 +371,16 @@ class Lstm(Model):
         return loss
 
     def _train_graph(self):
+        inputs, labels = self._prepair_inputs_and_labels(
+            self._applicable_placeholders['inputs'], self._applicable_placeholders['labels'])
+        inputs_by_device, labels_by_device = self._distribute_by_gpus(inputs, labels)
         trainable = self._applicable_trainable
         tower_grads = list()
         preds = list()
         losses = list()
         with tf.name_scope('train'):
             for gpu_batch_size, gpu_name, device_inputs, device_labels in zip(
-                    self._batch_sizes_on_gpus, self._gpu_names, self._inputs_by_device, self._labels_by_device):
+                    self._batch_sizes_on_gpus, self._gpu_names, inputs_by_device, labels_by_device):
                 with tf.device(gpu_name):
                     with tf.name_scope(device_name_scope(gpu_name)):
                         saved_states = list()
@@ -414,16 +417,16 @@ class Lstm(Model):
                             preds.append(tf.split(concat_pred, self._num_unrollings))
 
                             losses.append(loss)
-                            # optimizer = tf.train.GradientDescentOptimizer(self.learning_rate)
-                            optimizer = tf.train.AdamOptimizer(learning_rate=self._train_storage['learning_rate'])
+                            # optimizer = tf.train.GradientDescentOptimizer(self._train_placeholders['learning_rate'])
+                            optimizer = tf.train.AdamOptimizer(learning_rate=self._train_placeholders['learning_rate'])
                             grads_and_vars = optimizer.compute_gradients(loss + l2_loss)
                             tower_grads.append(grads_and_vars)
 
                             # splitting concatenated results for different characters
             with tf.device(self._base_device):
                 with tf.name_scope(device_name_scope(self._base_device) + '_gradients'):
-                    # optimizer = tf.train.GradientDescentOptimizer(self.learning_rate)
-                    optimizer = tf.train.AdamOptimizer(learning_rate=self._train_storage['learning_rate'])
+                    # optimizer = tf.train.GradientDescentOptimizer(self._train_placeholders['learning_rate'])
+                    optimizer = tf.train.AdamOptimizer(learning_rate=self._train_placeholders['learning_rate'])
                     grads_and_vars = average_gradients(tower_grads)
                     grads, v = zip(*grads_and_vars)
                     grads, _ = tf.clip_by_global_norm(grads, 1.)
@@ -563,13 +566,52 @@ class Lstm(Model):
                              trainable=False,
                              name='saved_state_%s_%s' % (layer_idx, 1)))
                     )
-            self._train_storage['learning_rate'] = tf.placeholder(tf.float32, name='learning_rate')
-            self._hooks['learning_rate'] = self._train_storage['learning_rate']
 
     def _add_applicable_placeholders(self):
         with tf.device(self._base_device):
+            self._applicable_placeholders['inputs'] = tf.placeholder(
+                tf.int32, shape=[self._num_unrollings, self._batch_size, 1])
+            self._applicable_placeholders['labels'] = tf.placeholder(
+                tf.int32, shape=[self._num_unrollings * self._batch_size, 1])
+            self._hooks['inputs'] = self._applicable_placeholders['inputs']
+            self._hooks['labels'] = self._applicable_placeholders['labels']
             self._applicable_placeholders['dropout_keep_prob'] = tf.placeholder(tf.float32, name='dropout_keep_prob')
             self._hooks['dropout'] = self._applicable_placeholders['dropout_keep_prob']
+
+    def _add_train_placeholders(self):
+        with tf.device(self._base_device):
+            self._train_placeholders['learning_rate'] = tf.placeholder(tf.float32, name='learning_rate')
+            self._hooks['learning_rate'] = self._train_placeholders['learning_rate']
+
+
+    def _prepair_inputs_and_labels(self, inputs, labels):
+        with tf.device(self._base_device):
+            inputs = tf.reshape(inputs, [self._num_unrollings, self._batch_size])
+            labels = tf.reshape(labels, [self._num_unrollings * self._batch_size])
+            inputs = tf.one_hot(inputs, self._vocabulary_size)
+            labels = tf.one_hot(labels, self._vocabulary_size)
+            self._hooks['labels_prepared'] = labels
+            labels = tf.reshape(
+                labels,
+                shape=(self._num_unrollings, self._batch_size, self._vec_dim))
+            return inputs, labels
+
+    def _distribute_by_gpus(self, inputs, labels):
+        with tf.device(self._base_device):
+            inputs = tf.split(inputs, self._batch_sizes_on_gpus, 1, name='inp_on_dev')
+            inputs_by_device = list()
+            for dev_idx, device_inputs in enumerate(inputs):
+                inputs_by_device.append(device_inputs)
+
+            labels = tf.split(labels, self._batch_sizes_on_gpus, 1)
+            labels_by_device = list()
+            for dev_idx, device_labels in enumerate(labels):
+                labels_by_device.append(
+                    tf.reshape(device_labels,
+                               [-1, self._vec_dim],
+                               name='labels_on_dev_%s' % dev_idx))
+            return inputs_by_device, labels_by_device
+
 
     def __init__(self,
                  batch_size=64,
@@ -648,44 +690,10 @@ class Lstm(Model):
 
         if regime == 'autonomous_training':
             self._add_train_storage()
+            self._add_train_placeholders()
 
         self._add_applicable_placeholders()
 
-        with tf.device(self._base_device):
-
-            self.inputs = tf.placeholder(
-                tf.int32, shape=[self._num_unrollings, self._batch_size, 1])
-            self.labels = tf.placeholder(
-                tf.int32, shape=[self._num_unrollings * self._batch_size, 1])
-            inputs = tf.reshape(self.inputs, [self._num_unrollings, self._batch_size])
-            labels = tf.reshape(self.labels, [self._num_unrollings * self._batch_size])
-            inputs = tf.one_hot(inputs, self._vocabulary_size)
-            labels = tf.one_hot(labels, self._vocabulary_size)
-
-            # in_flags
-            self._hooks['inputs'] = self.inputs
-            self._hooks['labels'] = self.labels
-            self._hooks['labels_prepared'] = labels
-
-            # inputs = tf.Print(inputs, [tf.argmax(inputs, axis=2)], message='inputs:', summarize=1200)
-            # labels = tf.Print(labels, [tf.argmax(labels, axis=1)], message='labels_in_lstm:', summarize=1200)
-
-            inputs = tf.split(inputs, self._batch_sizes_on_gpus, 1, name='inp_on_dev')
-            self._inputs_by_device = list()
-            for dev_idx, device_inputs in enumerate(inputs):
-                self._inputs_by_device.append(device_inputs)
-
-            labels = tf.reshape(
-                labels,
-                shape=(self._num_unrollings, self._batch_size, self._vec_dim))
-
-            labels = tf.split(labels, self._batch_sizes_on_gpus, 1)
-            self._labels_by_device = list()
-            for dev_idx, device_labels in enumerate(labels):
-                self._labels_by_device.append(
-                    tf.reshape(device_labels,
-                               [-1, self._vec_dim],
-                               name='labels_on_dev_%s' % dev_idx))
 
         if regime == 'autonomous_training':
             self._train_graph()
