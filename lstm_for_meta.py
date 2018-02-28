@@ -208,7 +208,13 @@ class Lstm(Model):
     def _lstm_layer(self, inp, state, layer_idx, matr, bias):
         with tf.name_scope('lstm_layer_%s' % layer_idx):
             nn = self._num_nodes[layer_idx]
-            x = tf.concat([tf.nn.dropout(inp, self.dropout_keep_prob), state[0]], -1, name='X')
+            x = tf.concat(
+                [tf.nn.dropout(
+                    inp,
+                    self._applicable_placeholders['dropout_keep_prob']),
+                 state[0]],
+                -1,
+                name='X')
             linear_res = tf.add(
                 custom_matmul(x, matr), bias, name='linear_res')
             [sigm_arg, tanh_arg] = tf.split(linear_res, [3 * nn, nn], axis=-1, name='split_to_act_func_args')
@@ -409,7 +415,7 @@ class Lstm(Model):
 
                             losses.append(loss)
                             # optimizer = tf.train.GradientDescentOptimizer(self.learning_rate)
-                            optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
+                            optimizer = tf.train.AdamOptimizer(learning_rate=self._train_storage['learning_rate'])
                             grads_and_vars = optimizer.compute_gradients(loss + l2_loss)
                             tower_grads.append(grads_and_vars)
 
@@ -417,7 +423,7 @@ class Lstm(Model):
             with tf.device(self._base_device):
                 with tf.name_scope(device_name_scope(self._base_device) + '_gradients'):
                     # optimizer = tf.train.GradientDescentOptimizer(self.learning_rate)
-                    optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
+                    optimizer = tf.train.AdamOptimizer(learning_rate=self._train_storage['learning_rate'])
                     grads_and_vars = average_gradients(tower_grads)
                     grads, v = zip(*grads_and_vars)
                     grads, _ = tf.clip_by_global_norm(grads, 1.)
@@ -541,6 +547,30 @@ class Lstm(Model):
             self.saver = tf.train.Saver(saved_vars, max_to_keep=None)
             self._hooks['saver'] = self.saver
 
+    def _add_train_storage(self):
+        self._train_storage['states'] = list()
+        states = self._train_storage['states']
+        with tf.device(self._base_device):
+            with tf.name_scope('states'):
+                for layer_idx, layer_num_nodes in enumerate(self._num_nodes):
+                    states.append(
+                        (tf.Variable(
+                            tf.zeros([self._batch_size, layer_num_nodes]),
+                            trainable=False,
+                            name='saved_state_%s_%s' % (layer_idx, 0)),
+                         tf.Variable(
+                             tf.zeros([self._batch_size, layer_num_nodes]),
+                             trainable=False,
+                             name='saved_state_%s_%s' % (layer_idx, 1)))
+                    )
+            self._train_storage['learning_rate'] = tf.placeholder(tf.float32, name='learning_rate')
+            self._hooks['learning_rate'] = self._train_storage['learning_rate']
+
+    def _add_applicable_placeholders(self):
+        with tf.device(self._base_device):
+            self._applicable_placeholders['dropout_keep_prob'] = tf.placeholder(tf.float32, name='dropout_keep_prob')
+            self._hooks['dropout'] = self._applicable_placeholders['dropout_keep_prob']
+
     def __init__(self,
                  batch_size=64,
                  num_layers=2,
@@ -553,7 +583,7 @@ class Lstm(Model):
                  init_parameter=3.,
                  num_gpus=1,
                  regularization_rate=.000006,
-                 regime='train',
+                 regime='autonomous_training',
                  going_to_limit_memory=False):
 
         if num_nodes is None:
@@ -616,8 +646,12 @@ class Lstm(Model):
 
         self._add_applicable_variables()
 
+        if regime == 'autonomous_training':
+            self._add_train_storage()
+
+        self._add_applicable_placeholders()
+
         with tf.device(self._base_device):
-            self.dropout_keep_prob = tf.placeholder(tf.float32, name='dropout_keep_prob')
 
             self.inputs = tf.placeholder(
                 tf.int32, shape=[self._num_unrollings, self._batch_size, 1])
@@ -629,7 +663,6 @@ class Lstm(Model):
             labels = tf.one_hot(labels, self._vocabulary_size)
 
             # in_flags
-            self._hooks['dropout'] = self.dropout_keep_prob
             self._hooks['inputs'] = self.inputs
             self._hooks['labels'] = self.labels
             self._hooks['labels_prepared'] = labels
@@ -654,11 +687,7 @@ class Lstm(Model):
                                [-1, self._vec_dim],
                                name='labels_on_dev_%s' % dev_idx))
 
-            self.learning_rate = tf.placeholder(tf.float32, name='learning_rate')
-            self._hooks['learning_rate'] = self.learning_rate
-
-
-        if regime == 'train':
+        if regime == 'autonomous_training':
             self._train_graph()
             self._validation_graph()
         if regime == 'inference':
