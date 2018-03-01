@@ -215,34 +215,44 @@ class Lstm(Model):
                  state[0]],
                 -1,
                 name='X')
+            s = custom_matmul(x, matr)
             linear_res = tf.add(
-                custom_matmul(x, matr), bias, name='linear_res')
+                s, bias, name='linear_res')
             [sigm_arg, tanh_arg] = tf.split(linear_res, [3 * nn, nn], axis=-1, name='split_to_act_func_args')
             sigm_res = tf.sigmoid(sigm_arg, name='sigm_res')
             transform_vec = tf.tanh(tanh_arg, name='transformation_vector')
             [forget_gate, input_gate, output_gate] = tf.split(sigm_res, 3, axis=-1, name='gates')
             new_cell_state = tf.add(forget_gate * state[1], input_gate * transform_vec, name='new_cell_state')
             new_hidden_state = tf.multiply(output_gate, tf.tanh(new_cell_state), name='new_hidden_state')
-        return new_hidden_state, (new_hidden_state, new_cell_state)
+        optimizer_ins = {'lstm_layer_%s' % layer_idx: {'o': x, 's': s}}
+        return new_hidden_state, (new_hidden_state, new_cell_state), optimizer_ins
 
     def _rnn_iter(self, embedding, all_states, lstm_matrices, lstm_biases, dropout):
+        optimizer_ins = dict()
         with tf.name_scope('rnn_iter'):
             new_all_states = list()
             output = embedding
             for layer_idx, state in enumerate(all_states):
-                output, state = self._lstm_layer(
+                output, state, opt_ins = self._lstm_layer(
                     output, state, layer_idx, lstm_matrices[layer_idx], lstm_biases[layer_idx], dropout)
                 new_all_states.append(state)
-            return output, new_all_states
+                optimizer_ins.update(opt_ins)
+            return output, new_all_states, optimizer_ins
 
     def _rnn_module(self, embeddings, all_states, lstm_matrices, lstm_biases, dropout):
         rnn_outputs = list()
+        optimizer_ins = dict()
+        for layer_idx in range(self._num_layers):
+            optimizer_ins['lstm_layer_%s' % layer_idx] = {'o': list(), 's': list()}
         with tf.name_scope('rnn_module'):
             for emb in embeddings:
-                rnn_output, all_states = self._rnn_iter(emb, all_states, lstm_matrices, lstm_biases, dropout)
+                rnn_output, all_states, opt_ins = self._rnn_iter(emb, all_states, lstm_matrices, lstm_biases, dropout)
                 # print('rnn_output.shape:', rnn_output.get_shape().as_list())
+                for layer_idx in range(self._num_layers):
+                    optimizer_ins['lstm_layer_%s' % layer_idx]['o'].append(opt_ins['lstm_layer_%s' % layer_idx]['o'])
+                    optimizer_ins['lstm_layer_%s' % layer_idx]['s'].append(opt_ins['lstm_layer_%s' % layer_idx]['s'])
                 rnn_outputs.append(rnn_output)
-        return rnn_outputs, all_states
+        return rnn_outputs, all_states, optimizer_ins
 
     @staticmethod
     def _embed(inputs, matrix):
@@ -253,9 +263,13 @@ class Lstm(Model):
                 unstack_dim = 1
             else:
                 unstack_dim = 0
-            return tf.unstack(embeddings, axis=unstack_dim, name='embeddings')
+            unstacked_embeddings = tf.unstack(embeddings, axis=unstack_dim, name='embeddings')
+            optimizer_ins = {'embedding_layer': {'o': tf.unstack(inputs, axis=unstack_dim, name='embeddings'),
+                                                 's': unstacked_embeddings}}
+            return unstacked_embeddings, optimizer_ins
 
     def _output_module(self, rnn_outputs, output_matrices, output_biases):
+        optimizer_ins = dict()
         with tf.name_scope('output_module'):
             # print('rnn_outputs:', rnn_outputs)
             rnn_output_ndim = len(rnn_outputs[0].get_shape().as_list())
@@ -263,18 +277,24 @@ class Lstm(Model):
                 concat_dim = 1
             else:
                 concat_dim = 0
+            num_split = len(rnn_outputs)
             rnn_outputs = tf.concat(rnn_outputs, concat_dim, name='concatenated_rnn_outputs')
             hs = rnn_outputs
             for layer_idx, (matr, bias) in enumerate(zip(output_matrices, output_biases)):
                 # print('hs.shape:', hs.get_shape().as_list())
+                s = custom_matmul(
+                        hs, matr)
+                optimizer_ins['output_layer_%s' % layer_idx] = dict(
+                    o=tf.split(hs, num_split, axis=concat_dim),
+                    s=tf.split(s, num_split, axis=concat_dim)
+                )
                 hs = tf.add(
-                    custom_matmul(
-                        hs, matr),
+                    s,
                     bias,
                     name='res_of_%s_output_layer' % layer_idx)
                 if layer_idx < self._num_output_layers - 1:
                     hs = tf.nn.relu(hs)
-        return hs
+        return hs, optimizer_ins
 
     @staticmethod
     def _extract_op_name(full_name):
@@ -360,9 +380,10 @@ class Lstm(Model):
             output_matrices = trainable_variables['output_matrices']
             output_biases = trainable_variables['output_biases']
 
-            embeddings = self._embed(inputs, embedding_matrix)
-            rnn_outputs, new_states = self._rnn_module(embeddings, saved_states, lstm_matrices, lstm_biases, dropout)
-            logits = self._output_module(rnn_outputs, output_matrices, output_biases)
+            embeddings, opt_ins = self._embed(inputs, embedding_matrix)
+            rnn_outputs, new_states, opt_ins = self._rnn_module(
+                embeddings, saved_states, lstm_matrices, lstm_biases, dropout)
+            logits, opt_ins = self._output_module(rnn_outputs, output_matrices, output_biases)
 
             save_ops = self._compose_save_list((saved_states, new_states))
 
@@ -398,11 +419,11 @@ class Lstm(Model):
                             )
 
                         all_states = saved_states
-                        embeddings = self._embed(device_inputs, trainable['embedding_matrix'])
-                        rnn_outputs, all_states = self._rnn_module(
+                        embeddings, _ = self._embed(device_inputs, trainable['embedding_matrix'])
+                        rnn_outputs, all_states, _ = self._rnn_module(
                             embeddings, all_states, trainable['lstm_matrices'],
                             trainable['lstm_biases'], self._applicable_placeholders['dropout_keep_prob'])
-                        logits = self._output_module(
+                        logits, _ = self._output_module(
                             rnn_outputs, trainable['output_matrices'], trainable['output_biases'])
 
                         save_ops = self._compose_save_list((saved_states, all_states))
@@ -490,12 +511,12 @@ class Lstm(Model):
                 self.randomize = tf.group(*randomize_list)
                 self._hooks['randomize_sample_state'] = self.randomize
 
-                embeddings = self._embed(sample_input, trainable['embedding_matrix'])
+                embeddings, _ = self._embed(sample_input, trainable['embedding_matrix'])
                 # print('embeddings:', embeddings)
-                rnn_output, sample_state = self._rnn_module(
+                rnn_output, sample_state, _ = self._rnn_module(
                     embeddings, saved_sample_state, trainable['lstm_matrices'],
                     trainable['lstm_biases'], self._applicable_placeholders['dropout_keep_prob'])
-                sample_logit = self._output_module(
+                sample_logit, _ = self._output_module(
                     rnn_output, trainable['output_matrices'], trainable['output_biases'])
 
                 sample_save_ops = self._compose_save_list((saved_sample_state, sample_state))
