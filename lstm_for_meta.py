@@ -560,22 +560,30 @@ class Lstm(Model):
             trainable[k] = v
         self._hooks['saver'] = self._create_saver(trainable)
 
+    def _create_storage(self, device, name_scope):
+        storage_dictionary = dict()
+        with tf.device(device):
+            with tf.name_scope(name_scope):
+                with tf.name_scope('states'):
+                    storage_dictionary['states'] = list()
+                    states = storage_dictionary['states']
+                    for layer_idx, layer_num_nodes in enumerate(self._num_nodes):
+                        states.append(
+                            [tf.Variable(
+                                tf.zeros([self._batch_size, layer_num_nodes]),
+                                trainable=False,
+                                name='saved_state_%s_%s' % (layer_idx, 0)),
+                                tf.Variable(
+                                    tf.zeros([self._batch_size, layer_num_nodes]),
+                                    trainable=False,
+                                    name='saved_state_%s_%s' % (layer_idx, 1))]
+                        )
+        return storage_dictionary
+
     def _add_train_storage(self):
-        self._train_storage['states'] = list()
-        states = self._train_storage['states']
-        with tf.device(self._base_device):
-            with tf.name_scope('states'):
-                for layer_idx, layer_num_nodes in enumerate(self._num_nodes):
-                    states.append(
-                        [tf.Variable(
-                            tf.zeros([self._batch_size, layer_num_nodes]),
-                            trainable=False,
-                            name='saved_state_%s_%s' % (layer_idx, 0)),
-                         tf.Variable(
-                             tf.zeros([self._batch_size, layer_num_nodes]),
-                             trainable=False,
-                             name='saved_state_%s_%s' % (layer_idx, 1))]
-                    )
+        storage = self._create_storage(self._base_device, 'train_storage')
+        for k, v in storage.items():
+            self._train_storage[k] = v
 
     def _add_applicable_placeholders(self):
         with tf.device(self._base_device):
