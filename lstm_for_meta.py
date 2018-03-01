@@ -371,7 +371,7 @@ class Lstm(Model):
         return loss
 
     def _train_graph(self):
-        inputs, labels = self._prepair_inputs_and_labels(
+        inputs, labels = self._prepare_inputs_and_labels(
             self._applicable_placeholders['inputs'], self._applicable_placeholders['labels'])
         inputs_by_device, labels_by_device = self._distribute_by_gpus(inputs, labels)
         trainable = self._applicable_trainable
@@ -460,11 +460,11 @@ class Lstm(Model):
                 inputs = tf.reshape(self.sample_input, [1, -1])
                 sample_input = tf.one_hot(inputs, self._vocabulary_size)
                 labels = tf.reshape(self.validation_labels, [1])
-                validation_labels_prepaired = tf.one_hot(labels, self._vocabulary_size)
+                validation_labels_prepared = tf.one_hot(labels, self._vocabulary_size)
 
                 self._hooks['validation_inputs'] = self.sample_input
                 self._hooks['validation_labels'] = self.validation_labels
-                self._hooks['validation_labels_prepaired'] = validation_labels_prepaired
+                self._hooks['validation_labels_prepared'] = validation_labels_prepared
                 saved_sample_state = list()
                 for layer_idx, layer_num_nodes in enumerate(self._num_nodes):
                     saved_sample_state.append(
@@ -501,54 +501,64 @@ class Lstm(Model):
                     self.sample_prediction = tf.nn.softmax(sample_logit)
                     self._hooks['validation_predictions'] = self.sample_prediction
 
-    def _add_applicable_variables(self):
-        trainable = self._applicable_trainable
-
-        with tf.device(self._base_device):
-
-            embedding_matrix = tf.Variable(
-                tf.truncated_normal([self._vec_dim, self._embedding_size],
-                                    stddev=self._init_parameter * np.sqrt(1. / self._vec_dim)),
-                name='embedding_matrix')
-            lstm_matrices = list()
-            lstm_biases = list()
-            for layer_idx in range(self._num_layers):
-                input_dim, output_dim, stddev = self._compute_lstm_matrix_parameters(layer_idx)
-                lstm_matrices.append(
-                    tf.Variable(tf.truncated_normal([input_dim,
-                                                     output_dim],
-                                                    stddev=stddev),
-                                                    name='lstm_matrix_%s' % layer_idx))
-                lstm_biases.append(tf.Variable(tf.zeros([output_dim]), name='lstm_bias_%s' % layer_idx))
-            output_matrices = list()
-            output_biases = list()
-            for layer_idx in range(self._num_output_layers):
-                input_dim, output_dim, stddev = self._compute_output_matrix_parameters(layer_idx)
-                # print('input_dim:', input_dim)
-                # print('output_dim:', output_dim)
-                output_matrices.append(
-                    tf.Variable(tf.truncated_normal([input_dim, output_dim],
-                                                    stddev=stddev),
-                                                    name='output_matrix_%s' % layer_idx))
-                output_biases.append(tf.Variable(
-                    tf.zeros([output_dim]),
-                    name='output_bias_%s' % layer_idx))
-            trainable['embedding_matrix'] = embedding_matrix
-            trainable['lstm_matrices'] = lstm_matrices
-            trainable['lstm_biases'] = lstm_biases
-            trainable['output_matrices'] = output_matrices
-            trainable['output_biases'] = output_biases
+    def _create_trainable_variables_dictionary(self, device, name_scope):
+        variables_dictionary = dict()
+        with tf.device(device):
+            with tf.name_scope(name_scope):
+                embedding_matrix = tf.Variable(
+                    tf.truncated_normal([self._vec_dim, self._embedding_size],
+                                        stddev=self._init_parameter * np.sqrt(1. / self._vec_dim)),
+                    name='embedding_matrix')
+                lstm_matrices = list()
+                lstm_biases = list()
+                for layer_idx in range(self._num_layers):
+                    input_dim, output_dim, stddev = self._compute_lstm_matrix_parameters(layer_idx)
+                    lstm_matrices.append(
+                        tf.Variable(tf.truncated_normal([input_dim,
+                                                         output_dim],
+                                                        stddev=stddev),
+                                    name='lstm_matrix_%s' % layer_idx))
+                    lstm_biases.append(tf.Variable(tf.zeros([output_dim]), name='lstm_bias_%s' % layer_idx))
+                output_matrices = list()
+                output_biases = list()
+                for layer_idx in range(self._num_output_layers):
+                    input_dim, output_dim, stddev = self._compute_output_matrix_parameters(layer_idx)
+                    # print('input_dim:', input_dim)
+                    # print('output_dim:', output_dim)
+                    output_matrices.append(
+                        tf.Variable(tf.truncated_normal([input_dim, output_dim],
+                                                        stddev=stddev),
+                                    name='output_matrix_%s' % layer_idx))
+                    output_biases.append(tf.Variable(
+                        tf.zeros([output_dim]),
+                        name='output_bias_%s' % layer_idx))
+                variables_dictionary['embedding_matrix'] = embedding_matrix
+                variables_dictionary['lstm_matrices'] = lstm_matrices
+                variables_dictionary['lstm_biases'] = lstm_biases
+                variables_dictionary['output_matrices'] = output_matrices
+                variables_dictionary['output_biases'] = output_biases
+        return variables_dictionary
+    
+    def _create_saver(self, var_dict):
         with tf.device('/cpu:0'):
             saved_vars = dict()
-            saved_vars['embedding_matrix'] = embedding_matrix
-            for layer_idx, lstm_matrix in enumerate(lstm_matrices):
+            saved_vars['embedding_matrix'] = var_dict['embedding_matrix']
+            for layer_idx, lstm_matrix in enumerate(var_dict['lstm_matrices']):
                 saved_vars['lstm_matrix_%s' % layer_idx] = lstm_matrix
-                saved_vars['lstm_bias_%s' % layer_idx] = lstm_biases[layer_idx]
-            for layer_idx, (output_matrix, output_bias) in enumerate(zip(output_matrices, output_biases)):
+                saved_vars['lstm_bias_%s' % layer_idx] = var_dict['lstm_biases'][layer_idx]
+            for layer_idx, (output_matrix, output_bias) in \
+                    enumerate(zip(var_dict['output_matrices'], var_dict['output_biases'])):
                 saved_vars['output_matrix_%s' % layer_idx] = output_matrix
                 saved_vars['output_bias_%s' % layer_idx] = output_bias
-            self.saver = tf.train.Saver(saved_vars, max_to_keep=None)
-            self._hooks['saver'] = self.saver
+            saver = tf.train.Saver(saved_vars, max_to_keep=None)
+        return saver
+
+    def _add_applicable_variables(self):
+        trainable = self._applicable_trainable
+        var_dict = self._create_trainable_variables_dictionary(self._base_device, 'applicable_trainable')
+        for k, v in var_dict.items():
+            trainable[k] = v
+        self._hooks['saver'] = self._create_saver(trainable)
 
     def _add_train_storage(self):
         self._train_storage['states'] = list()
@@ -557,14 +567,14 @@ class Lstm(Model):
             with tf.name_scope('states'):
                 for layer_idx, layer_num_nodes in enumerate(self._num_nodes):
                     states.append(
-                        (tf.Variable(
+                        [tf.Variable(
                             tf.zeros([self._batch_size, layer_num_nodes]),
                             trainable=False,
                             name='saved_state_%s_%s' % (layer_idx, 0)),
                          tf.Variable(
                              tf.zeros([self._batch_size, layer_num_nodes]),
                              trainable=False,
-                             name='saved_state_%s_%s' % (layer_idx, 1)))
+                             name='saved_state_%s_%s' % (layer_idx, 1))]
                     )
 
     def _add_applicable_placeholders(self):
@@ -583,8 +593,7 @@ class Lstm(Model):
             self._train_placeholders['learning_rate'] = tf.placeholder(tf.float32, name='learning_rate')
             self._hooks['learning_rate'] = self._train_placeholders['learning_rate']
 
-
-    def _prepair_inputs_and_labels(self, inputs, labels):
+    def _prepare_inputs_and_labels(self, inputs, labels):
         with tf.device(self._base_device):
             inputs = tf.reshape(inputs, [self._num_unrollings, self._batch_size])
             labels = tf.reshape(labels, [self._num_unrollings * self._batch_size])
@@ -612,6 +621,36 @@ class Lstm(Model):
                                name='labels_on_dev_%s' % dev_idx))
             return inputs_by_device, labels_by_device
 
+    def _init_exercise_dicts(self):
+        trainable = self._exercise_trainable
+        storage = self._exercise_storage
+        placeholders = self._exercise_placeholders
+
+        trainable['embedding_matrix'] = list()
+        trainable['lstm_matrices'] = list()
+        trainable['lstm_biases'] = list()
+        trainable['output_matrices'] = list()
+        trainable['output_biases'] = list()
+
+        storage['states'] = list()
+
+        placeholders['inputs'] = list()
+        placeholders['labels'] = list()
+        placeholders['dropout_keep_prob'] = list()
+
+    def _add_exercise_variables(self):
+        trainable = self._exercise_trainable
+        with tf.name_scope('exercise_vars'):
+            var_dict = self._create_trainable_variables_dictionary(None, 'ex1')
+            for k, v in var_dict:
+                trainable[k].append(v)
+        self._hooks['exercise_savers'].append(self._create_saver(var_dict))
+
+    def _add_exercise(self):
+        self._add_exercise_variables()
+        self._add_exercise_storage()
+        self._add_exercise_placeholders()
+        self._number_of_exercises += 1
 
     def __init__(self,
                  batch_size=64,
@@ -633,21 +672,23 @@ class Lstm(Model):
         if num_output_nodes is None:
             num_output_nodes = list()
 
-        self._hooks = dict(inputs=None,
-                           labels=None,
-                           labels_prepared=None,
-                           train_op=None,
-                           learning_rate=None,
-                           loss=None,
-                           predictions=None,
-                           validation_inputs=None,
-                           validation_labels=None,
-                           validation_labels_prepaired=None,
-                           validation_predictions=None,
-                           reset_validation_state=None,
-                           randomize_sample_state=None,
-                           dropout=None,
-                           saver=None)
+        self._hooks = dict(
+            inputs=None,
+            labels=None,
+            labels_prepared=None,
+            train_op=None,
+            learning_rate=None,
+            loss=None,
+            predictions=None,
+            validation_inputs=None,
+            validation_labels=None,
+            validation_labels_prepared=None,
+            validation_predictions=None,
+            reset_validation_state=None,
+            randomize_sample_state=None,
+            dropout=None,
+            saver=None,
+            exercise_savers=list())
 
         self._batch_size = batch_size
         self._num_layers = num_layers
@@ -677,10 +718,15 @@ class Lstm(Model):
         else:
             self._base_device = '/cpu:0'
 
+        self._number_of_exercises = 0
+
         self._applicable_trainable = dict()
         self._exercise_trainable = dict()
+
         self._train_storage = dict()
         self._inference_storage = dict()
+        self._exercise_storage = dict()
+
         self._applicable_placeholders = dict()
         self._train_placeholders = dict()
         self._inference_placeholders = dict()
@@ -693,7 +739,6 @@ class Lstm(Model):
             self._add_train_placeholders()
 
         self._add_applicable_placeholders()
-
 
         if regime == 'autonomous_training':
             self._train_graph()

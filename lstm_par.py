@@ -467,7 +467,7 @@ class Lstm(Model):
                                                        shape=[1, 1, self._vec_dim],
                                                        name='sample_input')
                     self.validation_labels = tf.placeholder(tf.float32)
-                    validation_labels_prepaired = self.validation_labels
+                    validation_labels_prepared = self.validation_labels
                     sample_input = self.sample_input
                 else:
                     self.validation_labels = tf.placeholder(tf.int32, [1, self._max_mark_num + 1])
@@ -483,18 +483,18 @@ class Lstm(Model):
                             labels = tf.unstack(self.validation_labels, axis=1)
                             lbl0 = tf.one_hot(labels[0], self._vocabulary_size)
                             lbls = [tf.one_hot(lbl, self._number_of_punctuation_marks) for lbl in labels[1:]]
-                            validation_labels_prepaired = tf.concat([lbl0] + lbls, 1)
+                            validation_labels_prepared = tf.concat([lbl0] + lbls, 1)
                     else:
                         inputs = tf.reshape(self.sample_input, [1, -1])
                         sample_input = tf.one_hot(inputs, self._vocabulary_size)
                         labels = tf.reshape(self.validation_labels, [1])
-                        validation_labels_prepaired = tf.one_hot(labels, self._vocabulary_size)
+                        validation_labels_prepared = tf.one_hot(labels, self._vocabulary_size)
 
                 sample_input = tf.reshape(sample_input, [1, -1])
 
                 self._hooks['validation_inputs'] = self.sample_input
                 self._hooks['validation_labels'] = self.validation_labels
-                self._hooks['validation_labels_prepaired'] = validation_labels_prepaired
+                self._hooks['validation_labels_prepared'] = validation_labels_prepared
                 saved_sample_state = list()
                 for layer_idx, layer_num_nodes in enumerate(self._num_nodes):
                     saved_sample_state.append(
@@ -575,7 +575,7 @@ class Lstm(Model):
                            predictions=None,
                            validation_inputs=None,
                            validation_labels=None,
-                           validation_labels_prepaired=None,
+                           validation_labels_prepared=None,
                            validation_predictions=None,
                            reset_validation_state=None,
                            randomize_sample_state=None,

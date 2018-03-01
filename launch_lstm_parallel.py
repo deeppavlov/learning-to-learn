@@ -49,6 +49,7 @@ env.build(batch_size=64,
           num_gpus=1)
 
 env.train(save_path='lstm_sample_test/scipop3_1000_bs256_11.12',
+          restore_path='lstm_sample_test/scipop3_1000_bs256_11.12/checkpoints/2000',
           learning_rate={'type': 'exponential_decay',
                          'init': .002,
                          'decay': .5,

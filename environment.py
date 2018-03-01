@@ -579,13 +579,13 @@ class Environment(object):
                                         special_args=pupil_special_args)
         valid_perplexity_builder = dict(f=perplexity_tensor,
                                         hooks={'probabilities': 'validation_predictions',
-                                               'labels': 'validation_labels_prepaired'},
+                                               'labels': 'validation_labels_prepared'},
                                         tensor_names=dict(),
                                         output_hook_name='validation_perplexity',
                                         special_args=pupil_special_args)
         valid_loss_builder = dict(f=loss_tensor,
                                   hooks={'predictions': 'validation_predictions',
-                                         'labels': 'validation_labels_prepaired'},
+                                         'labels': 'validation_labels_prepared'},
                                   tensor_names=dict(),
                                   output_hook_name='validation_loss',
                                   special_args=pupil_special_args)
@@ -607,7 +607,7 @@ class Environment(object):
                                     special_args=pupil_special_args)
         valid_accuracy_builder=dict(f=accuracy_tensor,
                                     hooks={'predictions': 'validation_predictions',
-                                           'labels': 'validation_labels_prepaired'},
+                                           'labels': 'validation_labels_prepared'},
                                     tensor_names=dict(),
                                     output_hook_name='validation_accuracy',
                                     special_args=pupil_special_args)
@@ -1008,9 +1008,9 @@ class Environment(object):
                 missing.append(tensor_alias)
         self.add_hooks(missing)
 
-    def _build_batch_kwargs(self, unprepareed_kwargs):
+    def _build_batch_kwargs(self, unprepared_kwargs):
         kwargs = dict()
-        for key, arg in unprepareed_kwargs.items():
+        for key, arg in unprepared_kwargs.items():
             if isinstance(arg, Controller):
                 kwargs[key] = arg.get()
             else:
