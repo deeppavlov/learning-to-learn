@@ -205,13 +205,13 @@ class Lstm(Model):
                 kwargs_for_building[insertion['hp_name']][insertion['list_index']] = insertion['paste']
         return kwargs_for_building
 
-    def _lstm_layer(self, inp, state, layer_idx, matr, bias, dropout):
+    def _lstm_layer(self, inp, state, layer_idx, matr, bias):
         with tf.name_scope('lstm_layer_%s' % layer_idx):
             nn = self._num_nodes[layer_idx]
             x = tf.concat(
                 [tf.nn.dropout(
                     inp,
-                    dropout),
+                    self._dropout_keep_prob),
                  state[0]],
                 -1,
                 name='X')
@@ -227,26 +227,26 @@ class Lstm(Model):
         optimizer_ins = {'lstm_layer_%s' % layer_idx: {'o': x, 's': s}}
         return new_hidden_state, (new_hidden_state, new_cell_state), optimizer_ins
 
-    def _rnn_iter(self, embedding, all_states, lstm_matrices, lstm_biases, dropout):
+    def _rnn_iter(self, embedding, all_states, lstm_matrices, lstm_biases):
         optimizer_ins = dict()
         with tf.name_scope('rnn_iter'):
             new_all_states = list()
             output = embedding
             for layer_idx, state in enumerate(all_states):
                 output, state, opt_ins = self._lstm_layer(
-                    output, state, layer_idx, lstm_matrices[layer_idx], lstm_biases[layer_idx], dropout)
+                    output, state, layer_idx, lstm_matrices[layer_idx], lstm_biases[layer_idx])
                 new_all_states.append(state)
                 optimizer_ins.update(opt_ins)
             return output, new_all_states, optimizer_ins
 
-    def _rnn_module(self, embeddings, all_states, lstm_matrices, lstm_biases, dropout):
+    def _rnn_module(self, embeddings, all_states, lstm_matrices, lstm_biases):
         rnn_outputs = list()
         optimizer_ins = dict()
         for layer_idx in range(self._num_layers):
             optimizer_ins['lstm_layer_%s' % layer_idx] = {'o': list(), 's': list()}
         with tf.name_scope('rnn_module'):
             for emb in embeddings:
-                rnn_output, all_states, opt_ins = self._rnn_iter(emb, all_states, lstm_matrices, lstm_biases, dropout)
+                rnn_output, all_states, opt_ins = self._rnn_iter(emb, all_states, lstm_matrices, lstm_biases)
                 # print('rnn_output.shape:', rnn_output.get_shape().as_list())
                 for layer_idx in range(self._num_layers):
                     optimizer_ins['lstm_layer_%s' % layer_idx]['o'].append(opt_ins['lstm_layer_%s' % layer_idx]['o'])
@@ -370,8 +370,19 @@ class Lstm(Model):
                 loss += regularizer(matr)
             return loss * self._regularization_rate
 
-    def loss(self, inputs, labels, trainable_variables, state_variables, other_params):
-        dropout = other_params['dropout']
+    def _acomplish_optimizer_ins(self, optimizer_ins, trainable_variables):
+        optimizer_ins['embedding_layer']['matrix'] = trainable_variables['embedding_matrix']
+        for layer_idx in range(self._num_layers):
+            optimizer_ins['lstm_layer_%s' % layer_idx]['matrix'] = trainable_variables['lstm_matrices'][layer_idx]
+            optimizer_ins['lstm_layer_%s' % layer_idx]['bias'] = trainable_variables['lstm_biases'][layer_idx]
+        for layer_idx in range(self._num_output_layers):
+            optimizer_ins['output_layer_%s' % layer_idx]['matrix'] = \
+                trainable_variables['output_matrices'][layer_idx]
+            optimizer_ins['output_layer_%s' % layer_idx]['bias'] = trainable_variables['output_biases'][layer_idx]
+        return optimizer_ins
+
+    def loss_and_opt_ins(self, inputs, labels, trainable_variables, state_variables, other_params):
+        optimizer_ins = dict()
         with tf.name_scope('loss'):
             saved_states = state_variables['saved_states']
             embedding_matrix = trainable_variables['embedding_matrix']
@@ -381,16 +392,19 @@ class Lstm(Model):
             output_biases = trainable_variables['output_biases']
 
             embeddings, opt_ins = self._embed(inputs, embedding_matrix)
+            optimizer_ins.update(opt_ins)
             rnn_outputs, new_states, opt_ins = self._rnn_module(
-                embeddings, saved_states, lstm_matrices, lstm_biases, dropout)
+                embeddings, saved_states, lstm_matrices, lstm_biases)
+            optimizer_ins.update(opt_ins)
             logits, opt_ins = self._output_module(rnn_outputs, output_matrices, output_biases)
-
+            optimizer_ins.update(opt_ins)
             save_ops = self._compose_save_list((saved_states, new_states))
 
             with tf.control_dependencies(save_ops):
                 loss = tf.reduce_mean(
                     tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits))
-        return loss
+            optimizer_ins = self._acomplish_optimizer_ins(optimizer_ins, trainable_variables)
+        return loss, optimizer_ins
 
     def _train_graph(self):
         inputs, labels = self._prepare_inputs_and_labels(
@@ -422,7 +436,7 @@ class Lstm(Model):
                         embeddings, _ = self._embed(device_inputs, trainable['embedding_matrix'])
                         rnn_outputs, all_states, _ = self._rnn_module(
                             embeddings, all_states, trainable['lstm_matrices'],
-                            trainable['lstm_biases'], self._applicable_placeholders['dropout_keep_prob'])
+                            trainable['lstm_biases'])
                         logits, _ = self._output_module(
                             rnn_outputs, trainable['output_matrices'], trainable['output_biases'])
 
@@ -515,7 +529,7 @@ class Lstm(Model):
                 # print('embeddings:', embeddings)
                 rnn_output, sample_state, _ = self._rnn_module(
                     embeddings, saved_sample_state, trainable['lstm_matrices'],
-                    trainable['lstm_biases'], self._applicable_placeholders['dropout_keep_prob'])
+                    trainable['lstm_biases'])
                 sample_logit, _ = self._output_module(
                     rnn_output, trainable['output_matrices'], trainable['output_biases'])
 
@@ -610,7 +624,7 @@ class Lstm(Model):
         for k, v in storage.items():
             self._train_storage[k] = v
 
-    def _create_placeholders_dictionary(self, device, name_scope):
+    def make_inputs_and_labels_placeholders(self, device, name_scope):
         placeholders = dict()
         with tf.device(device):
             with tf.name_scope(name_scope):
@@ -618,16 +632,14 @@ class Lstm(Model):
                     tf.int32, shape=[self._num_unrollings, self._batch_size, 1])
                 placeholders['labels'] = tf.placeholder(
                     tf.int32, shape=[self._num_unrollings * self._batch_size, 1])
-                placeholders['dropout_keep_prob'] = tf.placeholder(tf.float32, name='dropout_keep_prob')
         return placeholders
 
     def _add_applicable_placeholders(self):
-        placeholders = self._create_placeholders_dictionary(self._base_device, 'applicable_placeholders')
+        placeholders = self.make_inputs_and_labels_placeholders(self._base_device, 'applicable_placeholders')
         for k, v in placeholders.items():
             self._applicable_placeholders[k] = v
         self._hooks['inputs'] = placeholders['inputs']
         self._hooks['labels'] = placeholders['labels']
-        self._hooks['dropout'] = placeholders['dropout_keep_prob']
 
     def _add_train_placeholders(self):
         with tf.device(self._base_device):
@@ -668,22 +680,23 @@ class Lstm(Model):
         placeholders = self._exercise_placeholders
 
         trainable['embedding_matrix'] = list()
-        trainable['lstm_matrices'] = list()
-        trainable['lstm_biases'] = list()
-        trainable['output_matrices'] = list()
-        trainable['output_biases'] = list()
+        trainable['lstm_matrices'] = [list() for _ in range(self._num_layers)]
+        trainable['lstm_biases'] = [list() for _ in range(self._num_layers)]
+        trainable['output_matrices'] = [list() for _ in range(self._num_output_layers)]
+        trainable['output_biases'] = [list() for _ in range(self._num_output_layers)]
 
         storage['states'] = list()
 
         placeholders['inputs'] = list()
         placeholders['labels'] = list()
-        placeholders['dropout_keep_prob'] = list()
 
     def _add_exercise_variables(self):
         trainable = self._exercise_trainable
         var_dict = self._create_trainable_variables_dictionary(None, 'vars')
         for k, v in var_dict.items():
-            trainable[k].append(v)
+            if isinstance(v, list()):
+                for l_idx, var in enumerate(v):
+                    trainable[k][l_idx].append(var)
         self._hooks['exercise_savers'].append(self._create_saver(var_dict))
 
     def _add_exercise_storage(self):
@@ -692,19 +705,10 @@ class Lstm(Model):
         for k, v in stor.items():
             storage[k].append(v)
 
-    def _add_exercise_placeholders(self):
-        placeholders = self._create_placeholders_dictionary(None, 'placeholders')
-        for k, v in placeholders.items():
-            self._exercise_placeholders[k].append(v)
-        self._hooks['exercise_inputs'].append(placeholders['inputs'])
-        self._hooks['exercise_labels'].append(placeholders['labels'])
-        self._hooks['exercise_dropouts'].append(placeholders['dropout_keep_prob'])
-
     def _add_exercise(self):
         with tf.name_scope('ex%s' % self._number_of_exercises):
             self._add_exercise_variables()
             self._add_exercise_storage()
-            self._add_exercise_placeholders()
         self._number_of_exercises += 1
 
     def create_optimizer_training_base(self, num_exs):
@@ -749,8 +753,7 @@ class Lstm(Model):
             saver=None,
             exercise_savers=list(),
             exercise_inputs=list(),
-            exercise_labels=list(),
-            exercise_dropout=list())
+            exercise_labels=list())
 
         self._batch_size = batch_size
         self._num_layers = num_layers
@@ -780,6 +783,9 @@ class Lstm(Model):
         else:
             self._base_device = '/cpu:0'
 
+        self._dropout_keep_prob = tf.placeholder(tf.float32, name='dropout_keep_prob')
+        self._hooks['dropout'] = self._dropout_keep_prob
+
         self._number_of_exercises = 0
 
         self._applicable_trainable = dict()
@@ -792,7 +798,6 @@ class Lstm(Model):
         self._applicable_placeholders = dict()
         self._train_placeholders = dict()
         self._inference_placeholders = dict()
-        self._exercise_placeholders = dict()
 
         self._add_applicable_variables()
 
