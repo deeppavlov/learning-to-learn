@@ -694,31 +694,56 @@ def is_int(s):
     except ValueError:
         return False
 
+#
+# def write_equation(a_ndims, b_ndims):
+#     letters = 'ijklmnoprs'
+#     out_ndims = a_ndims + b_ndims - 3
+#     var_set_indices = letters[0]
+#     a_indices = letters[1:a_ndims - 2]
+#     b_indices = letters[out_ndims - b_ndims + 1:out_ndims - 2]
+#     last_indices = letters[out_ndims - 2: out_ndims + 1]
+#     a_str = var_set_indices + a_indices + last_indices[:2]
+#     b_str = var_set_indices + b_indices + last_indices[1:]
+#     out_str = var_set_indices + a_indices + b_indices + last_indices[0] + last_indices[2]
+#     return a_str + ',' + b_str + '->' + out_str
 
-def write_equation(a_ndims, b_ndims):
+
+def write_equation(a_ndims, b_ndims, base_ndims):
     letters = 'ijklmnoprs'
-    out_ndims = a_ndims + b_ndims - 3
-    var_set_indices = letters[0]
-    a_indices = letters[1:a_ndims - 2]
-    b_indices = letters[out_ndims - b_ndims + 1:out_ndims - 2]
-    last_indices = letters[out_ndims - 2: out_ndims + 1]
+    # out_ndims = a_ndims + base_ndims[1] - 2
+    var_set_ndims = a_ndims-base_ndims[0]
+    var_set_indices = letters[0:var_set_ndims]
+    a_indices = letters[var_set_ndims:a_ndims - 2]
+    b_indices = letters[a_ndims - 2:a_ndims + b_ndims - var_set_ndims - 4]
+    last_indices = letters[a_ndims + b_ndims - var_set_ndims - 4: a_ndims + b_ndims - var_set_ndims - 1]
     a_str = var_set_indices + a_indices + last_indices[:2]
     b_str = var_set_indices + b_indices + last_indices[1:]
     out_str = var_set_indices + a_indices + b_indices + last_indices[0] + last_indices[2]
     return a_str + ',' + b_str + '->' + out_str
 
 
-def custom_matmul(a, b, base_ndims=None):
+def custom_matmul(a, b, base_ndims=None, eq=None):
     with tf.name_scope('custom_matmul'):
-        if base_ndims is None:
-            base_ndims = [2, 2]
-        a_shape = a.get_shape().as_list()
-        b_shape = b.get_shape().as_list()
-        a_ndims = len(a_shape)
-        b_ndims = len(b_shape)
-        if a_ndims == base_ndims[0] + 1 and b_ndims == base_ndims[1] + 1:
-            eq = write_equation(a_ndims, b_ndims)
+        if eq is not None:
             res = tf.einsum(eq, a, b)
         else:
-            res = tf.tensordot(a, b, [[-1], [-2]])
+            if base_ndims is None:
+                base_ndims = [2, 2]
+            a_shape = a.get_shape().as_list()
+            b_shape = b.get_shape().as_list()
+            a_ndims = len(a_shape)
+            b_ndims = len(b_shape)
+            if a_ndims > base_ndims[0] and b_ndims > base_ndims[1]:
+                if a_ndims - base_ndims[0] == b_ndims - base_ndims[1]:
+                    eq = write_equation(a_ndims, b_ndims)
+                    res = tf.einsum(eq, a, b)
+                else:
+                    raise InvalidArgumentError('a and b have to satisfy condition \n'
+                                               'len(a.shape) - base_ndims[0] == len(b.shape) - base_ndims[1]',
+                                               [a, b],
+                                               'tensors a and b',
+                                               'tensors which satisfy \n'
+                                               'len(a.shape) - base_ndims[0] == len(b.shape) - base_ndims[1]')
+            else:
+                res = tf.tensordot(a, b, [[-1], [-2]])
     return res

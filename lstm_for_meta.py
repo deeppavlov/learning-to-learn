@@ -677,7 +677,6 @@ class Lstm(Model):
     def _init_exercise_dicts(self):
         trainable = self._exercise_trainable
         storage = self._exercise_storage
-        placeholders = self._exercise_placeholders
 
         trainable['embedding_matrix'] = list()
         trainable['lstm_matrices'] = [list() for _ in range(self._num_layers)]
@@ -686,9 +685,6 @@ class Lstm(Model):
         trainable['output_biases'] = [list() for _ in range(self._num_output_layers)]
 
         storage['states'] = list()
-
-        placeholders['inputs'] = list()
-        placeholders['labels'] = list()
 
     def _add_exercise_variables(self):
         trainable = self._exercise_trainable
