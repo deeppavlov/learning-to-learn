@@ -453,12 +453,14 @@ class Environment(object):
                       fuses=None,
                       fuse_tensors=construct(fuse_tensors),
                       fuse_file_name=None,
+                      example_length=None,
+                      example_tensors=construct(example_tensors),
                       replicas=None,
                       random={'number_of_runs': 5,
                               'length': 80},
                       validation_tensor_schedule=construct(valid_tensor_schedule)
-                    )
-                                               )
+                      )
+        )
         # This attribute is used solely for controlling learning parameters (learning rate, additions_to_feed_dict)
         # It is used by instances of Controller class
         # BPI stands for bits per input. It is cross entropy computed using logarithm for base 2
@@ -780,7 +782,18 @@ class Environment(object):
                 _ = self._validate(
                     batch_generator_class, validation_dataset, work['validation_batch_size'],
                     work['valid_batch_kwargs'], additional_feed_dict=add_feed_dict)
-        return fuse_res
+        if work['example_length'] is not None:
+            example_res = list()
+            for validation_dataset in validation_datasets:
+                example_res.append(self._prediction_examples(
+                                batch_generator_class,
+                                validation_dataset,
+                                work['example_length'],
+                                work['valid_batch_kwargs'],
+                                additional_feed_dict=add_feed_dict))
+        else:
+            example_res = None
+        return fuse_res, example_res
 
     def _on_fuses(self,
                   batch_generator,
@@ -841,8 +854,10 @@ class Environment(object):
                              validation_dataset,
                              example_length,
                              valid_batch_kwargs,
-                             additional_feed_dict=dict(),
+                             additional_feed_dict=None,
                              training_step=None):
+        if additional_feed_dict is None:
+            additional_feed_dict = dict()
         example_batches = batch_generator_class(validation_dataset[0], 1, **valid_batch_kwargs)
         self._handler.start_example_accumulation()
         for c_idx in range(min(example_length, example_batches.get_dataset_length())):
@@ -1979,14 +1994,15 @@ class Environment(object):
         fuses_fd.close()
         correct_answers_fd.close()
 
-        fuse_results = self.test(restore_path=restore_path,
-                                 print_results=False,
-                                 vocabulary=vocabulary,
-                                 additions_to_feed_dict=additions_to_feed_dict,
-                                 printed_result_types=None,
-                                 fuses=fuses,
-                                 random=None,
-                                 gpu_memory=gpu_memory)
+        fuse_results, _ = self.test(
+            restore_path=restore_path,
+            print_results=False,
+            vocabulary=vocabulary,
+            additions_to_feed_dict=additions_to_feed_dict,
+            printed_result_types=None,
+            fuses=fuses,
+            random=None,
+            gpu_memory=gpu_memory)
 
         generated_fd = open(add_index_to_filename_if_needed(save_path + '/generated.txt'), 'w')
         generated_text = ''

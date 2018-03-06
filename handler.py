@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 import datetime as dt
 # import os
 from some_useful_functions import create_path, add_index_to_filename_if_needed, construct, nested2string, \
@@ -27,12 +28,14 @@ class Handler(object):
                  # test method specific
                  validation_dataset_names=None,
                  validation_tensor_schedule=None,
-                 printed_result_types=['loss'],
+                 printed_result_types=None,
                  fuses=None,
                  fuse_tensor_schedule=None,
                  fuse_file_name=None,
                  example_tensor_schedule=None,
                  example_file_name=None):
+        if printed_result_types is None:
+            printed_result_types = ['loss']
         continuous_chit_chat = ['simple_fontain']
         # print('Initializing Handler! pid = %s' % os.getpid())
         self._processing_type = processing_type
@@ -89,6 +92,7 @@ class Handler(object):
             self._accumulated_text = None
             self._accumulated_input = None
             self._accumulated_predictions = None
+            self._accumulated_pred_vecs = None
 
             self._printed_result_types = None
             self._printed_controllers = None
@@ -151,6 +155,7 @@ class Handler(object):
             self._accumulated_text = None
             self._accumulated_input = None
             self._accumulated_predictions = None
+            self._accumulated_pred_vecs = None
 
         if self._processing_type == 'several_launches':
             self._result_types = result_types
@@ -362,6 +367,7 @@ class Handler(object):
             self._one_char_generation = False
         else:
             self._one_char_generation = True
+        self._accumulated_pred_vecs = list()
         if self._one_char_generation:
             self._accumulated_input = ''
             self._accumulated_predictions = ''
@@ -373,7 +379,7 @@ class Handler(object):
         # print('self._fuses:', self._fuses)
         self._text_is_being_accumulated = False
 
-    def _prepair_string(self, res):
+    def _prepare_string(self, res):
         preprocessed = ''
         for char in res:
             preprocessed += self._form_string_char(char)
@@ -394,7 +400,7 @@ class Handler(object):
                     msg += ('\nlaunch number: ' + str(res_idx) + '\n')
                 else:
                     msg += ('launch number: ' + str(res_idx) + '\n')
-                msg += ('result: ' + self._prepair_string(res) + '\n')
+                msg += ('result: ' + self._prepare_string(res) + '\n')
             msg += self._stars + '\n'*2
         msg += (self._stars + '\n') * 2
         return msg
@@ -453,7 +459,15 @@ class Handler(object):
             self._print_example_results(training_step)
         if self._save_path is not None:
             self._save_example_results(training_step)
-        res = construct(self._fuses)
+        if self._one_char_generation:
+            acc_inp = str(self._accumulated_input)
+            acc_out = str(self._accumulated_predictions)
+        else:
+            acc_inp = ''.join(self._accumulated_input)
+            acc_out = ''.join(self._accumulated_predictions)
+        res = {'input': acc_inp,
+               'output': acc_out,
+               'pred_vecs': construct(self._accumulated_pred_vecs)}
         self._accumulated_input = None
         self._accumulated_predictions = None
         return res
@@ -947,6 +961,7 @@ class Handler(object):
             else:
                 self._accumulated_input.append(input_str)
                 self._accumulated_predictions.append(char)
+            self._accumulated_pred_vecs.append(np.reshape(prediction, [-1]))
         else:
             raise WrongMethodCallError('Flag self._accumulated_text should be set True when '
                                        'Handler._process_example_generation_results is called')
