@@ -1,6 +1,7 @@
 import numpy as np
 import inspect
 import os
+import ast
 from collections import OrderedDict
 import tensorflow as tf
 from tensorflow.python.client import device_lib
@@ -747,3 +748,9 @@ def custom_matmul(a, b, base_ndims=None, eq=None):
             else:
                 res = tf.tensordot(a, b, [[-1], [-2]])
     return res
+
+
+def load_vocabulary(vocabulary_path):
+    with open(vocabulary_path, 'r') as f:
+        lines = f.read().split('\n')
+    return [ast.literal_eval(l) for l in lines]
