@@ -33,7 +33,9 @@ class Handler(object):
                  fuse_tensor_schedule=None,
                  fuse_file_name=None,
                  example_tensor_schedule=None,
-                 example_file_name=None):
+                 example_file_name=None,
+                 verbose=True):
+        self._verbose = verbose
         if printed_result_types is None:
             printed_result_types = ['loss']
         continuous_chit_chat = ['simple_fontain']
@@ -92,7 +94,7 @@ class Handler(object):
             self._accumulated_text = None
             self._accumulated_input = None
             self._accumulated_predictions = None
-            self._accumulated_pred_vecs = None
+            self._accumulated_prob_vecs = None
 
             self._printed_result_types = None
             self._printed_controllers = None
@@ -155,7 +157,7 @@ class Handler(object):
             self._accumulated_text = None
             self._accumulated_input = None
             self._accumulated_predictions = None
-            self._accumulated_pred_vecs = None
+            self._accumulated_prob_vecs = None
 
         if self._processing_type == 'several_launches':
             self._result_types = result_types
@@ -367,7 +369,7 @@ class Handler(object):
             self._one_char_generation = False
         else:
             self._one_char_generation = True
-        self._accumulated_pred_vecs = list()
+        self._accumulated_prob_vecs = list()
         if self._one_char_generation:
             self._accumulated_input = ''
             self._accumulated_predictions = ''
@@ -467,7 +469,7 @@ class Handler(object):
             acc_out = ''.join(self._accumulated_predictions)
         res = {'input': acc_inp,
                'output': acc_out,
-               'pred_vecs': construct(self._accumulated_pred_vecs)}
+               'prob_vecs': construct(self._accumulated_prob_vecs)}
         self._accumulated_input = None
         self._accumulated_predictions = None
         return res
@@ -961,7 +963,7 @@ class Handler(object):
             else:
                 self._accumulated_input.append(input_str)
                 self._accumulated_predictions.append(char)
-            self._accumulated_pred_vecs.append(np.reshape(prediction, [-1]))
+            self._accumulated_prob_vecs.append(np.reshape(prediction, [-1]))
         else:
             raise WrongMethodCallError('Flag self._accumulated_text should be set True when '
                                        'Handler._process_example_generation_results is called')
@@ -1011,7 +1013,8 @@ class Handler(object):
 
     def log_launch(self):
         if self._save_path is None:
-            print('\nWarning! Launch is not logged because save_path was not provided to Handler constructor')
+            if self._verbose:
+                print('\nWarning! Launch is not logged because save_path was not provided to Handler constructor')
         else:
             self._current_log_path = add_index_to_filename_if_needed(self._save_path + '/launch_log.txt')
             with open(self._current_log_path, 'w') as f:

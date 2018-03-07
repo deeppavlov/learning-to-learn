@@ -420,7 +420,7 @@ class Environment(object):
                           'printed_controllers': ['learning_rate'],
                           'fuses': None,
                           'fuse_tensors': construct(fuse_tensors),
-                          'prediction_examples': None,
+                          # 'prediction_examples': None,
                           'example_length': None,
                           'example_tensors': construct(example_tensors),
                           'replicas': None,
@@ -441,6 +441,7 @@ class Environment(object):
                          'print_results': True,
                          'result_types': self.put_result_types_in_correct_order(
                              ['loss', 'perplexity', 'accuracy']),
+                         'verbose': True,
                          'batch_generator_class': self._default_batch_generator,
                          'vocabulary': self._vocabulary},
             work=dict(additions_to_feed_dict=list(),
@@ -459,8 +460,8 @@ class Environment(object):
                       random={'number_of_runs': 5,
                               'length': 80},
                       validation_tensor_schedule=construct(valid_tensor_schedule)
-                      )
-        )
+                    )
+                                               )
         # This attribute is used solely for controlling learning parameters (learning rate, additions_to_feed_dict)
         # It is used by instances of Controller class
         # BPI stands for bits per input. It is cross entropy computed using logarithm for base 2
@@ -506,9 +507,10 @@ class Environment(object):
         for key, value in hooks.items():
             if value not in self._hooks:
                 stars = '\n**********\n'
-                msg = "Warning! Adding to hooks shapeless placeholder of type tf.float32 with alias '%s'" % value
-                print(stars + msg + stars)
                 self._hooks[value] = tf.placeholder(tf.float32)
+                msg = "Warning! Adding to hooks shapeless placeholder %s " \
+                      "of type tf.float32 with alias '%s'" % (self._hooks[value].name, value)
+                print(stars + msg + stars)
             arguments[key] = self._hooks[value]
         for key, value in tensor_names.items():
             arguments[key] = tf.get_default_graph().get_tensor_by_name(value)
@@ -559,10 +561,14 @@ class Environment(object):
 
     def register_builder(self,
                          f=None,
-                         hooks=dict(),
-                         tensor_names=dict(),
+                         hooks=None,
+                         tensor_names=None,
                          output_hook_name=None,
                          special_args=None):
+        if hooks is None:
+            hooks = dict()
+        if tensor_names is None:
+            tensor_names = dict()
         if isinstance(f, str):
             f = self._build_functions[f]
         self._builders[output_hook_name] = dict(f=f,
@@ -712,7 +718,7 @@ class Environment(object):
         if model_type == 'pupil':
             self._hooks['saver'].save(self._session, path)
         elif model_type == 'meta_optimizer':
-            self._meta_optimizer_hooks['saver'].save(self._session, path)
+            self._hooks['saver'].save(self._session, path)
 
     def _initialize_pupil(self, restore_path):
         if restore_path is not None:
@@ -762,7 +768,8 @@ class Environment(object):
                                 validation_tensor_schedule=work['validation_tensor_schedule'],
                                 fuses=work['fuses'],
                                 fuse_tensor_schedule=work['fuse_tensors'],
-                                fuse_file_name=work['fuse_file_name'])
+                                fuse_file_name=work['fuse_file_name'],
+                                verbose=start_specs['verbose'])
         self._handler.log_launch()
         empty_batch_gen = batch_generator_class('', 1, vocabulary=start_specs['vocabulary'])
         if work['fuses'] is not None:
@@ -773,6 +780,7 @@ class Environment(object):
             fuse_res = None
 
         validation_datasets = work['validation_datasets']
+        # print("(Environment.test)work['valid_batch_kwargs']:", work['valid_batch_kwargs'])
         for validation_dataset in validation_datasets:
             if work['validate_tokens_by_chars']:
                 _ = self._validate_by_chars(
@@ -785,12 +793,15 @@ class Environment(object):
         if work['example_length'] is not None:
             example_res = list()
             for validation_dataset in validation_datasets:
-                example_res.append(self._prediction_examples(
-                                batch_generator_class,
-                                validation_dataset,
-                                work['example_length'],
-                                work['valid_batch_kwargs'],
-                                additional_feed_dict=add_feed_dict))
+                example_res.append(
+                    self._prediction_examples(
+                        batch_generator_class,
+                        validation_dataset,
+                        work['example_length'],
+                        work['valid_batch_kwargs'],
+                        additional_feed_dict=add_feed_dict
+                    )
+                )
         else:
             example_res = None
         return fuse_res, example_res
@@ -799,7 +810,9 @@ class Environment(object):
                   batch_generator,
                   fuses,
                   training_step=None,
-                  additional_feed_dict=dict()):
+                  additional_feed_dict=None):
+        if additional_feed_dict is None:
+            additional_feed_dict = dict()
         for fuse_idx, fuse in enumerate(fuses):
             if fuse_idx % 100 == 0:
                 print('Number of processed fuses:', fuse_idx)
@@ -860,7 +873,7 @@ class Environment(object):
             additional_feed_dict = dict()
         example_batches = batch_generator_class(validation_dataset[0], 1, **valid_batch_kwargs)
         self._handler.start_example_accumulation()
-        for c_idx in range(min(example_length, example_batches.get_dataset_length())):
+        for c_idx in range(min(example_length, example_batches.get_dataset_length()) + 1):
             inputs, _ = example_batches.next()
             input_str = batch_generator_class.vec2char_fast(
                 np.reshape(inputs, (1, -1)),
@@ -919,10 +932,12 @@ class Environment(object):
             validation_batch_size,
             valid_batch_kwargs,
             training_step=None,
-            additional_feed_dict=dict(),
+            additional_feed_dict=None,
             save_to_file=None,
             save_to_storage=None,
             print_results=None):
+        if additional_feed_dict is None:
+            additional_feed_dict = dict()
         # print('valid_batch_kwargs:', valid_batch_kwargs)
         if 'reset_validation_state' in self._hooks:
             self._session.run(self._hooks['reset_validation_state'])
@@ -1273,7 +1288,7 @@ class Environment(object):
                         period: number of steps after which learning rate is being decreased
                 additions_to_feed_dict: If your model requires some special placeholders filling (e. g. probability
                     distribution for a stochastic node) it is provided through additions_to_feed_dict. It is a
-                    dictionary which keys are tensor aliases in _hooks attribute and values are dictionaries
+                    dictionary which keys are tensor aliases in _pupil_hooks attribute and values are dictionaries
                     of the same structure as learning_rate
                 stop: specifies when learning should be stopped. It is either an integer (number of steps after which
                     learning is being stopped) or a dictionary of the same structure as learning_rate where you may
@@ -1310,7 +1325,7 @@ class Environment(object):
                     console. Default printed is learning rate
                 fuses: specifies fuses from which model should periodically generate text. This option is not
                     available yet
-                fuse_tensors: tensor aliases from _hooks attribute which should be either saved or printed.
+                fuse_tensors: tensor aliases from _pupil_hooks attribute which should be either saved or printed.
                     not available
                 replicas: If dialog agent is trained it can be tested with consequently feeding it with few user
                     specified replicas. It can be used to check if agent is capable of dialog context accumulating
