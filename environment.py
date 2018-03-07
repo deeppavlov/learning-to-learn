@@ -729,6 +729,7 @@ class Environment(object):
 
     def test(self,
              **kwargs):
+        self.flush_storage()
         self._store_launch_parameters(**kwargs)
         tmp_output = parse_1_set_of_kwargs(self,
                                            kwargs,
@@ -770,6 +771,7 @@ class Environment(object):
                                 fuse_tensor_schedule=work['fuse_tensors'],
                                 fuse_file_name=work['fuse_file_name'],
                                 verbose=start_specs['verbose'])
+        # print('(Environment.test)self._storage:', self._storage)
         self._handler.log_launch()
         empty_batch_gen = batch_generator_class('', 1, vocabulary=start_specs['vocabulary'])
         if work['fuses'] is not None:
@@ -787,12 +789,14 @@ class Environment(object):
                     batch_generator_class, validation_dataset, work['validation_batch_size'],
                     work['valid_batch_kwargs'], additional_feed_dict=add_feed_dict)
             else:
+                # print('(Environment.test)self._storage:', self._storage)
                 _ = self._validate(
                     batch_generator_class, validation_dataset, work['validation_batch_size'],
                     work['valid_batch_kwargs'], additional_feed_dict=add_feed_dict)
         if work['example_length'] is not None:
             example_res = list()
             for validation_dataset in validation_datasets:
+                # print('(Environment.test)self._storage:', self._storage)
                 example_res.append(
                     self._prediction_examples(
                         batch_generator_class,
