@@ -804,6 +804,7 @@ class Environment(object):
                 )
         else:
             example_res = None
+        self._close_session()
         return fuse_res, example_res
 
     def _on_fuses(self,
