@@ -724,6 +724,16 @@ def write_equation(a_ndims, b_ndims, base_ndims):
 
 
 def custom_matmul(a, b, base_ndims=None, eq=None):
+    """Special matmul for several exercises simultaneous processing.
+    Matrix multiplication is performed across 2 last dimensions of a and b. Either mapping or broadcasting is performed
+    across all dimensions except for last 2. Specifically if (a_ndims > base_ndims[0] and b_ndims > base_ndims[1])
+    and (a_ndims - base_ndims[0] == b_ndims - base_ndims[1]) first a_ndims - base_ndims[0] dimensions of a and b are
+    mapped:
+        consider base_ndims = [3,2], a_ndim = 5, b_ndim = 4 than eq = 'ijklm,ijmn->ijkln'.
+    If base_ndims[i] > 2 than mutual broadcasting is performed. In case when base_ndims[0] > 2 base_ndims[1] > 2
+    this means outer product. a dimensions are put in front of b dimensions. Examples:
+        base_ndims = [3,3]    eq = 'ijkmn,ijlno->ijklmo'
+        base_ndims = [3,4]    eq = 'ijkno,ijlmop->ijklmnp'"""
     with tf.name_scope('custom_matmul'):
         if eq is not None:
             res = tf.einsum(eq, a, b)
