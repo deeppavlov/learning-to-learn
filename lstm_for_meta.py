@@ -381,6 +381,11 @@ class Lstm(Model):
         return optimizer_ins
 
     def loss_and_opt_ins(self, inputs, labels, trainable_variables, state_variables, other_params):
+        """optimizer_ins is a dictionary which keys are layer names and values are dictionaries with their parameters
+         ('matrix' and optionally 'bias') (meaning tf.Variable instances holding their saved values) and 'o' ansd 's'
+        vectors. 'o' - vector is an output of previous layer (input for linear projection) and 's' is the result of
+        linear projection performed using layer weights. 'o', 's', 'matrix', 'bias' - can be stacked if several
+        exercises are processed"""
         optimizer_ins = dict()
         with tf.name_scope('loss'):
             saved_states = state_variables['saved_states']
