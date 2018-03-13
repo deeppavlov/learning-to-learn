@@ -20,6 +20,15 @@ class ResNet4Lstm(Meta):
         self._num_gpus = num_gpus
         self._regime = regime
 
+        self._hooks = dict(
+            grad_eval_inputs=None,
+            grad_eval_labels=None,
+            optimizer_learn_inputs=None,
+            optimizer_learn_labels=None,
+            opt_inference_inputs=None,
+            opt_inference_labels=None
+        )
+
         if regime == 'train':
             ex_per_gpu = self._num_exercises // self._num_gpus
             remaining = self._num_exercises - self._num_gpus * ex_per_gpu
@@ -38,3 +47,10 @@ class ResNet4Lstm(Meta):
 
         self._opt_inference_inputs, self._opt_inference_labels = self._make_inputs_and_labels_placeholders(
             self._optimizee, self._num_optimizer_unrollings, None, None, regime='inference')
+
+        self._hooks['grad_eval_inputs'] = self._grad_eval_inputs
+        self._hooks['grad_eval_labels'] = self._grad_eval_labels
+        self._hooks['optimizer_learn_inputs'] = self._optimizer_learn_inputs
+        self._hooks['optimizer_learn_labels'] = self._optimizer_learn_labels
+        self._hooks['opt_inference_inputs'] = self._opt_inference_inputs
+        self._hooks['opt_inference_labels'] = self._opt_inference_labels
