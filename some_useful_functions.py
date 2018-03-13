@@ -746,7 +746,7 @@ def custom_matmul(a, b, base_ndims=None, eq=None):
             b_ndims = len(b_shape)
             if a_ndims > base_ndims[0] and b_ndims > base_ndims[1]:
                 if a_ndims - base_ndims[0] == b_ndims - base_ndims[1]:
-                    eq = write_equation(a_ndims, b_ndims)
+                    eq = write_equation(a_ndims, b_ndims, base_ndims)
                     res = tf.einsum(eq, a, b)
                 else:
                     raise InvalidArgumentError('a and b have to satisfy condition \n'
