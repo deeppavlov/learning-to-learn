@@ -42,6 +42,10 @@ class Meta(object):
 
     @staticmethod
     def _make_inputs_and_labels_placeholders(optimizee, num_unrollings, num_exercises, gpu_map, regime):
+        """If both num_unrollings and num_exercises are not None outputs are lists of lists where
+        inner list is for unrollings and outer is for exercises. If only one of variables num_unrollings and
+        num_exercises is not None outputs are lists of placeholders. And finally if both num_unrollings and
+        num_exercises are None  outputs are placeholders."""
         if regime == 'train':
             grad_eval_inputs = list()
             grad_eval_labels = list()
