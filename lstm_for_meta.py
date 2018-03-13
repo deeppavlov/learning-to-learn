@@ -626,11 +626,17 @@ class Lstm(Model):
     def make_inputs_and_labels_placeholders(self, device, name_scope):
         placeholders = dict()
         with tf.device(device):
-            with tf.name_scope(name_scope):
+            if name_scope is not None:
+                with tf.name_scope(name_scope):
+                    placeholders['inputs'] = tf.placeholder(
+                        tf.int32, shape=[self._num_unrollings, self._batch_size, 1], name='inputs')
+                    placeholders['labels'] = tf.placeholder(
+                        tf.int32, shape=[self._num_unrollings * self._batch_size, 1], name='labels')
+            else:
                 placeholders['inputs'] = tf.placeholder(
-                    tf.int32, shape=[self._num_unrollings, self._batch_size, 1])
+                    tf.int32, shape=[self._num_unrollings, self._batch_size, 1], name='inputs')
                 placeholders['labels'] = tf.placeholder(
-                    tf.int32, shape=[self._num_unrollings * self._batch_size, 1])
+                    tf.int32, shape=[self._num_unrollings * self._batch_size, 1], name='labels')
         return placeholders
 
     def _add_applicable_placeholders(self):
@@ -676,13 +682,11 @@ class Lstm(Model):
     def _init_exercise_dicts(self):
         trainable = self._exercise_trainable
         storage = self._exercise_storage
-
         trainable['embedding_matrix'] = list()
         trainable['lstm_matrices'] = [list() for _ in range(self._num_layers)]
         trainable['lstm_biases'] = [list() for _ in range(self._num_layers)]
         trainable['output_matrices'] = [list() for _ in range(self._num_output_layers)]
         trainable['output_biases'] = [list() for _ in range(self._num_output_layers)]
-
         storage['states'] = list()
 
     def _add_exercise_variables(self):
@@ -724,6 +728,7 @@ class Lstm(Model):
                  regularization_rate=.000006,
                  regime='autonomous_training',
                  going_to_limit_memory=False):
+        """4 regimes are possible: autonomous_training, inference, training_with_meta_optimizer, optimizer_training"""
 
         if num_nodes is None:
             num_nodes = [112, 113]
