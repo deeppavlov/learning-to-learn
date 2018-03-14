@@ -614,13 +614,13 @@ class Lstm(Model):
                     for layer_idx, layer_num_nodes in enumerate(self._num_nodes):
                         states.append(
                             [tf.Variable(
-                                tf.zeros([self._batch_size, layer_num_nodes]),
-                                trainable=False,
-                                name='saved_state_%s_%s' % (layer_idx, 0)),
-                                tf.Variable(
-                                    tf.zeros([self._batch_size, layer_num_nodes]),
-                                    trainable=False,
-                                    name='saved_state_%s_%s' % (layer_idx, 1))]
+                                 tf.zeros([self._batch_size, layer_num_nodes]),
+                                 trainable=False,
+                                 name='saved_state_%s_%s' % (layer_idx, 0)),
+                             tf.Variable(
+                                 tf.zeros([self._batch_size, layer_num_nodes]),
+                                 trainable=False,
+                                 name='saved_state_%s_%s' % (layer_idx, 1))]
                         )
         return storage_dictionary
 
