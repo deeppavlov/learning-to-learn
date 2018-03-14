@@ -25,8 +25,7 @@ class ResNet4Lstm(Meta):
             pupil_grad_eval_labels=None,
             optimizer_grad_inputs=None,
             optimizer_grad_labels=None,
-            opt_inference_inputs=None,
-            opt_inference_labels=None
+            pupil_savers=None
         )
 
         if regime == 'train':
@@ -41,16 +40,13 @@ class ResNet4Lstm(Meta):
             self._pupil_grad_eval_inputs, self._pupil_grad_eval_labels,\
                 self._optimizer_grad_inputs, self._optimizer_grad_labels = tmp
             self._pupil_trainable_variables, self._pupil_grad_eval_pupil_storage, self._optimizer_grad_pupil_storage, \
-            self._pupil_savers = self._create_pupil_variables_and_savers(
-                self._pupil, self._num_exercises, self._exercise_gpu_map)
+                self._pupil_savers = self._create_pupil_variables_and_savers(
+                    self._pupil, self._num_exercises, self._exercise_gpu_map)
         else:
             self._exercise_gpu_map = None
             self._pupil_grad_eval_inputs, self._pupil_grad_eval_labels, \
                 self._optimizer_grad_inputs, self._optimizer_grad_labels = None, None, None, None
 
-        self._hooks['pupil_grad_eval_inputs'] = self._pupil_grad_eval_inputs
-        self._hooks['pupil_grad_eval_labels'] = self._pupil_grad_eval_labels
-        self._hooks['optimizer_grad_inputs'] = self._optimizer_grad_inputs
-        self._hooks['optimizer_grad_labels'] = self._optimizer_grad_labels
+        self._add_standard_train_hooks()
         
         

@@ -101,3 +101,10 @@ class Meta(object):
             optimizer_grad_pupil_storage.append(
                 pupil.create_storage(gpu_map[ex_idx], 'optimizer_grad_states_ex_%s' % ex_idx))
         return trainable, pupil_grad_eval_pupil_storage, optimizer_grad_pupil_storage, savers
+
+    def _add_standard_train_hooks(self):
+        self._hooks['pupil_grad_eval_inputs'] = self._pupil_grad_eval_inputs
+        self._hooks['pupil_grad_eval_labels'] = self._pupil_grad_eval_labels
+        self._hooks['optimizer_grad_inputs'] = self._optimizer_grad_inputs
+        self._hooks['optimizer_grad_labels'] = self._optimizer_grad_labels
+        self._hooks['pupil_savers'] = self._pupil_savers
