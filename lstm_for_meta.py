@@ -583,7 +583,7 @@ class Lstm(Model):
         return variables_dictionary
 
     @staticmethod
-    def _create_saver(var_dict):
+    def create_saver(var_dict):
         with tf.device('/cpu:0'):
             saved_vars = dict()
             saved_vars['embedding_matrix'] = var_dict['embedding_matrix']
@@ -602,7 +602,7 @@ class Lstm(Model):
         var_dict = self.create_trainable_variables_dictionary(self._base_device, 'applicable_trainable')
         for k, v in var_dict.items():
             trainable[k] = v
-        self._hooks['saver'] = self._create_saver(trainable)
+        self._hooks['saver'] = self.create_saver(trainable)
 
     def create_storage(self, device, name_scope):
         storage_dictionary = dict()
