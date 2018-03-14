@@ -3,7 +3,8 @@ import numpy as np
 import tensorflow as tf
 from some_useful_functions import (create_vocabulary, get_positions_in_vocabulary, char2vec, pred2vec, pred2vec_fast,
                                    vec2char, vec2char_fast, char2id, id2char, flatten, get_available_gpus,
-                                   device_name_scope, average_gradients, get_num_gpus_and_bs_on_gpus, custom_matmul)
+                                   device_name_scope, average_gradients, get_num_gpus_and_bs_on_gpus, custom_matmul,
+                                   custom_add)
 
 url = 'http://mattmahoney.net/dc/'
 
@@ -215,7 +216,7 @@ class Lstm(Model):
                 -1,
                 name='X')
             s = custom_matmul(x, matr)
-            linear_res = tf.add(
+            linear_res = custom_add(
                 s, bias, name='linear_res')
             [sigm_arg, tanh_arg] = tf.split(linear_res, [3 * nn, nn], axis=-1, name='split_to_act_func_args')
             sigm_res = tf.sigmoid(sigm_arg, name='sigm_res')
@@ -287,7 +288,7 @@ class Lstm(Model):
                     o=tf.split(hs, num_split, axis=concat_dim),
                     s=tf.split(s, num_split, axis=concat_dim)
                 )
-                hs = tf.add(
+                hs = custom_add(
                     s,
                     bias,
                     name='res_of_%s_output_layer' % layer_idx)
