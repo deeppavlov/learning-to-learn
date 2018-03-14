@@ -749,12 +749,14 @@ def custom_matmul(a, b, base_ndims=None, eq=None):
                     eq = write_equation(a_ndims, b_ndims, base_ndims)
                     res = tf.einsum(eq, a, b)
                 else:
-                    raise InvalidArgumentError('a and b have to satisfy condition \n'
-                                               'len(a.shape) - base_ndims[0] == len(b.shape) - base_ndims[1]',
-                                               [a, b],
-                                               'tensors a and b',
-                                               'tensors which satisfy \n'
-                                               'len(a.shape) - base_ndims[0] == len(b.shape) - base_ndims[1]')
+                    raise InvalidArgumentError(
+                        'if len(a.shape) - base_ndims[0] > 0 and len(b.shape) - base_ndims[1] > 0 than '
+                        'a and b have to satisfy condition \n'
+                        'len(a.shape) - base_ndims[0] == len(b.shape) - base_ndims[1]',
+                        [a, b],
+                        'tensors a and b',
+                        'tensors which satisfy \n'
+                        'len(a.shape) - base_ndims[0] == len(b.shape) - base_ndims[1]')
             else:
                 res = tf.tensordot(a, b, [[-1], [-2]])
     return res
