@@ -413,7 +413,7 @@ class Lstm(Model):
 
     def _train_graph(self):
         inputs, labels = self._prepare_inputs_and_labels(
-            self._applicable_placeholders['inputs'], self._applicable_placeholders['labels'])
+            self._train_inputs_and_labels_placeholders['inputs'], self._train_inputs_and_labels_placeholders['labels'])
         inputs_by_device, labels_by_device = self._distribute_by_gpus(inputs, labels)
         trainable = self._applicable_trainable
         tower_grads = list()
@@ -459,16 +459,16 @@ class Lstm(Model):
                             preds.append(tf.split(concat_pred, self._num_unrollings))
 
                             losses.append(loss)
-                            # optimizer = tf.train.GradientDescentOptimizer(self._train_placeholders['learning_rate'])
-                            optimizer = tf.train.AdamOptimizer(learning_rate=self._train_placeholders['learning_rate'])
+                            # optimizer = tf.train.GradientDescentOptimizer(self._autonomous_train_specific_placeholders['learning_rate'])
+                            optimizer = tf.train.AdamOptimizer(learning_rate=self._autonomous_train_specific_placeholders['learning_rate'])
                             grads_and_vars = optimizer.compute_gradients(loss + l2_loss)
                             tower_grads.append(grads_and_vars)
 
                             # splitting concatenated results for different characters
             with tf.device(self._base_device):
                 with tf.name_scope(device_name_scope(self._base_device) + '_gradients'):
-                    # optimizer = tf.train.GradientDescentOptimizer(self._train_placeholders['learning_rate'])
-                    optimizer = tf.train.AdamOptimizer(learning_rate=self._train_placeholders['learning_rate'])
+                    # optimizer = tf.train.GradientDescentOptimizer(self._autonomous_train_specific_placeholders['learning_rate'])
+                    optimizer = tf.train.AdamOptimizer(learning_rate=self._autonomous_train_specific_placeholders['learning_rate'])
                     grads_and_vars = average_gradients(tower_grads)
                     grads, v = zip(*grads_and_vars)
                     grads, _ = tf.clip_by_global_norm(grads, 1.)
@@ -645,17 +645,18 @@ class Lstm(Model):
                     tf.int32, shape=[self._num_unrollings * self._batch_size, 1], name='labels')
         return placeholders
 
-    def _add_applicable_placeholders(self):
+    def _add_train_inputs_and_labels_placeholders(self):
         placeholders = self.make_inputs_and_labels_placeholders(self._base_device, 'applicable_placeholders')
         for k, v in placeholders.items():
-            self._applicable_placeholders[k] = v
+            self._train_inputs_and_labels_placeholders[k] = v
         self._hooks['inputs'] = placeholders['inputs']
         self._hooks['labels'] = placeholders['labels']
 
-    def _add_train_placeholders(self):
+    def _add_autonomous_train_specific_placeholders(self):
         with tf.device(self._base_device):
-            self._train_placeholders['learning_rate'] = tf.placeholder(tf.float32, name='learning_rate')
-            self._hooks['learning_rate'] = self._train_placeholders['learning_rate']
+            self._autonomous_train_specific_placeholders['learning_rate'] = tf.placeholder(
+                tf.float32, name='learning_rate')
+            self._hooks['learning_rate'] = self._autonomous_train_specific_placeholders['learning_rate']
 
     def _prepare_inputs_and_labels(self, inputs, labels):
         with tf.device(self._base_device):
@@ -759,17 +760,17 @@ class Lstm(Model):
         self._train_storage = dict()
         self._inference_storage = dict()
 
-        self._applicable_placeholders = dict()
-        self._train_placeholders = dict()
+        self._train_inputs_and_labels_placeholders = dict()     
+        self._autonomous_train_specific_placeholders = dict()
         self._inference_placeholders = dict()
 
         self._add_applicable_variables()
 
         if regime == 'autonomous_training':
             self._add_train_storage()
-            self._add_train_placeholders()
+            self._add_autonomous_train_specific_placeholders()
 
-        self._add_applicable_placeholders()
+        self._add_train_inputs_and_labels_placeholders()
 
         if regime == 'autonomous_training':
             self._train_graph()
