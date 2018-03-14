@@ -41,7 +41,7 @@ class Meta(object):
         return stacked
 
     @staticmethod
-    def _make_inputs_and_labels_placeholders(_pupil, num_unrollings, num_exercises, gpu_map):
+    def _make_inputs_and_labels_placeholders(pupil, num_unrollings, num_exercises, gpu_map):
         """If both num_unrollings and num_exercises are not None outputs are lists of lists where
         inner list is for unrollings and outer is for exercises. If only one of variables num_unrollings and
         num_exercises is not None outputs are lists of placeholders. And finally if both num_unrollings and
@@ -62,42 +62,42 @@ class Meta(object):
                 with tf.name_scope('pupil_grad_eval_placeholders'):
                     if num_unrollings is not None:
                         for i in range(num_unrollings):
-                            placeholders = _pupil.make_inputs_and_labels_placeholders(
+                            placeholders = pupil.make_inputs_and_labels_placeholders(
                                 '/gpu:%s' % gpu_map[ex_idx], 'unrolling_%s' % i)
                             pupil_grad_eval_inputs[ex_idx].append(placeholders['inputs'])
                             pupil_grad_eval_labels[ex_idx].append(placeholders['labels'])
                     else:
-                        placeholders = _pupil.make_inputs_and_labels_placeholders(
+                        placeholders = pupil.make_inputs_and_labels_placeholders(
                             '/gpu:%s' % gpu_map[ex_idx], None)
                         pupil_grad_eval_inputs.append(placeholders['inputs'])
                         pupil_grad_eval_labels.append(placeholders['labels'])
                 with tf.name_scope('optimizer_grad_placeholders'):
                     if num_unrollings is not None:
                         for i in range(num_unrollings):
-                            placeholders = _pupil.make_inputs_and_labels_placeholders(
+                            placeholders = pupil.make_inputs_and_labels_placeholders(
                                 '/gpu:%s' % gpu_map[ex_idx], 'unrolling_%s' % i)
                             optimizer_grad_inputs[ex_idx].append(placeholders['inputs'])
                             optimizer_grad_labels[ex_idx].append(placeholders['labels'])
                     else:
-                        placeholders = _pupil.make_inputs_and_labels_placeholders(
+                        placeholders = pupil.make_inputs_and_labels_placeholders(
                             '/gpu:%s' % gpu_map[ex_idx], None)
                         optimizer_grad_inputs.append(placeholders['inputs'])
                         optimizer_grad_inputs.append(placeholders['labels'])
         return pupil_grad_eval_inputs, pupil_grad_eval_labels, optimizer_grad_inputs, optimizer_grad_labels
 
     @staticmethod
-    def _create__pupil_variables_and_savers(_pupil, num_exercises, gpu_map):
+    def _create_pupil_variables_and_savers(pupil, num_exercises, gpu_map):
         trainable = list()
         pupil_grad_eval_pupil_storage = list()
         optimizer_grad_pupil_storage = list()
         savers = list()
         for ex_idx in range(num_exercises):
-            tr = _pupil.create_trainable_variables_dictionary(
+            tr = pupil.create_trainable_variables_dictionary(
                 gpu_map[ex_idx], 'trainable_vars_ex_%s' % ex_idx)
-            savers.append(_pupil.create_saver(tr))
+            savers.append(pupil.create_saver(tr))
             trainable.append(tr)
-            pupil_grad_eval_pupil_storage.append(_pupil.create_storage(
+            pupil_grad_eval_pupil_storage.append(pupil.create_storage(
                 gpu_map[ex_idx], 'pupil_grad_eval_states_ex_%s' % ex_idx))
             optimizer_grad_pupil_storage.append(
-                _pupil.create_storage(gpu_map[ex_idx], 'optimizer_grad_states_ex_%s' % ex_idx))
+                pupil.create_storage(gpu_map[ex_idx], 'optimizer_grad_states_ex_%s' % ex_idx))
         return trainable, pupil_grad_eval_pupil_storage, optimizer_grad_pupil_storage, savers
