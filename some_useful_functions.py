@@ -723,7 +723,7 @@ def write_equation(a_ndims, b_ndims, base_ndims):
     return a_str + ',' + b_str + '->' + out_str
 
 
-def custom_matmul(a, b, base_ndims=None, eq=None):
+def custom_matmul(a, b, base_ndims=None, eq=None, name='custom_matmul'):
     """Special matmul for several exercises simultaneous processing.
     Matrix multiplication is performed across 2 last dimensions of a and b. Either mapping or broadcasting is performed
     across all dimensions except for last 2. Specifically if (a_ndims > base_ndims[0] and b_ndims > base_ndims[1])
@@ -758,11 +758,11 @@ def custom_matmul(a, b, base_ndims=None, eq=None):
                         'tensors which satisfy \n'
                         'len(a.shape) - base_ndims[0] == len(b.shape) - base_ndims[1]')
             else:
-                res = tf.tensordot(a, b, [[-1], [-2]])
+                res = tf.tensordot(a, b, [[-1], [-2]], name=name)
     return res
 
 
-def custom_add(a, b, base_ndims=None):
+def custom_add(a, b, base_ndims=None, name='custom_add'):
     """Special addition for several exercises simultaneous processing.
     Across last base_ndims[0] of a and last base_ndims[1] of b usual addition (with broadcasting if needed) is
      performed.
@@ -795,13 +795,13 @@ def custom_add(a, b, base_ndims=None):
                 if b_is_broadcasted:
                     a_tr = tf.transpose(a, perm=forward_perm)
                     res_tr = a_tr + b
-                    res = tf.transpose(res_tr, perm=backward_perm)
+                    res = tf.transpose(res_tr, perm=backward_perm, name=name)
                 elif base_ndims[0] == base_ndims[1]:
-                    res = a + b
+                    res = tf.add(a, b, name=name)
                 else:
                     b_tr = tf.transpose(b, perm=forward_perm)
                     res_tr = b_tr + a
-                    res = tf.transpose(res_tr, perm=backward_perm)
+                    res = tf.transpose(res_tr, perm=backward_perm, name=name)
             else:
                 raise InvalidArgumentError(
                     'if len(a.shape) - base_ndims[0] > 0 and len(b.shape) - base_ndims[1] > 0 than '
@@ -812,7 +812,7 @@ def custom_add(a, b, base_ndims=None):
                     'tensors which satisfy \n'
                     'len(a.shape) - base_ndims[0] == len(b.shape) - base_ndims[1]')
         else:
-            res = a + b
+            res = tf.add(a, b, name=name)
         return res
 
 
