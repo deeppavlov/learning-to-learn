@@ -4,7 +4,7 @@ import tensorflow as tf
 from some_useful_functions import (create_vocabulary, get_positions_in_vocabulary, char2vec, pred2vec, pred2vec_fast,
                                    vec2char, vec2char_fast, char2id, id2char, flatten, get_available_gpus,
                                    device_name_scope, average_gradients, get_num_gpus_and_bs_on_gpus, custom_matmul,
-                                   custom_add)
+                                   custom_add, InvalidArgumentError)
 
 url = 'http://mattmahoney.net/dc/'
 
@@ -652,7 +652,7 @@ class Lstm(Model):
         self._hooks['inputs'] = placeholders['inputs']
         self._hooks['labels'] = placeholders['labels']
 
-    def _add_autonomous_train_specific_placeholders(self):
+    def _add_autonomous_training_specific_placeholders(self):
         with tf.device(self._base_device):
             self._autonomous_train_specific_placeholders['learning_rate'] = tf.placeholder(
                 tf.float32, name='learning_rate')
@@ -767,16 +767,40 @@ class Lstm(Model):
         self._add_trainable_variables()
 
         if regime == 'autonomous_training':
+            self._add_trainable_variables()
             self._add_train_storage()
-            self._add_autonomous_train_specific_placeholders()
-
-        self._add_train_inputs_and_labels_placeholders()
-
-        if regime == 'autonomous_training':
+            self._add_autonomous_training_specific_placeholders()
+            self._add_train_inputs_and_labels_placeholders()
+            
             self._train_graph()
             self._validation_graph()
-        if regime == 'inference':
+
+        elif regime == 'inference':
+            self._add_trainable_variables()
+
             self._validation_graph()
+
+        elif regime == 'training_with_meta_optimizer':
+            self._add_trainable_variables()
+            self._add_train_storage()
+            self._add_train_inputs_and_labels_placeholders()
+
+            self._validation_graph()
+
+        elif regime == 'optimizer_training':
+            self._add_trainable_variables()
+            self._add_train_storage()
+            self._add_train_inputs_and_labels_placeholders()
+
+            self._validation_graph()
+
+        else:
+            raise InvalidArgumentError(
+                'Not allowed regime',
+                regime,
+                'regime',
+                ['autonomous_training', 'inference', 'training_with_meta_optimizer', 'optimizer_training']
+            )
 
     def get_default_hooks(self):
         return dict(self._hooks.items())
