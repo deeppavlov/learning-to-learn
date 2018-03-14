@@ -89,7 +89,7 @@ class Meta(object):
     def _create__pupil_variables_and_savers(_pupil, num_exercises, gpu_map):
         trainable = list()
         pupil_grad_eval_storage = list()
-        optimizer_grad_storage = list()
+        optimizer_grad_pupil_storage = list()
         savers = list()
         for ex_idx in range(num_exercises):
             tr = _pupil.create_trainable_variables_dictionary(
@@ -98,6 +98,6 @@ class Meta(object):
             trainable.append(tr)
             pupil_grad_eval_storage.append(_pupil.create_storage(
                 gpu_map[ex_idx], 'pupil_grad_eval_states_ex_%s' % ex_idx))
-            optimizer_grad_storage.append(
+            optimizer_grad_pupil_storage.append(
                 _pupil.create_storage(gpu_map[ex_idx], 'optimizer_grad_states_ex_%s' % ex_idx))
-        return trainable, pupil_grad_eval_storage, optimizer_grad_storage, savers
+        return trainable, pupil_grad_eval_storage, optimizer_grad_pupil_storage, savers
