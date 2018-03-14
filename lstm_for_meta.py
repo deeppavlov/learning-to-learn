@@ -597,7 +597,7 @@ class Lstm(Model):
             saver = tf.train.Saver(saved_vars, max_to_keep=None)
         return saver
 
-    def _add_applicable_variables(self):
+    def _add_trainable_variables(self):
         trainable = self._applicable_trainable
         var_dict = self.create_trainable_variables_dictionary(self._base_device, 'applicable_trainable')
         for k, v in var_dict.items():
@@ -764,7 +764,7 @@ class Lstm(Model):
         self._autonomous_train_specific_placeholders = dict()
         self._inference_placeholders = dict()
 
-        self._add_applicable_variables()
+        self._add_trainable_variables()
 
         if regime == 'autonomous_training':
             self._add_train_storage()
