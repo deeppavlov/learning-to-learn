@@ -37,7 +37,7 @@ class ResNet4Lstm(Meta):
 
             tmp = self._make_inputs_and_labels_placeholders(
                 self._optimizee, self._num_optimizer_unrollings, self._num_exercises,
-                self._exercise_gpu_map, regime='train')
+                self._exercise_gpu_map)
             self._pupil_grad_eval_inputs, self._pupil_grad_eval_labels,\
                 self._optimizer_grad_inputs, self._optimizer_grad_labels = tmp
         else:
@@ -45,14 +45,9 @@ class ResNet4Lstm(Meta):
             self._pupil_grad_eval_inputs, self._pupil_grad_eval_labels, \
                 self._optimizer_grad_inputs, self._optimizer_grad_labels = None, None, None, None
 
-        self._opt_inference_inputs, self._opt_inference_labels = self._make_inputs_and_labels_placeholders(
-            self._optimizee, self._num_optimizer_unrollings, None, None, regime='inference')
-
         self._hooks['pupil_grad_eval_inputs'] = self._pupil_grad_eval_inputs
         self._hooks['pupil_grad_eval_labels'] = self._pupil_grad_eval_labels
         self._hooks['optimizer_grad_inputs'] = self._optimizer_grad_inputs
         self._hooks['optimizer_grad_labels'] = self._optimizer_grad_labels
-        self._hooks['opt_inference_inputs'] = self._opt_inference_inputs
-        self._hooks['opt_inference_labels'] = self._opt_inference_labels
         
         
