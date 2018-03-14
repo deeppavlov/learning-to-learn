@@ -544,7 +544,7 @@ class Lstm(Model):
                     self.sample_prediction = tf.nn.softmax(sample_logit)
                     self._hooks['validation_predictions'] = self.sample_prediction
 
-    def _create_trainable_variables_dictionary(self, device, name_scope):
+    def create_trainable_variables_dictionary(self, device, name_scope):
         variables_dictionary = dict()
         with tf.device(device):
             with tf.name_scope(name_scope):
@@ -599,12 +599,12 @@ class Lstm(Model):
 
     def _add_applicable_variables(self):
         trainable = self._applicable_trainable
-        var_dict = self._create_trainable_variables_dictionary(self._base_device, 'applicable_trainable')
+        var_dict = self.create_trainable_variables_dictionary(self._base_device, 'applicable_trainable')
         for k, v in var_dict.items():
             trainable[k] = v
         self._hooks['saver'] = self._create_saver(trainable)
 
-    def _create_storage(self, device, name_scope):
+    def create_storage(self, device, name_scope):
         storage_dictionary = dict()
         with tf.device(device):
             with tf.name_scope(name_scope):
@@ -625,7 +625,7 @@ class Lstm(Model):
         return storage_dictionary
 
     def _add_train_storage(self):
-        storage = self._create_storage(self._base_device, 'train_storage')
+        storage = self.create_storage(self._base_device, 'train_storage')
         for k, v in storage.items():
             self._train_storage[k] = v
 
