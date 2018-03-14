@@ -685,41 +685,6 @@ class Lstm(Model):
                                name='labels_on_dev_%s' % dev_idx))
             return inputs_by_device, labels_by_device
 
-    def _init_exercise_dicts(self):
-        trainable = self._exercise_trainable
-        storage = self._exercise_storage
-        trainable['embedding_matrix'] = list()
-        trainable['lstm_matrices'] = [list() for _ in range(self._num_layers)]
-        trainable['lstm_biases'] = [list() for _ in range(self._num_layers)]
-        trainable['output_matrices'] = [list() for _ in range(self._num_output_layers)]
-        trainable['output_biases'] = [list() for _ in range(self._num_output_layers)]
-        storage['states'] = list()
-
-    def _add_exercise_variables(self):
-        trainable = self._exercise_trainable
-        var_dict = self._create_trainable_variables_dictionary(None, 'vars')
-        for k, v in var_dict.items():
-            if isinstance(v, list()):
-                for l_idx, var in enumerate(v):
-                    trainable[k][l_idx].append(var)
-        self._hooks['exercise_savers'].append(self._create_saver(var_dict))
-
-    def _add_exercise_storage(self):
-        storage = self._exercise_storage
-        stor = self._create_storage(None, 'storage')
-        for k, v in stor.items():
-            storage[k].append(v)
-
-    def _add_exercise(self):
-        with tf.name_scope('ex%s' % self._number_of_exercises):
-            self._add_exercise_variables()
-            self._add_exercise_storage()
-        self._number_of_exercises += 1
-
-    def create_optimizer_training_base(self, num_exs):
-        for _ in range(num_exs):
-            self._add_exercise()
-
     def __init__(self,
                  batch_size=64,
                  num_layers=2,
@@ -756,10 +721,7 @@ class Lstm(Model):
             reset_validation_state=None,
             randomize_sample_state=None,
             dropout=None,
-            saver=None,
-            exercise_savers=list(),
-            exercise_inputs=list(),
-            exercise_labels=list())
+            saver=None)
 
         self._batch_size = batch_size
         self._num_layers = num_layers
@@ -792,14 +754,10 @@ class Lstm(Model):
         self._dropout_keep_prob = tf.placeholder(tf.float32, name='dropout_keep_prob')
         self._hooks['dropout'] = self._dropout_keep_prob
 
-        self._number_of_exercises = 0
-
         self._applicable_trainable = dict()
-        self._exercise_trainable = dict()
 
         self._train_storage = dict()
         self._inference_storage = dict()
-        self._exercise_storage = dict()
 
         self._applicable_placeholders = dict()
         self._train_placeholders = dict()
