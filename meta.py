@@ -101,4 +101,19 @@ class Meta(object):
                     grad_eval_inputs = placeholders['inputs']
                     grad_eval_labels = placeholders['labels']
             return grad_eval_inputs, grad_eval_labels
-    
+
+    @staticmethod
+    def _create_optimizee_variables_and_savers(optimizee, num_exercises, gpu_map):
+        trainable = list()
+        grad_eval_storage = list()
+        optimizer_learn_storage = list()
+        savers = list()
+        for ex_idx in range(num_exercises):
+            tr = optimizee.create_trainable_variables_dictionary(
+                gpu_map[ex_idx], 'trainable_vars_ex_%s' % ex_idx)
+            savers.append(optimizee.create_saver(tr))
+            trainable.append(tr)
+            grad_eval_storage.append(optimizee.create_storage(gpu_map[ex_idx], 'grad_eval_states_ex_%s' % ex_idx))
+            optimizer_learn_storage.append(
+                optimizee.create_storage(gpu_map[ex_idx], 'optimizer_learn_states_ex_%s' % ex_idx))
+        return trainable, grad_eval_storage, optimizer_learn_storage, savers
