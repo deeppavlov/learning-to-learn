@@ -760,6 +760,60 @@ def custom_matmul(a, b, base_ndims=None, eq=None):
     return res
 
 
+def custom_add(a, b, base_ndims=None):
+    """Special addition for several exercises simultaneous processing.
+    Across last base_ndims[0] of a and last base_ndims[1] of b usual addition (with broadcasting if needed) is
+     performed.
+    If a_ndims > base_ndims[0] and b_ndims > base_ndims[1] and a_ndims - base_ndims[0] == b_ndims - base_ndims[1]
+    first a_ndims - base_ndims[0] are mapped meaning that addition is performed between corresponding dims. If one of
+    tensors args[i] satisfies condition len(args[i].shape) == base_ndims[i] whereas the other does not satisfies it
+    broadcasting to len(args[i].shape) - base_ndims[i] of args[i] is performed."""
+    with tf.name_scope('custom_add'):
+        if base_ndims is None:
+            base_ndims = [2, 1]
+        a_shape = a.get_shape().as_list()
+        b_shape = b.get_shape().as_list()
+        a_ndims = len(a_shape)
+        b_ndims = len(b_shape)
+        b_is_broadcasted = base_ndims[0] > base_ndims[1]
+        max_ndims = max(a_ndims, b_ndims)
+        biggest_base = max(base_ndims[0], base_ndims[1])
+        smallest_base = min(base_ndims[0], base_ndims[1])
+        diff = biggest_base - smallest_base
+        if a_ndims > base_ndims[0] and b_ndims > base_ndims[1]:
+            if a_ndims - base_ndims[0] == b_ndims - base_ndims[1]:
+                mapped_ndims = a_ndims - base_ndims[0]
+                longest_indices = [i for i in range(max_ndims)]
+                forward_perm = longest_indices[mapped_ndims:max_ndims-smallest_base] + \
+                               longest_indices[:mapped_ndims] + longest_indices[max_ndims-smallest_base:]
+                backward_perm = longest_indices[diff:diff+mapped_ndims] + longest_indices[:diff] \
+                                + longest_indices[max_ndims-smallest_base:]
+                print(forward_perm)
+                print(backward_perm)
+                if b_is_broadcasted:
+                    a_tr = tf.transpose(a, perm=forward_perm)
+                    res_tr = a_tr + b
+                    res = tf.transpose(res_tr, perm=backward_perm)
+                elif base_ndims[0] == base_ndims[1]:
+                    res = a + b
+                else:
+                    b_tr = tf.transpose(b, perm=forward_perm)
+                    res_tr = b_tr + a
+                    res = tf.transpose(res_tr, perm=backward_perm)
+            else:
+                raise InvalidArgumentError(
+                    'if len(a.shape) - base_ndims[0] > 0 and len(b.shape) - base_ndims[1] > 0 than '
+                    'a and b have to satisfy condition \n'
+                    'len(a.shape) - base_ndims[0] == len(b.shape) - base_ndims[1]',
+                    [a, b],
+                    'tensors a and b',
+                    'tensors which satisfy \n'
+                    'len(a.shape) - base_ndims[0] == len(b.shape) - base_ndims[1]')
+        else:
+            res = a + b
+        return res
+
+
 def load_vocabulary(vocabulary_path):
     with open(vocabulary_path, 'r') as f:
         lines = f.read().split('\n')
