@@ -9,7 +9,7 @@ class Meta(object):
         """stack variables from different checkpoints or permutations.
          Stacking is performed along dimension which is last to tensor inner dimensions
          Args:
-             variables - dictionary with optimizee variables.
+             variables - dictionary with _pupil variables.
              Each dictionary value is either a list of lists of variables or a list of variables.
              In the first case inner list is a list of variables across different checkpoints
              and outer listing is made across varibles of similar function, e. g. weights from different layers.
@@ -41,7 +41,7 @@ class Meta(object):
         return stacked
 
     @staticmethod
-    def _make_inputs_and_labels_placeholders(optimizee, num_unrollings, num_exercises, gpu_map):
+    def _make_inputs_and_labels_placeholders(_pupil, num_unrollings, num_exercises, gpu_map):
         """If both num_unrollings and num_exercises are not None outputs are lists of lists where
         inner list is for unrollings and outer is for exercises. If only one of variables num_unrollings and
         num_exercises is not None outputs are lists of placeholders. And finally if both num_unrollings and
@@ -62,41 +62,42 @@ class Meta(object):
                 with tf.name_scope('pupil_grad_eval_placeholders'):
                     if num_unrollings is not None:
                         for i in range(num_unrollings):
-                            placeholders = optimizee.make_inputs_and_labels_placeholders(
+                            placeholders = _pupil.make_inputs_and_labels_placeholders(
                                 '/gpu:%s' % gpu_map[ex_idx], 'unrolling_%s' % i)
                             pupil_grad_eval_inputs[ex_idx].append(placeholders['inputs'])
                             pupil_grad_eval_labels[ex_idx].append(placeholders['labels'])
                     else:
-                        placeholders = optimizee.make_inputs_and_labels_placeholders(
+                        placeholders = _pupil.make_inputs_and_labels_placeholders(
                             '/gpu:%s' % gpu_map[ex_idx], None)
                         pupil_grad_eval_inputs.append(placeholders['inputs'])
                         pupil_grad_eval_labels.append(placeholders['labels'])
                 with tf.name_scope('optimizer_grad_placeholders'):
                     if num_unrollings is not None:
                         for i in range(num_unrollings):
-                            placeholders = optimizee.make_inputs_and_labels_placeholders(
+                            placeholders = _pupil.make_inputs_and_labels_placeholders(
                                 '/gpu:%s' % gpu_map[ex_idx], 'unrolling_%s' % i)
                             optimizer_grad_inputs[ex_idx].append(placeholders['inputs'])
                             optimizer_grad_labels[ex_idx].append(placeholders['labels'])
                     else:
-                        placeholders = optimizee.make_inputs_and_labels_placeholders(
+                        placeholders = _pupil.make_inputs_and_labels_placeholders(
                             '/gpu:%s' % gpu_map[ex_idx], None)
                         optimizer_grad_inputs.append(placeholders['inputs'])
                         optimizer_grad_inputs.append(placeholders['labels'])
         return pupil_grad_eval_inputs, pupil_grad_eval_labels, optimizer_grad_inputs, optimizer_grad_labels
 
     @staticmethod
-    def _create_optimizee_variables_and_savers(optimizee, num_exercises, gpu_map):
+    def _create__pupil_variables_and_savers(_pupil, num_exercises, gpu_map):
         trainable = list()
         pupil_grad_eval_storage = list()
         optimizer_grad_storage = list()
         savers = list()
         for ex_idx in range(num_exercises):
-            tr = optimizee.create_trainable_variables_dictionary(
+            tr = _pupil.create_trainable_variables_dictionary(
                 gpu_map[ex_idx], 'trainable_vars_ex_%s' % ex_idx)
-            savers.append(optimizee.create_saver(tr))
+            savers.append(_pupil.create_saver(tr))
             trainable.append(tr)
-            pupil_grad_eval_storage.append(optimizee.create_storage(gpu_map[ex_idx], 'pupil_grad_eval_states_ex_%s' % ex_idx))
+            pupil_grad_eval_storage.append(_pupil.create_storage(
+                gpu_map[ex_idx], 'pupil_grad_eval_states_ex_%s' % ex_idx))
             optimizer_grad_storage.append(
-                optimizee.create_storage(gpu_map[ex_idx], 'optimizer_grad_states_ex_%s' % ex_idx))
+                _pupil.create_storage(gpu_map[ex_idx], 'optimizer_grad_states_ex_%s' % ex_idx))
         return trainable, pupil_grad_eval_storage, optimizer_grad_storage, savers
