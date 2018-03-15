@@ -1,5 +1,5 @@
 import tensorflow as tf
-from some_useful_functions import construct
+from some_useful_functions import construct, get_keys_from_nested, get_obj_elem_by_path, write_elem_in_obj_by_path
 
 
 class Meta(object):
@@ -61,6 +61,7 @@ class Meta(object):
     @staticmethod
     def _stack_storage(storage):
         stacked = construct(storage[0])
+        paths = get_keys_from_nested(stacked)
 
 
     @classmethod

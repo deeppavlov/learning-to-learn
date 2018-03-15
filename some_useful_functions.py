@@ -230,6 +230,18 @@ def get_keys_from_nested(obj, ready=None, collected=None):
         return ready
 
 
+def get_obj_elem_by_path(obj, path):
+    for k in path:
+        obj = obj[k]
+    return obj
+
+
+def write_elem_in_obj_by_path(obj, path, elem):
+    for k in path[:-1]:
+        obj = obj[k]
+    obj[path[-1]] = elem
+
+
 def maybe_download(filename, expected_bytes):
     # Download a file if not present, and make sure it's the right size.
     if not os.path.exists(filename):
