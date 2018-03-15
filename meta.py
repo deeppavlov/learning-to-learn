@@ -26,30 +26,28 @@ class Meta(object):
 
     @staticmethod
     def _gpu_idx_borders(gpu_map):
-        borders = dict()
+        borders = list()
         start = 0
-        current_gpu_idx = gpu_map[0]
         for idx, gpu_idx in enumerate(gpu_map):
             if gpu_map[start] != gpu_idx:
-                borders[current_gpu_idx] = [start, idx]
+                borders.append([start, idx])
                 start = idx
-                current_gpu_idx = gpu_idx
-        borders[current_gpu_idx] = [start, len(gpu_map)]
+        borders.append([start, len(gpu_map)])
         return borders
 
     @staticmethod
     def _stack_placeholders(gpu_borders, placeholders):
         if isinstance(placeholders[0], list):
-            stacked_by_gpus = dict([(k, list()) for k, _ in gpu_borders.items()])
-            for gpu_idx, borders in gpu_borders.items():
+            stacked_by_gpus = [list() for _ in range(len(gpu_borders))]
+            for gpu_idx, borders in enumerate(gpu_borders):
                 with tf.device('/gpu:%s' % gpu_idx):
                     ex_placeholders = placeholders[borders[0]:borders[1]]
                     for unr_pl in zip(*ex_placeholders):
                         stacked_by_gpus[gpu_idx].append(tf.stack(unr_pl))
         else:
-            stacked_by_gpus = dict()
-            for gpu_idx, borders in gpu_borders.items():
-                stacked_by_gpus[gpu_idx] = tf.stack(placeholders[borders[0]:borders[1]])
+            stacked_by_gpus = list()
+            for borders in gpu_borders:
+                stacked_by_gpus.append(tf.stack(placeholders[borders[0]:borders[1]]))
         return stacked_by_gpus
 
     @classmethod
@@ -65,7 +63,6 @@ class Meta(object):
             optimizer_grad_pupil_storage
     ):
         gpu_borders = cls._gpu_idx_borders(gpu_map)
-
 
     @staticmethod
     def _stack_duplicate_o_s(optimizer_ins):
