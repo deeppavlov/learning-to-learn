@@ -25,7 +25,21 @@ class Meta(object):
         return stacked
 
     @staticmethod
-    def _stack_placeholders(gpu_map, placeholders, net_is_unrolled):
+    def _gpu_idx_borders(gpu_map):
+        borders = dict()
+        start = 0
+        current_gpu_idx = gpu_map[0]
+        for idx, gpu_idx in enumerate(gpu_map):
+            if gpu_map[start] != gpu_idx:
+                borders[current_gpu_idx] = [start, idx]
+                start = idx
+                current_gpu_idx = gpu_idx
+        borders[current_gpu_idx] = [start, len(gpu_map)]
+        return borders
+
+    @staticmethod
+    def _stack_placeholders(gpu_map, placeholders):
+        net_is_unrolled = isinstance(placeholders[0], list)
         pass
 
     @staticmethod
@@ -37,8 +51,7 @@ class Meta(object):
             optimizer_grad_labels,
             pupil_trainable_variables,
             pupil_grad_eval_pupil_storage,
-            optimizer_grad_pupil_storage,
-            net_is_unrolled
+            optimizer_grad_pupil_storage
     ):
         pass
 

@@ -4,6 +4,9 @@ from meta import Meta
 
 class ResNet4Lstm(Meta):
 
+    def _train_graph(self):
+        pass
+
     def __init__(self,
                  pupil,
                  num_exercises=10,
