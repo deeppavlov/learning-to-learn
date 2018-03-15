@@ -38,12 +38,14 @@ class Meta(object):
         return borders
 
     @staticmethod
-    def _stack_placeholders(gpu_map, placeholders):
+    def _stack_placeholders(gpu_borders, placeholders):
         net_is_unrolled = isinstance(placeholders[0], list)
-        pass
+        for gpu_idx, borders in gpu_borders.items():
+            pass
 
-    @staticmethod
+    @classmethod
     def _stack_exercises(
+            cls,
             gpu_map,
             pupil_grad_eval_inputs,
             pupil_grad_eval_labels,
@@ -53,7 +55,8 @@ class Meta(object):
             pupil_grad_eval_pupil_storage,
             optimizer_grad_pupil_storage
     ):
-        pass
+        gpu_borders = cls._gpu_idx_borders(gpu_map)
+
 
     @staticmethod
     def _stack_duplicate_o_s(optimizer_ins):
