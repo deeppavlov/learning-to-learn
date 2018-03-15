@@ -381,21 +381,47 @@ class Lstm(Model):
             optimizer_ins['output_layer_%s' % layer_idx]['bias'] = trainable_variables['output_biases'][layer_idx]
         return optimizer_ins
 
-    def loss_and_opt_ins(self, inputs, labels, trainable_variables, state_variables):
-        """optimizer_ins is a dictionary which keys are layer names and values are dictionaries with their parameters
+    def _extract_trainable_from_opt_ins(self, opt_ins):
+        trainable = dict(
+            embedding_matrix=opt_ins['embedding_layer']['matrix'],
+            lstm_matrices=[opt_ins['lstm_layer_%s' % layer_idx]['matrix'] for layer_idx in range(self._num_layers)],
+            lstm_biases=[opt_ins['lstm_layer_%s' % layer_idx]['bias'] for layer_idx in range(self._num_layers)],
+            output_matrices=[opt_ins['output_layer_%s' % layer_idx]['matrix']
+                             for layer_idx in range(self._num_output_layers)],
+            output_biases=[opt_ins['output_layer_%s' % layer_idx]['bias']
+                             for layer_idx in range(self._num_output_layers)]
+        )
+        return trainable
+
+    def loss_and_opt_ins(self, inputs, labels, storage, opt_ins=None, trainable_variables=None):
+        """Args:
+            either trainable_variables or opt_ins have to be provided
+        optimizer_ins is a dictionary which keys are layer names and values are dictionaries with their parameters
          ('matrix' and optionally 'bias') (meaning tf.Variable instances holding their saved values) and 'o' ansd 's'
         vectors. 'o' - vector is an output of previous layer (input for linear projection) and 's' is the result of
         linear projection performed using layer weights. 'o', 's', 'matrix', 'bias' - can be stacked if several
         exercises are processed"""
         optimizer_ins = dict()
         with tf.name_scope('loss'):
-            saved_states = state_variables['saved_states']
-            embedding_matrix = trainable_variables['embedding_matrix']
-            lstm_matrices = trainable_variables['lstm_matrices']
-            lstm_biases = trainable_variables['lstm_biases']
-            output_matrices = trainable_variables['output_matrices']
-            output_biases = trainable_variables['output_biases']
+            saved_states = storage['saved_states']
+            if opt_ins is not None:
+                trainable = self._extract_trainable_from_opt_ins(opt_ins)
+            elif opt_ins is not None:
+                trainable = trainable_variables
+            else:
+                raise InvalidArgumentError(
+                    'At least one of arguments opt_ins and trainable_variables have to be provided',
+                    (None, None),
+                    ('opt_ins', 'trainable_variables'),
+                    'opt_ins in optimizer_ins format and trainable_variables structure is explained in loss_and_opt_ins'
+                    'implementation'
+                )
 
+            embedding_matrix = trainable['embedding_matrix']
+            lstm_matrices = trainable['lstm_matrices']
+            lstm_biases = trainable['lstm_biases']
+            output_matrices = trainable['output_matrices']
+            output_biases = trainable['output_biases']
             embeddings, opt_ins = self._embed(inputs, embedding_matrix)
             optimizer_ins.update(opt_ins)
             rnn_outputs, new_states, opt_ins = self._rnn_module(
@@ -459,16 +485,21 @@ class Lstm(Model):
                             preds.append(tf.split(concat_pred, self._num_unrollings))
 
                             losses.append(loss)
-                            # optimizer = tf.train.GradientDescentOptimizer(self._autonomous_train_specific_placeholders['learning_rate'])
-                            optimizer = tf.train.AdamOptimizer(learning_rate=self._autonomous_train_specific_placeholders['learning_rate'])
+                            # optimizer = tf.train.GradientDescentOptimizer(
+                            #     self._autonomous_train_specific_placeholders['learning_rate'])
+                            optimizer = tf.train.AdamOptimizer(
+                                learning_rate=self._autonomous_train_specific_placeholders['learning_rate'])
                             grads_and_vars = optimizer.compute_gradients(loss + l2_loss)
                             tower_grads.append(grads_and_vars)
 
                             # splitting concatenated results for different characters
             with tf.device(self._base_device):
                 with tf.name_scope(device_name_scope(self._base_device) + '_gradients'):
-                    # optimizer = tf.train.GradientDescentOptimizer(self._autonomous_train_specific_placeholders['learning_rate'])
-                    optimizer = tf.train.AdamOptimizer(learning_rate=self._autonomous_train_specific_placeholders['learning_rate'])
+                    # optimizer = tf.train.GradientDescentOptimizer(
+                    #     self._autonomous_train_specific_placeholders['learning_rate'])
+                    optimizer = tf.train.AdamOptimizer(
+                        learning_rate=self._autonomous_train_specific_placeholders['learning_rate'])
+                    print('(Lstm._train_graph)tower_grads:', tower_grads)
                     grads_and_vars = average_gradients(tower_grads)
                     grads, v = zip(*grads_and_vars)
                     grads, _ = tf.clip_by_global_norm(grads, 1.)
