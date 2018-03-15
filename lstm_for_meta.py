@@ -381,7 +381,7 @@ class Lstm(Model):
             optimizer_ins['output_layer_%s' % layer_idx]['bias'] = trainable_variables['output_biases'][layer_idx]
         return optimizer_ins
 
-    def loss_and_opt_ins(self, inputs, labels, trainable_variables, state_variables, other_params):
+    def loss_and_opt_ins(self, inputs, labels, trainable_variables, state_variables):
         """optimizer_ins is a dictionary which keys are layer names and values are dictionaries with their parameters
          ('matrix' and optionally 'bias') (meaning tf.Variable instances holding their saved values) and 'o' ansd 's'
         vectors. 'o' - vector is an output of previous layer (input for linear projection) and 's' is the result of
