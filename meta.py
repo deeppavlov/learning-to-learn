@@ -59,7 +59,7 @@ class Meta(object):
         return stacked
 
     @staticmethod
-    def _stack_storage(storages):
+    def _stack_storages(storages):
         stacked = construct(storages[0])
         paths = get_keys_from_nested(stacked)
         for path in paths:
