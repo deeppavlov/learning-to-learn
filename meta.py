@@ -50,6 +50,10 @@ class Meta(object):
                 stacked_by_gpus.append(tf.stack(placeholders[borders[0]:borders[1]]))
         return stacked_by_gpus
 
+    @staticmethod
+    def _stack_trainable_variables():
+        pass
+
     @classmethod
     def _stack_exercises(
             cls,
@@ -63,6 +67,10 @@ class Meta(object):
             optimizer_grad_pupil_storage
     ):
         gpu_borders = cls._gpu_idx_borders(gpu_map)
+        pupil_grad_eval_inputs = cls._stack_placeholders(gpu_borders, pupil_grad_eval_inputs)
+        pupil_grad_eval_labels = cls._stack_placeholders(gpu_borders, pupil_grad_eval_labels)
+        optimizer_grad_inputs = cls._stack_placeholders(gpu_borders, optimizer_grad_inputs)
+        optimizer_grad_labels = cls._stack_placeholders(gpu_borders, optimizer_grad_labels)
 
     @staticmethod
     def _stack_duplicate_o_s(optimizer_ins):
@@ -131,7 +139,7 @@ class Meta(object):
         optimizer_grad_pupil_storage = list()
         savers = list()
         for ex_idx in range(num_exercises):
-            tr = pupil.create_trainable_variables_dictionary(
+            tr = pupil.create_trainable_variables_dictionary_for_optimizer(
                 gpu_map[ex_idx], 'trainable_vars_ex_%s' % ex_idx)
             savers.append(pupil.create_saver(tr))
             trainable.append(tr)

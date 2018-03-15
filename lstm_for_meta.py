@@ -575,7 +575,24 @@ class Lstm(Model):
                     self.sample_prediction = tf.nn.softmax(sample_logit)
                     self._hooks['validation_predictions'] = self.sample_prediction
 
-    def create_trainable_variables_dictionary(self, device, name_scope):
+    def _pack_trainable_to_optimizer_format(self, trainable):
+        opt_ins = dict()
+        opt_ins['embedding_layer'] = dict(
+            matrix=trainable['embedding_matrix']
+        )
+        for i in range(self._num_layers):
+            opt_ins['lstm_layer_%s' % i] = dict(
+                matrix=trainable['lstm_matrix_%s' % i],
+                bias=trainable['lstm_bias_%s' % i]
+            )
+        for i in range(self._num_output_layers):
+            opt_ins['output_layer_%s' % i] = dict(
+                matrix=trainable['output_matrix_%s' % i],
+                bias=trainable['output_bias_%s' % i]
+            )
+        return opt_ins
+
+    def _create_trainable_variables_dictionary(self, device, name_scope):
         variables_dictionary = dict()
         with tf.device(device):
             with tf.name_scope(name_scope):
@@ -613,6 +630,10 @@ class Lstm(Model):
                 variables_dictionary['output_biases'] = output_biases
         return variables_dictionary
 
+    def create_trainable_variables_dictionary_for_optimizer(self, device, name_scope):
+        variables_dictionary = self._create_trainable_variables_dictionary(device, name_scope)
+        return self._pack_trainable_to_optimizer_format(variables_dictionary)
+
     @staticmethod
     def create_saver(var_dict):
         with tf.device('/cpu:0'):
@@ -630,7 +651,7 @@ class Lstm(Model):
 
     def _add_trainable_variables(self):
         trainable = self._applicable_trainable
-        var_dict = self.create_trainable_variables_dictionary(self._base_device, 'applicable_trainable')
+        var_dict = self._create_trainable_variables_dictionary(self._base_device, 'applicable_trainable')
         for k, v in var_dict.items():
             trainable[k] = v
         self._hooks['saver'] = self.create_saver(trainable)
