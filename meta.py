@@ -58,6 +58,11 @@ class Meta(object):
                 stacked[ok][ik] = tf.stack([tr[ok][ik] for tr in trainable])
         return stacked
 
+    @staticmethod
+    def _stack_storage(storage):
+        stacked = construct(storage[0])
+
+
     @classmethod
     def _stack_exercises(
             cls,

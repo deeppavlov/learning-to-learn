@@ -196,6 +196,40 @@ def construct(obj):
     return new_obj
 
 
+def get_keys_from_nested(obj, ready=None, collected=None):
+    if ready is None:
+        ready = list()
+    if collected is None:
+        collected = list()
+        top = True
+    else:
+        top = False
+    if isinstance(obj, (list, tuple)):
+        num_elem = len(obj)
+        for idx, inner_obj in enumerate(obj):
+            if idx < num_elem - 1:
+                new = list(collected)
+                new.append(idx)
+                get_keys_from_nested(inner_obj, ready=ready, collected=new)
+            else:
+                collected.append(idx)
+                get_keys_from_nested(inner_obj, ready=ready, collected=collected)
+    elif isinstance(obj, dict):
+        num_elem = len(obj)
+        for idx, (k, inner_obj) in enumerate(obj.items()):
+            if idx < num_elem - 1:
+                new = list(collected)
+                new.append(k)
+                get_keys_from_nested(inner_obj, ready=ready, collected=new)
+            else:
+                collected.append(k)
+                get_keys_from_nested(inner_obj, ready=ready, collected=collected)
+    else:
+        ready.append(collected)
+    if top:
+        return ready
+
+
 def maybe_download(filename, expected_bytes):
     # Download a file if not present, and make sure it's the right size.
     if not os.path.exists(filename):
