@@ -39,9 +39,18 @@ class Meta(object):
 
     @staticmethod
     def _stack_placeholders(gpu_borders, placeholders):
-        net_is_unrolled = isinstance(placeholders[0], list)
-        for gpu_idx, borders in gpu_borders.items():
-            pass
+        if isinstance(placeholders[0], list):
+            stacked_by_gpus = dict([(k, list()) for k, _ in gpu_borders.items()])
+            for gpu_idx, borders in gpu_borders.items():
+                with tf.device('/gpu:%s' % gpu_idx):
+                    ex_placeholders = placeholders[borders[0]:borders[1]]
+                    for unr_pl in zip(*ex_placeholders):
+                        stacked_by_gpus[gpu_idx].append(tf.stack(unr_pl))
+        else:
+            stacked_by_gpus = dict()
+            for gpu_idx, borders in gpu_borders.items():
+                stacked_by_gpus[gpu_idx] = tf.stack(placeholders[borders[0]:borders[1]])
+        return stacked_by_gpus
 
     @classmethod
     def _stack_exercises(
