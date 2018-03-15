@@ -59,10 +59,16 @@ class Meta(object):
         return stacked
 
     @staticmethod
-    def _stack_storage(storage):
-        stacked = construct(storage[0])
+    def _stack_storage(storages):
+        stacked = construct(storages[0])
         paths = get_keys_from_nested(stacked)
-
+        for path in paths:
+            write_elem_in_obj_by_path(
+                stacked, path,
+                tf.stack(
+                    [get_obj_elem_by_path(stor, path) for stor in storages])
+            )
+        return stacked
 
     @classmethod
     def _stack_exercises(
