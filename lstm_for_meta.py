@@ -499,7 +499,7 @@ class Lstm(Model):
                     #     self._autonomous_train_specific_placeholders['learning_rate'])
                     optimizer = tf.train.AdamOptimizer(
                         learning_rate=self._autonomous_train_specific_placeholders['learning_rate'])
-                    print('(Lstm._train_graph)tower_grads:', tower_grads)
+                    # print('(Lstm._train_graph)tower_grads:', tower_grads)
                     grads_and_vars = average_gradients(tower_grads)
                     grads, v = zip(*grads_and_vars)
                     grads, _ = tf.clip_by_global_norm(grads, 1.)
@@ -794,8 +794,6 @@ class Lstm(Model):
         self._train_inputs_and_labels_placeholders = dict()     
         self._autonomous_train_specific_placeholders = dict()
         self._inference_placeholders = dict()
-
-        self._add_trainable_variables()
 
         if regime == 'autonomous_training':
             self._add_trainable_variables()
