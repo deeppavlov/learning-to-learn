@@ -25,6 +25,24 @@ class Meta(object):
         return stacked
 
     @staticmethod
+    def _stack_placeholders(gpu_map, placeholders, net_is_unrolled):
+        pass
+
+    @staticmethod
+    def _stack_exercises(
+            gpu_map,
+            pupil_grad_eval_inputs,
+            pupil_grad_eval_labels,
+            optimizer_grad_inputs,
+            optimizer_grad_labels,
+            pupil_trainable_variables,
+            pupil_grad_eval_pupil_storage,
+            optimizer_grad_pupil_storage,
+            net_is_unrolled
+    ):
+        pass
+
+    @staticmethod
     def _stack_duplicate_o_s(optimizer_ins):
         """Stacking if one matrix is used several times"""
         stacked = dict()
@@ -42,10 +60,9 @@ class Meta(object):
 
     @staticmethod
     def _make_inputs_and_labels_placeholders(pupil, num_unrollings, num_exercises, gpu_map):
-        """If both num_unrollings and num_exercises are not None outputs are lists of lists where
-        inner list is for unrollings and outer is for exercises. If only one of variables num_unrollings and
-        num_exercises is not None outputs are lists of placeholders. And finally if both num_unrollings and
-        num_exercises are None  outputs are placeholders."""
+        """If both num_unrollings is not None outputs are lists of lists where
+        inner list is for unrollings and outer is for exercises. If num_unrollings is None outputs are lists of
+        placeholders."""
         pupil_grad_eval_inputs = list()
         pupil_grad_eval_labels = list()
 
