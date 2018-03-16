@@ -88,7 +88,10 @@ class Meta(object):
         optimizer_grad_inputs = cls._stack_placeholders(gpu_borders, optimizer_grad_inputs)
         optimizer_grad_labels = cls._stack_placeholders(gpu_borders, optimizer_grad_labels)
         pupil_trainable_variables = cls._stack_trainable_variables(pupil_trainable_variables)
-
+        pupil_grad_eval_pupil_storage = cls._stack_storages(pupil_grad_eval_pupil_storage)
+        optimizer_grad_pupil_storage = cls._stack_storages(optimizer_grad_pupil_storage)
+        return pupil_grad_eval_inputs, pupil_grad_eval_labels, optimizer_grad_inputs, optimizer_grad_labels, \
+               pupil_trainable_variables, pupil_grad_eval_pupil_storage, optimizer_grad_pupil_storage
 
     @staticmethod
     def _stack_duplicate_o_s(optimizer_ins):
