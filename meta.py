@@ -183,3 +183,20 @@ class Meta(object):
         self._hooks['optimizer_grad_inputs'] = self._optimizer_grad_inputs
         self._hooks['optimizer_grad_labels'] = self._optimizer_grad_labels
         self._hooks['pupil_savers'] = self._pupil_savers
+
+    def _train_graph(self):
+        pupil_grad_eval_inputs, pupil_grad_eval_labels, optimizer_grad_inputs, optimizer_grad_labels, \
+            pupil_trainable_variables, pupil_grad_eval_pupil_storage, optimizer_grad_pupil_storage = \
+                self._stack_exercises(
+                    self._exercise_gpu_map,
+                    self._pupil_grad_eval_inputs,
+                    self._pupil_grad_eval_labels,
+                    self._optimizer_grad_inputs,
+                    self._optimizer_grad_labels,
+                    self._pupil_trainable_variables,
+                    self._pupil_grad_eval_pupil_storage,
+                    self._optimizer_grad_pupil_storage
+                )
+        for gpu_idx in range(self._num_gpus):
+            with tf.device('/gpu:%s' % gpu_idx):
+                pass
