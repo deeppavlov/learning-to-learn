@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 import datetime as dt
 # import os
-from some_useful_functions import create_path, add_index_to_filename_if_needed, construct, nested2string, \
+from useful_functions import create_path, add_index_to_filename_if_needed, construct, nested2string, \
     WrongMethodCallError
 
 class Handler(object):

@@ -2,7 +2,7 @@ import re
 from environment import Environment
 # from gru_par import Gru, BatchGenerator
 from lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
-from some_useful_functions import create_vocabulary, get_positions_in_vocabulary
+from useful_functions import create_vocabulary, get_positions_in_vocabulary
 
 f = open('datasets/scipop_v3.0/scipop_train.txt', 'r', encoding='utf-8')
 train_text = re.sub('<[^>]*>', '', f.read( ))

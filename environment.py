@@ -10,10 +10,10 @@ from collections import OrderedDict
 
 import tensorflow as tf
 from tensorflow.python import debug as tf_debug
-from some_useful_functions import InvalidArgumentError
-from some_useful_functions import (construct, add_index_to_filename_if_needed, match_two_dicts, create_path,
-                                   check_if_key_in_nested_dict, add_missing_to_list, print_and_log,
-                                   apply_temperature, sample, is_int)
+from useful_functions import InvalidArgumentError
+from useful_functions import (construct, add_index_to_filename_if_needed, match_two_dicts, create_path,
+                              check_if_key_in_nested_dict, add_missing_to_list, print_and_log,
+                              apply_temperature, sample, is_int)
 from args_parsing import parse_1_set_of_kwargs, parse_train_method_arguments, \
     formalize_and_create_insertions_for_build_hps, formalize_and_create_insertions_for_other_hps, \
     create_all_args_for_launches, configure_args_for_launches

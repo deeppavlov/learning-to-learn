@@ -1,10 +1,10 @@
 from __future__ import print_function
 import numpy as np
 import tensorflow as tf
-from some_useful_functions import (construct, create_vocabulary,
-                                   get_positions_in_vocabulary, char2vec, pred2vec, pred2vec_fast, vec2char,
-                                   vec2char_fast, char2id, id2char, flatten, get_available_gpus, device_name_scope,
-                                   average_gradients, get_num_gpus_and_bs_on_gpus)
+from useful_functions import (construct, create_vocabulary,
+                              get_positions_in_vocabulary, char2vec, pred2vec, pred2vec_fast, vec2char,
+                              vec2char_fast, char2id, id2char, flatten, get_available_gpus, device_name_scope,
+                              average_gradients, get_num_gpus_and_bs_on_gpus)
 
 
 url = 'http://mattmahoney.net/dc/'

@@ -2,7 +2,7 @@
 from environment import Environment
 from vanilla import Vanilla, BatchGenerator
 from lstm_par import Lstm, LstmBatchGenerator
-from some_useful_functions import create_vocabulary, get_positions_in_vocabulary
+from useful_functions import create_vocabulary, get_positions_in_vocabulary
 
 f = open('datasets/ted.txt', 'r', encoding='utf-8')
 text = f.read()

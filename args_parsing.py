@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from some_useful_functions import InvalidArgumentError, search_in_nested_dictionary,\
+from useful_functions import InvalidArgumentError, search_in_nested_dictionary,\
                                   construct, paste_into_nested_structure, unite_dicts
 
 
