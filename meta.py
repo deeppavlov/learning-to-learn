@@ -184,6 +184,33 @@ class Meta(object):
         self._hooks['optimizer_grad_labels'] = self._optimizer_grad_labels
         self._hooks['pupil_savers'] = self._pupil_savers
 
+    def _eval_pupil_gradients(
+            self, pupil_grad_eval_inputs, pupil_grad_eval_labels,
+            pupil_trainable_variables, pupil_grad_eval_pupil_storage):
+        loss, optimizer_ins, new_storage = self._pupil.loss_and_opt_ins(
+            pupil_grad_eval_inputs, pupil_grad_eval_labels,
+            pupil_grad_eval_pupil_storage, opt_ins=pupil_trainable_variables)
+        map = dict()
+        s_vectors = list()
+        start = 0
+        for k, v in optimizer_ins.items():
+            if isinstance(v['s'], list):
+                map[k] = [start, start+len(v['s'])]
+                start += len(v['s'])
+                s_vectors.extend(v['s'])
+            else:
+                map[k] = start
+                start += 1
+                s_vectors.append(v['s'])
+        sigma_vectors = tf.gradients(loss, s_vectors)
+        sigma_vectors = [tf.stop_gradient(sigma) for sigma in sigma_vectors]
+        for k, v in optimizer_ins.items():
+            if isinstance(map[k], list):
+                v['sigma'] = sigma_vectors[map[k][0]:map[k][1]]
+            else:
+                v['sigma'] = sigma_vectors[map[k]]
+        return optimizer_ins
+
     def _train_graph(self):
         pupil_grad_eval_inputs, pupil_grad_eval_labels, optimizer_grad_inputs, optimizer_grad_labels, \
             pupil_trainable_variables, pupil_grad_eval_pupil_storage, optimizer_grad_pupil_storage = \
