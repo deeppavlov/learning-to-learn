@@ -1,5 +1,6 @@
 import tensorflow as tf
-from useful_functions import construct, get_keys_from_nested, get_obj_elem_by_path, write_elem_in_obj_by_path
+from useful_functions import (construct, get_keys_from_nested, get_obj_elem_by_path,
+                              write_elem_in_obj_by_path, stop_gradient_in_nested)
 
 
 class Meta(object):
@@ -209,7 +210,7 @@ class Meta(object):
                 v['sigma'] = sigma_vectors[map[k][0]:map[k][1]]
             else:
                 v['sigma'] = sigma_vectors[map[k]]
-        return optimizer_ins
+        return optimizer_ins, stop_gradient_in_nested(new_storage)
 
     def _train_graph(self):
         pupil_grad_eval_inputs, pupil_grad_eval_labels, optimizer_grad_inputs, optimizer_grad_labels, \
