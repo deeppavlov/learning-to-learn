@@ -4,7 +4,8 @@ import tensorflow as tf
 from useful_functions import (create_vocabulary, get_positions_in_vocabulary, char2vec, pred2vec, pred2vec_fast,
                               vec2char, vec2char_fast, char2id, id2char, flatten, get_available_gpus,
                               device_name_scope, average_gradients, get_num_gpus_and_bs_on_gpus, custom_matmul,
-                              custom_add, InvalidArgumentError)
+                              custom_add, InvalidArgumentError, compose_save_list, compose_reset_list,
+                              compose_randomize_list)
 
 url = 'http://mattmahoney.net/dc/'
 
@@ -296,49 +297,6 @@ class Lstm(Model):
                     hs = tf.nn.relu(hs)
         return hs, optimizer_ins
 
-    @staticmethod
-    def _extract_op_name(full_name):
-        scopes_stripped = full_name.split('/')[-1]
-        return scopes_stripped.split(':')[0]
-
-    def _compose_save_list(self,
-                           *pairs):
-        # print('start')
-        with tf.name_scope('save_list'):
-            save_list = list()
-            for pair in pairs:
-                # print('pair:', pair)
-                variables = flatten(pair[0])
-                # print(variables)
-                new_values = flatten(pair[1])
-                for variable, value in zip(variables, new_values):
-                    name = self._extract_op_name(variable.name)
-                    save_list.append(tf.assign(variable, value, name='assign_save_%s' % name))
-            return save_list
-
-    def _compose_reset_list(self, *args):
-        with tf.name_scope('reset_list'):
-            reset_list = list()
-            flattened = flatten(args)
-            for variable in flattened:
-                shape = variable.get_shape().as_list()
-                name = self._extract_op_name(variable.name)
-                reset_list.append(tf.assign(variable, tf.zeros(shape), name='assign_reset_%s' % name))
-            return reset_list
-
-    def _compose_randomize_list(self, *args):
-        with tf.name_scope('randomize_list'):
-            randomize_list = list()
-            flattened = flatten(args)
-            for variable in flattened:
-                shape = variable.get_shape().as_list()
-                name = self._extract_op_name(variable.name)
-                assign_tensor = tf.truncated_normal(shape, stddev=1.)
-                # assign_tensor = tf.Print(assign_tensor, [assign_tensor], message='assign tensor:')
-                assign = tf.assign(variable, assign_tensor, name='assign_reset_%s' % name)
-                randomize_list.append(assign)
-            return randomize_list
-
     def _compute_lstm_matrix_parameters(self, idx):
         if idx == 0:
             print(self._num_nodes)
@@ -473,7 +431,7 @@ class Lstm(Model):
                         logits, _ = self._output_module(
                             rnn_outputs, trainable['output_matrices'], trainable['output_biases'])
 
-                        save_ops = self._compose_save_list((saved_states, all_states))
+                        save_ops = compose_save_list((saved_states, all_states))
 
                         with tf.control_dependencies(save_ops):
                             all_matrices = [trainable['embedding_matrix']]
@@ -553,12 +511,12 @@ class Lstm(Model):
                              name='saved_sample_state_%s_%s' % (layer_idx, 1)))
                     )
 
-                reset_list = self._compose_reset_list(saved_sample_state)
+                reset_list = compose_reset_list(saved_sample_state)
 
                 self.reset_sample_state = tf.group(*reset_list)
                 self._hooks['reset_validation_state'] = self.reset_sample_state
 
-                randomize_list = self._compose_randomize_list(saved_sample_state)
+                randomize_list = compose_randomize_list(saved_sample_state)
 
                 self.randomize = tf.group(*randomize_list)
                 self._hooks['randomize_sample_state'] = self.randomize
@@ -571,7 +529,7 @@ class Lstm(Model):
                 sample_logit, _ = self._output_module(
                     rnn_output, trainable['output_matrices'], trainable['output_biases'])
 
-                sample_save_ops = self._compose_save_list((saved_sample_state, sample_state))
+                sample_save_ops = compose_save_list((saved_sample_state, sample_state))
 
                 with tf.control_dependencies(sample_save_ops):
                     self.sample_prediction = tf.nn.softmax(sample_logit)

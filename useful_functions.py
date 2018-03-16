@@ -872,3 +872,47 @@ def stop_gradient_in_nested(nested):
     for path in paths:
         write_elem_in_obj_by_path(nested, path, tf.stop_gradient(get_obj_elem_by_path(nested, path)))
     return nested
+
+
+def extract_op_name(full_name):
+    scopes_stripped = full_name.split('/')[-1]
+    return scopes_stripped.split(':')[0]
+
+
+def compose_save_list(*pairs):
+    with tf.name_scope('save_list'):
+        save_list = list()
+        for pair in pairs:
+            # print('pair:', pair)
+            variables = flatten(pair[0])
+            # print(variables)
+            new_values = flatten(pair[1])
+            for variable, value in zip(variables, new_values):
+                name = extract_op_name(variable.name)
+                save_list.append(tf.assign(variable, value, name='assign_save_%s' % name))
+        return save_list
+
+
+def compose_reset_list(*args):
+    with tf.name_scope('reset_list'):
+        reset_list = list()
+        flattened = flatten(args)
+        for variable in flattened:
+            shape = variable.get_shape().as_list()
+            name = extract_op_name(variable.name)
+            reset_list.append(tf.assign(variable, tf.zeros(shape), name='assign_reset_%s' % name))
+        return reset_list
+
+
+def compose_randomize_list(*args):
+    with tf.name_scope('randomize_list'):
+        randomize_list = list()
+        flattened = flatten(args)
+        for variable in flattened:
+            shape = variable.get_shape().as_list()
+            name = extract_op_name(variable.name)
+            assign_tensor = tf.truncated_normal(shape, stddev=1.)
+            # assign_tensor = tf.Print(assign_tensor, [assign_tensor], message='assign tensor:')
+            assign = tf.assign(variable, assign_tensor, name='assign_reset_%s' % name)
+            randomize_list.append(assign)
+        return randomize_list
