@@ -429,13 +429,15 @@ class Lstm(Model):
             optimizer_ins.update(opt_ins)
             logits, opt_ins = self._output_module(rnn_outputs, output_matrices, output_biases)
             optimizer_ins.update(opt_ins)
-            save_ops = self._compose_save_list((saved_states, new_states))
 
-            with tf.control_dependencies(save_ops):
-                loss = tf.reduce_mean(
-                    tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits))
+            new_storage = dict(
+                saved_states=new_states
+            )
+
+            loss = tf.reduce_mean(
+                tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits))
             optimizer_ins = self._acomplish_optimizer_ins(optimizer_ins, trainable_variables)
-        return loss, optimizer_ins
+            return loss, optimizer_ins, new_storage
 
     def _train_graph(self):
         inputs, labels = self._prepare_inputs_and_labels(
