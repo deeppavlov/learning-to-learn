@@ -51,24 +51,31 @@ class Meta(object):
         return stacked_by_gpus
 
     @staticmethod
-    def _stack_trainable_variables(trainable):
-        stacked = construct(trainable[0])
-        for ok, ov in stacked.items():
+    def _stack_trainable_variables(gpu_borders, trainable):
+        stacked_tmpl = construct(trainable[0])
+        stacked_by_gpus = [construct(trainable[0]) for _ in gpu_borders]
+        for ok, ov in stacked_tmpl.items():
             for ik in ov.keys():
-                stacked[ok][ik] = tf.stack([tr[ok][ik] for tr in trainable])
-        return stacked
+                for gpu_idx, borders in enumerate(gpu_borders):
+                    with tf.device('/gpu:%s' % gpu_idx):
+                        stacked_by_gpus[gpu_idx][ok][ik] = tf.stack(
+                            [tr[ok][ik] for tr in trainable[borders[0]:borders[1]]])
+        return stacked_by_gpus
 
     @staticmethod
-    def _stack_storages(storages):
-        stacked = construct(storages[0])
-        paths = get_keys_from_nested(stacked)
+    def _stack_storages(gpu_borders, storages):
+        stacked_tmpl = construct(storages[0])
+        stacked_by_gpus = [construct(storages[0]) for _ in gpu_borders]
+        paths = get_keys_from_nested(stacked_tmpl)
         for path in paths:
-            write_elem_in_obj_by_path(
-                stacked, path,
-                tf.stack(
-                    [get_obj_elem_by_path(stor, path) for stor in storages])
-            )
-        return stacked
+            for gpu_idx, borders in enumerate(gpu_borders):
+                with tf.device('/gpu:%s' % gpu_idx):
+                    write_elem_in_obj_by_path(
+                        stacked_by_gpus[gpu_idx], path,
+                        tf.stack(
+                            [get_obj_elem_by_path(stor, path) for stor in storages])
+                    )
+        return stacked_by_gpus
 
     @classmethod
     def _stack_exercises(
