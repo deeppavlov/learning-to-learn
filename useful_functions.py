@@ -865,3 +865,10 @@ def load_vocabulary(vocabulary_path):
     with open(vocabulary_path, 'r') as f:
         lines = f.read().split('\n')
     return [ast.literal_eval(l) for l in lines]
+
+
+def stop_gradient_in_nested(nested):
+    paths = get_keys_from_nested(nested)
+    for path in paths:
+        write_elem_in_obj_by_path(nested, path, tf.stop_gradient(get_obj_elem_by_path(nested, path)))
+    return nested
