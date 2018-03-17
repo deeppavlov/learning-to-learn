@@ -1,6 +1,6 @@
 import tensorflow as tf
-from useful_functions import (construct, get_keys_from_nested, get_obj_elem_by_path,
-                              write_elem_in_obj_by_path, stop_gradient_in_nested)
+from useful_functions import (construct, get_keys_from_nested, get_obj_elem_by_path, device_name_scope,
+                              write_elem_in_obj_by_path, stop_gradient_in_nested, compose_save_list, average_gradients)
 
 
 class Meta(object):
@@ -62,6 +62,31 @@ class Meta(object):
                         stacked_by_gpu[gpu_idx][ok][ik] = tf.stack(
                             [tr[ok][ik] for tr in trainable[borders[0]:borders[1]]])
         return stacked_by_gpu
+
+    @staticmethod
+    def _retrieve_and_unstack_trainable_variables(num_exercises, trainable_by_gpu):
+        """trainable_by_gpu is a list of dicts each containing layer information, e. g.:
+            embedding_layer: {'matrix': t1, 'o': t2, 's': t3, 'sigma': t4}
+        t1, t2 and so on are stacked tensors for exercises on gpu.
+        This method retrieves only tensors with trainable variables values, unstacks them and distributes among
+        num_exercises dicts of structure similar to trainable_by_gpu[i]"""
+        allowed_keys = ['matrix', 'bias']
+        tmpl = construct(trainable_by_gpu[0])
+        unstacked = [dict() for _ in range(num_exercises)]
+        for ok, ov in tmpl.items():
+            for d in unstacked:
+                d[ok] = dict()
+            for ik in ov.keys():
+                allowed = False
+                for k in allowed_keys:
+                    allowed = allowed or (k == ik)
+                if allowed:
+                    to_distribute = list()
+                    for tr in trainable_by_gpu:
+                        to_distribute.extend(tf.unstack(tr[ok][ik]))
+                    for ex_idx, d in enumerate(unstacked):
+                        d[ok][ik] = to_distribute[ex_idx]
+        return unstacked
 
     @staticmethod
     def _stack_storages(gpu_borders, storages):
@@ -210,21 +235,59 @@ class Meta(object):
                 v['sigma'] = sigma_vectors[map[k][0]:map[k][1]]
             else:
                 v['sigma'] = sigma_vectors[map[k]]
-        return optimizer_ins, stop_gradient_in_nested(new_storage)
+        return optimizer_ins, stop_gradient_in_nested(new_storage), loss
 
     def _train_graph(self):
-        pupil_grad_eval_inputs, pupil_grad_eval_labels, optimizer_grad_inputs, optimizer_grad_labels, \
-            pupil_trainable_variables, pupil_grad_eval_pupil_storage, optimizer_grad_pupil_storage = \
-                self._stack_exercises(
-                    self._exercise_gpu_map,
-                    self._pupil_grad_eval_inputs,
-                    self._pupil_grad_eval_labels,
-                    self._optimizer_grad_inputs,
-                    self._optimizer_grad_labels,
-                    self._pupil_trainable_variables,
-                    self._pupil_grad_eval_pupil_storage,
-                    self._optimizer_grad_pupil_storage
-                )
-        for gpu_idx in range(self._num_gpus):
-            with tf.device('/gpu:%s' % gpu_idx):
-                pass
+        with tf.name_scope('optimizer_train_graph'):
+            pupil_grad_eval_inputs, pupil_grad_eval_labels, optimizer_grad_inputs, optimizer_grad_labels, \
+                pupil_trainable_variables, pupil_grad_eval_pupil_storage, optimizer_grad_pupil_storage = \
+                    self._stack_exercises(
+                        self._exercise_gpu_map,
+                        self._pupil_grad_eval_inputs,
+                        self._pupil_grad_eval_labels,
+                        self._optimizer_grad_inputs,
+                        self._optimizer_grad_labels,
+                        self._pupil_trainable_variables,
+                        self._pupil_grad_eval_pupil_storage,
+                        self._optimizer_grad_pupil_storage
+                    )
+            start_losses_by_gpu = list()
+            end_losses_by_gpu = list()
+            tower_grads = list()
+
+            for gpu_idx in range(self._num_gpus):
+                device_name = '/gpu:%s' % gpu_idx
+                with tf.device(device_name):
+                    with tf.name_scope(device_name_scope(device_name)):
+                        optimizer_states = self._create_optimizer_states()
+                        tmp_states = optimizer_states
+                        one_gpu_end_loss = 0
+                        one_gpu_start_loss = 0
+                        for unr_idx in range(self._num_optimizer_unrollings):
+                            with tf.name_scope('optimizer_unrolling_%s' % unr_idx):
+                                optimizer_ins, pupil_grad_eval_pupil_storage[gpu_idx], start_loss =\
+                                    self._eval_pupil_gradients(
+                                        pupil_grad_eval_inputs[gpu_idx], pupil_grad_eval_labels[gpu_idx],
+                                        pupil_trainable_variables[gpu_idx], pupil_grad_eval_pupil_storage[gpu_idx]
+                                    )
+                                optimizer_outs, tmp_states = self._optimizer_core(
+                                    optimizer_ins, tmp_states)
+                                mods = self._compose_mods(optimizer_outs)
+                                new_pupil_trainable = self._apply_mods(mods)
+                                end_loss, _, optimizer_grad_pupil_storage[gpu_idx] = self._pupil.loss_and_opt_ins(
+                                    optimizer_grad_inputs[gpu_idx], optimizer_grad_labels[gpu_idx],
+                                    optimizer_grad_pupil_storage[gpu_idx], opt_ins=new_pupil_trainable)
+                                one_gpu_start_loss += start_loss
+                                one_gpu_end_loss += end_loss
+                        save_ops = compose_save_list((optimizer_states, tmp_states))
+                        with tf.control_dependencies(save_ops):
+                            one_gpu_end_loss = tf.identity(one_gpu_end_loss)
+                            start_losses_by_gpu.append(one_gpu_start_loss)
+                            end_losses_by_gpu.append(one_gpu_end_loss)
+                            grads_and_vars = self._compute_optimizer_gradients(one_gpu_end_loss)
+                            tower_grads.append(grads_and_vars)
+            with tf.device(self._base_device):
+                with tf.name_scope('unite_exercise_gradients'):
+                    grads_and_vars = average_gradients(tower_grads)
+                    grads, v = self._tune_gradients(grads_and_vars)
+                    train_op = self._apply_gradients(grads, v)

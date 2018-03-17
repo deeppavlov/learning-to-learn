@@ -18,6 +18,10 @@ class ResNet4Lstm(Meta):
         self._num_optimizer_unrollings = num_optimizer_unrollings
         self._perm_period = perm_period
         self._num_gpus = num_gpus
+        if self._num_gpus == 1:
+            self._base_device = '/gpu:0'
+        else:
+            self._base_device = '/cpu:0'
         self._regime = regime
 
         self._hooks = dict(
@@ -48,5 +52,8 @@ class ResNet4Lstm(Meta):
                 self._optimizer_grad_inputs, self._optimizer_grad_labels = None, None, None, None
 
         self._add_standard_train_hooks()
+
+        with tf.device(self._base_device):
+            self._create_optimizer_trainable_vars()
         
         
