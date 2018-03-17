@@ -292,7 +292,18 @@ class Meta(object):
                                     optimizer_grad_pupil_storage[gpu_idx], opt_ins=new_pupil_trainable)
                                 one_gpu_start_loss += start_loss
                                 one_gpu_end_loss += end_loss
-                        save_ops = compose_save_list((optimizer_states, tmp_states))
+                        new_pupil_trainable = self._retrieve_and_unstack_trainable_variables(
+                            self._num_exercises, new_pupil_trainable)
+                        pupil_grad_eval_pupil_storage = self._unstack_storages(
+                            self._num_exercises, pupil_grad_eval_pupil_storage)
+                        optimizer_grad_pupil_storage = self._unstack_storages(
+                            self._num_exercises, optimizer_grad_pupil_storage)
+                        save_ops = compose_save_list(
+                            (optimizer_states, tmp_states),
+                            (self._pupil_trainable_variables, new_pupil_trainable),
+                            (self._pupil_grad_eval_pupil_storage, pupil_grad_eval_pupil_storage),
+                            (self._optimizer_grad_pupil_storage, optimizer_grad_pupil_storage)
+                        )
                         with tf.control_dependencies(save_ops):
                             one_gpu_end_loss = tf.identity(one_gpu_end_loss)
                             start_losses_by_gpu.append(one_gpu_start_loss)
