@@ -103,6 +103,19 @@ class Meta(object):
                     )
         return stacked_by_gpu
 
+    @staticmethod
+    def _unstack_storages(num_exercises, storages):
+        tmpl = construct(storages[0])
+        unstacked = [construct(tmpl) for _ in range(num_exercises)]
+        paths = get_keys_from_nested(tmpl)
+        for path in paths:
+            to_distribute = list()
+            for st in storages:
+                to_distribute.extend(tf.unstack(get_obj_elem_by_path(st, path)))
+            for unst, distr in zip(unstacked, to_distribute):
+                write_elem_in_obj_by_path(unst, path, distr)
+        return unstacked
+
     @classmethod
     def _stack_exercises(
             cls,
