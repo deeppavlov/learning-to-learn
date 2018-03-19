@@ -4,6 +4,13 @@ from meta import Meta
 
 class ResNet4Lstm(Meta):
 
+    def _create_optimizer_states(self):
+        states = [
+            tf.Variable(tf.zeros([self._num_lstm_nodes, self._num_lstm_nodes])),
+            tf.Variable(tf.zeros([self._num_lstm_nodes, self._num_lstm_nodes]))
+        ]
+        return states
+
     def __init__(self,
                  pupil,
                  num_exercises=10,
