@@ -275,6 +275,11 @@ class Meta(object):
             tf.GraphKeys.TRAINABLE_VARIABLES, scope='optimizer_trainable_variables')
         return self._optimizer_for_optimizer_training.compute_gradients(loss, var_list=optimizer_trainable_variables)
 
+    def _tune_gradients(self, grads_and_vars):
+        grads, v = zip(*grads_and_vars)
+        grads, _ = tf.clip_by_global_norm(grads, 1.)
+        return grads, v
+
     def _train_graph(self):
         with tf.name_scope('optimizer_train_graph'):
             pupil_grad_eval_inputs, pupil_grad_eval_labels, optimizer_grad_inputs, optimizer_grad_labels, \
@@ -339,5 +344,5 @@ class Meta(object):
                 with tf.name_scope('unite_exercise_gradients'):
                     grads_and_vars = average_gradients(tower_grads)
                     grads, v = self._tune_gradients(grads_and_vars)
-                    train_op = self._apply_gradients(grads, v)
+                    train_op = self._optimizer_for_optimizer_training.apply_gradients(zip(grads, v))
                     self._hooks['optimizer_train_op'] = train_op
