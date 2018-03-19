@@ -5,11 +5,28 @@ from meta import Meta
 class ResNet4Lstm(Meta):
 
     def _create_optimizer_states(self):
-        states = [
-            tf.Variable(tf.zeros([self._num_lstm_nodes, self._num_lstm_nodes])),
-            tf.Variable(tf.zeros([self._num_lstm_nodes, self._num_lstm_nodes]))
-        ]
-        return states
+        with tf.variable_scope('optimizer_states'):
+            states = [
+                tf.get_variable('h', tf.zeros([self._num_lstm_nodes, self._num_lstm_nodes])),
+                tf.Variable('c', tf.zeros([self._num_lstm_nodes, self._num_lstm_nodes]))
+            ]
+            return states
+
+    @staticmethod
+    def _reset_optimizer_states():
+        with tf.variable_scope('optimizer_states', resue=True):
+            h = tf.get_variable('h')
+            c = tf.get_variable('c')
+            h_shape = h.get_shape.as_list()
+            c_shape = c.get_shape().as_list()
+            reset_ops = [
+                tf.assign(h, tf.zeros(h_shape)),
+                tf.assign(c, c_shape)
+            ]
+            return tf.group(*reset_ops)
+
+    def _optimizer_core(self, optimizer_ins, states):
+
 
     def __init__(self,
                  pupil,
