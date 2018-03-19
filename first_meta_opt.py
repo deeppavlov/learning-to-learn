@@ -4,8 +4,8 @@ from meta import Meta
 
 class ResNet4Lstm(Meta):
 
-    def _create_optimizer_states(self):
-        with tf.variable_scope('optimizer_states'):
+    def _create_optimizer_states(self, reuse):
+        with tf.variable_scope('optimizer_states', reuse=reuse):
             states = [
                 tf.get_variable('h', tf.zeros([self._num_lstm_nodes, self._num_lstm_nodes])),
                 tf.Variable('c', tf.zeros([self._num_lstm_nodes, self._num_lstm_nodes]))
@@ -56,6 +56,8 @@ class ResNet4Lstm(Meta):
             pupil_savers=None,
             optimizer_train_op=None
         )
+
+        _ = self._create_optimizer_states(False)
 
         if regime == 'train':
             ex_per_gpu = self._num_exercises // self._num_gpus

@@ -302,7 +302,7 @@ class Meta(object):
                 device_name = '/gpu:%s' % gpu_idx
                 with tf.device(device_name):
                     with tf.name_scope(device_name_scope(device_name)):
-                        optimizer_states = self._create_optimizer_states()
+                        optimizer_states = self._create_optimizer_states(True)
                         tmp_states = optimizer_states
                         one_gpu_end_loss = 0
                         one_gpu_start_loss = 0
