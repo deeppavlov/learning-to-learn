@@ -252,9 +252,18 @@ class Meta(object):
 
     @staticmethod
     def _compose_mods(optimizer_outs):
-        for layer_key, v in optimizer_outs.items():
-            v['mods'] = tf.einsum('ijk,ijl->ikl', v['phi'], v['psi'])
+        for v in optimizer_outs.values():
+            if 'matrix' in v:
+                batch_size = v['phi'].get_shape().as_list()[1]
+                v['matrix_mods'] = tf.einsum('ijk,ijl->ikl', v['phi'], v['psi']) / batch_size
+            if 'bias' in v:
+                v['bias_mods'] = tf.reduce_mean(v['psi'], axis=1)
         return optimizer_outs
+
+    @staticmethod
+    def _apply_mods(mods):
+        for v in mods.values():
+
 
     def _train_graph(self):
         with tf.name_scope('optimizer_train_graph'):
