@@ -250,7 +250,8 @@ class Meta(object):
                 v['sigma'] = sigma_vectors[map[k]]
         return optimizer_ins, stop_gradient_in_nested(new_storage), loss
 
-    def _compose_mods(self, optimizer_outs):
+    @staticmethod
+    def _compose_mods(optimizer_outs):
         for layer_key, v in optimizer_outs.items():
             v['mods'] = tf.einsum('ijk,ijl->ikl', v['phi'], v['psi'])
         return optimizer_outs
