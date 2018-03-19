@@ -315,3 +315,4 @@ class Meta(object):
                     grads_and_vars = average_gradients(tower_grads)
                     grads, v = self._tune_gradients(grads_and_vars)
                     train_op = self._apply_gradients(grads, v)
+                    self._hooks['optimizer_train_op'] = train_op

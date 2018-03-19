@@ -29,7 +29,8 @@ class ResNet4Lstm(Meta):
             pupil_grad_eval_labels=None,
             optimizer_grad_inputs=None,
             optimizer_grad_labels=None,
-            pupil_savers=None
+            pupil_savers=None,
+            optimizer_train_op=None
         )
 
         if regime == 'train':
