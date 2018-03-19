@@ -269,6 +269,12 @@ class Meta(object):
                 v['bias'] = v['bias'] + v['bias_mods']
         return mods
 
+    def _compute_optimizer_gradients(self, loss):
+        loss += self._additional_loss
+        optimizer_trainable_variables = tf.get_collection(
+            tf.GraphKeys.TRAINABLE_VARIABLES, scope='optimizer_trainable_variables')
+        return self._optimizer_for_optimizer_training.compute_gradients(loss, var_list=optimizer_trainable_variables)
+
     def _train_graph(self):
         with tf.name_scope('optimizer_train_graph'):
             pupil_grad_eval_inputs, pupil_grad_eval_labels, optimizer_grad_inputs, optimizer_grad_labels, \
