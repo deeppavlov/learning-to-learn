@@ -263,7 +263,11 @@ class Meta(object):
     @staticmethod
     def _apply_mods(mods):
         for v in mods.values():
-
+            if 'matrix' in v:
+                v['matrix'] = v['matrix'] + v['matrix_mods']
+            if 'bias' in v:
+                v['bias'] = v['bias'] + v['bias_mods']
+        return mods
 
     def _train_graph(self):
         with tf.name_scope('optimizer_train_graph'):
