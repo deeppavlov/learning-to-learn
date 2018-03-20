@@ -1,6 +1,6 @@
 import tensorflow as tf
 from meta import Meta
-from useful_functions import block_diagonal
+from useful_functions import block_diagonal, custom_matmul
 
 
 class ResNet4Lstm(Meta):
@@ -89,8 +89,37 @@ class ResNet4Lstm(Meta):
             optimizer_ins['output_layer_%s' % (layer_idx+1)]['out_perm'] = output_layers[layer_idx+1]
         return optimizer_ins
 
+    @staticmethod
+    def _forward_permute(optimizer_ins):
+        for v in optimizer_ins.values():
+            if isinstance(v['o'], list):
+                v['o'] = [custom_matmul(o, v['in_perm']) for o in v['o']]
+            else:
+                v['o'] = custom_matmul(v['o'], v['in_perm'])
+            if isinstance(v['sigma'], list):
+                v['sigma'] = [custom_matmul(sigma, v['out_perm']) for sigma in v['sigma']]
+            else:
+                v['sigma'] = custom_matmul(v['sigma'], v['out_perm'])
+        return optimizer_ins
+
+    @staticmethod
+    def _backward_permute(optimizer_ins):
+        for v in optimizer_ins.values():
+            in_tr = tf.matrix_transpose(v['in_perm'])
+            out_tr = tf.matrix_transpose(v['out_perm'])
+            if isinstance(v['o'], list):
+                v['o'] = [custom_matmul(o, in_tr) for o in v['o']]
+            else:
+                v['o'] = custom_matmul(v['o'], in_tr)
+            if isinstance(v['sigma'], list):
+                v['sigma'] = [custom_matmul(sigma, out_tr) for sigma in v['sigma']]
+            else:
+                v['sigma'] = custom_matmul(v['sigma'], out_tr)
+        return optimizer_ins
+
     def _optimizer_core(self, optimizer_ins, num_exrcises, states, gpu_idx):
-        pass
+        optimizer_ins = self._extend_with_permutations(optimizer_ins, num_exrcises, gpu_idx)
+
 
     def __init__(self,
                  pupil,

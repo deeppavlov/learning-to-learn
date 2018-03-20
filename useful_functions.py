@@ -959,3 +959,4 @@ def block_diagonal(matrices, dtype=tf.float32):
     blocked = tf.concat(row_blocks, -2)
     blocked.set_shape(batch_shape.concatenate((blocked_rows, blocked_cols)))
     return blocked
+
