@@ -46,33 +46,45 @@ class ResNet4Lstm(Meta):
             )
         return tf.group(*reset_ops)
 
-    def _extend_with_permutations(self, optimizer_ins, num_exrcises, gpu_idx):
+    def _create_permutation_matrices(self, num_exercises, gpu_idx):
         net_size = self._pupil.get_net_size()
         num_nodes = net_size['num_nodes']
         num_output_nodes = net_size['num_output_nodes']
         num_layers = len(num_nodes)
         num_output_layers = len(num_output_nodes)
-        with tf.variable_scope('permutation_matrices_on_gpu_%s' % gpu_idx):
-            if 'embedding_layer' in optimizer_ins:
-                emb = tf.get_variable(
+        with tf.variable_scope('permutation_matrices_on_gpu_%s' % gpu_idx, reuse=True):
+            if 'embedding_size' in net_size:
+                _ = tf.get_variable(
                     'embedding',
-                    self._create_permutation_matrix(net_size['embedding_size'], num_exrcises),
+                    self._create_permutation_matrix(net_size['embedding_size'], num_exercises),
                     trainable=False
                 )
+            for layer_idx in range(num_layers):
+                _ = tf.get_variable(
+                    'c_%s' % layer_idx,
+                    self._create_permutation_matrix(num_nodes[layer_idx], num_exercises),
+                    trainable=False
+                )
+            for layer_idx in range(num_output_layers - 1):
+                _ = tf.get_variable(
+                    'h_%s' % layer_idx,
+                    self._create_permutation_matrix(num_output_nodes[layer_idx], num_exercises),
+                    trainable=False
+                )
+
+    def _extend_with_permutations(self, optimizer_ins, gpu_idx):
+        net_size = self._pupil.get_net_size()
+        num_layers = len(net_size['num_nodes'])
+        num_output_layers = len(net_size['num_output_nodes'])
+        with tf.variable_scope('permutation_matrices_on_gpu_%s' % gpu_idx, reuse=True):
+            if 'embedding_size' in net_size:
+                emb = tf.get_variable('embedding')
             lstm_layers = list()
             for layer_idx in range(num_layers):
-                lstm_layers.append(tf.get_variable(
-                    'c_%s' % layer_idx,
-                    self._create_permutation_matrix(num_nodes[layer_idx], num_exrcises),
-                    trainable=False
-                ))
+                lstm_layers.append(tf.get_variable('c_%s' % layer_idx))
             output_layers = list()
             for layer_idx in range(num_output_layers-1):
-                output_layers.append(tf.get_variable(
-                    'h_%s' % layer_idx,
-                    self._create_permutation_matrix(num_output_nodes[layer_idx], num_exrcises),
-                    trainable=False
-                ))
+                output_layers.append(tf.get_variable('h_%s' % layer_idx))
         if 'embedding_layer' in optimizer_ins:
             optimizer_ins['embedding_layer']['out_perm'] = emb
             optimizer_ins['lstm_layer_0']['in_perm'] = block_diagonal([emb, lstm_layers[0]])
@@ -119,6 +131,7 @@ class ResNet4Lstm(Meta):
 
     def _optimizer_core(self, optimizer_ins, num_exrcises, states, gpu_idx):
         optimizer_ins = self._extend_with_permutations(optimizer_ins, num_exrcises, gpu_idx)
+        optimizer_ins = self._forward_permute(optimizer_ins)
 
 
     def __init__(self,
