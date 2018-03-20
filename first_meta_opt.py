@@ -4,8 +4,8 @@ from meta import Meta
 
 class ResNet4Lstm(Meta):
 
-    def _create_optimizer_states(self, num_exercises):
-        with tf.variable_scope('optimizer_states'):
+    def _create_optimizer_states(self, num_exercises, gpu_idx):
+        with tf.variable_scope('optimizer_states_on_gpu_%s' % gpu_idx):
             states = [
                 tf.get_variable(
                     'h', tf.zeros([num_exercises, self._num_lstm_nodes]), trainable=False),
@@ -15,19 +15,70 @@ class ResNet4Lstm(Meta):
             return states
 
     @staticmethod
-    def _reset_optimizer_states():
-        with tf.variable_scope('optimizer_states', resue=True):
+    def _reset_optimizer_states(gpu_idx):
+        with tf.variable_scope('optimizer_states_on_gpu_%s' % gpu_idx, resue=True):
             h = tf.get_variable('h')
             c = tf.get_variable('c')
             h_shape = h.get_shape.as_list()
             c_shape = c.get_shape().as_list()
             reset_ops = [
                 tf.assign(h, tf.zeros(h_shape)),
-                tf.assign(c, c_shape)
+                tf.assign(c, tf.zeros(c_shape))
             ]
             return tf.group(*reset_ops)
 
-    def _optimizer_core(self, optimizer_ins, states):
+    @staticmethod
+    def _create_permutation_matrix(size, num_exrcises):
+        return tf.one_hot(
+            tf.stack(
+                [tf.random_shuffle([i for i in range(size)])
+                 for _ in range(num_exrcises)]),
+            size)
+
+    def _create_permutations(self, optimizer_ins, num_exrcises, gpu_idx):
+        net_size = self._pupil.get_net_size()
+        num_nodes = net_size['num_nodes']
+        num_output_nodes = net_size['num_output_nodes']
+        num_layers = len(num_nodes)
+        num_output_layers = len(num_output_nodes)
+        with tf.variable_scope('permutation_matrices_on_gpu_%s' % gpu_idx):
+            if 'embedding_layer' in optimizer_ins:
+                emb = tf.get_variable(
+                    'embedding',
+                    self._create_permutation_matrix(net_size['embedding_size'], num_exrcises)
+                )
+            lstm_layers = list()
+            for layer_idx in range(num_layers):
+                one_layer = list()
+                one_layer.append(tf.get_variable(
+                    'i_%s' % layer_idx,
+                    self._create_permutation_matrix(num_nodes[layer_idx], num_exrcises)
+                ))
+                one_layer.append(tf.get_variable(
+                    'o_%s' % layer_idx,
+                    self._create_permutation_matrix(num_nodes[layer_idx], num_exrcises)
+                ))
+                one_layer.append(tf.get_variable(
+                    'f_%s' % layer_idx,
+                    self._create_permutation_matrix(num_nodes[layer_idx], num_exrcises)
+                ))
+                one_layer.append(tf.get_variable(
+                    'j_%s' % layer_idx,
+                    self._create_permutation_matrix(num_nodes[layer_idx], num_exrcises)
+                ))
+                lstm_layers.append(one_layer)
+            output_layers = list()
+            for layer_idx in range(num_output_layers):
+                output_layers.append(tf.get_variable(
+                    'h_%s' % layer_idx,
+                    self._create_permutation_matrix(num_output_nodes[layer_idx], num_exrcises)
+                ))
+        if 'embedding_layer' in optimizer_ins:
+            optimizer_ins['embedding_layer']['out_perm'] = emb
+            
+
+
+    def _optimizer_core(self, optimizer_ins, num_exrcises, states, gpu_idx):
         pass
 
     def __init__(self,

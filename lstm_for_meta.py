@@ -818,4 +818,9 @@ class Lstm(Model):
     def get_building_parameters(self):
         pass
 
-
+    def get_net_size(self):
+        return dict(
+            embedding_size=self._embedding_size,
+            num_nodes=self._num_nodes,
+            num_output_nodes=self._num_output_nodes
+        )
