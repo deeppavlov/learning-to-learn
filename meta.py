@@ -119,7 +119,7 @@ class Meta(object):
     @classmethod
     def _stack_exercises(
             cls,
-            gpu_map,
+            gpu_borders,
             pupil_grad_eval_inputs,
             pupil_grad_eval_labels,
             optimizer_grad_inputs,
@@ -128,7 +128,6 @@ class Meta(object):
             pupil_grad_eval_pupil_storage,
             optimizer_grad_pupil_storage
     ):
-        gpu_borders = cls._gpu_idx_borders(gpu_map)
         pupil_grad_eval_inputs = cls._stack_placeholders(gpu_borders, pupil_grad_eval_inputs)
         pupil_grad_eval_labels = cls._stack_placeholders(gpu_borders, pupil_grad_eval_labels)
         optimizer_grad_inputs = cls._stack_placeholders(gpu_borders, optimizer_grad_inputs)
@@ -285,7 +284,7 @@ class Meta(object):
             pupil_grad_eval_inputs, pupil_grad_eval_labels, optimizer_grad_inputs, optimizer_grad_labels, \
                 pupil_trainable_variables, pupil_grad_eval_pupil_storage, optimizer_grad_pupil_storage = \
                     self._stack_exercises(
-                        self._exercise_gpu_map,
+                        self._gpu_borders,
                         self._pupil_grad_eval_inputs,
                         self._pupil_grad_eval_labels,
                         self._optimizer_grad_inputs,
@@ -302,7 +301,7 @@ class Meta(object):
                 device_name = '/gpu:%s' % gpu_idx
                 with tf.device(device_name):
                     with tf.name_scope(device_name_scope(device_name)):
-                        optimizer_states = self._create_optimizer_states(True)
+                        optimizer_states = self._create_optimizer_states(self._num_ex_on_gpus[gpu_idx])
                         tmp_states = optimizer_states
                         one_gpu_end_loss = 0
                         one_gpu_start_loss = 0

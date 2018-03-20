@@ -4,11 +4,13 @@ from meta import Meta
 
 class ResNet4Lstm(Meta):
 
-    def _create_optimizer_states(self, reuse):
-        with tf.variable_scope('optimizer_states', reuse=reuse):
+    def _create_optimizer_states(self, num_exercises):
+        with tf.variable_scope('optimizer_states'):
             states = [
-                tf.get_variable('h', tf.zeros([self._num_lstm_nodes, self._num_lstm_nodes])),
-                tf.Variable('c', tf.zeros([self._num_lstm_nodes, self._num_lstm_nodes]))
+                tf.get_variable(
+                    'h', tf.zeros([num_exercises, self._num_lstm_nodes]), trainable=False),
+                tf.get_variable(
+                    'c', tf.zeros([num_exercises, self._num_lstm_nodes]), trainable=False)
             ]
             return states
 
@@ -26,7 +28,7 @@ class ResNet4Lstm(Meta):
             return tf.group(*reset_ops)
 
     def _optimizer_core(self, optimizer_ins, states):
-
+        pass
 
     def __init__(self,
                  pupil,
@@ -64,6 +66,8 @@ class ResNet4Lstm(Meta):
             remaining = self._num_exercises - self._num_gpus * ex_per_gpu
             self._exercise_gpu_map = [n // ex_per_gpu for n in range((self._num_gpus - 1) * ex_per_gpu)] + \
                                      [self._num_gpus - 1] * (ex_per_gpu + remaining)
+            self._num_ex_on_gpus = [ex_per_gpu] * (self._num_gpus - 1) + [ex_per_gpu + remaining]
+            self._gpu_borders = self._gpu_idx_borders(self._exercise_gpu_map)
 
             tmp = self._make_inputs_and_labels_placeholders(
                 self._pupil, self._num_optimizer_unrollings, self._num_exercises,
