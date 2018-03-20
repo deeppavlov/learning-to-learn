@@ -46,7 +46,7 @@ class ResNet4Lstm(Meta):
             )
         return tf.group(*reset_ops)
 
-    def _create_permutations(self, optimizer_ins, num_exrcises, gpu_idx):
+    def _extend_with_permutations(self, optimizer_ins, num_exrcises, gpu_idx):
         net_size = self._pupil.get_net_size()
         num_nodes = net_size['num_nodes']
         num_output_nodes = net_size['num_output_nodes']
