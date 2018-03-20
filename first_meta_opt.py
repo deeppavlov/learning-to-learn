@@ -1,5 +1,6 @@
 import tensorflow as tf
 from meta import Meta
+from useful_functions import block_diagonal
 
 
 class ResNet4Lstm(Meta):
@@ -28,12 +29,22 @@ class ResNet4Lstm(Meta):
             return tf.group(*reset_ops)
 
     @staticmethod
-    def _create_permutation_matrix(size, num_exrcises):
+    def _create_permutation_matrix(size, num_exercises):
         return tf.one_hot(
             tf.stack(
                 [tf.random_shuffle([i for i in range(size)])
-                 for _ in range(num_exrcises)]),
+                 for _ in range(num_exercises)]),
             size)
+
+    def _reset_permutations(self, gpu_idx):
+        variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='permutation_matrices_on_gpu_%s' % gpu_idx)
+        reset_ops = list()
+        for v in variables:
+            v_shape = v.get_shape().as_list()
+            reset_ops.append(
+                tf.assign(v, self._create_permutation_matrix(v_shape[1], v_shape[0]))
+            )
+        return tf.group(*reset_ops)
 
     def _create_permutations(self, optimizer_ins, num_exrcises, gpu_idx):
         net_size = self._pupil.get_net_size()
@@ -45,38 +56,38 @@ class ResNet4Lstm(Meta):
             if 'embedding_layer' in optimizer_ins:
                 emb = tf.get_variable(
                     'embedding',
-                    self._create_permutation_matrix(net_size['embedding_size'], num_exrcises)
+                    self._create_permutation_matrix(net_size['embedding_size'], num_exrcises),
+                    trainable=False
                 )
             lstm_layers = list()
             for layer_idx in range(num_layers):
-                one_layer = list()
-                one_layer.append(tf.get_variable(
-                    'i_%s' % layer_idx,
-                    self._create_permutation_matrix(num_nodes[layer_idx], num_exrcises)
+                lstm_layers.append(tf.get_variable(
+                    'c_%s' % layer_idx,
+                    self._create_permutation_matrix(num_nodes[layer_idx], num_exrcises),
+                    trainable=False
                 ))
-                one_layer.append(tf.get_variable(
-                    'o_%s' % layer_idx,
-                    self._create_permutation_matrix(num_nodes[layer_idx], num_exrcises)
-                ))
-                one_layer.append(tf.get_variable(
-                    'f_%s' % layer_idx,
-                    self._create_permutation_matrix(num_nodes[layer_idx], num_exrcises)
-                ))
-                one_layer.append(tf.get_variable(
-                    'j_%s' % layer_idx,
-                    self._create_permutation_matrix(num_nodes[layer_idx], num_exrcises)
-                ))
-                lstm_layers.append(one_layer)
             output_layers = list()
-            for layer_idx in range(num_output_layers):
+            for layer_idx in range(num_output_layers-1):
                 output_layers.append(tf.get_variable(
                     'h_%s' % layer_idx,
-                    self._create_permutation_matrix(num_output_nodes[layer_idx], num_exrcises)
+                    self._create_permutation_matrix(num_output_nodes[layer_idx], num_exrcises),
+                    trainable=False
                 ))
         if 'embedding_layer' in optimizer_ins:
             optimizer_ins['embedding_layer']['out_perm'] = emb
-            
-
+            optimizer_ins['lstm_layer_0']['in_perm'] = block_diagonal([emb, lstm_layers[0]])
+        for layer_idx, c in enumerate(lstm_layers):
+            optimizer_ins['lstm_layer_%s' % layer_idx]['out_perm'] = block_diagonal(
+                [c] * 4
+            )
+            if layer_idx < num_layers - 1:
+                optimizer_ins['lstm_layer_%s' % (layer_idx+1)]['in_perm'] = block_diagonal(
+                    [c, lstm_layers[layer_idx+1]])
+        optimizer_ins['output_layer_0']['in_perm'] = lstm_layers[-1]
+        for layer_idx, h in output_layers:
+            optimizer_ins['output_layer_%s' % layer_idx]['out_perm'] = h
+            optimizer_ins['output_layer_%s' % (layer_idx+1)]['out_perm'] = output_layers[layer_idx+1]
+        return optimizer_ins
 
     def _optimizer_core(self, optimizer_ins, num_exrcises, states, gpu_idx):
         pass
