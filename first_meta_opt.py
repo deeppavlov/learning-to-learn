@@ -144,7 +144,8 @@ class ResNet4Lstm(Meta):
                  num_optimizer_unrollings=10,
                  perm_period=None,
                  num_gpus=1,
-                 regime='train'):
+                 regime='train',
+                 optimizer_for_opt_type='adam'):
         self._pupil = pupil
         self._num_exercises = num_exercises
         self._num_lstm_nodes = num_lstm_nodes
@@ -157,13 +158,17 @@ class ResNet4Lstm(Meta):
             self._base_device = '/cpu:0'
         self._regime = regime
 
+        self._optimizer_for_opt_type = optimizer_for_opt_type
+
         self._hooks = dict(
             pupil_grad_eval_inputs=None,
             pupil_grad_eval_labels=None,
             optimizer_grad_inputs=None,
             optimizer_grad_labels=None,
             pupil_savers=None,
-            optimizer_train_op=None
+            optimizer_train_op=None,
+            learning_rate_for_optimizer_training=None,
+            train_with_meta_op=None
         )
 
         _ = self._create_optimizer_states(False)
@@ -193,5 +198,19 @@ class ResNet4Lstm(Meta):
 
         with tf.device(self._base_device):
             self._create_optimizer_trainable_vars()
+
+        if self._regime == 'train':
+            self._learning_rate_for_optimizer_training = tf.placeholder(
+                tf.float32, name='learning_rate_for_optimizer_training')
+            if self._optimizer_for_opt_type == 'adam':
+                self._optimizer_for_optimizer_training = tf.train.AdamOptimizer(
+                    learning_rate=self._learning_rate_for_optimizer_training)
+            elif self._optimizer_for_opt_type == 'sgd':
+                self._optimizer_for_optimizer_training = tf.train.GradientDescentOptimizer(
+                    learning_rate=self._learning_rate_for_optimizer_training)
+            self._train_graph()
+            self._inference_graph()
+        elif self._regime == 'inference':
+            self._inference_graph()
         
         
