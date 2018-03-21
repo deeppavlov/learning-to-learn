@@ -230,7 +230,7 @@ class Meta(object):
             v['s'] = tf.stop_gradient(v['s'])
         return optimizer_ins
 
-    def _eval_pupil_gradients(
+    def _eval_pupil_gradients_for_optimizer_training(
             self, pupil_grad_eval_inputs, pupil_grad_eval_labels,
             pupil_trainable_variables, pupil_grad_eval_pupil_storage):
         loss, optimizer_ins, new_storage = self._pupil.loss_and_opt_ins(
@@ -317,7 +317,7 @@ class Meta(object):
                         for unr_idx in range(self._num_optimizer_unrollings):
                             with tf.name_scope('optimizer_unrolling_%s' % unr_idx):
                                 optimizer_ins, pupil_grad_eval_pupil_storage[gpu_idx], start_loss =\
-                                    self._eval_pupil_gradients(
+                                    self._eval_pupil_gradients_for_optimizer_training(
                                         pupil_grad_eval_inputs[gpu_idx], pupil_grad_eval_labels[gpu_idx],
                                         pupil_trainable_variables[gpu_idx], pupil_grad_eval_pupil_storage[gpu_idx]
                                     )
@@ -358,6 +358,7 @@ class Meta(object):
     def _inference_graph(self):
         with tf.name_scope('optimizer_inference_graph'):
             with tf.device('/gpu:0'):
-                pass
+                optimizer_states = self._create_optimizer_states(1)
+
 
 
