@@ -243,6 +243,13 @@ class Meta(object):
         optimizer_ins = distribute_into_inner_dicts(optimizer_ins, 'sigma', sigma_vectors, map_)
         return optimizer_ins, stop_gradient_in_nested(new_storage), loss
 
+    def _eval_pupil_gradients_for_optimizer_inference(self):
+        loss, optimizer_ins, storage_save_ops = self._pupil.loss_and_opt_ins_for_inference()
+        s_vectors, map_ = retrieve_from_inner_dicts(optimizer_ins, 's')
+        sigma_vectors = tf.gradients(loss, s_vectors)
+        optimizer_ins = distribute_into_inner_dicts(optimizer_ins, 'sigma', sigma_vectors, map_)
+        return optimizer_ins, storage_save_ops, loss
+
     @staticmethod
     def _empty_core(optimizer_ins, *args):
         for v in optimizer_ins.values():
@@ -359,6 +366,11 @@ class Meta(object):
         with tf.name_scope('optimizer_inference_graph'):
             with tf.device('/gpu:0'):
                 optimizer_states = self._create_optimizer_states(1)
-                loss, optimizer_ins, storage_save_ops = self._pupil.loss_and_opt_ins_for_inference
+                optimizer_ins, storage_save_ops, pupil_save_ops = self._eval_pupil_gradients_for_optimizer_inference()
+                optimizer_outs, optimizer_states = self._optimizer_core(
+                    optimizer_ins, optimizer_states)
+                mods = self._compose_mods(optimizer_outs)
+
+
 
 

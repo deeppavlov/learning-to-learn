@@ -407,6 +407,44 @@ class Lstm(Model):
         storage_save_ops = compose_save_list((self._train_storage, new_storage))
         return loss, optimizer_ins, storage_save_ops
 
+    def apply_mods(self, mods):
+        assign_ops = list()
+        assign_ops.append(
+            tf.assign(
+                self._applicable_trainable['embedding_matrix'],
+                mods['embedding_layer']['matrix']))
+        for layer_idx, (matr, bias) in enumerate(
+                zip(self._applicable_trainable['lstm_matrices'],
+                    self._applicable_trainable['lstm_matrices'])):
+            assign_ops.append(
+                tf.assign(
+                    matr,
+                    mods['lstm_layer_%s' % layer_idx]['matrix']
+                )
+            )
+            assign_ops.append(
+                tf.assign(
+                    bias,
+                    mods['lstm_layer_%s' % layer_idx]['bias']
+                )
+            )
+        for layer_idx, (matr, bias) in enumerate(
+                zip(self._applicable_trainable['output_matrices'],
+                    self._applicable_trainable['output_matrices'])):
+            assign_ops.append(
+                tf.assign(
+                    matr,
+                    mods['output_layer_%s' % layer_idx]['matrix']
+                )
+            )
+            assign_ops.append(
+                tf.assign(
+                    bias,
+                    mods['output_layer_%s' % layer_idx]['bias']
+                )
+            )
+        return assign_ops
+
     def _train_graph(self):
         inputs, labels = self._prepare_inputs_and_labels(
             self._train_inputs_and_labels_placeholders['inputs'], self._train_inputs_and_labels_placeholders['labels'])
