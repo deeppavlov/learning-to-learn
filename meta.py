@@ -288,6 +288,7 @@ class Meta(object):
             tf.GraphKeys.TRAINABLE_VARIABLES, scope='optimizer_trainable_variables')
         return self._optimizer_for_optimizer_training.compute_gradients(loss, var_list=optimizer_trainable_variables)
 
+    @staticmethod
     def _tune_gradients(grads_and_vars):
         grads, v = zip(*grads_and_vars)
         grads, _ = tf.clip_by_global_norm(grads, 1.)
