@@ -222,6 +222,13 @@ class Meta(object):
         self._hooks['optimizer_grad_labels'] = self._optimizer_grad_labels
         self._hooks['pupil_savers'] = self._pupil_savers
 
+    @staticmethod
+    def _stop_gradients_in_o_and_s(optimizer_ins):
+        for v in optimizer_ins.values():
+            v['o'] = tf.stop_gradient(v['o'])
+            v['s'] = tf.stop_gradient(v['s'])
+        return optimizer_ins
+
     def _eval_pupil_gradients(
             self, pupil_grad_eval_inputs, pupil_grad_eval_labels,
             pupil_trainable_variables, pupil_grad_eval_pupil_storage):
@@ -242,6 +249,7 @@ class Meta(object):
                 s_vectors.append(v['s'])
         sigma_vectors = tf.gradients(loss, s_vectors)
         sigma_vectors = [tf.stop_gradient(sigma) for sigma in sigma_vectors]
+        optimizer_ins = self._stop_gradients_in_o_and_s(optimizer_ins)
         for k, v in optimizer_ins.items():
             if isinstance(map[k], list):
                 v['sigma'] = sigma_vectors[map[k][0]:map[k][1]]
@@ -293,6 +301,7 @@ class Meta(object):
                         self._pupil_grad_eval_pupil_storage,
                         self._optimizer_grad_pupil_storage
                     )
+
             start_losses_by_gpu = list()
             end_losses_by_gpu = list()
             tower_grads = list()
@@ -302,6 +311,7 @@ class Meta(object):
                 with tf.device(device_name):
                     with tf.name_scope(device_name_scope(device_name)):
                         optimizer_states = self._create_optimizer_states(self._num_ex_on_gpus[gpu_idx])
+                        self._create_permutation_matrices(self._num_ex_on_gpus[gpu_idx], gpu_idx)
                         tmp_states = optimizer_states
                         one_gpu_end_loss = 0
                         one_gpu_start_loss = 0
