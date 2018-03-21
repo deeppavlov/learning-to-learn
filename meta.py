@@ -288,7 +288,7 @@ class Meta(object):
             tf.GraphKeys.TRAINABLE_VARIABLES, scope='optimizer_trainable_variables')
         return self._optimizer_for_optimizer_training.compute_gradients(loss, var_list=optimizer_trainable_variables)
 
-    def _tune_gradients(self, grads_and_vars):
+    def _tune_gradients(grads_and_vars):
         grads, v = zip(*grads_and_vars)
         grads, _ = tf.clip_by_global_norm(grads, 1.)
         return grads, v
@@ -367,10 +367,13 @@ class Meta(object):
             with tf.device('/gpu:0'):
                 optimizer_states = self._create_optimizer_states(1)
                 optimizer_ins, storage_save_ops, pupil_save_ops = self._eval_pupil_gradients_for_optimizer_inference()
-                optimizer_outs, optimizer_states = self._optimizer_core(
+                optimizer_outs, new_optimizer_states = self._optimizer_core(
                     optimizer_ins, optimizer_states)
                 mods = self._compose_mods(optimizer_outs)
-
-
+                optimizer_save_states_ops = compose_save_list(
+                    (optimizer_states, new_optimizer_states))
+                with tf.control_dependencies(pupil_save_ops+optimizer_save_states_ops):
+                    train_op = tf.group(*self._pupil.apply_mods(mods))
+                self._hooks['train_with_meta_op'] = train_op
 
 
