@@ -170,7 +170,9 @@ class ResNet4Lstm(Meta):
             pupil_savers=None,
             optimizer_train_op=None,
             learning_rate_for_optimizer_training=None,
-            train_with_meta_op=None
+            train_with_meta_op=None,
+            reset_train_states=None,
+            reset_inference_state=None
         )
 
         _ = self._create_optimizer_states(False)
@@ -212,7 +214,12 @@ class ResNet4Lstm(Meta):
                     learning_rate=self._learning_rate_for_optimizer_training)
             self._train_graph()
             self._inference_graph()
+            self._hooks['reset_train_states'] = tf.group(
+                *[self._reset_optimizer_states('train', gpu_idx)
+                  for gpu_idx in range(self._num_gpus)])
+            self._hooks['reset_inference_state'] = self._reset_optimizer_states('inference', 0)
         elif self._regime == 'inference':
             self._inference_graph()
+            self._hooks['reset_inference_state'] = self._reset_optimizer_states('inference', 0)
         
         
