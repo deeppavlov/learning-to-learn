@@ -359,6 +359,6 @@ class Meta(object):
         with tf.name_scope('optimizer_inference_graph'):
             with tf.device('/gpu:0'):
                 optimizer_states = self._create_optimizer_states(1)
-
+                loss, optimizer_ins, storage_save_ops = self._pupil.loss_and_opt_ins_for_inference
 
 

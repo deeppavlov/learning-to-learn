@@ -397,7 +397,7 @@ class Lstm(Model):
             optimizer_ins = self._acomplish_optimizer_ins(optimizer_ins, trainable_variables)
             return loss, optimizer_ins, new_storage
 
-    def loss_and_opt_ins(self):
+    def loss_and_opt_ins_for_inference(self):
         loss, optimizer_ins, new_storage = self.loss_and_opt_ins(
             self._train_inputs_and_labels_placeholders['inputs'],
             self._train_inputs_and_labels_placeholders['labels'],
