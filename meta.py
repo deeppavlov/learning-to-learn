@@ -258,6 +258,19 @@ class Meta(object):
         return optimizer_ins, stop_gradient_in_nested(new_storage), loss
 
     @staticmethod
+    def _empty_core(optimizer_ins, *args):
+        for v in optimizer_ins.values():
+            if isinstance(v['o'], list):
+                v['phi'] = tf.add_n(v['o']) / len(v['o'])
+            else:
+                v['phi'] = v['o']
+            if isinstance(v['sigma'], list):
+                v['psi'] = tf.add_n(v['psi']) / len(v['sigma'])
+            else:
+                v['psi'] = v['sigma']
+        return optimizer_ins
+
+    @staticmethod
     def _compose_mods(optimizer_outs):
         for v in optimizer_outs.values():
             if 'matrix' in v:
