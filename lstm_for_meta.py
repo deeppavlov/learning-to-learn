@@ -397,6 +397,16 @@ class Lstm(Model):
             optimizer_ins = self._acomplish_optimizer_ins(optimizer_ins, trainable_variables)
             return loss, optimizer_ins, new_storage
 
+    def loss_and_opt_ins(self):
+        loss, optimizer_ins, new_storage = self.loss_and_opt_ins(
+            self._train_inputs_and_labels_placeholders['inputs'],
+            self._train_inputs_and_labels_placeholders['labels'],
+            self._train_storage,
+            trainable_variables=self._applicable_trainable
+        )
+        storage_save_ops = compose_save_list((self._train_storage, new_storage))
+        return loss, optimizer_ins, storage_save_ops
+
     def _train_graph(self):
         inputs, labels = self._prepare_inputs_and_labels(
             self._train_inputs_and_labels_placeholders['inputs'], self._train_inputs_and_labels_placeholders['labels'])
