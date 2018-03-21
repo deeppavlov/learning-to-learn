@@ -1,6 +1,7 @@
 import tensorflow as tf
 from useful_functions import (construct, get_keys_from_nested, get_obj_elem_by_path, device_name_scope,
-                              write_elem_in_obj_by_path, stop_gradient_in_nested, compose_save_list, average_gradients)
+                              write_elem_in_obj_by_path, stop_gradient_in_nested, compose_save_list, average_gradients,
+                              retrieve_from_inner_dicts, distribute_into_inner_dicts)
 
 
 class Meta(object):
@@ -235,26 +236,11 @@ class Meta(object):
         loss, optimizer_ins, new_storage = self._pupil.loss_and_opt_ins(
             pupil_grad_eval_inputs, pupil_grad_eval_labels,
             pupil_grad_eval_pupil_storage, opt_ins=pupil_trainable_variables)
-        map = dict()
-        s_vectors = list()
-        start = 0
-        for k, v in optimizer_ins.items():
-            if isinstance(v['s'], list):
-                map[k] = [start, start+len(v['s'])]
-                start += len(v['s'])
-                s_vectors.extend(v['s'])
-            else:
-                map[k] = start
-                start += 1
-                s_vectors.append(v['s'])
+        s_vectors, map_ = retrieve_from_inner_dicts(optimizer_ins, 's')
         sigma_vectors = tf.gradients(loss, s_vectors)
         sigma_vectors = [tf.stop_gradient(sigma) for sigma in sigma_vectors]
         optimizer_ins = self._stop_gradients_in_o_and_s(optimizer_ins)
-        for k, v in optimizer_ins.items():
-            if isinstance(map[k], list):
-                v['sigma'] = sigma_vectors[map[k][0]:map[k][1]]
-            else:
-                v['sigma'] = sigma_vectors[map[k]]
+        optimizer_ins = distribute_into_inner_dicts(optimizer_ins, 'sigma', sigma_vectors, map_)
         return optimizer_ins, stop_gradient_in_nested(new_storage), loss
 
     @staticmethod
@@ -368,3 +354,10 @@ class Meta(object):
                     grads, v = self._tune_gradients(grads_and_vars)
                     train_op = self._optimizer_for_optimizer_training.apply_gradients(zip(grads, v))
                     self._hooks['optimizer_train_op'] = train_op
+
+    def _inference_graph(self):
+        with tf.name_scope('optimizer_inference_graph'):
+            with tf.device('/gpu:0'):
+                pass
+
+

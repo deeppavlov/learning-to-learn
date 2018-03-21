@@ -129,6 +129,9 @@ class ResNet4Lstm(Meta):
                 v['sigma'] = custom_matmul(v['sigma'], out_tr)
         return optimizer_ins
 
+    def _create_optimizer_trainable_vars(self):
+        pass
+
     def _optimizer_core(self, optimizer_ins, num_exercises, states, gpu_idx):
         # optimizer_ins = self._extend_with_permutations(optimizer_ins, num_exercises, gpu_idx)
         # optimizer_ins = self._forward_permute(optimizer_ins)

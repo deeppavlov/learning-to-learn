@@ -960,3 +960,27 @@ def block_diagonal(matrices, dtype=tf.float32):
     blocked.set_shape(batch_shape.concatenate((blocked_rows, blocked_cols)))
     return blocked
 
+
+def retrieve_from_inner_dicts(d, key):
+    map = dict()
+    retrieved = list()
+    start = 0
+    for k, v in d.items():
+        if isinstance(v[key], list):
+            map[k] = [start, start + len(v[key])]
+            start += len(v[key])
+            retrieved.extend(v[key])
+        else:
+            map[k] = start
+            start += 1
+            retrieved.append(v[key])
+    return retrieved, map
+
+
+def distribute_into_inner_dicts(d, key, to_distribute, map_):
+    for k, v in d.items():
+        if isinstance(map_[k], list):
+            v[key] = to_distribute[map_[k][0]:map_[k][1]]
+        else:
+            v[key] = to_distribute[map_[k]]
+    return d
