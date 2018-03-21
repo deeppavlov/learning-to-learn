@@ -5,28 +5,30 @@ from useful_functions import block_diagonal, custom_matmul
 
 class ResNet4Lstm(Meta):
 
-    def _create_optimizer_states(self, num_exercises, gpu_idx):
-        with tf.variable_scope('optimizer_states_on_gpu_%s' % gpu_idx):
-            states = [
-                tf.get_variable(
-                    'h', tf.zeros([num_exercises, self._num_lstm_nodes]), trainable=False),
-                tf.get_variable(
-                    'c', tf.zeros([num_exercises, self._num_lstm_nodes]), trainable=False)
-            ]
-            return states
+    def _create_optimizer_states(self, num_exercises, var_scope, gpu_idx):
+        with tf.variable_scope(var_scope):
+            with tf.variable_scope('gpu_%s' % gpu_idx):
+                states = [
+                    tf.get_variable(
+                        'h', tf.zeros([num_exercises, self._num_lstm_nodes]), trainable=False),
+                    tf.get_variable(
+                        'c', tf.zeros([num_exercises, self._num_lstm_nodes]), trainable=False)
+                ]
+                return states
 
     @staticmethod
-    def _reset_optimizer_states(gpu_idx):
-        with tf.variable_scope('optimizer_states_on_gpu_%s' % gpu_idx, resue=True):
-            h = tf.get_variable('h')
-            c = tf.get_variable('c')
-            h_shape = h.get_shape.as_list()
-            c_shape = c.get_shape().as_list()
-            reset_ops = [
-                tf.assign(h, tf.zeros(h_shape)),
-                tf.assign(c, tf.zeros(c_shape))
-            ]
-            return tf.group(*reset_ops)
+    def _reset_optimizer_states(var_scope, gpu_idx):
+        with tf.variable_scope(var_scope, reuse=True):
+            with tf.variable_scope('gpu_%s' % gpu_idx):
+                h = tf.get_variable('h')
+                c = tf.get_variable('c')
+                h_shape = h.get_shape.as_list()
+                c_shape = c.get_shape().as_list()
+                reset_ops = [
+                    tf.assign(h, tf.zeros(h_shape)),
+                    tf.assign(c, tf.zeros(c_shape))
+                ]
+                return tf.group(*reset_ops)
 
     @staticmethod
     def _create_permutation_matrix(size, num_exercises):

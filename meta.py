@@ -317,7 +317,11 @@ class Meta(object):
                 device_name = '/gpu:%s' % gpu_idx
                 with tf.device(device_name):
                     with tf.name_scope(device_name_scope(device_name)):
-                        optimizer_states = self._create_optimizer_states(self._num_ex_on_gpus[gpu_idx])
+                        optimizer_states = self._create_optimizer_states(
+                            self._num_ex_on_gpus[gpu_idx],
+                            'train_optimizer_states',
+                            gpu_idx
+                        )
                         self._create_permutation_matrices(self._num_ex_on_gpus[gpu_idx], gpu_idx)
                         tmp_states = optimizer_states
                         one_gpu_end_loss = 0
@@ -366,7 +370,7 @@ class Meta(object):
     def _inference_graph(self):
         with tf.name_scope('optimizer_inference_graph'):
             with tf.device('/gpu:0'):
-                optimizer_states = self._create_optimizer_states(1)
+                optimizer_states = self._create_optimizer_states('inference_optimizer_states', 0)
                 optimizer_ins, storage_save_ops, pupil_save_ops = self._eval_pupil_gradients_for_optimizer_inference()
                 optimizer_outs, new_optimizer_states = self._optimizer_core(
                     optimizer_ins, optimizer_states)
