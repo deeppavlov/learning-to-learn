@@ -197,12 +197,11 @@ class ResNet4Lstm(Meta):
             self._pupil_trainable_variables, self._pupil_grad_eval_pupil_storage, self._optimizer_grad_pupil_storage, \
                 self._pupil_savers = self._create_pupil_variables_and_savers(
                     self._pupil, self._num_exercises, self._exercise_gpu_map)
+            self._add_standard_train_hooks()
         else:
             self._exercise_gpu_map = None
             self._pupil_grad_eval_inputs, self._pupil_grad_eval_labels, \
                 self._optimizer_grad_inputs, self._optimizer_grad_labels = None, None, None, None
-
-        self._add_standard_train_hooks()
 
         with tf.device(self._base_device):
             self._create_optimizer_trainable_vars()
