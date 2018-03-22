@@ -373,7 +373,7 @@ class Meta(object):
                 optimizer_states = self._create_optimizer_states(1, 'inference_optimizer_states', 0)
                 optimizer_ins, storage_save_ops, pupil_save_ops = self._eval_pupil_gradients_for_optimizer_inference()
                 optimizer_outs, new_optimizer_states = self._optimizer_core(
-                    optimizer_ins, optimizer_states)
+                    optimizer_ins, None, optimizer_states, 0)
                 mods = self._compose_mods(optimizer_outs)
                 optimizer_save_states_ops = compose_save_list(
                     (optimizer_states, new_optimizer_states))
