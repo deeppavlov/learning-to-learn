@@ -15,9 +15,15 @@ class ResNet4Lstm(Meta):
             with tf.variable_scope('gpu_%s' % gpu_idx):
                 states = [
                     tf.get_variable(
-                        'h', tf.zeros([num_exercises, self._num_lstm_nodes]), trainable=False),
+                        'h',
+                        shape=[num_exercises, self._num_lstm_nodes],
+                        initializer=tf.zeros_initializer(),
+                        trainable=False),
                     tf.get_variable(
-                        'c', tf.zeros([num_exercises, self._num_lstm_nodes]), trainable=False)
+                        'c',
+                        shape=[num_exercises, self._num_lstm_nodes],
+                        initializer=tf.zeros_initializer(),
+                        trainable=False)
                 ]
                 return states
 
@@ -63,19 +69,19 @@ class ResNet4Lstm(Meta):
             if 'embedding_size' in net_size:
                 _ = tf.get_variable(
                     'embedding',
-                    self._create_permutation_matrix(net_size['embedding_size'], num_exercises),
+                    initializer=self._create_permutation_matrix(net_size['embedding_size'], num_exercises),
                     trainable=False
                 )
             for layer_idx in range(num_layers):
                 _ = tf.get_variable(
                     'c_%s' % layer_idx,
-                    self._create_permutation_matrix(num_nodes[layer_idx], num_exercises),
+                    initializer=self._create_permutation_matrix(num_nodes[layer_idx], num_exercises),
                     trainable=False
                 )
             for layer_idx in range(num_output_layers - 1):
                 _ = tf.get_variable(
                     'h_%s' % layer_idx,
-                    self._create_permutation_matrix(num_output_nodes[layer_idx], num_exercises),
+                    initializer=self._create_permutation_matrix(num_output_nodes[layer_idx], num_exercises),
                     trainable=False
                 )
 

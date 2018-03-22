@@ -1,6 +1,5 @@
 import re
 from environment import Environment
-# from gru_par import Gru, BatchGenerator
 from lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
 from res_net_opt import ResNet4Lstm
 from useful_functions import create_vocabulary, get_positions_in_vocabulary
