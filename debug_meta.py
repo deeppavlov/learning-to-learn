@@ -5,10 +5,10 @@ from lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
 from res_net_opt import ResNet4Lstm
 from useful_functions import create_vocabulary, get_positions_in_vocabulary
 
-with open('datasets/scipop_v3.0/scipop_train.txt', 'r', encoding='utf-8') as f:
+with open('datasets/scipop_v3.0/scipop_train.txt', 'r') as f:
     train_text = re.sub('<[^>]*>', '', f.read( ))
 
-with open('datasets/scipop_v3.0/scipop_valid.txt', 'r', encoding='utf-8') as f:
+with open('datasets/scipop_v3.0/scipop_valid.txt', 'r') as f:
     valid_text = re.sub('<[^>]*>', '', ''.join(f.readlines()[:10]))
 
 vocabulary = create_vocabulary(train_text + valid_text)

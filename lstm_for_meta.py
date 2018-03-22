@@ -1,4 +1,3 @@
-from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 from useful_functions import (create_vocabulary, get_positions_in_vocabulary, char2vec, pred2vec, pred2vec_fast,
@@ -299,7 +298,7 @@ class Lstm(Model):
 
     def _compute_lstm_matrix_parameters(self, idx):
         if idx == 0:
-            print(self._num_nodes)
+            # print(self._num_nodes)
             input_dim = self._num_nodes[0] + self._embedding_size
         else:
             input_dim = self._num_nodes[idx - 1] + self._num_nodes[idx]
