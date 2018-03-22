@@ -501,7 +501,8 @@ class Environment(object):
         default_hooks = self._pupil.get_default_hooks()
         self._hooks.update(default_hooks)
 
-    def _split_to_loss_and_not_loss_names(self, names):
+    @staticmethod
+    def _split_to_loss_and_not_loss_names(names):
         loss_names = list()
         not_loss_names = list()
         for name in names:
