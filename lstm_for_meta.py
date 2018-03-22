@@ -363,11 +363,11 @@ class Lstm(Model):
             saved_states = storage['states']
             if opt_ins is not None:
                 trainable = self._extract_trainable_from_opt_ins(opt_ins)
-            elif opt_ins is not None:
+            elif trainable_variables is not None:
                 trainable = trainable_variables
             else:
                 raise InvalidArgumentError(
-                    'At least one of arguments opt_ins and trainable_variables have to be provided',
+                    'At least one of arguments opt_ins or trainable_variables have to be provided',
                     (None, None),
                     ('opt_ins', 'trainable_variables'),
                     'opt_ins in optimizer_ins format and trainable_variables structure is explained in loss_and_opt_ins'
