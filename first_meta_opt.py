@@ -172,7 +172,8 @@ class ResNet4Lstm(Meta):
             learning_rate_for_optimizer_training=None,
             train_with_meta_op=None,
             reset_train_states=None,
-            reset_inference_state=None
+            reset_inference_state=None,
+            meta_optimizer_saver=None
         )
 
         _ = self._create_optimizer_states(False)

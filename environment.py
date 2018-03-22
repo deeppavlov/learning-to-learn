@@ -736,7 +736,7 @@ class Environment(object):
             print('restoring pupil from %s' % restore_path)
             self._hooks['saver'].restore(self._session, restore_path)
 
-    def _initialize_meta_optimizer(self, restore_path):
+    def _restore_meta_optimizer(self, restore_path):
         if restore_path is not None:
             print('restoring meta optimizer from %s' % restore_path)
             self._hooks['meta_optimizer_saver'].restore(self._session, restore_path)
@@ -1387,13 +1387,17 @@ class Environment(object):
         self._session.run(tf.global_variables_initializer())
         self._restore_pupil(start_specs['restore_path'])
         if start_specs['with_meta']:
-            self._initialize_meta_optimizer(start_specs['meta_optimizer_restore_path'])
+            self._restore_meta_optimizer(start_specs['meta_optimizer_restore_path'])
 
         # print('start_specs:', start_specs)
+        if start_specs['with_meta']:
+            processing_type = 'train_with_meta'
+        else:
+            processing_type = 'train'
 
         self._handler = Handler(self,
                                 self._hooks,
-                                'train',
+                                processing_type,
                                 start_specs['save_path'],
                                 start_specs['result_types'],
                                 summary=start_specs['summary'],
