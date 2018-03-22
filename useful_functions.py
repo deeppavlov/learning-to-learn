@@ -901,9 +901,10 @@ def compose_save_list(*pairs):
         save_list = list()
         for pair in pairs:
             # print('pair:', pair)
-            variables = flatten(pair[0])
-            # print(variables)
-            new_values = flatten(pair[1])
+            [variables, new_values] = synchronous_flatten(pair[0], pair[1])
+            # variables = flatten(pair[0])
+            # # print(variables)
+            # new_values = flatten(pair[1])
             for variable, value in zip(variables, new_values):
                 name = extract_op_name(variable.name)
                 save_list.append(tf.assign(variable, value, name='assign_save_%s' % name))

@@ -391,7 +391,7 @@ class Lstm(Model):
             optimizer_ins.update(opt_ins)
 
             new_storage = dict(
-                saved_states=new_states
+                states=new_states
             )
 
             loss = tf.reduce_mean(
