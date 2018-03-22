@@ -370,7 +370,7 @@ class Meta(object):
     def _inference_graph(self):
         with tf.name_scope('optimizer_inference_graph'):
             with tf.device('/gpu:0'):
-                optimizer_states = self._create_optimizer_states('inference_optimizer_states', 0)
+                optimizer_states = self._create_optimizer_states(1, 'inference_optimizer_states', 0)
                 optimizer_ins, storage_save_ops, pupil_save_ops = self._eval_pupil_gradients_for_optimizer_inference()
                 optimizer_outs, new_optimizer_states = self._optimizer_core(
                     optimizer_ins, optimizer_states)

@@ -176,8 +176,6 @@ class ResNet4Lstm(Meta):
             meta_optimizer_saver=None
         )
 
-        _ = self._create_optimizer_states(False)
-
         if regime == 'train':
             ex_per_gpu = self._num_exercises // self._num_gpus
             remaining = self._num_exercises - self._num_gpus * ex_per_gpu
