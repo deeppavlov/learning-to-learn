@@ -6,6 +6,10 @@ LEARNING_RATE_FOR_EMPTY_CORE = 4.
 
 class ResNet4Lstm(Meta):
 
+    @staticmethod
+    def check_kwargs():
+        pass
+
     def _create_optimizer_states(self, num_exercises, var_scope, gpu_idx):
         with tf.variable_scope(var_scope):
             with tf.variable_scope('gpu_%s' % gpu_idx):
