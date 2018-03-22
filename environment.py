@@ -1097,8 +1097,9 @@ class Environment(object):
 
         # resetting step in control_storage
         self.set_in_storage(step=step)
-        learning_rate_controller = Controller(self._storage,
-                                              train_specs['learning_rate'])
+        if not with_meta_optimizer:
+            learning_rate_controller = Controller(self._storage,
+                                                  train_specs['learning_rate'])
         train_feed_dict_additions = train_specs['additions_to_feed_dict']
         validation_additional_feed_dict = train_specs['validation_additions_to_feed_dict']
 
@@ -1170,7 +1171,9 @@ class Environment(object):
             train_batch_kwargs_controller_specs)
         batch_generator_specs_should_change = Controller(self._storage, change_tracker_specs)
 
-        controllers_for_printing = [learning_rate_controller]
+        if not with_meta_optimizer:
+            controllers_for_printing = [learning_rate_controller]
+
         controllers_for_printing.extend(additional_controllers)
         controllers_for_printing.append(batch_size_controller)
         batch_kwargs_controllers = list()
@@ -1202,10 +1205,12 @@ class Environment(object):
 
             if it_is_time_to_create_checkpoint.get():
                 self._create_checkpoint(step, checkpoints_path)
-
-            learning_rate = learning_rate_controller.get()
             train_inputs, train_labels = train_batches.next()
-            feed_dict[self._hooks['learning_rate']] = learning_rate
+
+            if not with_meta_optimizer:
+                learning_rate = learning_rate_controller.get()
+                feed_dict[self._hooks['learning_rate']] = learning_rate
+
             if isinstance(self._hooks['inputs'], list):
                 for input_tensor, input_value in zip(self._hooks['inputs'], train_inputs):
                     feed_dict[input_tensor] = input_value
