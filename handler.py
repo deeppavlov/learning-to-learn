@@ -61,7 +61,7 @@ class Handler(object):
 
         self._print_order = ['loss', 'bpc', 'perplexity', 'accuracy']
 
-        if self._processing_type == 'train':
+        if self._processing_type == 'train' or self._processing_type == 'train_with_meta':
             self._train_files = dict()
             if self._save_path is not None:
                 self._train_files['loss'] = self._save_path + '/' + 'loss_train.txt'
@@ -1024,9 +1024,9 @@ class Handler(object):
                 if self._processing_type == 'train' or self._processing_type == 'test':
                     f.write('build parameters:\n')
                     f.write(nested2string(self._environment_instance.current_pupil_build_parameters) + '\n' * 2)
-                    f.write('user specified parameters:\n')
+                    f.write('launch parameters:\n')
                     f.write(nested2string(self._environment_instance.current_pupil_launch_parameters) + '\n' * 2)
-                    f.write('default parameters:\n')
+                    f.write('default launch parameters:\n')
                     f.write(nested2string(
                         self._environment_instance.get_default_method_parameters( self._processing_type)) + '\n' * 2)
                 elif self._processing_type == 'several_launches':
@@ -1034,6 +1034,17 @@ class Handler(object):
                     f.write(nested2string(self._environment_instance.current_pupil_launch_parameters) + '\n' * 2)
                     f.write('train method default parameters:\n')
                     f.write(nested2string(self._environment_instance.get_default_method_parameters('train')) + '\n' * 2)
+                elif self._processing_type == 'train_with_meta':
+                    f.write('pupil build parameters:\n')
+                    f.write(nested2string(self._environment_instance.current_pupil_build_parameters) + '\n' * 2)
+                    f.write('pupil launch parameters:\n')
+                    f.write(nested2string(self._environment_instance.current_pupil_launch_parameters) + '\n' * 2)
+                    f.write('default launch parameters:\n')
+                    f.write(nested2string(
+                        self._environment_instance.get_default_method_parameters('train')) + '\n' * 2)
+                    f.write('optimizer build parameters:\n')
+                    f.write(nested2string(
+                        self._environment_instance.current_optimizer_build_parameters) + '\n' * 2)
 
     def log_finish_time(self):
         if self._current_log_path is not None:
