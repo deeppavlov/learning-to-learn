@@ -1023,15 +1023,15 @@ class Handler(object):
                 f.write('launch regime: ' + self._processing_type + '\n' * 2)
                 if self._processing_type == 'train' or self._processing_type == 'test':
                     f.write('build parameters:\n')
-                    f.write(nested2string(self._environment_instance.current_build_parameters) + '\n' * 2)
+                    f.write(nested2string(self._environment_instance.current_pupil_build_parameters) + '\n' * 2)
                     f.write('user specified parameters:\n')
-                    f.write(nested2string(self._environment_instance.current_launch_parameters) + '\n' * 2)
+                    f.write(nested2string(self._environment_instance.current_pupil_launch_parameters) + '\n' * 2)
                     f.write('default parameters:\n')
                     f.write(nested2string(
                         self._environment_instance.get_default_method_parameters( self._processing_type)) + '\n' * 2)
                 elif self._processing_type == 'several_launches':
                     f.write('all_parameters:\n')
-                    f.write(nested2string(self._environment_instance.current_launch_parameters) + '\n' * 2)
+                    f.write(nested2string(self._environment_instance.current_pupil_launch_parameters) + '\n' * 2)
                     f.write('train method default parameters:\n')
                     f.write(nested2string(self._environment_instance.get_default_method_parameters('train')) + '\n' * 2)
 

@@ -468,8 +468,8 @@ class Environment(object):
         self._handler = None
         self._storage = {'step': None}
         self._collected_result = None
-        self.current_build_parameters = None
-        self.current_launch_parameters = None
+        self.current_pupil_build_parameters = None
+        self.current_pupil_launch_parameters = None
         self.mp_debug_flag = 0
 
     def build_pupil(self, **kwargs):
@@ -483,7 +483,7 @@ class Environment(object):
 
     def _build_pupil(self, kwargs):
         self._pupil_class.check_kwargs(**kwargs)
-        self.current_build_parameters = kwargs
+        self.current_pupil_build_parameters = kwargs
         # Building the graph
         self._pupil = self._pupil_class(**kwargs)
 
@@ -491,6 +491,11 @@ class Environment(object):
         default_hooks = self._pupil.get_default_hooks()
         self._hooks.update(default_hooks)
         self._register_default_builders()
+
+    def build_optimizer(self, **kwargs):
+        self._meta_optimizer_class.check_kwargs(**kwargs)
+        self.current_pupil_build_parameters = kwargs
+
 
     def _split_to_loss_and_not_loss_names(self, names):
         loss_names = list()
@@ -2047,6 +2052,6 @@ class Environment(object):
         # print('generated_text:', generated_text)
 
     def _store_launch_parameters(self, **kwargs):
-        self.current_launch_parameters = kwargs
+        self.current_pupil_launch_parameters = kwargs
 
 
