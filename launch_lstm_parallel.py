@@ -36,17 +36,18 @@ valid_add_feed = [# {'placeholder': 'sampling_prob', 'value': 1.},
                   {'placeholder': 'dropout', 'value': 1.}]
 
 
-env.build(batch_size=64,
-          num_layers=2,
-          num_nodes=[400, 400],
-          num_output_layers=2,
-          num_output_nodes=[650],
-          vocabulary_size=vocabulary_size,
-          embedding_size=150,
-          num_unrollings=50,
-          init_parameter=3.,
-          # character_positions_in_vocabulary=cpiv,
-          num_gpus=1)
+env.build_pupil(
+    batch_size=64,
+    num_layers=2,
+    num_nodes=[400, 400],
+    num_output_layers=2,
+    num_output_nodes=[650],
+    vocabulary_size=vocabulary_size,
+    embedding_size=150,
+    num_unrollings=50,
+    init_parameter=3.,
+    # character_positions_in_vocabulary=cpiv,
+    num_gpus=1)
 
 env.train(save_path='lstm_sample_test/scipop3_1000_bs256_11.12',
           restore_path='lstm_sample_test/scipop3_1000_bs256_11.12/checkpoints/2000',

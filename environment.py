@@ -472,16 +472,16 @@ class Environment(object):
         self.current_launch_parameters = None
         self.mp_debug_flag = 0
 
-    def build(self, **kwargs):
+    def build_pupil(self, **kwargs):
         """A method building the graph
         Args:
             kwargs: key word arguments passed to self._model_class constructor
             :type kwargs: dictionary"""
 
         # checking if passed required arguments
-        self._build(kwargs)
+        self._build_pupil(kwargs)
 
-    def _build(self, kwargs):
+    def _build_pupil(self, kwargs):
         self._pupil_class.check_kwargs(**kwargs)
         self.current_build_parameters = kwargs
         # Building the graph
@@ -1217,7 +1217,7 @@ class Environment(object):
                                                                                      validation_additional_feed_dict)
                 for validation_dataset in train_specs['validation_datasets']:
                     if train_specs['validate_tokens_by_chars']:
-                        print('(Environment._train)ready to validate by chars')
+                        # print('(Environment._train)ready to validate by chars')
                         _ = self._validate_by_chars(
                             batch_generator_class, validation_dataset, train_specs['validation_batch_size'],
                             train_specs['valid_batch_kwargs'], training_step=step,
@@ -1404,7 +1404,7 @@ class Environment(object):
                                              args_for_launches,
                                              evaluation):
 
-        self._build(kwargs_for_building)
+        self._build_pupil(kwargs_for_building)
         #print('args_for_launches:', args_for_launches)
         all_tensor_aliases = self._all_tensor_aliases_from_train_method_arguments(
             args_for_launches, evaluation=evaluation)
@@ -1796,7 +1796,7 @@ class Environment(object):
             inq,
             outq):
         # print('entered _one_chat')
-        self._build(kwargs_for_building)
+        self._build_pupil(kwargs_for_building)
         if additions_to_feed_dict is None:
             feed_dict_base = dict()
         else:
