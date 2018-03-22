@@ -470,6 +470,8 @@ class Environment(object):
         self._collected_result = None
         self.current_pupil_build_parameters = None
         self.current_pupil_launch_parameters = None
+        self.current_optimizer_build_parameters = None
+        self.current_optimizer_launch_parameters = None
         self.mp_debug_flag = 0
 
     def build_pupil(self, **kwargs):
@@ -2058,6 +2060,8 @@ class Environment(object):
     def _store_launch_parameters(self, model_type, **kwargs):
         if model_type == 'pupil':
             self.current_pupil_launch_parameters = kwargs
+        elif model_type == 'optimizer':
+            self.current_optimizer_launch_parameters = kwargs
 
 
 
