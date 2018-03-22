@@ -287,6 +287,23 @@ def flatten(nested):
     return output
 
 
+def synchronous_flatten(*nested):
+    if not isinstance(nested[0], (tuple, list, dict)):
+        return [[n] for n in nested]
+    output = [list() for _ in nested]
+    if isinstance(nested[0], dict):
+        for k in nested[0].keys():
+            flattened = synchronous_flatten(*[n[k] for n in nested])
+            for o, f in zip(output, flattened):
+                o.extend(f)
+    else:
+        for inner_nested in zip(*nested):
+            flattened = synchronous_flatten(*inner_nested)
+            for o, f in zip(output, flattened):
+                o.extend(f)
+    return output
+
+
 def loop_through_indices(filename, start_index):
     path, name = split_to_path_and_name(filename)
     if '.' in name:
