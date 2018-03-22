@@ -32,7 +32,9 @@ env.build_pupil(
     init_parameter=3.,
     num_gpus=1)
 
-env.build_optimizer()
+env.build_optimizer(
+    regime='inference'
+)
 
 
 add_feed = [{'placeholder': 'dropout', 'value': 0.9}]

@@ -7,7 +7,7 @@ LEARNING_RATE_FOR_EMPTY_CORE = 4.
 class ResNet4Lstm(Meta):
 
     @staticmethod
-    def check_kwargs():
+    def check_kwargs(**kwargs):
         pass
 
     def _create_optimizer_states(self, num_exercises, var_scope, gpu_idx):
