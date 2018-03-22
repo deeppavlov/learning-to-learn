@@ -379,6 +379,9 @@ class Lstm(Model):
             lstm_biases = trainable['lstm_biases']
             output_matrices = trainable['output_matrices']
             output_biases = trainable['output_biases']
+
+            inputs, labels = self._prepare_inputs_and_labels(inputs, labels)
+
             embeddings, opt_ins = self._embed(inputs, embedding_matrix)
             optimizer_ins.update(opt_ins)
             rnn_outputs, new_states, opt_ins = self._rnn_module(
