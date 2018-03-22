@@ -251,16 +251,16 @@ class Meta(object):
         return optimizer_ins, storage_save_ops, loss
 
     @staticmethod
-    def _empty_core(optimizer_ins, *args):
+    def _empty_core(optimizer_ins, learning_rate=4.):
         for v in optimizer_ins.values():
             if isinstance(v['o'], list):
-                v['phi'] = tf.add_n(v['o']) / len(v['o'])
+                v['phi'] = tf.add_n(v['o']) / len(v['o']) * learning_rate**.5
             else:
-                v['phi'] = v['o']
+                v['phi'] = v['o'] * learning_rate**.5
             if isinstance(v['sigma'], list):
-                v['psi'] = tf.add_n(v['psi']) / len(v['sigma'])
+                v['psi'] = tf.add_n(v['psi']) / len(v['sigma']) * learning_rate**.5
             else:
-                v['psi'] = v['sigma']
+                v['psi'] = v['sigma'] * learning_rate**.5
         return optimizer_ins
 
     @staticmethod
