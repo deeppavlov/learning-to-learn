@@ -360,7 +360,7 @@ class Lstm(Model):
         exercises are processed"""
         optimizer_ins = dict()
         with tf.name_scope('loss'):
-            saved_states = storage['saved_states']
+            saved_states = storage['states']
             if opt_ins is not None:
                 trainable = self._extract_trainable_from_opt_ins(opt_ins)
             elif opt_ins is not None:
