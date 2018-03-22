@@ -735,7 +735,7 @@ class Environment(object):
     def test(self,
              **kwargs):
         self.flush_storage()
-        self._store_launch_parameters(**kwargs)
+        self._store_launch_parameters('pupil', **kwargs)
         tmp_output = parse_1_set_of_kwargs(self,
                                            kwargs,
                                            'test',
@@ -1344,11 +1344,13 @@ class Environment(object):
                     be performed and specifying length of generated sequences (not available)
                 train_tensor_schedule: If user wishes he may print or save any tensor in the graph (not available)
                 valid_tensor_schedule: same as train_tensor_schedule"""
-        self._store_launch_parameters(args=args,
-                                      start_session=start_session,
-                                      close_session=close_session,
-                                      set_passed_parameters_as_default=set_passed_parameters_as_default,
-                                      kwargs=kwargs)
+        self._store_launch_parameters(
+            'pupil',
+            args=args,
+            start_session=start_session,
+            close_session=close_session,
+            set_passed_parameters_as_default=set_passed_parameters_as_default,
+            kwargs=kwargs)
         tmp_output = parse_train_method_arguments(self,
                                                   args,
                                                   kwargs,
@@ -1489,11 +1491,13 @@ class Environment(object):
             build_hyperparameters = dict()
         if other_hyperparameters is None:
             other_hyperparameters = dict()
-        self._store_launch_parameters(evaluation=evaluation,
-                                      kwargs_for_building=kwargs_for_building,
-                                      build_hyperparameters=build_hyperparameters,
-                                      other_hyperparameters=other_hyperparameters,
-                                      kwargs=kwargs)
+        self._store_launch_parameters(
+            'pupil',
+            evaluation=evaluation,
+            kwargs_for_building=kwargs_for_building,
+            build_hyperparameters=build_hyperparameters,
+            other_hyperparameters=other_hyperparameters,
+            kwargs=kwargs)
         tmp_output = parse_train_method_arguments(self,
                                                   [],
                                                   kwargs,
@@ -2051,7 +2055,9 @@ class Environment(object):
 
         # print('generated_text:', generated_text)
 
-    def _store_launch_parameters(self, **kwargs):
-        self.current_pupil_launch_parameters = kwargs
+    def _store_launch_parameters(self, model_type, **kwargs):
+        if model_type == 'pupil':
+            self.current_pupil_launch_parameters = kwargs
+
 
 
