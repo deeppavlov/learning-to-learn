@@ -391,6 +391,8 @@ class Environment(object):
                            'log_device_placement': False,
                            'visible_device_list': ""},
             start_specs={'restore_path': None,
+                         'with_meta': False,
+                         'meta_optimizer_restore_path': None,
                          'save_path': None,
                          'result_types': self.put_result_types_in_correct_order(
                              ['loss', 'perplexity', 'accuracy']),
@@ -399,8 +401,7 @@ class Environment(object):
                          'batch_generator_class': self._default_batch_generator,
                          'vocabulary': self._vocabulary},
             run=dict(
-                train_specs={'meta_optimizer': None,
-                             'learning_rate': construct(default_learning_rate_control),
+                train_specs={'learning_rate': construct(default_learning_rate_control),
                              'additions_to_feed_dict': list(),
                              'stop': {'type': 'limit_steps', 'limit': 10000, 'name': 'stop'},
                              'train_dataset': default_dataset,
@@ -730,12 +731,15 @@ class Environment(object):
         elif model_type == 'meta_optimizer':
             self._hooks['saver'].save(self._session, path)
 
-    def _initialize_pupil(self, restore_path):
+    def _restore_pupil(self, restore_path):
         if restore_path is not None:
-            print('restoring from %s' % restore_path)
-        self._session.run(tf.global_variables_initializer())
-        if restore_path is not None:
+            print('restoring pupil from %s' % restore_path)
             self._hooks['saver'].restore(self._session, restore_path)
+
+    def _initialize_meta_optimizer(self, restore_path):
+        if restore_path is not None:
+            print('restoring meta optimizer from %s' % restore_path)
+            self._hooks['meta_optimizer_saver'].restore(self._session, restore_path)
 
     def test(self,
              **kwargs):
@@ -759,7 +763,8 @@ class Environment(object):
                             session_specs['gpu_memory'],
                             session_specs['allow_growth'],
                             session_specs['visible_device_list'])
-        self._initialize_pupil(start_specs['restore_path'])
+        self._session.run(tf.global_variables_initializer())
+        self._restore_pupil(start_specs['restore_path'])
         add_feed_dict = dict()
         # print("(Environment.test)work['additions_to_feed_dict']:", work['additions_to_feed_dict'])
         for addition in work['additions_to_feed_dict']:
@@ -1379,7 +1384,10 @@ class Environment(object):
     def _train_repeatedly(self, start_specs, run_specs_set):
         # initializing model
         self.flush_storage()
-        self._initialize_pupil(start_specs['restore_path'])
+        self._session.run(tf.global_variables_initializer())
+        self._restore_pupil(start_specs['restore_path'])
+        if start_specs['with_meta']:
+            self._initialize_meta_optimizer(start_specs['meta_optimizer_restore_path'])
 
         # print('start_specs:', start_specs)
 
@@ -1659,7 +1667,8 @@ class Environment(object):
         if restore_path is None:
             print_and_log('Skipping variables restoring. Continuing on current variables values', fn=log_path)
         else:
-            self._initialize_pupil(restore_path)
+            self._session.run(tf.global_variables_initializer())
+            self._restore_pupil(restore_path)
         self._hooks['reset_validation_state'].run(session=self._session)
         if first_speaker == 'human':
             human_replica = input('Human: ')
@@ -1822,7 +1831,8 @@ class Environment(object):
                             gpu_memory,
                             allow_growth,
                             '')
-        self._initialize_pupil(restore_path)
+        self._session.run(tf.global_variables_initializer())
+        self._restore_pupil(restore_path)
         self._hooks['reset_validation_state'].run(session=self._session)
         greeting = 'Здравствуйте, я бот.'
         # print_and_log('Bot: ' + greeting, _print=False, fn=log_path)
