@@ -391,7 +391,7 @@ class Environment(object):
                            'log_device_placement': False,
                            'visible_device_list': ""},
             start_specs={'restore_path': None,
-                         'with_meta': False,
+                         'with_meta_optimizer': False,
                          'meta_optimizer_restore_path': None,
                          'save_path': None,
                          'result_types': self.put_result_types_in_correct_order(
@@ -1083,6 +1083,7 @@ class Environment(object):
                run_specs,
                checkpoints_path,
                batch_generator_class,
+               with_meta_optimizer,
                init_step=0):
         """It is a method that does actual training and responsible for one training pass through dataset. It is called
         from train method (maybe several times)
@@ -1217,7 +1218,7 @@ class Environment(object):
                 feed_dict[self._hooks['labels']] = train_labels
             for addition, add_controller in zip(train_feed_dict_additions, additional_controllers):
                 feed_dict[self._hooks[addition['placeholder']]] = add_controller.get()
-            train_operations = self._handler.get_tensors('train', step)
+            train_operations = self._handler.get_tensors('train', step, with_meta_optimizer=with_meta_optimizer)
             # print('train_operations:', train_operations)
             # print('feed_dict:', feed_dict)
 
@@ -1386,11 +1387,11 @@ class Environment(object):
         self.flush_storage()
         self._session.run(tf.global_variables_initializer())
         self._restore_pupil(start_specs['restore_path'])
-        if start_specs['with_meta']:
+        if start_specs['with_meta_optimizer']:
             self._restore_meta_optimizer(start_specs['meta_optimizer_restore_path'])
 
         # print('start_specs:', start_specs)
-        if start_specs['with_meta']:
+        if start_specs['with_meta_optimizer']:
             processing_type = 'train_with_meta'
         else:
             processing_type = 'train'
@@ -1415,6 +1416,7 @@ class Environment(object):
             init_step = self._train(run_specs,
                                     checkpoints_path,
                                     start_specs['batch_generator_class'],
+                                    start_specs['with_meta_optimizer'],
                                     init_step=init_step)
         if checkpoints_path is not None:
             self._create_checkpoint('final', checkpoints_path)
