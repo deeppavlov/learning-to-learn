@@ -497,7 +497,9 @@ class Environment(object):
     def build_optimizer(self, **kwargs):
         self._meta_optimizer_class.check_kwargs(**kwargs)
         self.current_pupil_build_parameters = kwargs
-
+        self._meta_optimizer = self._meta_optimizer_class(self._pupil, **kwargs)
+        default_hooks = self._pupil.get_default_hooks()
+        self._hooks.update(default_hooks)
 
     def _split_to_loss_and_not_loss_names(self, names):
         loss_names = list()

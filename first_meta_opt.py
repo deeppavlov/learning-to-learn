@@ -221,5 +221,6 @@ class ResNet4Lstm(Meta):
         elif self._regime == 'inference':
             self._inference_graph()
             self._hooks['reset_inference_state'] = self._reset_optimizer_states('inference', 0)
-        
-        
+
+    def get_default_hooks(self):
+        return dict(self._hooks.items())
