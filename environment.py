@@ -282,8 +282,8 @@ class Environment(object):
         return sorted_types
 
     def __init__(self,
-                 pupil_class,
-                 batch_generator_classes,
+                 pupil_class=None,
+                 batch_generator_classes=None,
                  vocabulary=None,
                  datasets=None,
                  filenames=None,
