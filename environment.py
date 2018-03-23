@@ -499,7 +499,7 @@ class Environment(object):
         self._meta_optimizer_class.check_kwargs(**kwargs)
         self.current_pupil_build_parameters = kwargs
         self._meta_optimizer = self._meta_optimizer_class(self._pupil, **kwargs)
-        default_hooks = self._pupil.get_default_hooks()
+        default_hooks = self._meta_optimizer.get_default_hooks()
         self._hooks.update(default_hooks)
 
     @staticmethod
@@ -1225,6 +1225,7 @@ class Environment(object):
                 feed_dict[self._hooks['labels']] = train_labels
             for addition, add_controller in zip(train_feed_dict_additions, additional_controllers):
                 feed_dict[self._hooks[addition['placeholder']]] = add_controller.get()
+            # print('(Environment._train)self._hooks:', self._hooks)
             train_operations = self._handler.get_tensors('train', step, with_meta_optimizer=with_meta_optimizer)
             # print('train_operations:', train_operations)
             # print('feed_dict:', feed_dict)
