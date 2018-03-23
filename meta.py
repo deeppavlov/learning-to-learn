@@ -382,7 +382,7 @@ class Meta(object):
         with tf.name_scope('optimizer_inference_graph'):
             with tf.device('/gpu:0'):
                 optimizer_states = self._create_optimizer_states(1, 'inference_optimizer_states', 0)
-                optimizer_ins, storage_save_ops, pupil_save_ops = self._eval_pupil_gradients_for_optimizer_inference()
+                optimizer_ins, pupil_save_ops, start_loss = self._eval_pupil_gradients_for_optimizer_inference()
                 optimizer_outs, new_optimizer_states = self._optimizer_core(
                     optimizer_ins, None, optimizer_states, 0)
                 # print('\n(Meta._inference_graph)optimizer_states:', optimizer_states)
@@ -390,6 +390,8 @@ class Meta(object):
                 mods = self._compose_mods(optimizer_outs)
                 optimizer_save_states_ops = compose_save_list(
                     (optimizer_states, new_optimizer_states))
+                print('\n(Meta._inference_graph)pupil_save_ops:', pupil_save_ops)
+                print('\n(Meta._inference_graph)new_optimizer_states:', new_optimizer_states)
                 with tf.control_dependencies(pupil_save_ops+optimizer_save_states_ops):
                     train_op = tf.group(*self._pupil.apply_mods(mods))
                 self._hooks['train_with_meta_op'] = train_op
