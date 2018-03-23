@@ -268,21 +268,25 @@ class Meta(object):
 
     @staticmethod
     def _compose_mods(optimizer_outs):
-        for v in optimizer_outs.values():
-            if 'matrix' in v:
-                ndims = len(v['phi'].get_shape().as_list())
-                batch_size = v['phi'].get_shape().as_list()[-2]
-                # print("\n(Meta._compose_mods)v['phi'].shape:", v['phi'].get_shape().as_list())
-                # print("\n(Meta._compose_mods)v['psi'].shape:", v['psi'].get_shape().as_list())
-                if ndims == 3:
-                    eq = 'ijk,ijl->ikl'
-                elif ndims == 2:
-                    eq = 'jk,jl->kl'
-                v['matrix_mods'] = tf.einsum(eq, v['phi'], v['psi']) / batch_size
+        with tf.name_scope('pupil_mods'):
+            for k, v in optimizer_outs.items():
+                with tf.name_scope(k):
+                    if 'matrix' in v:
+                        ndims = len(v['phi'].get_shape().as_list())
+                        batch_size = v['phi'].get_shape().as_list()[-2]
+                        # print("\n(Meta._compose_mods)v['phi'].shape:", v['phi'].get_shape().as_list())
+                        # print("\n(Meta._compose_mods)v['psi'].shape:", v['psi'].get_shape().as_list())
+                        with tf.name_scope('matrix'):
+                            if ndims == 3:
+                                eq = 'ijk,ijl->ikl'
+                            elif ndims == 2:
+                                eq = 'jk,jl->kl'
+                            v['matrix_mods'] = tf.einsum(eq, v['phi'], v['psi']) / batch_size
 
-            if 'bias' in v:
-                v['bias_mods'] = tf.reduce_mean(v['psi'], axis=-2)
-        return optimizer_outs
+                    if 'bias' in v:
+                        with tf.name_scope('bias'):
+                            v['bias_mods'] = tf.reduce_mean(v['psi'], axis=-2)
+            return optimizer_outs
 
     @staticmethod
     def _apply_mods(mods):
