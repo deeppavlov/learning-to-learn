@@ -1173,6 +1173,8 @@ class Environment(object):
 
         if not with_meta_optimizer:
             controllers_for_printing = [learning_rate_controller]
+        else:
+            controllers_for_printing = list()
 
         controllers_for_printing.extend(additional_controllers)
         controllers_for_printing.append(batch_size_controller)
