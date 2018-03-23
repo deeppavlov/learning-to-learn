@@ -1009,12 +1009,16 @@ class Environment(object):
         list_of_required_tensors_aliases = list()
         result_types_for_launches = list()
         for start_specs in start_specs_for_launches:
-            result_types_for_launches = add_missing_to_list(result_types_for_launches, start_specs['result_types'])
+            if start_specs['with_meta_optimizer']:
+                result_types_for_launches = add_missing_to_list(
+                    result_types_for_launches, start_specs['result_types'])
         list_of_required_tensors_aliases.extend(result_types_for_launches)
-        for run_specs_set in run_specs_for_launches:
-            if self._check_if_validation_is_needed(run_specs_set):
-                for result_type in start_specs['result_types']:
-                    list_of_required_tensors_aliases.append('validation_' + result_type)
+        for start_specs, run_specs_set in zip(start_specs_for_launches, run_specs_for_launches):
+            if start_specs['with_meta_optimizer']:
+                if self._check_if_validation_is_needed(run_specs_set):
+                    for result_type in start_specs['result_types']:
+                        list_of_required_tensors_aliases.append('validation_' + result_type)
+
         for run_specs_set in run_specs_for_launches:
             for run_specs in run_specs_set:
                 train_aliases = self._get_all_tensors_from_schedule(run_specs['schedule']['train_tensor_schedule'])

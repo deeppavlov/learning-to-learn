@@ -29,7 +29,9 @@ env.build_pupil(
     embedding_size=150,
     num_unrollings=50,
     init_parameter=3.,
-    num_gpus=1)
+    num_gpus=1,
+    regime='training_with_meta_optimizer'
+)
 
 env.build_optimizer(
     regime='inference'
@@ -41,16 +43,19 @@ valid_add_feed = [{'placeholder': 'dropout', 'value': 1.}]
 
 env.train(
     with_meta_optimizer=True,
-    save_path='lstm_sample_test/scipop3_1000_bs256_11.12',
+    save_path='debug_empty_meta_optimizer/not_changing_variables_issue',
     batch_size=64,
     num_unrollings=50,
     vocabulary=vocabulary,
     checkpoint_steps=2000,
-    result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
+    result_types=['loss'],
     printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
     stop=40000,
     train_dataset_text=train_text,
     validation_dataset_texts=[valid_text],
     results_collect_interval=100,
     additions_to_feed_dict=add_feed,
-    validation_additions_to_feed_dict=valid_add_feed)
+    validation_additions_to_feed_dict=valid_add_feed,
+    summary=True,
+    add_graph_to_summary=True
+)

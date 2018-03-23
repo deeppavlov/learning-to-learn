@@ -395,5 +395,6 @@ class Meta(object):
                 with tf.control_dependencies(pupil_save_ops+optimizer_save_states_ops):
                     train_op = tf.group(*self._pupil.apply_mods(mods))
                 self._hooks['train_with_meta_optimizer_op'] = train_op
+                self._hooks['loss'] = start_loss
 
 

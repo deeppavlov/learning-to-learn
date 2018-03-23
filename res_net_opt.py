@@ -191,7 +191,8 @@ class ResNet4Lstm(Meta):
             train_with_meta_optimizer_op=None,
             reset_train_states=None,
             reset_inference_state=None,
-            meta_optimizer_saver=None
+            meta_optimizer_saver=None,
+            loss=None
         )
 
         if regime == 'train':
