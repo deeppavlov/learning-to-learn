@@ -1002,3 +1002,14 @@ def distribute_into_inner_dicts(d, key, to_distribute, map_):
         else:
             v[key] = to_distribute[map_[k]]
     return d
+
+
+def print_optimizer_ins(opt_ins):
+    """Help method for debugging meta optimizers"""
+    for ok, ov in opt_ins.items():
+        print('\n'*2)
+        print(ok)
+        for ik, iv in ov.items():
+            print('')
+            print(ik)
+            print(iv)

@@ -1,7 +1,7 @@
 import tensorflow as tf
 from useful_functions import (construct, get_keys_from_nested, get_obj_elem_by_path, device_name_scope,
                               write_elem_in_obj_by_path, stop_gradient_in_nested, compose_save_list, average_gradients,
-                              retrieve_from_inner_dicts, distribute_into_inner_dicts)
+                              retrieve_from_inner_dicts, distribute_into_inner_dicts, print_optimizer_ins)
 
 
 class Meta(object):
@@ -246,12 +246,15 @@ class Meta(object):
     def _eval_pupil_gradients_for_optimizer_inference(self):
         loss, optimizer_ins, storage_save_ops = self._pupil.loss_and_opt_ins_for_inference()
         s_vectors, map_ = retrieve_from_inner_dicts(optimizer_ins, 's')
+        print('(Meta._eval_pupil_gradients_for_optimizer_inference)map_:', map_)
         sigma_vectors = tf.gradients(loss, s_vectors)
         optimizer_ins = distribute_into_inner_dicts(optimizer_ins, 'sigma', sigma_vectors, map_)
         return optimizer_ins, storage_save_ops, loss
 
     @staticmethod
     def _empty_core(optimizer_ins, learning_rate=4.):
+        print('(Meta._empty_core)optimizer_ins:')
+        print_optimizer_ins(optimizer_ins)
         for v in optimizer_ins.values():
             if isinstance(v['o'], list):
                 v['phi'] = tf.add_n(v['o']) / len(v['o']) * learning_rate**.5

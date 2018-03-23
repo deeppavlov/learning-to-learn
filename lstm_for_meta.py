@@ -278,22 +278,26 @@ class Lstm(Model):
             else:
                 concat_dim = 0
             num_split = len(rnn_outputs)
+            o = rnn_outputs
             rnn_outputs = tf.concat(rnn_outputs, concat_dim, name='concatenated_rnn_outputs')
             hs = rnn_outputs
             for layer_idx, (matr, bias) in enumerate(zip(output_matrices, output_biases)):
-                # print('hs.shape:', hs.get_shape().as_list())
-                s = custom_matmul(
-                        hs, matr)
-                optimizer_ins['output_layer_%s' % layer_idx] = dict(
-                    o=tf.split(hs, num_split, axis=concat_dim),
-                    s=tf.split(s, num_split, axis=concat_dim)
-                )
-                hs = custom_add(
-                    s,
-                    bias,
-                    name='res_of_%s_output_layer' % layer_idx)
-                if layer_idx < self._num_output_layers - 1:
-                    hs = tf.nn.relu(hs)
+                with tf.name_scope('layer_%s' % layer_idx):
+                    # print('hs.shape:', hs.get_shape().as_list())
+                    s = custom_matmul(
+                            hs, matr, name='first_s')
+                    s = tf.split(s, num_split, axis=concat_dim, name='split_s_for_optimizer')
+                    optimizer_ins['output_layer_%s' % layer_idx] = dict(
+                        o=o,
+                        s=s
+                    )
+                    s = tf.concat(s, concat_dim, name='united_s')
+                    hs = custom_add(
+                        s,
+                        bias,
+                        name='res_of_%s_output_layer' % layer_idx)
+                    if layer_idx < self._num_output_layers - 1:
+                        hs = tf.nn.relu(hs)
         return hs, optimizer_ins
 
     def _compute_lstm_matrix_parameters(self, idx):
