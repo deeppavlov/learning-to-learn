@@ -899,8 +899,8 @@ def extract_op_name(full_name):
     return scopes_stripped.split(':')[0]
 
 
-def compose_save_list(*pairs):
-    with tf.name_scope('save_list'):
+def compose_save_list(*pairs, name_scope='save_list'):
+    with tf.name_scope(name_scope):
         save_list = list()
         for pair in pairs:
             # print('pair:', pair)
@@ -914,8 +914,8 @@ def compose_save_list(*pairs):
         return save_list
 
 
-def compose_reset_list(*args):
-    with tf.name_scope('reset_list'):
+def compose_reset_list(*args, name_scope='reset_list'):
+    with tf.name_scope(name_scope):
         reset_list = list()
         flattened = flatten(args)
         for variable in flattened:
@@ -925,8 +925,8 @@ def compose_reset_list(*args):
         return reset_list
 
 
-def compose_randomize_list(*args):
-    with tf.name_scope('randomize_list'):
+def compose_randomize_list(*args, name_scope='randomize_list'):
+    with tf.name_scope(name_scope):
         randomize_list = list()
         flattened = flatten(args)
         for variable in flattened:

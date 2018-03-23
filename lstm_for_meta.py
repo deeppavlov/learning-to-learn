@@ -363,7 +363,7 @@ class Lstm(Model):
         linear projection performed using layer weights. 'o', 's', 'matrix', 'bias' - can be stacked if several
         exercises are processed"""
         optimizer_ins = dict()
-        with tf.name_scope('loss'):
+        with tf.name_scope('pupil_loss'):
             saved_states = storage['states']
             if opt_ins is not None:
                 trainable = self._extract_trainable_from_opt_ins(opt_ins)
@@ -412,7 +412,10 @@ class Lstm(Model):
         )
         # print('(Lstm.loss_and_opt_ins_for_inference)self._train_storage:', self._train_storage)
         # print('(Lstm.loss_and_opt_ins_for_inference)new_storage:', new_storage)
-        storage_save_ops = compose_save_list((self._train_storage, new_storage))
+        storage_save_ops = compose_save_list(
+            (self._train_storage, new_storage),
+            name_scope='save_pupil_train_storage'
+        )
         # print('(Lstm.loss_and_opt_ins_for_inference)storage_save_ops:', storage_save_ops)
         return loss, optimizer_ins, storage_save_ops
 

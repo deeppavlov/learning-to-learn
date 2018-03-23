@@ -369,10 +369,17 @@ class Meta(object):
                             self._num_exercises, optimizer_grad_pupil_storage)
                         save_ops = compose_save_list(
                             (optimizer_states, tmp_states),
-                            (self._pupil_trainable_variables, new_pupil_trainable),
+                            name_scope='save_opt_states'
+                        ) + compose_save_list(
+                            (self._pupil_trainable_variables, new_pupil_trainable), name_scope='save_pupil_train_vars'
+                        ) + compose_save_list(
                             (self._pupil_grad_eval_pupil_storage, pupil_grad_eval_pupil_storage),
-                            (self._optimizer_grad_pupil_storage, optimizer_grad_pupil_storage)
+                            name_scope='save_pupil_grad_eval_pupil_storage'
+                        ) + compose_save_list(
+                            (self._optimizer_grad_pupil_storage, optimizer_grad_pupil_storage),
+                            name_scope='save_optimizer_grad_pupil_storage'
                         )
+
                         with tf.control_dependencies(save_ops):
                             one_gpu_end_loss = tf.identity(one_gpu_end_loss)
                             start_losses_by_gpu.append(one_gpu_start_loss)
@@ -397,7 +404,7 @@ class Meta(object):
                 # print('\n(Meta._inference_graph)new_optimizer_states:', new_optimizer_states)
                 mods = self._compose_mods(optimizer_outs)
                 optimizer_save_states_ops = compose_save_list(
-                    (optimizer_states, new_optimizer_states))
+                    (optimizer_states, new_optimizer_states), name_scope='save_optimizer_states')
                 # print('\n(Meta._inference_graph)pupil_save_ops:', pupil_save_ops)
                 # print('\n(Meta._inference_graph)new_optimizer_states:', new_optimizer_states)
                 with tf.control_dependencies(pupil_save_ops+optimizer_save_states_ops):
