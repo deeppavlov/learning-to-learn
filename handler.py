@@ -111,9 +111,12 @@ class Handler(object):
             self._training_step = None
             self._accumulation_is_performed = False
             self._accumulated_tensors = dict()
-            self._accumulated = dict(loss=None, perplexity=None, accuracy=None)
-            if self._bpc:
-                self._accumulated['bpc'] = None
+
+            # self._accumulated = dict(loss=None, perplexity=None, accuracy=None)
+            # if self._bpc:
+            #     self._accumulated['bpc'] = None
+
+            self._accumulated = dict([(res_key, None) for res_key in self._result_types])
         if self._processing_type == 'test':
             self._name_of_dataset_on_which_accumulating = None
             self._dataset_specific = dict()
@@ -125,9 +128,12 @@ class Handler(object):
                 valid_print_tensors=dict(),
                 valid_save_text_tensors=dict()
             )
-            self._accumulated = dict(loss=None, perplexity=None, accuracy=None)
-            if self._bpc:
-                self._accumulated['bpc'] = None
+            # self._accumulated = dict(loss=None, perplexity=None, accuracy=None)
+            # if self._bpc:
+            #     self._accumulated['bpc'] = None
+
+            self._accumulated = dict([(res_key, None) for res_key in self._result_types])
+
             self._fuses = fuses
             if self._fuses is not None:
                 for fuse in self._fuses:
