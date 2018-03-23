@@ -256,14 +256,16 @@ class Meta(object):
         # print('(Meta._empty_core)optimizer_ins:')
         # print_optimizer_ins(optimizer_ins)
         for v in optimizer_ins.values():
-            if isinstance(v['o'], list):
-                v['phi'] = tf.add_n(v['o']) / len(v['o']) * learning_rate**.5
-            else:
-                v['phi'] = v['o'] * learning_rate**.5
-            if isinstance(v['sigma'], list):
-                v['psi'] = tf.add_n(v['sigma']) / len(v['sigma']) * learning_rate**.5
-            else:
-                v['psi'] = v['sigma'] * learning_rate**.5
+            with tf.name_scope('phi'):
+                if isinstance(v['o'], list):
+                    v['phi'] = tf.add_n(v['o']) / len(v['o']) * learning_rate**.5
+                else:
+                    v['phi'] = v['o'] * learning_rate**.5
+            with tf.name_scope('psi'):
+                if isinstance(v['sigma'], list):
+                    v['psi'] = tf.add_n(v['sigma']) / len(v['sigma']) * learning_rate**.5
+                else:
+                    v['psi'] = v['sigma'] * learning_rate**.5
         return optimizer_ins, []
 
     @staticmethod
