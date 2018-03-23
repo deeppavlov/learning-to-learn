@@ -620,8 +620,8 @@ class Handler(object):
         start = pointer
         if regime == 'train':
             if with_meta_optimizer:
-                tensors.append(self._hooks['train_op_with_meta_optimizer'])
-                current['tensors']['train_op_with_meta_optimizer'] = [pointer, pointer+1]
+                tensors.append(self._hooks['train_with_meta_optimizer_op'])
+                current['tensors']['train_with_meta_optimizer_op'] = [pointer, pointer+1]
                 pointer += 1
             else:
                 tensors.append(self._hooks['train_op'])

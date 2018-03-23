@@ -188,7 +188,7 @@ class ResNet4Lstm(Meta):
             pupil_savers=None,
             optimizer_train_op=None,
             learning_rate_for_optimizer_training=None,
-            train_with_meta_op=None,
+            train_with_meta_optimizer_op=None,
             reset_train_states=None,
             reset_inference_state=None,
             meta_optimizer_saver=None
