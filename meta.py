@@ -258,7 +258,7 @@ class Meta(object):
             else:
                 v['phi'] = v['o'] * learning_rate**.5
             if isinstance(v['sigma'], list):
-                v['psi'] = tf.add_n(v['psi']) / len(v['sigma']) * learning_rate**.5
+                v['psi'] = tf.add_n(v['sigma']) / len(v['sigma']) * learning_rate**.5
             else:
                 v['psi'] = v['sigma'] * learning_rate**.5
         return optimizer_ins
