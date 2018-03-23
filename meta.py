@@ -246,15 +246,15 @@ class Meta(object):
     def _eval_pupil_gradients_for_optimizer_inference(self):
         loss, optimizer_ins, storage_save_ops = self._pupil.loss_and_opt_ins_for_inference()
         s_vectors, map_ = retrieve_from_inner_dicts(optimizer_ins, 's')
-        print('(Meta._eval_pupil_gradients_for_optimizer_inference)map_:', map_)
+        # print('(Meta._eval_pupil_gradients_for_optimizer_inference)map_:', map_)
         sigma_vectors = tf.gradients(loss, s_vectors)
         optimizer_ins = distribute_into_inner_dicts(optimizer_ins, 'sigma', sigma_vectors, map_)
         return optimizer_ins, storage_save_ops, loss
 
     @staticmethod
     def _empty_core(optimizer_ins, learning_rate=4.):
-        print('(Meta._empty_core)optimizer_ins:')
-        print_optimizer_ins(optimizer_ins)
+        # print('(Meta._empty_core)optimizer_ins:')
+        # print_optimizer_ins(optimizer_ins)
         for v in optimizer_ins.values():
             if isinstance(v['o'], list):
                 v['phi'] = tf.add_n(v['o']) / len(v['o']) * learning_rate**.5
@@ -337,7 +337,7 @@ class Meta(object):
                                         pupil_trainable_variables[gpu_idx], pupil_grad_eval_pupil_storage[gpu_idx]
                                     )
                                 optimizer_outs, tmp_states = self._optimizer_core(
-                                    optimizer_ins, tmp_states)
+                                    optimizer_ins, self._num_ex_per_gpu[gpu_idx], tmp_states, gpu_idx)
                                 mods = self._compose_mods(optimizer_outs)
                                 new_pupil_trainable = self._apply_mods(mods)
                                 end_loss, _, optimizer_grad_pupil_storage[gpu_idx] = self._pupil.loss_and_opt_ins(
