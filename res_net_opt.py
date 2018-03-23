@@ -10,22 +10,25 @@ class ResNet4Lstm(Meta):
     def check_kwargs(**kwargs):
         pass
 
+    # def _create_optimizer_states(self, num_exercises, var_scope, gpu_idx):
+    #     with tf.variable_scope(var_scope):
+    #         with tf.variable_scope('gpu_%s' % gpu_idx):
+    #             states = [
+    #                 tf.get_variable(
+    #                     'h',
+    #                     shape=[num_exercises, self._num_lstm_nodes],
+    #                     initializer=tf.zeros_initializer(),
+    #                     trainable=False),
+    #                 tf.get_variable(
+    #                     'c',
+    #                     shape=[num_exercises, self._num_lstm_nodes],
+    #                     initializer=tf.zeros_initializer(),
+    #                     trainable=False)
+    #             ]
+    #             return states
+
     def _create_optimizer_states(self, num_exercises, var_scope, gpu_idx):
-        with tf.variable_scope(var_scope):
-            with tf.variable_scope('gpu_%s' % gpu_idx):
-                states = [
-                    tf.get_variable(
-                        'h',
-                        shape=[num_exercises, self._num_lstm_nodes],
-                        initializer=tf.zeros_initializer(),
-                        trainable=False),
-                    tf.get_variable(
-                        'c',
-                        shape=[num_exercises, self._num_lstm_nodes],
-                        initializer=tf.zeros_initializer(),
-                        trainable=False)
-                ]
-                return states
+        return []
 
     @staticmethod
     def _reset_optimizer_states(var_scope, gpu_idx):

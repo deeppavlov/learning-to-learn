@@ -297,10 +297,13 @@ def synchronous_flatten(*nested):
             for o, f in zip(output, flattened):
                 o.extend(f)
     else:
-        for inner_nested in zip(*nested):
-            flattened = synchronous_flatten(*inner_nested)
-            for o, f in zip(output, flattened):
-                o.extend(f)
+        try:
+            for inner_nested in zip(*nested):
+                flattened = synchronous_flatten(*inner_nested)
+                for o, f in zip(output, flattened):
+                    o.extend(f)
+        except TypeError:
+            print('(synchronous_flatten)nested:', nested)
     return output
 
 

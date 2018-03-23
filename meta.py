@@ -264,7 +264,7 @@ class Meta(object):
                 v['psi'] = tf.add_n(v['sigma']) / len(v['sigma']) * learning_rate**.5
             else:
                 v['psi'] = v['sigma'] * learning_rate**.5
-        return optimizer_ins, None
+        return optimizer_ins, []
 
     @staticmethod
     def _compose_mods(optimizer_outs):
@@ -272,8 +272,8 @@ class Meta(object):
             if 'matrix' in v:
                 ndims = len(v['phi'].get_shape().as_list())
                 batch_size = v['phi'].get_shape().as_list()[-2]
-                print("\n(Meta._compose_mods)v['phi'].shape:", v['phi'].get_shape().as_list())
-                print("\n(Meta._compose_mods)v['psi'].shape:", v['psi'].get_shape().as_list())
+                # print("\n(Meta._compose_mods)v['phi'].shape:", v['phi'].get_shape().as_list())
+                # print("\n(Meta._compose_mods)v['psi'].shape:", v['psi'].get_shape().as_list())
                 if ndims == 3:
                     eq = 'ijk,ijl->ikl'
                 elif ndims == 2:
@@ -385,6 +385,8 @@ class Meta(object):
                 optimizer_ins, storage_save_ops, pupil_save_ops = self._eval_pupil_gradients_for_optimizer_inference()
                 optimizer_outs, new_optimizer_states = self._optimizer_core(
                     optimizer_ins, None, optimizer_states, 0)
+                # print('\n(Meta._inference_graph)optimizer_states:', optimizer_states)
+                # print('\n(Meta._inference_graph)new_optimizer_states:', new_optimizer_states)
                 mods = self._compose_mods(optimizer_outs)
                 optimizer_save_states_ops = compose_save_list(
                     (optimizer_states, new_optimizer_states))
