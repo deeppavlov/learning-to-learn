@@ -49,7 +49,7 @@ env.train(
     vocabulary=vocabulary,
     checkpoint_steps=2000,
     result_types=['loss'],
-    printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
+    printed_result_types=['loss'],
     stop=40000,
     train_dataset_text=train_text,
     validation_dataset_texts=[valid_text],

@@ -51,7 +51,7 @@ env.build_pupil(
 
 print('building is finished')
 env.train(save_path='lstm_sample_test/scipop3_1000_bs256_11.12',
-          restore_path='lstm_sample_test/scipop3_1000_bs256_11.12/checkpoints/2000',
+          # restore_path='lstm_sample_test/scipop3_1000_bs256_11.12/checkpoints/2000',
           learning_rate={'type': 'exponential_decay',
                          'init': .002,
                          'decay': .5,

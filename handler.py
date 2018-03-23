@@ -506,12 +506,13 @@ class Handler(object):
         tmp_output = validation_res[self._last_run_tensor_order['basic']['borders'][0] + 1:
             self._last_run_tensor_order['basic']['borders'][1]]
         # print('tmp_output:', tmp_output)
-        if self._bpc:
-            [loss, perplexity, accuracy, bpc] = tmp_output
-            self._accumulate_several_data(['loss', 'perplexity', 'accuracy', 'bpc'], [loss, perplexity, accuracy, bpc])
-        else:
-            [loss, perplexity, accuracy] = tmp_output
-            self._accumulate_several_data(['loss', 'perplexity', 'accuracy'], [loss, perplexity, accuracy])
+        self._accumulate_several_data(self._result_types, tmp_output)
+        # if self._bpc:
+        #     [loss, perplexity, accuracy, bpc] = tmp_output
+        #     self._accumulate_several_data(['loss', 'perplexity', 'accuracy', 'bpc'], [loss, perplexity, accuracy, bpc])
+        # else:
+        #     [loss, perplexity, accuracy] = tmp_output
+        #     self._accumulate_several_data(['loss', 'perplexity', 'accuracy'], [loss, perplexity, accuracy])
         self._accumulate_tensors(step, validation_res)
 
     @staticmethod
@@ -840,6 +841,15 @@ class Handler(object):
         instructions['results'].update(extracted_for_printing)
         return instructions
 
+    def _toss_train_results(
+            self,
+            res
+    ):
+        d = dict()
+        for r, res_type in zip(res, self._result_types):
+            d[res_type] = r
+        return d
+
     def _process_train_results(self,
                                step,
                                train_res):
@@ -848,50 +858,65 @@ class Handler(object):
         #print(self._last_run_tensor_order)
         basic_borders = self._last_run_tensor_order['basic']['borders']
         tmp = train_res[basic_borders[0]+1:basic_borders[1]]
-        if self._bpc:
-            [loss, perplexity, accuracy, bpc] = tmp
-        else:
-            [loss, perplexity, accuracy] = tmp
+        # if self._bpc:
+        #     [loss, perplexity, accuracy, bpc] = tmp
+        # else:
+        #     [loss, perplexity, accuracy] = tmp
+
+        res_dict = self._toss_train_results(tmp)
 
         if self._printed_result_types is not None:
             if self._results_collect_interval is not None:
                 if step % (self._results_collect_interval * self._print_per_collected) == 0:
-                    if self._bpc:
-                        self._print_standard_report(indents=[2, 0],
-                                                    step=step,
-                                                    loss=loss,
-                                                    bpc=bpc,
-                                                    perplexity=perplexity,
-                                                    accuracy=accuracy,
-                                                    message='results on train dataset')
-                    else:
-                        self._print_standard_report(indents=[2, 0],
-                                                    step=step,
-                                                    loss=loss,
-                                                    perplexity=perplexity,
-                                                    accuracy=accuracy,
-                                                    message='results on train dataset')
+                    # if self._bpc:
+                    #     self._print_standard_report(indents=[2, 0],
+                    #                                 step=step,
+                    #                                 loss=loss,
+                    #                                 bpc=bpc,
+                    #                                 perplexity=perplexity,
+                    #                                 accuracy=accuracy,
+                    #                                 message='results on train dataset')
+                    # else:
+                    #     self._print_standard_report(indents=[2, 0],
+                    #                                 step=step,
+                    #                                 loss=loss,
+                    #                                 perplexity=perplexity,
+                    #                                 accuracy=accuracy,
+                    #                                 message='results on train dataset')
+                    self._print_standard_report(
+                        indents=[2, 0],
+                        step=step,
+                        message='results on train dataset',
+                        **res_dict
+                    )
         if self._results_collect_interval is not None:
             if step % self._results_collect_interval == 0:
-                if self._bpc:
-                    if self._save_path is not None:
-                        self._save_several_data(['loss', 'perplexity', 'accuracy', 'bpc'],
-                                                step,
-                                                [loss, perplexity, accuracy, bpc])
-                    self._environment_instance.append_to_storage('train',
-                                                                 loss=loss,
-                                                                 bpc=bpc,
-                                                                 perplexity=perplexity,
-                                                                 accuracy=accuracy,
-                                                                 steps=step)
-                else:
-                    if self._save_path is not None:
-                        self._save_several_data(['loss', 'perplexity', 'accuracy'], step, [loss, perplexity, accuracy])
-                    self._environment_instance.append_to_storage('train',
-                                                                 loss=loss,
-                                                                 perplexity=perplexity,
-                                                                 accuracy=accuracy,
-                                                                 steps=step)
+                # if self._bpc:
+                #     if self._save_path is not None:
+                #         # self._save_several_data(['loss', 'perplexity', 'accuracy', 'bpc'],
+                #         #                         step,
+                #         #                         [loss, perplexity, accuracy, bpc])
+                #         self._save_several_data(self._result_types,
+                #                                 step,
+                #                                 tmp)
+                #     self._environment_instance.append_to_storage('train',
+                #                                                  steps=step,
+                #                                                  **res_dict)
+                # else:
+                #     if self._save_path is not None:
+                #         self._save_several_data(['loss', 'perplexity', 'accuracy'], step, [loss, perplexity, accuracy])
+                #     self._environment_instance.append_to_storage('train',
+                #                                                  loss=loss,
+                #                                                  perplexity=perplexity,
+                #                                                  accuracy=accuracy,
+                #                                                  steps=step)
+                self._save_several_data(self._result_types,
+                                        step,
+                                        tmp)
+                self._environment_instance.append_to_storage('train',
+                                                             steps=step,
+                                                             **res_dict)
+
         print_borders = self._last_run_tensor_order['train_print_tensors']['borders']
         if print_borders[1] - print_borders[0] > 0:
             print_instructions = self._form_train_tensor_print_instructions(step,
@@ -1001,7 +1026,7 @@ class Handler(object):
             input_str = args[1]
             res = args[2]
             self._process_example_generation_results(step, input_str, res)
-        if regime =='several_launches':
+        if regime == 'several_launches':
             hp = args[0]
             res = args[1]
             self._several_launches_results_processing(hp, res)

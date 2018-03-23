@@ -492,6 +492,7 @@ class Environment(object):
 
         # getting default hooks
         default_hooks = self._pupil.get_default_hooks()
+        # print('(Environment._build_pupil)default_hooks:', default_hooks)
         self._hooks.update(default_hooks)
         self._register_default_builders()
 
@@ -1009,15 +1010,15 @@ class Environment(object):
         list_of_required_tensors_aliases = list()
         result_types_for_launches = list()
         for start_specs in start_specs_for_launches:
-            if start_specs['with_meta_optimizer']:
+            if not start_specs['with_meta_optimizer']:
                 result_types_for_launches = add_missing_to_list(
                     result_types_for_launches, start_specs['result_types'])
         list_of_required_tensors_aliases.extend(result_types_for_launches)
         for start_specs, run_specs_set in zip(start_specs_for_launches, run_specs_for_launches):
-            if start_specs['with_meta_optimizer']:
-                if self._check_if_validation_is_needed(run_specs_set):
-                    for result_type in start_specs['result_types']:
-                        list_of_required_tensors_aliases.append('validation_' + result_type)
+            # if not start_specs['with_meta_optimizer']:
+            if self._check_if_validation_is_needed(run_specs_set):
+                for result_type in start_specs['result_types']:
+                    list_of_required_tensors_aliases.append('validation_' + result_type)
 
         for run_specs_set in run_specs_for_launches:
             for run_specs in run_specs_set:
@@ -1382,6 +1383,7 @@ class Environment(object):
         start_specs = tmp_output['start_specs']
         run_specs_set = tmp_output['run']
         all_tensor_aliases = self._all_tensor_aliases_from_train_method_arguments([(start_specs, run_specs_set)])
+        # print('(Environment.train)all_tensor_aliases:', all_tensor_aliases)
         self._create_missing_hooks(all_tensor_aliases)
 
         if start_session:
