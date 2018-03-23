@@ -264,7 +264,7 @@ class Meta(object):
                 v['psi'] = tf.add_n(v['sigma']) / len(v['sigma']) * learning_rate**.5
             else:
                 v['psi'] = v['sigma'] * learning_rate**.5
-        return optimizer_ins
+        return optimizer_ins, None
 
     @staticmethod
     def _compose_mods(optimizer_outs):
