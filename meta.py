@@ -270,10 +270,18 @@ class Meta(object):
     def _compose_mods(optimizer_outs):
         for v in optimizer_outs.values():
             if 'matrix' in v:
-                batch_size = v['phi'].get_shape().as_list()[1]
-                v['matrix_mods'] = tf.einsum('ijk,ijl->ikl', v['phi'], v['psi']) / batch_size
+                ndims = len(v['phi'].get_shape().as_list())
+                batch_size = v['phi'].get_shape().as_list()[-2]
+                print("\n(Meta._compose_mods)v['phi'].shape:", v['phi'].get_shape().as_list())
+                print("\n(Meta._compose_mods)v['psi'].shape:", v['psi'].get_shape().as_list())
+                if ndims == 3:
+                    eq = 'ijk,ijl->ikl'
+                elif ndims == 2:
+                    eq = 'jk,jl->kl'
+                v['matrix_mods'] = tf.einsum(eq, v['phi'], v['psi']) / batch_size
+
             if 'bias' in v:
-                v['bias_mods'] = tf.reduce_mean(v['psi'], axis=1)
+                v['bias_mods'] = tf.reduce_mean(v['psi'], axis=-2)
         return optimizer_outs
 
     @staticmethod
