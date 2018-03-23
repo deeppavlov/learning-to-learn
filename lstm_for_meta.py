@@ -410,10 +410,10 @@ class Lstm(Model):
             self._train_storage,
             trainable_variables=self._applicable_trainable
         )
-        print('(Lstm.loss_and_opt_ins_for_inference)self._train_storage:', self._train_storage)
-        print('(Lstm.loss_and_opt_ins_for_inference)new_storage:', new_storage)
+        # print('(Lstm.loss_and_opt_ins_for_inference)self._train_storage:', self._train_storage)
+        # print('(Lstm.loss_and_opt_ins_for_inference)new_storage:', new_storage)
         storage_save_ops = compose_save_list((self._train_storage, new_storage))
-        print('(Lstm.loss_and_opt_ins_for_inference)storage_save_ops:', storage_save_ops)
+        # print('(Lstm.loss_and_opt_ins_for_inference)storage_save_ops:', storage_save_ops)
         return loss, optimizer_ins, storage_save_ops
 
     def apply_mods(self, mods):
