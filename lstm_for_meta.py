@@ -424,7 +424,7 @@ class Lstm(Model):
                 mods['embedding_layer']['matrix']))
         for layer_idx, (matr, bias) in enumerate(
                 zip(self._applicable_trainable['lstm_matrices'],
-                    self._applicable_trainable['lstm_matrices'])):
+                    self._applicable_trainable['lstm_biases'])):
             assign_ops.append(
                 tf.assign(
                     matr,
@@ -439,7 +439,7 @@ class Lstm(Model):
             )
         for layer_idx, (matr, bias) in enumerate(
                 zip(self._applicable_trainable['output_matrices'],
-                    self._applicable_trainable['output_matrices'])):
+                    self._applicable_trainable['output_biases'])):
             assign_ops.append(
                 tf.assign(
                     matr,

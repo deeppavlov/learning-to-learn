@@ -390,8 +390,8 @@ class Meta(object):
                 mods = self._compose_mods(optimizer_outs)
                 optimizer_save_states_ops = compose_save_list(
                     (optimizer_states, new_optimizer_states))
-                print('\n(Meta._inference_graph)pupil_save_ops:', pupil_save_ops)
-                print('\n(Meta._inference_graph)new_optimizer_states:', new_optimizer_states)
+                # print('\n(Meta._inference_graph)pupil_save_ops:', pupil_save_ops)
+                # print('\n(Meta._inference_graph)new_optimizer_states:', new_optimizer_states)
                 with tf.control_dependencies(pupil_save_ops+optimizer_save_states_ops):
                     train_op = tf.group(*self._pupil.apply_mods(mods))
                 self._hooks['train_with_meta_op'] = train_op
