@@ -278,12 +278,15 @@ class Lstm(Model):
             else:
                 concat_dim = 0
             num_split = len(rnn_outputs)
+            # o = rnn_outputs
+            # rnn_outputs = tf.concat(rnn_outputs, concat_dim, name='concatenated_rnn_outputs')
             o = rnn_outputs
-            rnn_outputs = tf.concat(rnn_outputs, concat_dim, name='concatenated_rnn_outputs')
-            hs = rnn_outputs
             for layer_idx, (matr, bias) in enumerate(zip(output_matrices, output_biases)):
                 with tf.name_scope('layer_%s' % layer_idx):
                     # print('hs.shape:', hs.get_shape().as_list())
+                    if layer_idx > 0:
+                        o = tf.split(hs, num_split, axis=concat_dim, name='split_o_for_optimizer')
+                    hs = tf.concat(o, concat_dim, name='united_o')
                     s = custom_matmul(
                             hs, matr, name='first_s')
                     s = tf.split(s, num_split, axis=concat_dim, name='split_s_for_optimizer')

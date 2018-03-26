@@ -286,17 +286,17 @@ class Meta(object):
                             elif ndims == 2:
                                 eq = 'jk,jl->kl'
                             v['matrix_mods'] = tf.einsum(eq, v['phi'], v['psi']) / batch_size
-                            with tf.device('/cpu:0'):
-                                v['matrix_mods'] = tf.Print(
-                                    v['matrix_mods'],
-                                    [v['matrix_mods']],
-                                    message='\n' + k + '\nmatrix')
+                            # with tf.device('/cpu:0'):
+                            #     v['matrix_mods'] = tf.Print(
+                            #         v['matrix_mods'],
+                            #         [v['matrix_mods']],
+                            #         message='\n' + k + '\nmatrix')
 
                     if 'bias' in v:
                         with tf.name_scope('bias'):
                             v['bias_mods'] = tf.reduce_mean(v['psi'], axis=-2)
-                            with tf.device('/cpu:0'):
-                                v['bias_mods'] = tf.Print(v['bias_mods'], [v['bias_mods']], message='\n' + k + '\nbias')
+                            # with tf.device('/cpu:0'):
+                            #     v['bias_mods'] = tf.Print(v['bias_mods'], [v['bias_mods']], message='\n' + k + '\nbias')
             return optimizer_outs
 
     @staticmethod
@@ -411,8 +411,8 @@ class Meta(object):
                 # print('\n(Meta._inference_graph)optimizer_states:', optimizer_states)
                 # print('\n(Meta._inference_graph)new_optimizer_states:', new_optimizer_states)
                 mods = self._compose_mods(optimizer_outs)
-                print('\n(Meta._inference_graph)')
-                print_optimizer_ins(mods)
+                # print('\n(Meta._inference_graph)')
+                # print_optimizer_ins(mods)
                 mods = self._add_mods(mods)
                 optimizer_save_states_ops = compose_save_list(
                     (optimizer_states, new_optimizer_states), name_scope='save_optimizer_states')
