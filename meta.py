@@ -286,20 +286,28 @@ class Meta(object):
                             elif ndims == 2:
                                 eq = 'jk,jl->kl'
                             v['matrix_mods'] = tf.einsum(eq, v['phi'], v['psi']) / batch_size
+                            with tf.device('/cpu:0'):
+                                v['matrix_mods'] = tf.Print(
+                                    v['matrix_mods'],
+                                    [v['matrix_mods']],
+                                    message='\n' + k + '\nmatrix')
 
                     if 'bias' in v:
                         with tf.name_scope('bias'):
                             v['bias_mods'] = tf.reduce_mean(v['psi'], axis=-2)
+                            with tf.device('/cpu:0'):
+                                v['bias_mods'] = tf.Print(v['bias_mods'], [v['bias_mods']], message='\n' + k + '\nbias')
             return optimizer_outs
 
     @staticmethod
-    def _apply_mods(mods):
-        for v in mods.values():
-            if 'matrix' in v:
-                v['matrix'] = v['matrix'] + v['matrix_mods']
-            if 'bias' in v:
-                v['bias'] = v['bias'] + v['bias_mods']
-        return mods
+    def _add_mods(mods):
+        with tf.name_scope('add_modifications'):
+            for v in mods.values():
+                if 'matrix' in v:
+                    v['matrix'] = v['matrix'] + v['matrix_mods']
+                if 'bias' in v:
+                    v['bias'] = v['bias'] + v['bias_mods']
+            return mods
 
     def _compute_optimizer_gradients(self, loss):
         loss += self._additional_loss
@@ -355,7 +363,7 @@ class Meta(object):
                                 optimizer_outs, tmp_states = self._optimizer_core(
                                     optimizer_ins, self._num_ex_per_gpu[gpu_idx], tmp_states, gpu_idx)
                                 mods = self._compose_mods(optimizer_outs)
-                                new_pupil_trainable = self._apply_mods(mods)
+                                new_pupil_trainable = self._add_mods(mods)
                                 end_loss, _, optimizer_grad_pupil_storage[gpu_idx] = self._pupil.loss_and_opt_ins(
                                     optimizer_grad_inputs[gpu_idx], optimizer_grad_labels[gpu_idx],
                                     optimizer_grad_pupil_storage[gpu_idx], opt_ins=new_pupil_trainable)
@@ -403,12 +411,15 @@ class Meta(object):
                 # print('\n(Meta._inference_graph)optimizer_states:', optimizer_states)
                 # print('\n(Meta._inference_graph)new_optimizer_states:', new_optimizer_states)
                 mods = self._compose_mods(optimizer_outs)
+                print('\n(Meta._inference_graph)')
+                print_optimizer_ins(mods)
+                mods = self._add_mods(mods)
                 optimizer_save_states_ops = compose_save_list(
                     (optimizer_states, new_optimizer_states), name_scope='save_optimizer_states')
                 # print('\n(Meta._inference_graph)pupil_save_ops:', pupil_save_ops)
                 # print('\n(Meta._inference_graph)new_optimizer_states:', new_optimizer_states)
                 with tf.control_dependencies(pupil_save_ops+optimizer_save_states_ops):
-                    train_op = tf.group(*self._pupil.apply_mods(mods))
+                    train_op = tf.group(*self._pupil.apply_mods(mods), name='train_with_meta_optimizer_op')
                 self._hooks['train_with_meta_optimizer_op'] = train_op
                 self._hooks['loss'] = start_loss
 

@@ -1232,7 +1232,7 @@ class Environment(object):
                 feed_dict[self._hooks[addition['placeholder']]] = add_controller.get()
             # print('(Environment._train)self._hooks:', self._hooks)
             train_operations = self._handler.get_tensors('train', step, with_meta_optimizer=with_meta_optimizer)
-            # print('train_operations:', train_operations)
+            print('train_operations:', train_operations)
             # print('feed_dict:', feed_dict)
 
             train_res = self._session.run(train_operations, feed_dict=feed_dict)
