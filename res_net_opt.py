@@ -2,7 +2,6 @@ import tensorflow as tf
 from meta import Meta
 from useful_functions import block_diagonal, custom_matmul
 
-LEARNING_RATE_FOR_EMPTY_CORE = 4.
 
 class ResNet4Lstm(Meta):
 
@@ -155,7 +154,7 @@ class ResNet4Lstm(Meta):
     def _optimizer_core(self, optimizer_ins, num_exercises, states, gpu_idx):
         # optimizer_ins = self._extend_with_permutations(optimizer_ins, num_exercises, gpu_idx)
         # optimizer_ins = self._forward_permute(optimizer_ins)
-        return self._empty_core(optimizer_ins, LEARNING_RATE_FOR_EMPTY_CORE)
+        return self._empty_core(optimizer_ins)
 
     def __init__(self,
                  pupil,
