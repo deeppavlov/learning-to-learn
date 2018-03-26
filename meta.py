@@ -255,31 +255,42 @@ class Meta(object):
         return optimizer_ins, storage_save_ops, loss
 
     @staticmethod
-    def _empty_core(optimizer_ins):
-        # print('(Meta._empty_core)optimizer_ins:')
-        # print_optimizer_ins(optimizer_ins)
+    def _compose_phi_and_psi(optimizer_outs):
         with tf.name_scope('phi_and_psi'):
-            for k, v in optimizer_ins.items():
+            for k, v in optimizer_outs.items():
                 with tf.name_scope(k):
                     with tf.name_scope('phi'):
-                        if isinstance(v['o'], list):
-                            v['phi'] = tf.concat(v['o'], axis=-2, name='phi')
+                        if isinstance(v['o_pr'], list):
+                            v['phi'] = tf.concat(v['o_pr'], axis=-2, name='phi')
                         else:
-                            v['phi'] = v['o']
+                            v['phi'] = v['o_pr']
                         # if isinstance(v['o'], list):
                         #     v['phi'] = tf.add_n(v['o']) / len(v['o']) * learning_rate**.5
                         # else:
                         #     v['phi'] = v['o'] * learning_rate**.5
                     with tf.name_scope('psi'):
                         # v['psi'] = v['sigma']
-                        if isinstance(v['s'], list):
-                            v['psi'] = tf.concat(v['sigma'], axis=-2, name='phi')
+                        if isinstance(v['sigma_pr'], list):
+                            v['psi'] = tf.concat(v['sigma_pr'], axis=-2, name='phi')
                         else:
-                            v['psi'] = v['sigma']
+                            v['psi'] = v['sigma_pr']
                         # if isinstance(v['sigma'], list):
                         #     v['psi'] = tf.add_n(v['sigma']) / len(v['sigma']) * learning_rate**.5
                         # else:
                         #     v['psi'] = v['sigma'] * learning_rate**.5
+        return optimizer_outs
+
+    @staticmethod
+    def _empty_core(optimizer_ins):
+        # print('(Meta._empty_core)optimizer_ins:')
+        # print_optimizer_ins(optimizer_ins)
+        with tf.name_scope('core'):
+            for k, v in optimizer_ins.items():
+                with tf.name_scope(k):
+                    with tf.name_scope('phi'):
+                        v['o_pr'] = v['o']
+                    with tf.name_scope('psi'):
+                        v['sigma_pr'] = v['sigma']
         return optimizer_ins, []
 
     @staticmethod
@@ -314,7 +325,7 @@ class Meta(object):
 
     @staticmethod
     def _sub_mods(mods):
-        with tf.name_scope('add_modifications'):
+        with tf.name_scope('subtract_modifications'):
             for v in mods.values():
                 if 'matrix' in v:
                     v['matrix'] = v['matrix'] - v['matrix_mods']
@@ -419,10 +430,15 @@ class Meta(object):
             with tf.device('/gpu:0'):
                 optimizer_states = self._create_optimizer_states(1, 'inference_optimizer_states', 0)
                 optimizer_ins, pupil_save_ops, start_loss = self._eval_pupil_gradients_for_optimizer_inference()
-                opt = tf.train.GradientDescentOptimizer(1.)
+
+                # optimizer_ins = self._extend_with_permutations(optimizer_ins, 0)
+                # optimizer_ins = self._forward_permute(optimizer_ins)
+
+                # opt = tf.train.GradientDescentOptimizer(1.)
                 # grads, vars = zip(*opt.compute_gradients(start_loss))
                 optimizer_outs, new_optimizer_states = self._optimizer_core(
                     optimizer_ins, None, optimizer_states, 0)
+                optimizer_outs = self._compose_phi_and_psi(optimizer_outs)
                 # for var, gr in zip(vars, grads):
                 #     with tf.device('/cpu:0'):
                 #         optimizer_outs['lstm_layer_0']['psi'] = tf.Print(
