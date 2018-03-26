@@ -71,7 +71,7 @@ class ResNet4Lstm(Meta):
         num_output_nodes = net_size['num_output_nodes']
         num_layers = len(num_nodes)
         num_output_layers = len(num_output_nodes)
-        with tf.variable_scope('permutation_matrices_on_gpu_%s' % gpu_idx, reuse=True):
+        with tf.variable_scope('permutation_matrices_on_gpu_%s' % gpu_idx):
             if 'embedding_size' in net_size:
                 _ = tf.get_variable(
                     'embedding',
@@ -123,30 +123,42 @@ class ResNet4Lstm(Meta):
     @staticmethod
     def _forward_permute(optimizer_ins):
         for v in optimizer_ins.values():
-            if isinstance(v['o'], list):
-                v['o'] = [custom_matmul(o, v['in_perm']) for o in v['o']]
-            else:
-                v['o'] = custom_matmul(v['o'], v['in_perm'])
-            if isinstance(v['sigma'], list):
-                v['sigma'] = [custom_matmul(sigma, v['out_perm']) for sigma in v['sigma']]
-            else:
-                v['sigma'] = custom_matmul(v['sigma'], v['out_perm'])
+            if 'in_perm' in v:
+                if isinstance(v['o'], list):
+                    v['o'] = [custom_matmul(o, v['in_perm']) for o in v['o']]
+                    # v['o'] = [tf.reshape(vec, vec.get_shape().as_list()[1:]) for vec in v['o']]
+                else:
+                    v['o'] = custom_matmul(v['o'], v['in_perm'])
+                    # v['o'] = tf.reshape(v['o'], v['o'].get_shape().as_list()[1:])
+            if 'out_perm' in v:
+                if isinstance(v['sigma'], list):
+                    v['sigma'] = [custom_matmul(sigma, v['out_perm']) for sigma in v['sigma']]
+                    # v['sigma'] = [tf.reshape(vec, vec.get_shape().as_list()[1:]) for vec in v['sigma']]
+                else:
+                    v['sigma'] = custom_matmul(v['sigma'], v['out_perm'])
+                    # v['sigma'] = tf.reshape(v['sigma'], v['sigma'].get_shape().as_list()[1:])
         return optimizer_ins
 
     @staticmethod
-    def _backward_permute(optimizer_ins):
-        for v in optimizer_ins.values():
-            in_tr = tf.matrix_transpose(v['in_perm'])
-            out_tr = tf.matrix_transpose(v['out_perm'])
-            if isinstance(v['o'], list):
-                v['o'] = [custom_matmul(o, in_tr) for o in v['o']]
-            else:
-                v['o'] = custom_matmul(v['o'], in_tr)
-            if isinstance(v['sigma'], list):
-                v['sigma'] = [custom_matmul(sigma, out_tr) for sigma in v['sigma']]
-            else:
-                v['sigma'] = custom_matmul(v['sigma'], out_tr)
-        return optimizer_ins
+    def _backward_permute(optimizer_outs):
+        for v in optimizer_outs.values():
+            if 'in_perm' in v:
+                in_tr = tf.matrix_transpose(v['in_perm'])
+                if isinstance(v['o_pr'], list):
+                    v['o_pr'] = [custom_matmul(o, in_tr) for o in v['o_pr']]
+                    # v['o_pr'] = [tf.reshape(vec, vec.get_shape().as_list()[1:]) for vec in v['o_pr']]
+                else:
+                    v['o_pr'] = custom_matmul(v['o_pr'], in_tr)
+                    # v['o_pr'] = tf.reshape(v['o_pr'], v['o_pr'].get_shape().as_list()[1:])
+            if 'out_perm' in v:
+                out_tr = tf.matrix_transpose(v['out_perm'])
+                if isinstance(v['sigma_pr'], list):
+                    v['sigma_pr'] = [custom_matmul(sigma, out_tr) for sigma in v['sigma_pr']]
+                    # v['sigma_pr'] = [tf.reshape(vec, vec.get_shape().as_list()[1:]) for vec in v['sigma_pr']]
+                else:
+                    v['sigma_pr'] = custom_matmul(v['sigma_pr'], out_tr)
+                    # v['sigma_pr'] = tf.reshape(v['sigma_pr'], v['sigma_pr'].get_shape().as_list()[1:])
+        return optimizer_outs
 
     def _create_optimizer_trainable_vars(self):
         pass
@@ -223,6 +235,8 @@ class ResNet4Lstm(Meta):
 
         with tf.device(self._base_device):
             self._create_optimizer_trainable_vars()
+
+        self._create_permutation_matrices(1, 0)
 
         if self._regime == 'train':
             self._learning_rate_for_optimizer_training = tf.placeholder(

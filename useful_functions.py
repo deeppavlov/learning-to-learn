@@ -777,13 +777,31 @@ def is_int(s):
 def write_equation(a_ndims, b_ndims, base_ndims):
     letters = 'ijklmnoprs'
     # out_ndims = a_ndims + base_ndims[1] - 2
-    var_set_ndims = a_ndims-base_ndims[0]
+    a_set_ndims = a_ndims - base_ndims[0]
+    b_set_ndims = b_ndims - base_ndims[1]
+    a_short = a_set_ndims == 0
+    b_short = b_set_ndims == 0
+
+    var_set_ndims = max(a_set_ndims, b_set_ndims)
+    if var_set_ndims == 0:
+        var_set_ndims = b_ndims - base_ndims[1]
     var_set_indices = letters[0:var_set_ndims]
-    a_indices = letters[var_set_ndims:a_ndims - 2]
-    b_indices = letters[a_ndims - 2:a_ndims + b_ndims - var_set_ndims - 4]
-    last_indices = letters[a_ndims + b_ndims - var_set_ndims - 4: a_ndims + b_ndims - var_set_ndims - 1]
-    a_str = var_set_indices + a_indices + last_indices[:2]
-    b_str = var_set_indices + b_indices + last_indices[1:]
+    a_extended_ndims = a_ndims - a_set_ndims - 2
+    b_extended_ndims = b_ndims - b_set_ndims - 2
+    a_indices = letters[var_set_ndims:var_set_ndims + a_extended_ndims]
+    b_indices = letters[var_set_ndims + a_extended_ndims:var_set_ndims + a_extended_ndims + b_extended_ndims]
+    not_last_ndims = var_set_ndims + a_extended_ndims + b_extended_ndims
+    last_indices = letters[not_last_ndims: not_last_ndims + 3]
+    if not a_short:
+        a_str = str(var_set_indices)
+    else:
+        a_str = ''
+    if not b_short:
+        b_str = str(var_set_indices)
+    else:
+        b_str = ''
+    a_str += a_indices + last_indices[:2]
+    b_str += b_indices + last_indices[1:]
     out_str = var_set_indices + a_indices + b_indices + last_indices[0] + last_indices[2]
     return a_str + ',' + b_str + '->' + out_str
 
@@ -809,21 +827,20 @@ def custom_matmul(a, b, base_ndims=None, eq=None, name='custom_matmul'):
             b_shape = b.get_shape().as_list()
             a_ndims = len(a_shape)
             b_ndims = len(b_shape)
-            if a_ndims > base_ndims[0] and b_ndims > base_ndims[1]:
-                if a_ndims - base_ndims[0] == b_ndims - base_ndims[1]:
-                    eq = write_equation(a_ndims, b_ndims, base_ndims)
-                    res = tf.einsum(eq, a, b)
-                else:
-                    raise InvalidArgumentError(
-                        'if len(a.shape) - base_ndims[0] > 0 and len(b.shape) - base_ndims[1] > 0 than '
-                        'a and b have to satisfy condition \n'
-                        'len(a.shape) - base_ndims[0] == len(b.shape) - base_ndims[1]',
-                        [a, b],
-                        'tensors a and b',
-                        'tensors which satisfy \n'
-                        'len(a.shape) - base_ndims[0] == len(b.shape) - base_ndims[1]')
+            if a_ndims < base_ndims[0] or b_ndims < base_ndims[1] or \
+                    (a_ndims > base_ndims[0] and b_ndims > base_ndims[1] and
+                                 a_ndims - base_ndims[0] != b_ndims - base_ndims[1]):
+                raise InvalidArgumentError(
+                    'if len(a.shape) - base_ndims[0] > 0 and len(b.shape) - base_ndims[1] > 0 than '
+                    'a and b have to satisfy condition \n'
+                    'len(a.shape) - base_ndims[0] == len(b.shape) - base_ndims[1]',
+                    [a, b],
+                    'tensors a and b',
+                    'tensors which satisfy \n'
+                    'len(a.shape) - base_ndims[0] == len(b.shape) - base_ndims[1]')
             else:
-                res = tf.tensordot(a, b, [[-1], [-2]], name=name)
+                eq = write_equation(a_ndims, b_ndims, base_ndims)
+                res = tf.einsum(eq, a, b)
     return res
 
 

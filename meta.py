@@ -432,12 +432,18 @@ class Meta(object):
                 optimizer_ins, pupil_save_ops, start_loss = self._eval_pupil_gradients_for_optimizer_inference()
 
                 # optimizer_ins = self._extend_with_permutations(optimizer_ins, 0)
+                # print('\n(Meta._inference_graph)optimizer_ins before permutations:')
+                # print_optimizer_ins(optimizer_ins)
                 # optimizer_ins = self._forward_permute(optimizer_ins)
-
+                # print('\n(Meta._inference_graph)optimizer_ins after permutations:')
+                # print_optimizer_ins(optimizer_ins)
                 # opt = tf.train.GradientDescentOptimizer(1.)
                 # grads, vars = zip(*opt.compute_gradients(start_loss))
                 optimizer_outs, new_optimizer_states = self._optimizer_core(
                     optimizer_ins, None, optimizer_states, 0)
+                # print('\n(Meta._inference_graph)optimizer_outs:')
+                # print_optimizer_ins(optimizer_outs)
+                # optimizer_outs = self._backward_permute(optimizer_outs)
                 optimizer_outs = self._compose_phi_and_psi(optimizer_outs)
                 # for var, gr in zip(vars, grads):
                 #     with tf.device('/cpu:0'):
