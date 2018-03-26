@@ -273,9 +273,9 @@ class Meta(object):
                     with tf.name_scope('psi'):
                         # v['psi'] = v['sigma']
                         if isinstance(v['s'], list):
-                            v['psi'] = tf.concat(v['s'], axis=-2, name='phi')
+                            v['psi'] = tf.concat(v['sigma'], axis=-2, name='phi')
                         else:
-                            v['psi'] = v['s']
+                            v['psi'] = v['sigma']
                         # if isinstance(v['sigma'], list):
                         #     v['psi'] = tf.add_n(v['sigma']) / len(v['sigma']) * learning_rate**.5
                         # else:
@@ -289,7 +289,7 @@ class Meta(object):
                 with tf.name_scope(k):
                     if 'matrix' in v:
                         ndims = len(v['phi'].get_shape().as_list())
-                        batch_size = v['phi'].get_shape().as_list()[-2]
+                        # batch_size = v['phi'].get_shape().as_list()[-2]
                         # print("\n(Meta._compose_mods)v['phi'].shape:", v['phi'].get_shape().as_list())
                         # print("\n(Meta._compose_mods)v['psi'].shape:", v['psi'].get_shape().as_list())
                         with tf.name_scope('matrix'):
@@ -297,7 +297,7 @@ class Meta(object):
                                 eq = 'ijk,ijl->ikl'
                             elif ndims == 2:
                                 eq = 'jk,jl->kl'
-                            v['matrix_mods'] = tf.einsum(eq, v['phi'], v['psi']) / batch_size
+                            v['matrix_mods'] = tf.einsum(eq, v['phi'], v['psi'])  # / batch_size
                             with tf.device('/cpu:0'):
                                 v['matrix_mods'] = tf.Print(
                                     v['matrix_mods'],
@@ -306,7 +306,7 @@ class Meta(object):
 
                     if 'bias' in v:
                         with tf.name_scope('bias'):
-                            v['bias_mods'] = tf.reduce_mean(v['psi'], axis=-2)
+                            v['bias_mods'] = tf.reduce_sum(v['psi'], axis=-2)
                             with tf.device('/cpu:0'):
                                 v['bias_mods'] = tf.Print(
                                     v['bias_mods'], [v['bias_mods']], message='\n' + k + '\nbias:\n')

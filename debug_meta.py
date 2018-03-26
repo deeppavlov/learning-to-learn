@@ -21,13 +21,13 @@ env = Environment(
 
 env.build_pupil(
     batch_size=64,
-    num_layers=2,
-    num_nodes=[400, 400],
-    num_output_layers=2,
-    num_output_nodes=[650],
+    num_layers=1,
+    num_nodes=[400],
+    num_output_layers=1,
+    num_output_nodes=[],
     vocabulary_size=vocabulary_size,
     embedding_size=150,
-    num_unrollings=50,
+    num_unrollings=1,
     init_parameter=3.,
     num_gpus=1,
     regime='training_with_meta_optimizer'
@@ -45,7 +45,7 @@ env.train(
     with_meta_optimizer=True,
     save_path='debug_empty_meta_optimizer/not_changing_variables_issue',
     batch_size=64,
-    num_unrollings=50,
+    num_unrollings=1,
     vocabulary=vocabulary,
     checkpoint_steps=2000,
     result_types=['loss'],
