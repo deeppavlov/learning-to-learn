@@ -298,28 +298,28 @@ class Meta(object):
                             elif ndims == 2:
                                 eq = 'jk,jl->kl'
                             v['matrix_mods'] = tf.einsum(eq, v['phi'], v['psi'])  # / batch_size
-                            with tf.device('/cpu:0'):
-                                v['matrix_mods'] = tf.Print(
-                                    v['matrix_mods'],
-                                    [v['matrix_mods']],
-                                    message='\n' + k + '\nmatrix:\n')
+                            # with tf.device('/cpu:0'):
+                            #     v['matrix_mods'] = tf.Print(
+                            #         v['matrix_mods'],
+                            #         [v['matrix_mods']],
+                            #         message='\n' + k + '\nmatrix:\n')
 
                     if 'bias' in v:
                         with tf.name_scope('bias'):
                             v['bias_mods'] = tf.reduce_sum(v['psi'], axis=-2)
-                            with tf.device('/cpu:0'):
-                                v['bias_mods'] = tf.Print(
-                                    v['bias_mods'], [v['bias_mods']], message='\n' + k + '\nbias:\n')
+                            # with tf.device('/cpu:0'):
+                            #     v['bias_mods'] = tf.Print(
+                            #         v['bias_mods'], [v['bias_mods']], message='\n' + k + '\nbias:\n')
             return optimizer_outs
 
     @staticmethod
-    def _add_mods(mods):
+    def _sub_mods(mods):
         with tf.name_scope('add_modifications'):
             for v in mods.values():
                 if 'matrix' in v:
-                    v['matrix'] = v['matrix'] + v['matrix_mods']
+                    v['matrix'] = v['matrix'] - v['matrix_mods']
                 if 'bias' in v:
-                    v['bias'] = v['bias'] + v['bias_mods']
+                    v['bias'] = v['bias'] - v['bias_mods']
             return mods
 
     def _compute_optimizer_gradients(self, loss):
@@ -376,7 +376,7 @@ class Meta(object):
                                 optimizer_outs, tmp_states = self._optimizer_core(
                                     optimizer_ins, self._num_ex_per_gpu[gpu_idx], tmp_states, gpu_idx)
                                 mods = self._compose_mods(optimizer_outs)
-                                new_pupil_trainable = self._add_mods(mods)
+                                new_pupil_trainable = self._sub_mods(mods)
                                 end_loss, _, optimizer_grad_pupil_storage[gpu_idx] = self._pupil.loss_and_opt_ins(
                                     optimizer_grad_inputs[gpu_idx], optimizer_grad_labels[gpu_idx],
                                     optimizer_grad_pupil_storage[gpu_idx], opt_ins=new_pupil_trainable)
@@ -420,19 +420,19 @@ class Meta(object):
                 optimizer_states = self._create_optimizer_states(1, 'inference_optimizer_states', 0)
                 optimizer_ins, pupil_save_ops, start_loss = self._eval_pupil_gradients_for_optimizer_inference()
                 opt = tf.train.GradientDescentOptimizer(1.)
-                grads, vars = zip(*opt.compute_gradients(start_loss))
+                # grads, vars = zip(*opt.compute_gradients(start_loss))
                 optimizer_outs, new_optimizer_states = self._optimizer_core(
                     optimizer_ins, None, optimizer_states, 0)
-                for var, gr in zip(vars, grads):
-                    with tf.device('/cpu:0'):
-                        optimizer_outs['lstm_layer_0']['psi'] = tf.Print(
-                            optimizer_outs['lstm_layer_0']['psi'], [gr], message='\n' + var.name + ':\n')
+                # for var, gr in zip(vars, grads):
+                #     with tf.device('/cpu:0'):
+                #         optimizer_outs['lstm_layer_0']['psi'] = tf.Print(
+                #             optimizer_outs['lstm_layer_0']['psi'], [gr], message='\n' + var.name + ':\n')
                 # print('\n(Meta._inference_graph)optimizer_states:', optimizer_states)
                 # print('\n(Meta._inference_graph)new_optimizer_states:', new_optimizer_states)
                 mods = self._compose_mods(optimizer_outs, learning_rate=LEARNING_RATE_FOR_EMPTY_CORE)
                 # print('\n(Meta._inference_graph)')
                 # print_optimizer_ins(mods)
-                mods = self._add_mods(mods)
+                mods = self._sub_mods(mods)
                 optimizer_save_states_ops = compose_save_list(
                     (optimizer_states, new_optimizer_states), name_scope='save_optimizer_states')
                 # print('\n(Meta._inference_graph)pupil_save_ops:', pupil_save_ops)
