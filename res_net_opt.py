@@ -1,6 +1,6 @@
 import tensorflow as tf
 from meta import Meta
-from useful_functions import block_diagonal, custom_matmul
+from useful_functions import block_diagonal, custom_matmul, flatten
 
 
 class ResNet4Lstm(Meta):
@@ -160,8 +160,63 @@ class ResNet4Lstm(Meta):
                     # v['sigma_pr'] = tf.reshape(v['sigma_pr'], v['sigma_pr'].get_shape().as_list()[1:])
         return optimizer_outs
 
-    def _create_optimizer_trainable_vars(self):
-        pass
+    @staticmethod
+    def _distribute_rnn_size_among_res_layers(rnn_size, num_res_layers):
+        rnn_nodes_for_layer = rnn_size // num_res_layers
+        remainder = rnn_size % num_res_layers
+        return [rnn_nodes_for_layer for _ in range(num_res_layers-1)] + [rnn_nodes_for_layer + remainder]
+
+    @staticmethod
+    def _res_core_vars(left, target, right, rnn_part_size, res_size, var_scope):
+        with tf.variable_scope(var_scope):
+            matrices, biases = list(), list()
+            edge_dim = sum(flatten(left)) + sum(flatten(target)) + sum(flatten(right)) + rnn_part_size
+            stddev = 2. / (edge_dim + res_size)**.5
+            with tf.variable_scope('in_core'):
+                matrices.append(
+                    tf.get_variable(
+                        'matrix',
+                        shape=[edge_dim, res_size],
+                        initializer=tf.truncated_normal_initializer(stddev=stddev)
+                    )
+                )
+                biases.append(
+                    tf.get_variable(
+                        'bias',
+                        shape=[res_size],
+                        initializer=tf.zeros_initializer()
+                    )
+                )
+            with tf.variable_scope('out_core'):
+                matrices.append(
+                    tf.get_variable(
+                        'matrix',
+                        shape=[res_size, edge_dim],
+                        initializer=tf.truncated_normal_initializer(stddev=stddev)
+                    )
+                )
+                biases.append(
+                    tf.get_variable(
+                        'bias',
+                        shape=[edge_dim],
+                        initializer=tf.zeros_initializer()
+                    )
+                )
+            for m in matrices:
+                tf.add_to_collection(tf.GraphKeys.WEIGHTS, m)
+        return matrices, biases
+
+
+    def _create_optimizer_trainable_vars(self, num_res_layers, res_size, rnn_size):
+        pupil_size = self._pupil.get_net_size()
+        rnn_for_res_layer = self._distribute_rnn_size_among_res_layers(rnn_size, num_res_layers)
+        vars = dict()
+        with tf.variable_scope('optimizer_trainable_variables'):
+            with tf.variable_scope('res_layers'):
+                for res_idx in range(num_res_layers):
+                    with tf.variable_scope('layer_%s' % res_idx):
+                        pass
+
 
     # def _optimizer_core(self, optimizer_ins, num_exercises, states, gpu_idx):
     #     # optimizer_ins = self._extend_with_permutations(optimizer_ins, num_exercises, gpu_idx)
@@ -169,8 +224,8 @@ class ResNet4Lstm(Meta):
     #     return self._empty_core(optimizer_ins)
 
     def _optimizer_core(self, optimizer_ins, num_exercises, states, gpu_idx):
-        # optimizer_ins = self._extend_with_permutations(optimizer_ins, num_exercises, gpu_idx)
-        # optimizer_ins = self._forward_permute(optimizer_ins)
+        optimizer_ins = self._extend_with_permutations(optimizer_ins, num_exercises, gpu_idx)
+        optimizer_ins = self._forward_permute(optimizer_ins)
         return self._empty_core(optimizer_ins)
 
     def __init__(self,
@@ -179,6 +234,7 @@ class ResNet4Lstm(Meta):
                  num_lstm_nodes=256,
                  num_optimizer_unrollings=10,
                  perm_period=None,
+                 init_parameter=4.,
                  num_gpus=1,
                  regime='train',
                  optimizer_for_opt_type='adam'):
