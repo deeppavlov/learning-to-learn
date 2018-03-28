@@ -1,7 +1,8 @@
 import tensorflow as tf
 from useful_functions import (construct, get_keys_from_nested, get_obj_elem_by_path, device_name_scope,
                               write_elem_in_obj_by_path, stop_gradient_in_nested, compose_save_list, average_gradients,
-                              retrieve_from_inner_dicts, distribute_into_inner_dicts, print_optimizer_ins)
+                              retrieve_from_inner_dicts, distribute_into_inner_dicts, print_optimizer_ins,
+                              custom_matmul)
 
 
 LEARNING_RATE_FOR_EMPTY_CORE = 1.
@@ -252,6 +253,7 @@ class Meta(object):
         # print('(Meta._eval_pupil_gradients_for_optimizer_inference)map_:', map_)
         sigma_vectors = tf.gradients(loss, s_vectors)
         optimizer_ins = distribute_into_inner_dicts(optimizer_ins, 'sigma', sigma_vectors, map_)
+        # print('(Meta._eval_pupil_gradients_for_optimizer_inference)optimizer_ins:', optimizer_ins)
         return optimizer_ins, storage_save_ops, loss
 
     @staticmethod
@@ -264,6 +266,7 @@ class Meta(object):
                             v['phi'] = tf.concat(v['o_pr'], axis=-2, name='phi')
                         else:
                             v['phi'] = v['o_pr']
+                        # print('(Meta._compose_phi_and_psi)v["o_pr"]:', v['o_pr'])
                         # if isinstance(v['o'], list):
                         #     v['phi'] = tf.add_n(v['o']) / len(v['o']) * learning_rate**.5
                         # else:
@@ -274,6 +277,7 @@ class Meta(object):
                             v['psi'] = tf.concat(v['sigma_pr'], axis=-2, name='phi')
                         else:
                             v['psi'] = v['sigma_pr']
+                        # print('(Meta._compose_phi_and_psi)v["sigma_pr"]:', v['sigma_pr'])
                         # if isinstance(v['sigma'], list):
                         #     v['psi'] = tf.add_n(v['sigma']) / len(v['sigma']) * learning_rate**.5
                         # else:
@@ -302,16 +306,65 @@ class Meta(object):
         return opt_ins
 
     @staticmethod
+    def _forward_permute(optimizer_ins, in_perm_keys, out_perm_keys, collapse_1st_dim=False):
+        for v in optimizer_ins.values():
+            for in_perm_key in in_perm_keys:
+                if 'in_perm' in v:
+                    if isinstance(v[in_perm_key], list):
+                        v[in_perm_key] = [custom_matmul(t, v['in_perm']) for t in v[in_perm_key]]
+                        if collapse_1st_dim:
+                            v['o'] = [tf.reshape(vec, vec.get_shape().as_list()[1:]) for vec in v['o']]
+                    else:
+                        v[in_perm_key] = custom_matmul(v[in_perm_key], v['in_perm'])
+                        if collapse_1st_dim:
+                            v['o'] = tf.reshape(v['o'], v['o'].get_shape().as_list()[1:])
+            for out_perm_key in out_perm_keys:
+                if 'out_perm' in v:
+                    if isinstance(v[out_perm_key], list):
+                        v[out_perm_key] = [custom_matmul(t, v['out_perm']) for t in v[out_perm_key]]
+                        if collapse_1st_dim:
+                            v['sigma'] = [tf.reshape(vec, vec.get_shape().as_list()[1:]) for vec in v['sigma']]
+                    else:
+                        v[out_perm_key] = custom_matmul(v[out_perm_key], v['out_perm'])
+                        if collapse_1st_dim:
+                            v['sigma'] = tf.reshape(v['sigma'], v['sigma'].get_shape().as_list()[1:])
+        return optimizer_ins
+
+    @staticmethod
+    def _backward_permute(optimizer_outs, in_perm_keys, out_perm_keys, collapse_1st_dim=False):
+        for v in optimizer_outs.values():
+            for in_perm_key in in_perm_keys:
+                if 'in_perm' in v:
+                    in_tr = tf.matrix_transpose(v['in_perm'])
+                    if isinstance(v[in_perm_key], list):
+                        v[in_perm_key] = [custom_matmul(t, in_tr) for t in v[in_perm_key]]
+                        if collapse_1st_dim:
+                            v['o_pr'] = [tf.reshape(vec, vec.get_shape().as_list()[1:]) for vec in v['o_pr']]
+                    else:
+                        v[in_perm_key] = custom_matmul(v[in_perm_key], in_tr)
+                        if collapse_1st_dim:
+                            v['o_pr'] = tf.reshape(v['o_pr'], v['o_pr'].get_shape().as_list()[1:])
+            for out_perm_key in out_perm_keys:
+                if 'out_perm' in v:
+                    out_tr = tf.matrix_transpose(v['out_perm'])
+                    if isinstance(v[out_perm_key], list):
+                        v[out_perm_key] = [custom_matmul(t, out_tr) for t in v[out_perm_key]]
+                        if collapse_1st_dim:
+                            v['sigma_pr'] = [tf.reshape(vec, vec.get_shape().as_list()[1:]) for vec in v['sigma_pr']]
+                    else:
+                        v[out_perm_key] = custom_matmul(v[out_perm_key], out_tr)
+                        if collapse_1st_dim:
+                            v['sigma_pr'] = tf.reshape(v['sigma_pr'], v['sigma_pr'].get_shape().as_list()[1:])
+        return optimizer_outs
+
+    @staticmethod
     def _empty_core(optimizer_ins):
         # print('(Meta._empty_core)optimizer_ins:')
         # print_optimizer_ins(optimizer_ins)
         with tf.name_scope('core'):
             for k, v in optimizer_ins.items():
-                with tf.name_scope(k):
-                    with tf.name_scope('phi'):
-                        v['o_pr'] = v['o']
-                    with tf.name_scope('psi'):
-                        v['sigma_pr'] = v['sigma']
+                v['o_pr'] = v['o']
+                v['sigma_pr'] = v['sigma']
         return optimizer_ins, []
 
     @staticmethod
@@ -321,7 +374,7 @@ class Meta(object):
                 with tf.name_scope(k):
                     if 'matrix' in v:
                         ndims = len(v['phi'].get_shape().as_list())
-                        # batch_size = v['phi'].get_shape().as_list()[-2]
+                        batch_size = v['phi'].get_shape().as_list()[-2]
                         # print("\n(Meta._compose_mods)v['phi'].shape:", v['phi'].get_shape().as_list())
                         # print("\n(Meta._compose_mods)v['psi'].shape:", v['psi'].get_shape().as_list())
                         with tf.name_scope('matrix'):
@@ -455,7 +508,7 @@ class Meta(object):
                 # optimizer_ins = self._extend_with_permutations(optimizer_ins, 0)
                 # print('\n(Meta._inference_graph)optimizer_ins before permutations:')
                 # print_optimizer_ins(optimizer_ins)
-                # optimizer_ins = self._forward_permute(optimizer_ins)
+                # optimizer_ins = self._forward_permute(optimizer_ins, ['o'], ['sigma'], collapse_1st_dim=True)
                 # print('\n(Meta._inference_graph)optimizer_ins after permutations:')
                 # print_optimizer_ins(optimizer_ins)
                 # opt = tf.train.GradientDescentOptimizer(1.)
@@ -464,7 +517,7 @@ class Meta(object):
                     optimizer_ins, None, optimizer_states, 0)
                 # print('\n(Meta._inference_graph)optimizer_outs:')
                 # print_optimizer_ins(optimizer_outs)
-                # optimizer_outs = self._backward_permute(optimizer_outs)
+                # optimizer_outs = self._backward_permute(optimizer_outs, ['o_pr'], ['sigma_pr'], collapse_1st_dim=True)
                 optimizer_outs = self._compose_phi_and_psi(optimizer_outs)
                 # for var, gr in zip(vars, grads):
                 #     with tf.device('/cpu:0'):

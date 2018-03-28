@@ -886,7 +886,10 @@ class Lstm(Model):
             vocabulary_size=self._vocabulary_size,
             embedding_size=self._embedding_size,
             num_nodes=self._num_nodes,
-            num_output_nodes=self._num_output_nodes
+            num_output_nodes=self._num_output_nodes + [self._vocabulary_size],
+            num_layers=self._num_layers,
+            num_output_layers=self._num_output_layers,
+            batch_size=self._batch_size
         )
 
     def get_layer_dims(self):
@@ -897,7 +900,7 @@ class Lstm(Model):
             in_dim, out_dim, _ = self._compute_lstm_matrix_parameters(layer_idx)
             dims['lstm_layers'].append((in_dim, out_dim))
         dims['output_layers'] = []
-        for layer_idx, n_nodes in enumerate(self._num_output_nodes):
+        for layer_idx, n_nodes in enumerate(self._num_output_nodes + [self._vocabulary_size]):
             in_dim, out_dim, _ = self._compute_output_matrix_parameters(layer_idx)
             dims['output_layers'].append((in_dim, out_dim))
         return dims

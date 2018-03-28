@@ -66,16 +66,15 @@ class ResNet4Lstm(Meta):
         return tf.group(*reset_ops)
 
     def _create_permutation_matrices(self, num_exercises, gpu_idx):
-        net_size = self._pupil.get_net_size()
-        num_nodes = net_size['num_nodes']
-        num_output_nodes = net_size['num_output_nodes']
+        num_nodes = self._pupil_net_size['num_nodes']
+        num_output_nodes = self._pupil_net_size['num_output_nodes']
         num_layers = len(num_nodes)
         num_output_layers = len(num_output_nodes)
         with tf.variable_scope('permutation_matrices_on_gpu_%s' % gpu_idx):
-            if 'embedding_size' in net_size:
+            if self._emb_layer_is_present:
                 _ = tf.get_variable(
                     'embedding',
-                    initializer=self._create_permutation_matrix(net_size['embedding_size'], num_exercises),
+                    initializer=self._create_permutation_matrix(self._pupil_net_size['embedding_size'], num_exercises),
                     trainable=False
                 )
             for layer_idx in range(num_layers):
@@ -92,11 +91,10 @@ class ResNet4Lstm(Meta):
                 )
 
     def _extend_with_permutations(self, optimizer_ins, gpu_idx):
-        net_size = self._pupil.get_net_size()
-        num_layers = len(net_size['num_nodes'])
-        num_output_layers = len(net_size['num_output_nodes'])
+        num_layers = self._pupil_net_size['num_layers']
+        num_output_layers = self._pupil_net_size['num_output_layers']
         with tf.variable_scope('permutation_matrices_on_gpu_%s' % gpu_idx, reuse=True):
-            if 'embedding_size' in net_size:
+            if self._emb_layer_is_present:
                 emb = tf.get_variable('embedding')
             lstm_layers = list()
             for layer_idx in range(num_layers):
@@ -104,7 +102,7 @@ class ResNet4Lstm(Meta):
             output_layers = list()
             for layer_idx in range(num_output_layers-1):
                 output_layers.append(tf.get_variable('h_%s' % layer_idx))
-        if 'embedding_layer' in optimizer_ins:
+        if self._emb_layer_is_present:
             optimizer_ins['embedding_layer']['out_perm'] = emb
             optimizer_ins['lstm_layer_0']['in_perm'] = block_diagonal([emb, lstm_layers[0]])
         for layer_idx, c in enumerate(lstm_layers):
@@ -121,46 +119,6 @@ class ResNet4Lstm(Meta):
         return optimizer_ins
 
     @staticmethod
-    def _forward_permute(optimizer_ins):
-        for v in optimizer_ins.values():
-            if 'in_perm' in v:
-                if isinstance(v['o'], list):
-                    v['o'] = [custom_matmul(o, v['in_perm']) for o in v['o']]
-                    # v['o'] = [tf.reshape(vec, vec.get_shape().as_list()[1:]) for vec in v['o']]
-                else:
-                    v['o'] = custom_matmul(v['o'], v['in_perm'])
-                    # v['o'] = tf.reshape(v['o'], v['o'].get_shape().as_list()[1:])
-            if 'out_perm' in v:
-                if isinstance(v['sigma'], list):
-                    v['sigma'] = [custom_matmul(sigma, v['out_perm']) for sigma in v['sigma']]
-                    # v['sigma'] = [tf.reshape(vec, vec.get_shape().as_list()[1:]) for vec in v['sigma']]
-                else:
-                    v['sigma'] = custom_matmul(v['sigma'], v['out_perm'])
-                    # v['sigma'] = tf.reshape(v['sigma'], v['sigma'].get_shape().as_list()[1:])
-        return optimizer_ins
-
-    @staticmethod
-    def _backward_permute(optimizer_outs):
-        for v in optimizer_outs.values():
-            if 'in_perm' in v:
-                in_tr = tf.matrix_transpose(v['in_perm'])
-                if isinstance(v['o_pr'], list):
-                    v['o_pr'] = [custom_matmul(o, in_tr) for o in v['o_pr']]
-                    # v['o_pr'] = [tf.reshape(vec, vec.get_shape().as_list()[1:]) for vec in v['o_pr']]
-                else:
-                    v['o_pr'] = custom_matmul(v['o_pr'], in_tr)
-                    # v['o_pr'] = tf.reshape(v['o_pr'], v['o_pr'].get_shape().as_list()[1:])
-            if 'out_perm' in v:
-                out_tr = tf.matrix_transpose(v['out_perm'])
-                if isinstance(v['sigma_pr'], list):
-                    v['sigma_pr'] = [custom_matmul(sigma, out_tr) for sigma in v['sigma_pr']]
-                    # v['sigma_pr'] = [tf.reshape(vec, vec.get_shape().as_list()[1:]) for vec in v['sigma_pr']]
-                else:
-                    v['sigma_pr'] = custom_matmul(v['sigma_pr'], out_tr)
-                    # v['sigma_pr'] = tf.reshape(v['sigma_pr'], v['sigma_pr'].get_shape().as_list()[1:])
-        return optimizer_outs
-
-    @staticmethod
     def _distribute_rnn_size_among_res_layers(rnn_size, num_res_layers):
         rnn_nodes_for_layer = rnn_size // num_res_layers
         remainder = rnn_size % num_res_layers
@@ -170,13 +128,14 @@ class ResNet4Lstm(Meta):
     def _res_core_vars(left, target, right, rnn_part_size, res_size, var_scope):
         with tf.variable_scope(var_scope):
             matrices, biases = list(), list()
-            edge_dim = sum(flatten(left)) + sum(flatten(target)) + sum(flatten(right)) + rnn_part_size
-            stddev = 2. / (edge_dim + res_size)**.5
+            in_ndims = sum(flatten(left)) + sum(flatten(target)) + sum(flatten(right)) + rnn_part_size
+            out_ndims = sum(flatten(target)) + rnn_part_size
+            stddev = 2. / (in_ndims + res_size)**.5
             with tf.variable_scope('in_core'):
                 matrices.append(
                     tf.get_variable(
                         'matrix',
-                        shape=[edge_dim, res_size],
+                        shape=[in_ndims, res_size],
                         initializer=tf.truncated_normal_initializer(stddev=stddev)
                     )
                 )
@@ -191,14 +150,14 @@ class ResNet4Lstm(Meta):
                 matrices.append(
                     tf.get_variable(
                         'matrix',
-                        shape=[res_size, edge_dim],
+                        shape=[res_size, out_ndims],
                         initializer=tf.truncated_normal_initializer(stddev=stddev)
                     )
                 )
                 biases.append(
                     tf.get_variable(
                         'bias',
-                        shape=[edge_dim],
+                        shape=[out_ndims],
                         initializer=tf.zeros_initializer()
                     )
                 )
@@ -206,32 +165,36 @@ class ResNet4Lstm(Meta):
                 tf.add_to_collection(tf.GraphKeys.WEIGHTS, m)
         return matrices, biases
 
-    def _create_optimizer_trainable_vars(self, num_res_layers, res_size, rnn_size):
-        pupil_size = self._pupil.get_layer_dims()
-        embedding_layer = pupil_size['embedding_layer']
-        lstm_layers = pupil_size['lstm_layers']
-        output_layers = pupil_size['output_layers']
-        num_layers = len(lstm_layers)
-        num_output_layers = len(output_layers)
-        rnn_for_res_layer = self._distribute_rnn_size_among_res_layers(rnn_size, num_res_layers)
+    def _create_optimizer_trainable_vars(self):
+        pupil_dims = self._pupil.get_layer_dims()
+        if self._emb_layer_is_present:
+            embedding_layer = pupil_dims['embedding_layer']
+        lstm_layers = pupil_dims['lstm_layers']
+        output_layers = pupil_dims['output_layers']
+        num_layers = self._pupil_net_size['num_layers']
+        num_output_layers = self._pupil_net_size['num_output_layers']
         vars = dict()
         with tf.variable_scope('optimizer_trainable_variables'):
             with tf.variable_scope('res_layers'):
                 vars['res_layers'] = list()
-                for res_idx, rnn_part in enumerate(rnn_for_res_layer):
+                for res_idx, rnn_part in enumerate(self._rnn_for_res_layers):
                     with tf.variable_scope('layer_%s' % res_idx):
-                        res_layer_params = dict()
-                        res_layer_params['embedding_layer'] = self._res_core_vars(
-                            [()],
-                            [embedding_layer],
-                            [lstm_layers[0]],
-                            rnn_part,
-                            res_size,
-                            'embedding_layer_core'
-                        )
+                        if self._emb_layer_is_present:
+                            res_layer_params = dict()
+                            res_layer_params['embedding_layer'] = self._res_core_vars(
+                                [()],
+                                [embedding_layer],
+                                [lstm_layers[0]],
+                                rnn_part,
+                                self._res_size,
+                                'embedding_layer_core'
+                            )
                         for layer_idx, layer_dims in enumerate(lstm_layers):
                             if layer_idx == 0:
-                                pupil_previous_layer_dims = embedding_layer
+                                if self._emb_layer_is_present:
+                                    pupil_previous_layer_dims = embedding_layer
+                                else:
+                                    pupil_previous_layer_dims = ()
                             else:
                                 pupil_previous_layer_dims = lstm_layers[layer_idx-1]
                             if layer_idx == num_layers - 1:
@@ -244,7 +207,7 @@ class ResNet4Lstm(Meta):
                                 [layer_dims],
                                 [pupil_next_layer_dims, layer_dims],
                                 rnn_part,
-                                res_size,
+                                self._res_size,
                                 'lstm_layer_%s_core' % layer_idx
                             )
                         for layer_idx, layer_dims in enumerate(output_layers):
@@ -262,11 +225,12 @@ class ResNet4Lstm(Meta):
                                 [layer_dims],
                                 [pupil_next_layer_dims, layer_dims],
                                 rnn_part,
-                                res_size,
+                                self._res_size,
                                 'output_layer_%s_core' % layer_idx
                             )
                         vars['res_layers'].append(res_layer_params)
                 with tf.variable_scope('lstm'):
+                    rnn_size = self._num_lstm_nodes
                     stddev = 2. / (6 * rnn_size) ** .5
                     vars['lstm_matrix'] = tf.get_variable(
                         'lstm_matrix',
@@ -280,18 +244,98 @@ class ResNet4Lstm(Meta):
                     )
         return vars
 
-    # def _optimizer_core(self, optimizer_ins, num_exercises, states, gpu_idx):
-    #     # optimizer_ins = self._extend_with_permutations(optimizer_ins, num_exercises, gpu_idx)
-    #     # optimizer_ins = self._forward_permute(optimizer_ins)
-    #     return self._empty_core(optimizer_ins)
-
     def _optimizer_core(self, optimizer_ins, num_exercises, states, gpu_idx):
-        optimizer_ins = self._extend_with_permutations(optimizer_ins, gpu_idx)
-        optimizer_ins = self._forward_permute(optimizer_ins)
-        ndims = self._get_optimizer_ins_ndims(optimizer_ins)
-        if ndims == 2:
-            optimizer_ins = self._expand_num_ex_dim_in_opt_ins(optimizer_ins, ['o', 'sigma'])
+        # optimizer_ins = self._extend_with_permutations(optimizer_ins, num_exercises, gpu_idx)
+        # optimizer_ins = self._forward_permute(optimizer_ins)
         return self._empty_core(optimizer_ins)
+
+    def _pad(self, tensor, direction):
+        """if direction < 0 |direction| most recent pupil unrollings are cut and  paddings are added after oldest
+        unrollings. If direction > 0 all is done the opposite way."""
+        pupil_batch_size = self._pupil_net_size['batch_size']
+        tensor_shape = tensor.get_shape().as_list()
+        padded_size = pupil_batch_size * abs(direction)
+        kept_size = tensor_shape[-2] - pupil_batch_size * abs(direction)
+        if direction < 0:
+            split_sizes = [kept_size, padded_size]
+            kept_idx = 0
+        else:
+            split_sizes = [padded_size, kept_size]
+            kept_idx = 1
+        kept = tf.split(tensor, split_sizes, axis=-2)[kept_idx]
+        paddings = tf.zeros(tensor_shape[:-2] + [padded_size] + tensor_shape[-1:])
+        if direction < 0:
+            padded = tf.concat([paddings, kept], -2)
+        else:
+            padded = tf.concat([kept, paddings], -2)
+        return padded
+
+    def _apply_res_layer(self, ins, res_vars, rnn_part):
+        core_inps = [
+            ins['embedding_layer']['o_c'],
+            ins['embedding_layer']['sigma_c'],
+            ins['lstm_layer_0']['o_c'],
+            ins['lstm_layer_0']['o_sigma']
+        ]
+        o, sigma, emb_rnn_part = self._apply_res_core(res_vars['embedding_layer'], core_inps, rnn_part)
+        ins['embedding_layer']['o_c'] = o
+        ins['embedding_layer']['sigma_c'] = sigma
+
+        lstm_rnn_parts = list()
+        for layer_idx in range(self._pupil_net_size['num_layers']):
+            if layer_idx == 0:
+                previous_layer_tensors = [
+                    ins['embedding_layer']['o_c'],
+                    ins['embedding_layer']['sigma_c']
+                ]
+            else:
+                previous_layer_tensors = [
+                    ins['lstm_layer_%s' % (layer_idx - 1)]['o_c'],
+                    ins['lstm_layer_%s' % (layer_idx - 1)]['sigma_c']
+                ]
+            if layer_idx == self._pupil_net_size['num_layers'] - 1:
+                previous_layer_tensors = [
+                    ins['embedding_layer']['o_c'],
+                    ins['embedding_layer']['sigma_c']
+                ]
+            else:
+                previous_layer_tensors = [
+                    ins['lstm_layer_%s' % (layer_idx - 1)]['o_c'],
+                    ins['lstm_layer_%s' % (layer_idx - 1)]['sigma_c']
+                ]
+            core_inps = [
+                ins['embedding_layer']['o_c'],
+                ins['embedding_layer']['sigma_c'],
+                ins['lstm_layer_0']['o_c'],
+                ins['lstm_layer_0']['o_sigma'],
+                self._pad(ins['lstm_layer_0']['o_c'], -1),
+                self._pad(ins['lstm_layer_0']['sigma_c'], -1),
+                self._pad(ins['lstm_layer_0']['o_c'], 1),
+                self._pad(ins['lstm_layer_0']['sigma_c'], 1),
+
+            ]
+
+
+
+    def _concat_opt_ins(self, opt_ins, inner_keys):
+        with tf.name_scope('concat_opt_ins'):
+            for ov in opt_ins.values():
+                for ik in inner_keys:
+                    ov[ik + '_c'] = tf.concat(ov[ik], -2, name=ik + '_c')
+        return opt_ins
+
+    # def _optimizer_core(self, optimizer_ins, num_exercises, states, gpu_idx):
+    #     optimizer_ins = self._extend_with_permutations(optimizer_ins, gpu_idx)
+    #     optimizer_ins = self._forward_permute(optimizer_ins)
+    #     ndims = self._get_optimizer_ins_ndims(optimizer_ins)
+    #     if ndims == 2:
+    #         optimizer_ins = self._expand_num_ex_dim_in_opt_ins(optimizer_ins, ['o', 'sigma'])
+    #     optimizer_ins = self._concat_opt_ins(optimizer_ins, ['o', 'sigma'])
+    #
+    #     rnn_output_by_res_layers = tf.split(states[0], self._rnn_for_res_layers, axis=-1)
+    #     rnn_input_by_res_layers = list()
+    #
+    #     return self._empty_core(optimizer_ins)
 
     def __init__(self,
                  pupil,
@@ -305,6 +349,8 @@ class ResNet4Lstm(Meta):
                  regime='train',
                  optimizer_for_opt_type='adam'):
         self._pupil = pupil
+        self._pupil_net_size = self._pupil.get_net_size()
+        self._emb_layer_is_present = 'embedding_size' in self._pupil_net_size
         self._num_exercises = num_exercises
         self._num_lstm_nodes = num_lstm_nodes
         self._num_optimizer_unrollings = num_optimizer_unrollings
@@ -357,12 +403,10 @@ class ResNet4Lstm(Meta):
             self._pupil_grad_eval_inputs, self._pupil_grad_eval_labels, \
                 self._optimizer_grad_inputs, self._optimizer_grad_labels = None, None, None, None
 
+        self._rnn_for_res_layers = self._distribute_rnn_size_among_res_layers(
+            self._num_lstm_nodes, self._num_res_layers)
         with tf.device(self._base_device):
-            self._opt_trainable = self._create_optimizer_trainable_vars(
-                self._num_res_layers,
-                self._res_size,
-                self._num_lstm_nodes
-            )
+            self._opt_trainable = self._create_optimizer_trainable_vars()
 
         self._create_permutation_matrices(1, 0)
 
