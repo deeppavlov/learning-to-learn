@@ -280,14 +280,13 @@ class ResNet4Lstm(Meta):
                     )
         return vars
 
-
     # def _optimizer_core(self, optimizer_ins, num_exercises, states, gpu_idx):
     #     # optimizer_ins = self._extend_with_permutations(optimizer_ins, num_exercises, gpu_idx)
     #     # optimizer_ins = self._forward_permute(optimizer_ins)
     #     return self._empty_core(optimizer_ins)
 
     def _optimizer_core(self, optimizer_ins, num_exercises, states, gpu_idx):
-        optimizer_ins = self._extend_with_permutations(optimizer_ins, num_exercises, gpu_idx)
+        optimizer_ins = self._extend_with_permutations(optimizer_ins, gpu_idx)
         optimizer_ins = self._forward_permute(optimizer_ins)
         return self._empty_core(optimizer_ins)
 

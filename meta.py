@@ -281,6 +281,18 @@ class Meta(object):
         return optimizer_outs
 
     @staticmethod
+    def _expand_num_ex_dim_in_opt_ins(opt_ins, inner_keys):
+        for ov in opt_ins.values():
+            for ik in inner_keys:
+                iv = ov[ik]
+                if isinstance(iv, list):
+                    for idx, tensor in iv:
+                        iv[idx] = tf.expand_dims(tensor, axis=0)
+                else:
+                    ov[ik] = tf.expand_dims(iv, axis=0)
+        return opt_ins
+
+    @staticmethod
     def _empty_core(optimizer_ins):
         # print('(Meta._empty_core)optimizer_ins:')
         # print_optimizer_ins(optimizer_ins)
