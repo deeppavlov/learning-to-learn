@@ -206,7 +206,6 @@ class ResNet4Lstm(Meta):
                 tf.add_to_collection(tf.GraphKeys.WEIGHTS, m)
         return matrices, biases
 
-
     def _create_optimizer_trainable_vars(self, num_res_layers, res_size, rnn_size):
         pupil_size = self._pupil.get_layer_dims()
         embedding_layer = pupil_size['embedding_layer']
@@ -227,7 +226,7 @@ class ResNet4Lstm(Meta):
                             [embedding_layer],
                             [lstm_layers[0]],
                             rnn_part,
-                            res_idx,
+                            res_size,
                             'embedding_layer_core'
                         )
                         for layer_idx, layer_dims in enumerate(lstm_layers):
@@ -245,7 +244,7 @@ class ResNet4Lstm(Meta):
                                 [layer_dims],
                                 [pupil_next_layer_dims, layer_dims],
                                 rnn_part,
-                                res_idx,
+                                res_size,
                                 'lstm_layer_%s_core' % layer_idx
                             )
                         for layer_idx, layer_dims in enumerate(output_layers):
@@ -263,7 +262,7 @@ class ResNet4Lstm(Meta):
                                 [layer_dims],
                                 [pupil_next_layer_dims, layer_dims],
                                 rnn_part,
-                                res_idx,
+                                res_size,
                                 'output_layer_%s_core' % layer_idx
                             )
                         vars['res_layers'].append(res_layer_params)
@@ -298,7 +297,8 @@ class ResNet4Lstm(Meta):
                  num_lstm_nodes=256,
                  num_optimizer_unrollings=10,
                  perm_period=None,
-                 init_parameter=4.,
+                 num_res_layers=4,
+                 res_size=1000,
                  num_gpus=1,
                  regime='train',
                  optimizer_for_opt_type='adam'):
@@ -307,6 +307,8 @@ class ResNet4Lstm(Meta):
         self._num_lstm_nodes = num_lstm_nodes
         self._num_optimizer_unrollings = num_optimizer_unrollings
         self._perm_period = perm_period
+        self._num_res_layers = num_res_layers
+        self._res_size = res_size
         self._num_gpus = num_gpus
         if self._num_gpus == 1:
             self._base_device = '/gpu:0'
@@ -354,7 +356,11 @@ class ResNet4Lstm(Meta):
                 self._optimizer_grad_inputs, self._optimizer_grad_labels = None, None, None, None
 
         with tf.device(self._base_device):
-            self._create_optimizer_trainable_vars()
+            self._opt_trainable = self._create_optimizer_trainable_vars(
+                self._num_res_layers,
+                self._res_size,
+                self._num_lstm_nodes
+            )
 
         self._create_permutation_matrices(1, 0)
 
