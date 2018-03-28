@@ -208,14 +208,78 @@ class ResNet4Lstm(Meta):
 
 
     def _create_optimizer_trainable_vars(self, num_res_layers, res_size, rnn_size):
-        pupil_size = self._pupil.get_net_size()
+        pupil_size = self._pupil.get_layer_dims()
+        embedding_layer = pupil_size['embedding_layer']
+        lstm_layers = pupil_size['lstm_layers']
+        output_layers = pupil_size['output_layers']
+        num_layers = len(lstm_layers)
+        num_output_layers = len(output_layers)
         rnn_for_res_layer = self._distribute_rnn_size_among_res_layers(rnn_size, num_res_layers)
         vars = dict()
         with tf.variable_scope('optimizer_trainable_variables'):
             with tf.variable_scope('res_layers'):
-                for res_idx in range(num_res_layers):
+                vars['res_layers'] = list()
+                for res_idx, rnn_part in enumerate(rnn_for_res_layer):
                     with tf.variable_scope('layer_%s' % res_idx):
-                        pass
+                        res_layer_params = dict()
+                        res_layer_params['embedding_layer'] = self._res_core_vars(
+                            [()],
+                            [embedding_layer],
+                            [lstm_layers[0]],
+                            rnn_part,
+                            res_idx,
+                            'embedding_layer_core'
+                        )
+                        for layer_idx, layer_dims in enumerate(lstm_layers):
+                            if layer_idx == 0:
+                                pupil_previous_layer_dims = embedding_layer
+                            else:
+                                pupil_previous_layer_dims = lstm_layers[layer_idx-1]
+                            if layer_idx == num_layers - 1:
+                                pupil_next_layer_dims = output_layers[0]
+                            else:
+                                pupil_next_layer_dims = lstm_layers[layer_idx+1]
+                            res_layer_params['lstm_layer_%s' % layer_idx] = self._res_core_vars(
+                                [pupil_previous_layer_dims,
+                                 layer_dims],
+                                [layer_dims],
+                                [pupil_next_layer_dims, layer_dims],
+                                rnn_part,
+                                res_idx,
+                                'lstm_layer_%s_core' % layer_idx
+                            )
+                        for layer_idx, layer_dims in enumerate(output_layers):
+                            if layer_idx == 0:
+                                pupil_previous_layer_dims = lstm_layers[-1]
+                            else:
+                                pupil_previous_layer_dims = output_layers[layer_idx-1]
+                            if layer_idx == num_output_layers - 1:
+                                pupil_next_layer_dims = ()
+                            else:
+                                pupil_next_layer_dims = output_layers[layer_idx+1]
+                            res_layer_params['output_layer_%s' % layer_idx] = self._res_core_vars(
+                                [pupil_previous_layer_dims,
+                                 layer_dims],
+                                [layer_dims],
+                                [pupil_next_layer_dims, layer_dims],
+                                rnn_part,
+                                res_idx,
+                                'output_layer_%s_core' % layer_idx
+                            )
+                        vars['res_layers'].append(res_layer_params)
+                with tf.variable_scope('lstm'):
+                    stddev = 2. / (6 * rnn_size) ** .5
+                    vars['lstm_matrix'] = tf.get_variable(
+                        'lstm_matrix',
+                        shape=[2 * rnn_size, 4 * rnn_size],
+                        initializer=tf.truncated_normal_initializer(stddev=stddev)
+                    )
+                    vars['lstm_bias'] = tf.get_variable(
+                        'lstm_bias',
+                        shape=[4 * rnn_size],
+                        initializer=tf.zeros_initializer()
+                    )
+        return vars
 
 
     # def _optimizer_core(self, optimizer_ins, num_exercises, states, gpu_idx):
