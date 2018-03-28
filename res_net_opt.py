@@ -288,6 +288,9 @@ class ResNet4Lstm(Meta):
     def _optimizer_core(self, optimizer_ins, num_exercises, states, gpu_idx):
         optimizer_ins = self._extend_with_permutations(optimizer_ins, gpu_idx)
         optimizer_ins = self._forward_permute(optimizer_ins)
+        ndims = self._get_optimizer_ins_ndims(optimizer_ins)
+        if ndims == 2:
+            optimizer_ins = self._expand_num_ex_dim_in_opt_ins(optimizer_ins, ['o', 'sigma'])
         return self._empty_core(optimizer_ins)
 
     def __init__(self,

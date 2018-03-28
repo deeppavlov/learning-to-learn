@@ -281,6 +281,15 @@ class Meta(object):
         return optimizer_outs
 
     @staticmethod
+    def _get_optimizer_ins_ndims(opt_ins):
+        ov = list(opt_ins.values())[0]
+        s = ov['s']
+        if isinstance(s, list):
+            return len(s[0].get_shape().as_list())
+        else:
+            return len(s.get_shape().as_list())
+
+    @staticmethod
     def _expand_num_ex_dim_in_opt_ins(opt_ins, inner_keys):
         for ov in opt_ins.values():
             for ik in inner_keys:
