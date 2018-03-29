@@ -1,6 +1,6 @@
 import tensorflow as tf
 from meta import Meta
-from useful_functions import block_diagonal, custom_matmul, flatten
+from useful_functions import block_diagonal, custom_matmul, custom_add, flatten
 
 
 class ResNet4Lstm(Meta):
@@ -244,10 +244,10 @@ class ResNet4Lstm(Meta):
                     )
         return vars
 
-    def _optimizer_core(self, optimizer_ins, num_exercises, states, gpu_idx):
-        # optimizer_ins = self._extend_with_permutations(optimizer_ins, num_exercises, gpu_idx)
-        # optimizer_ins = self._forward_permute(optimizer_ins)
-        return self._empty_core(optimizer_ins)
+    # def _optimizer_core(self, optimizer_ins, num_exercises, states, gpu_idx):
+    #     # optimizer_ins = self._extend_with_permutations(optimizer_ins, num_exercises, gpu_idx)
+    #     # optimizer_ins = self._forward_permute(optimizer_ins)
+    #     return self._empty_core(optimizer_ins)
 
     def _pad(self, tensor, direction):
         """if direction < 0 |direction| most recent pupil unrollings are cut and  paddings are added after oldest
@@ -270,108 +270,140 @@ class ResNet4Lstm(Meta):
             padded = tf.concat([kept, paddings], -2)
         return padded
 
-    def _apply_res_layer(self, ins, res_vars, rnn_part):
-        if self._emb_layer_is_present:
-            core_inps = [
-                ins['embedding_layer']['o_c'],
-                ins['embedding_layer']['sigma_c'],
-                ins['lstm_layer_0']['o_c'],
-                ins['lstm_layer_0']['o_sigma']
-            ]
-            o, sigma, emb_rnn_part = self._apply_res_core(res_vars['embedding_layer'], core_inps, rnn_part)
-            ins['embedding_layer']['o_c'] = o
-            ins['embedding_layer']['sigma_c'] = sigma
+    @staticmethod
+    def _apply_res_core(vars, opt_ins, rnn_part, scope):
+        with tf.name_scope(scope):
+            opt_ins_united = tf.concat(opt_ins, -1)
+            rnn_stack_num = opt_ins_united.get_shape().as_list()[-2]
+            rnn_part = tf.stack([rnn_part]*rnn_stack_num, axis=-2)
+            hs = tf.concat([opt_ins_united, rnn_part], -1)
+            matrices = vars[0]
+            biases = vars[1]
+            for m, b in zip(matrices, biases):
+                hs = tf.nn.relu(custom_add(custom_matmul(hs, m), b))
+            return hs
 
-        lstm_rnn_parts = list()
-        for layer_idx in range(self._pupil_net_size['num_layers']):
-            if layer_idx == 0:
-                if self._emb_layer_is_present:
+    def _apply_res_layer(self, ins, res_vars, rnn_part, scope):
+        with tf.name_scope(scope):
+            if self._emb_layer_is_present:
+                core_inps = [
+                    ins['embedding_layer']['o_c'],
+                    ins['embedding_layer']['sigma_c'],
+                    ins['lstm_layer_0']['o_c'],
+                    ins['lstm_layer_0']['o_sigma']
+                ]
+                o, sigma, emb_rnn_part = self._apply_res_core(
+                    res_vars['embedding_layer'], core_inps, rnn_part, 'embedding_layer')
+                ins['embedding_layer']['o_c'] = o
+                ins['embedding_layer']['sigma_c'] = sigma
+            else:
+                emb_rnn_part = 0
+
+            lstm_rnn_parts = list()
+            for layer_idx in range(self._pupil_net_size['num_layers']):
+                if layer_idx == 0:
+                    if self._emb_layer_is_present:
+                        previous_layer_tensors = [
+                            ins['embedding_layer']['o_c'],
+                            ins['embedding_layer']['sigma_c']
+                        ]
+                    else:
+                        previous_layer_tensors = []
+                else:
                     previous_layer_tensors = [
-                        ins['embedding_layer']['o_c'],
-                        ins['embedding_layer']['sigma_c']
+                        ins['lstm_layer_%s' % (layer_idx - 1)]['o_c'],
+                        ins['lstm_layer_%s' % (layer_idx - 1)]['sigma_c']
+                    ]
+                if layer_idx == self._pupil_net_size['num_layers'] - 1:
+                    next_layer_tensors = [
+                        ins['output_layer_0']['o_c'],
+                        ins['output_layer_0']['sigma_c']
                     ]
                 else:
-                    previous_layer_tensors = []
-            else:
-                previous_layer_tensors = [
-                    ins['lstm_layer_%s' % (layer_idx - 1)]['o_c'],
-                    ins['lstm_layer_%s' % (layer_idx - 1)]['sigma_c']
+                    next_layer_tensors = [
+                        ins['lstm_layer_%s' % (layer_idx + 1)]['o_c'],
+                        ins['lstm_layer_%s' % (layer_idx + 1)]['sigma_c']
+                    ]
+                core_inps = [
+                    *previous_layer_tensors,
+                    ins['lstm_layer_%s' % layer_idx]['o_c'],
+                    ins['lstm_layer_%s' % layer_idx]['o_sigma'],
+                    self._pad(ins['lstm_layer_%s' % layer_idx]['o_c'], -1),
+                    self._pad(ins['lstm_layer_%s' % layer_idx]['sigma_c'], -1),
+                    self._pad(ins['lstm_layer_%s' % layer_idx]['o_c'], 1),
+                    self._pad(ins['lstm_layer_%s' % layer_idx]['sigma_c'], 1),
+                    *next_layer_tensors
                 ]
-            if layer_idx == self._pupil_net_size['num_layers'] - 1:
-                next_layer_tensors = [
-                    ins['output_layer_0']['o_c'],
-                    ins['output_layer_0']['sigma_c']
-                ]
-            else:
-                next_layer_tensors = [
-                    ins['lstm_layer_%s' % (layer_idx + 1)]['o_c'],
-                    ins['lstm_layer_%s' % (layer_idx + 1)]['sigma_c']
-                ]
-            core_inps = [
-                *previous_layer_tensors,
-                ins['lstm_layer_%s' % layer_idx]['o_c'],
-                ins['lstm_layer_%s' % layer_idx]['o_sigma'],
-                self._pad(ins['lstm_layer_%s' % layer_idx]['o_c'], -1),
-                self._pad(ins['lstm_layer_%s' % layer_idx]['sigma_c'], -1),
-                self._pad(ins['lstm_layer_%s' % layer_idx]['o_c'], 1),
-                self._pad(ins['lstm_layer_%s' % layer_idx]['sigma_c'], 1),
-                *next_layer_tensors
-            ]
-            o, sigma, rnn_part = self._apply_res_core(res_vars['lstm_layer_%s' % layer_idx], core_inps, rnn_part)
-            lstm_rnn_parts.append(rnn_part)
-            ins['lstm_layer_%s' % layer_idx]['o_c'] = o
-            ins['lstm_layer_%s' % layer_idx]['sigma_c'] = sigma
+                layer_name = 'lstm_layer_%s' % layer_idx
+                o, sigma, rnn_part = self._apply_res_core(
+                    res_vars[layer_name], core_inps, rnn_part, layer_name)
+                lstm_rnn_parts.append(rnn_part)
+                ins['lstm_layer_%s' % layer_idx]['o_c'] = o
+                ins['lstm_layer_%s' % layer_idx]['sigma_c'] = sigma
 
-        output_rnn_parts = list()
-        for layer_idx in range(self._pupil_net_size['num_output_layers']):
-            if layer_idx == 0:
-                previous_layer_tensors = [
-                    ins['lstm_layer_%s' % (self._pupil_net_size['num_layers'] - 1)]['o_c'],
-                    ins['lstm_layer_%s' % (self._pupil_net_size['num_layers'] - 1)]['sigma_c']
+            output_rnn_parts = list()
+            for layer_idx in range(self._pupil_net_size['num_output_layers']):
+                if layer_idx == 0:
+                    previous_layer_tensors = [
+                        ins['lstm_layer_%s' % (self._pupil_net_size['num_layers'] - 1)]['o_c'],
+                        ins['lstm_layer_%s' % (self._pupil_net_size['num_layers'] - 1)]['sigma_c']
+                    ]
+                else:
+                    previous_layer_tensors = [
+                        ins['output_layer_%s' % (layer_idx - 1)]['o_c'],
+                        ins['output_layer_%s' % (layer_idx - 1)]['sigma_c']
+                    ]
+                if layer_idx == self._pupil_net_size['num_output_layers'] - 1:
+                    next_layer_tensors = []
+                else:
+                    next_layer_tensors = [
+                        ins['output_layer_%s' % (layer_idx + 1)]['o_c'],
+                        ins['output_layer_%s' % (layer_idx + 1)]['sigma_c']
+                    ]
+                core_inps = [
+                    *previous_layer_tensors,
+                    ins['output_layer_%s' % layer_idx]['o_c'],
+                    ins['output_layer_%s' % layer_idx]['o_sigma'],
+                    *next_layer_tensors
                 ]
-            else:
-                previous_layer_tensors = [
-                    ins['output_layer_%s' % (layer_idx - 1)]['o_c'],
-                    ins['output_layer_%s' % (layer_idx - 1)]['sigma_c']
-                ]
-            if layer_idx == self._pupil_net_size['num_output_layers'] - 1:
-                next_layer_tensors = []
-            else:
-                next_layer_tensors = [
-                    ins['output_layer_%s' % (layer_idx + 1)]['o_c'],
-                    ins['output_layer_%s' % (layer_idx + 1)]['sigma_c']
-                ]
-            core_inps = [
-                *previous_layer_tensors,
-                ins['output_layer_%s' % layer_idx]['o_c'],
-                ins['output_layer_%s' % layer_idx]['o_sigma'],
-                *next_layer_tensors
-            ]
-            o, sigma, rnn_part = self._apply_res_core(res_vars['output_layer_%s' % layer_idx], core_inps, rnn_part)
-            output_rnn_parts.append(rnn_part)
-            ins['output_layer_%s' % layer_idx]['o_c'] = o
-            ins['output_layer_%s' % layer_idx]['sigma_c'] = sigma
-        return ins
+                layer_name = 'output_layer_%s' % layer_idx
+                o, sigma, rnn_part = self._apply_res_core(res_vars[layer_name], core_inps, rnn_part, layer_name)
+                output_rnn_parts.append(rnn_part)
+                ins['output_layer_%s' % layer_idx]['o_c'] = o
+                ins['output_layer_%s' % layer_idx]['sigma_c'] = sigma
+            return ins, emb_rnn_part + sum(lstm_rnn_parts + output_rnn_parts)
 
-    def _concat_opt_ins(self, opt_ins, inner_keys):
+    @staticmethod
+    def _concat_opt_ins(opt_ins, inner_keys):
+        num_concatenated = -1
         with tf.name_scope('concat_opt_ins'):
             for ov in opt_ins.values():
                 for ik in inner_keys:
+                    if num_concatenated < 0:
+                        num_concatenated = len(ov[ik])
                     ov[ik + '_c'] = tf.concat(ov[ik], -2, name=ik + '_c')
+        return opt_ins, num_concatenated
+
+    @staticmethod
+    def _split_opt_ins(opt_ins, inner_keys, num_splits):
+        with tf.name_scope('split_opt_ins'):
+            for ov in opt_ins.values():
+                for ik in inner_keys:
+                    ov[ik + '_spl'] = tf.split(ov[ik + '_spl'], num_splits)
         return opt_ins
 
-    # def _optimizer_core(self, optimizer_ins, num_exercises, states, gpu_idx):
-    #     optimizer_ins = self._extend_with_permutations(optimizer_ins, gpu_idx)
-    #     optimizer_ins = self._forward_permute(optimizer_ins)
-    #     ndims = self._get_optimizer_ins_ndims(optimizer_ins)
-    #     if ndims == 2:
-    #         optimizer_ins = self._expand_num_ex_dim_in_opt_ins(optimizer_ins, ['o', 'sigma'])
-    #     optimizer_ins = self._concat_opt_ins(optimizer_ins, ['o', 'sigma'])
-    #
-    #     rnn_output_by_res_layers = tf.split(states[0], self._rnn_for_res_layers, axis=-1)
-    #     rnn_input_by_res_layers = list()
-    #
-    #     return self._empty_core(optimizer_ins)
+    def _optimizer_core(self, optimizer_ins, num_exercises, states, gpu_idx):
+        optimizer_ins = self._extend_with_permutations(optimizer_ins, gpu_idx)
+        optimizer_ins = self._forward_permute(optimizer_ins)
+        ndims = self._get_optimizer_ins_ndims(optimizer_ins)
+        if ndims == 2:
+            optimizer_ins = self._expand_num_ex_dim_in_opt_ins(optimizer_ins, ['o', 'sigma'])
+        optimizer_ins, num_concatenated = self._concat_opt_ins(optimizer_ins, ['o', 'sigma'])
+
+        rnn_output_by_res_layers = tf.split(states[0], self._rnn_for_res_layers, axis=-1)
+        rnn_input_by_res_layers = list()
+
+        return self._empty_core(optimizer_ins)
 
     def __init__(self,
                  pupil,
