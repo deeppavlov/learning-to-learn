@@ -271,51 +271,87 @@ class ResNet4Lstm(Meta):
         return padded
 
     def _apply_res_layer(self, ins, res_vars, rnn_part):
-        core_inps = [
-            ins['embedding_layer']['o_c'],
-            ins['embedding_layer']['sigma_c'],
-            ins['lstm_layer_0']['o_c'],
-            ins['lstm_layer_0']['o_sigma']
-        ]
-        o, sigma, emb_rnn_part = self._apply_res_core(res_vars['embedding_layer'], core_inps, rnn_part)
-        ins['embedding_layer']['o_c'] = o
-        ins['embedding_layer']['sigma_c'] = sigma
+        if self._emb_layer_is_present:
+            core_inps = [
+                ins['embedding_layer']['o_c'],
+                ins['embedding_layer']['sigma_c'],
+                ins['lstm_layer_0']['o_c'],
+                ins['lstm_layer_0']['o_sigma']
+            ]
+            o, sigma, emb_rnn_part = self._apply_res_core(res_vars['embedding_layer'], core_inps, rnn_part)
+            ins['embedding_layer']['o_c'] = o
+            ins['embedding_layer']['sigma_c'] = sigma
 
         lstm_rnn_parts = list()
         for layer_idx in range(self._pupil_net_size['num_layers']):
             if layer_idx == 0:
-                previous_layer_tensors = [
-                    ins['embedding_layer']['o_c'],
-                    ins['embedding_layer']['sigma_c']
-                ]
+                if self._emb_layer_is_present:
+                    previous_layer_tensors = [
+                        ins['embedding_layer']['o_c'],
+                        ins['embedding_layer']['sigma_c']
+                    ]
+                else:
+                    previous_layer_tensors = []
             else:
                 previous_layer_tensors = [
                     ins['lstm_layer_%s' % (layer_idx - 1)]['o_c'],
                     ins['lstm_layer_%s' % (layer_idx - 1)]['sigma_c']
                 ]
             if layer_idx == self._pupil_net_size['num_layers'] - 1:
+                next_layer_tensors = [
+                    ins['output_layer_0']['o_c'],
+                    ins['output_layer_0']['sigma_c']
+                ]
+            else:
+                next_layer_tensors = [
+                    ins['lstm_layer_%s' % (layer_idx + 1)]['o_c'],
+                    ins['lstm_layer_%s' % (layer_idx + 1)]['sigma_c']
+                ]
+            core_inps = [
+                *previous_layer_tensors,
+                ins['lstm_layer_%s' % layer_idx]['o_c'],
+                ins['lstm_layer_%s' % layer_idx]['o_sigma'],
+                self._pad(ins['lstm_layer_%s' % layer_idx]['o_c'], -1),
+                self._pad(ins['lstm_layer_%s' % layer_idx]['sigma_c'], -1),
+                self._pad(ins['lstm_layer_%s' % layer_idx]['o_c'], 1),
+                self._pad(ins['lstm_layer_%s' % layer_idx]['sigma_c'], 1),
+                *next_layer_tensors
+            ]
+            o, sigma, rnn_part = self._apply_res_core(res_vars['lstm_layer_%s' % layer_idx], core_inps, rnn_part)
+            lstm_rnn_parts.append(rnn_part)
+            ins['lstm_layer_%s' % layer_idx]['o_c'] = o
+            ins['lstm_layer_%s' % layer_idx]['sigma_c'] = sigma
+
+        output_rnn_parts = list()
+        for layer_idx in range(self._pupil_net_size['num_output_layers']):
+            if layer_idx == 0:
                 previous_layer_tensors = [
-                    ins['embedding_layer']['o_c'],
-                    ins['embedding_layer']['sigma_c']
+                    ins['lstm_layer_%s' % (self._pupil_net_size['num_layers'] - 1)]['o_c'],
+                    ins['lstm_layer_%s' % (self._pupil_net_size['num_layers'] - 1)]['sigma_c']
                 ]
             else:
                 previous_layer_tensors = [
-                    ins['lstm_layer_%s' % (layer_idx - 1)]['o_c'],
-                    ins['lstm_layer_%s' % (layer_idx - 1)]['sigma_c']
+                    ins['output_layer_%s' % (layer_idx - 1)]['o_c'],
+                    ins['output_layer_%s' % (layer_idx - 1)]['sigma_c']
+                ]
+            if layer_idx == self._pupil_net_size['num_output_layers'] - 1:
+                next_layer_tensors = []
+            else:
+                next_layer_tensors = [
+                    ins['output_layer_%s' % (layer_idx + 1)]['o_c'],
+                    ins['output_layer_%s' % (layer_idx + 1)]['sigma_c']
                 ]
             core_inps = [
-                ins['embedding_layer']['o_c'],
-                ins['embedding_layer']['sigma_c'],
-                ins['lstm_layer_0']['o_c'],
-                ins['lstm_layer_0']['o_sigma'],
-                self._pad(ins['lstm_layer_0']['o_c'], -1),
-                self._pad(ins['lstm_layer_0']['sigma_c'], -1),
-                self._pad(ins['lstm_layer_0']['o_c'], 1),
-                self._pad(ins['lstm_layer_0']['sigma_c'], 1),
-
+                *previous_layer_tensors,
+                ins['output_layer_%s' % layer_idx]['o_c'],
+                ins['output_layer_%s' % layer_idx]['o_sigma'],
+                *next_layer_tensors
             ]
-
-
+            o, sigma, rnn_part = self._apply_res_core(res_vars['output_layer_%s' % layer_idx], core_inps, rnn_part)
+            output_rnn_parts.append(rnn_part)
+            ins['output_layer_%s' % layer_idx]['o_c'] = o
+            ins['output_layer_%s' % layer_idx]['sigma_c'] = sigma
+        return ins
 
     def _concat_opt_ins(self, opt_ins, inner_keys):
         with tf.name_scope('concat_opt_ins'):
