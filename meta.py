@@ -440,6 +440,16 @@ class Meta(object):
         return self._optimizer_for_optimizer_training.compute_gradients(loss, var_list=optimizer_trainable_variables)
 
     @staticmethod
+    def _l2_loss(reg_rate):
+        with tf.name_scope('l2_loss'):
+            weights = tf.get_collection(tf.GraphKeys.WEIGHTS)
+            regularizer = tf.contrib.layers.l2_regularizer(reg_rate)
+            loss = 0
+            for w in weights:
+                loss += regularizer(w)
+        return loss
+
+    @staticmethod
     def _tune_gradients(grads_and_vars):
         grads, v = zip(*grads_and_vars)
         grads, _ = tf.clip_by_global_norm(grads, 1.)
@@ -494,6 +504,7 @@ class Meta(object):
                                     optimizer_grad_pupil_storage[gpu_idx], opt_ins=new_pupil_trainable)
                                 one_gpu_start_loss += start_loss
                                 one_gpu_end_loss += end_loss
+                        one_gpu_end_loss += self._l2_loss(self._regularization_rate)
                         new_pupil_trainable = self._retrieve_and_unstack_trainable_variables(
                             self._num_exercises, new_pupil_trainable)
                         pupil_grad_eval_pupil_storage = self._unstack_storages(

@@ -328,11 +328,11 @@ class Lstm(Model):
 
     def _l2_loss(self, matrices):
         with tf.name_scope('l2_loss'):
-            regularizer = tf.contrib.layers.l2_regularizer(1.)
+            regularizer = tf.contrib.layers.l2_regularizer(self._regularization_rate)
             loss = 0
             for matr in matrices:
                 loss += regularizer(matr)
-            return loss * self._regularization_rate
+            return loss
 
     def _acomplish_optimizer_ins(self, optimizer_ins, trainable_variables):
         optimizer_ins['embedding_layer']['matrix'] = trainable_variables['embedding_matrix']
