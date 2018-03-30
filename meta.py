@@ -257,6 +257,32 @@ class Meta(object):
         return optimizer_ins, storage_save_ops, loss
 
     @staticmethod
+    def _concat_opt_ins(opt_ins, inner_keys):
+        num_concatenated = -1
+        with tf.name_scope('concat_opt_ins'):
+            for ov in opt_ins.values():
+                for ik in inner_keys:
+                    if num_concatenated < 0:
+                        num_concatenated = len(ov[ik])
+                    ov[ik + '_c'] = tf.concat(ov[ik], -2, name=ik + '_c')
+        return opt_ins, num_concatenated
+
+    @staticmethod
+    def _split_opt_ins(opt_ins, inner_keys, num_splits):
+        with tf.name_scope('split_opt_ins'):
+            for ov in opt_ins.values():
+                for ik in inner_keys:
+                    ov[ik + '_spl'] = tf.split(ov[ik + '_spl'], num_splits)
+        return opt_ins
+
+    @staticmethod
+    def _mv_tensors(opt_ins, source_keys, dest_keys):
+        for ov in opt_ins.values():
+            for s_key, d_key in zip(source_keys, dest_keys):
+                ov[d_key] = ov[s_key]
+        return opt_ins
+
+    @staticmethod
     def _compose_phi_and_psi(optimizer_outs):
         with tf.name_scope('phi_and_psi'):
             for k, v in optimizer_outs.items():
@@ -460,6 +486,7 @@ class Meta(object):
                                     )
                                 optimizer_outs, tmp_states = self._optimizer_core(
                                     optimizer_ins, self._num_ex_per_gpu[gpu_idx], tmp_states, gpu_idx)
+                                optimizer_outs = self._compose_phi_and_psi(optimizer_outs)
                                 mods = self._compose_mods(optimizer_outs)
                                 new_pupil_trainable = self._sub_mods(mods)
                                 end_loss, _, optimizer_grad_pupil_storage[gpu_idx] = self._pupil.loss_and_opt_ins(

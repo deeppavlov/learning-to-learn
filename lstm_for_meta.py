@@ -468,6 +468,7 @@ class Lstm(Model):
         tower_grads = list()
         preds = list()
         losses = list()
+        reset_state_ops = list()
         with tf.name_scope('train'):
             for gpu_batch_size, gpu_name, device_inputs, device_labels in zip(
                     self._batch_sizes_on_gpus, self._gpu_names, inputs_by_device, labels_by_device):
@@ -485,6 +486,7 @@ class Lstm(Model):
                                      trainable=False,
                                      name='saved_state_%s_%s' % (layer_idx, 1)))
                             )
+                        reset_state_ops.extend(compose_reset_list(saved_states))
 
                         all_states = saved_states
                         embeddings, _ = self._embed(device_inputs, trainable['embedding_matrix'])
@@ -528,7 +530,7 @@ class Lstm(Model):
                     # grads, _ = tf.clip_by_global_norm(grads, 1.)
                     self.train_op = optimizer.apply_gradients(zip(grads, v))
                     self._hooks['train_op'] = self.train_op
-
+                    self._hooks['reset_train_state'] = tf.group(*reset_state_ops)
                     # composing predictions
                     preds_by_char = list()
                     # print('preds:', preds)
@@ -795,6 +797,7 @@ class Lstm(Model):
             validation_labels_prepared=None,
             validation_predictions=None,
             reset_validation_state=None,
+            reset_train_state=None,
             randomize_sample_state=None,
             dropout=None,
             saver=None)

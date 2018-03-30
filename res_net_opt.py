@@ -63,13 +63,11 @@ class ResNet4Lstm(Meta):
             reset_ops.append(
                 tf.assign(v, self._create_permutation_matrix(v_shape[1], v_shape[0]))
             )
-        return tf.group(*reset_ops)
+        return reset_ops
 
     def _create_permutation_matrices(self, num_exercises, gpu_idx):
         num_nodes = self._pupil_net_size['num_nodes']
         num_output_nodes = self._pupil_net_size['num_output_nodes']
-        num_layers = len(num_nodes)
-        num_output_layers = len(num_output_nodes)
         with tf.variable_scope('permutation_matrices_on_gpu_%s' % gpu_idx):
             if self._emb_layer_is_present:
                 _ = tf.get_variable(
@@ -77,18 +75,24 @@ class ResNet4Lstm(Meta):
                     initializer=self._create_permutation_matrix(self._pupil_net_size['embedding_size'], num_exercises),
                     trainable=False
                 )
-            for layer_idx in range(num_layers):
+            for layer_idx in range(self._pupil_net_size['num_layers']):
                 _ = tf.get_variable(
                     'c_%s' % layer_idx,
                     initializer=self._create_permutation_matrix(num_nodes[layer_idx], num_exercises),
                     trainable=False
                 )
-            for layer_idx in range(num_output_layers - 1):
+            for layer_idx in range(self._pupil_net_size['num_output_layers'] - 1):
                 _ = tf.get_variable(
                     'h_%s' % layer_idx,
                     initializer=self._create_permutation_matrix(num_output_nodes[layer_idx], num_exercises),
                     trainable=False
                 )
+
+    def _reset_all_permutation_matrices(self):
+        reset_ops = list()
+        for gpu_idx, num_exercises in enumerate(self._num_ex_on_gpus):
+            reset_ops.extend(self._reset_permutations(gpu_idx))
+        return reset_ops
 
     def _extend_with_permutations(self, optimizer_ins, gpu_idx):
         num_layers = self._pupil_net_size['num_layers']
@@ -373,37 +377,52 @@ class ResNet4Lstm(Meta):
                 ins['output_layer_%s' % layer_idx]['sigma_c'] = sigma
             return ins, emb_rnn_part + sum(lstm_rnn_parts + output_rnn_parts)
 
-    @staticmethod
-    def _concat_opt_ins(opt_ins, inner_keys):
-        num_concatenated = -1
-        with tf.name_scope('concat_opt_ins'):
-            for ov in opt_ins.values():
-                for ik in inner_keys:
-                    if num_concatenated < 0:
-                        num_concatenated = len(ov[ik])
-                    ov[ik + '_c'] = tf.concat(ov[ik], -2, name=ik + '_c')
-        return opt_ins, num_concatenated
+    def _apply_lstm_layer(self, inp, state, matrix, bias, scope='lstm'):
+        with tf.name_scope(scope):
+            nn = self._num_lstm_nodes
+            x = tf.concat(
+                [tf.nn.dropout(
+                    inp,
+                    self._dropout_keep_prob),
+                 state[0]],
+                -1,
+                name='X')
+            s = tf.matmul(x, matrix)
+            linear_res = tf.add(
+                s, bias, name='linear_res')
+            [sigm_arg, tanh_arg] = tf.split(linear_res, [3 * nn, nn], axis=-1, name='split_to_act_func_args')
+            sigm_res = tf.sigmoid(sigm_arg, name='sigm_res')
+            transform_vec = tf.tanh(tanh_arg, name='transformation_vector')
+            [forget_gate, input_gate, output_gate] = tf.split(sigm_res, 3, axis=-1, name='gates')
+            new_cell_state = tf.add(forget_gate * state[1], input_gate * transform_vec, name='new_cell_state')
+            new_hidden_state = tf.multiply(output_gate, tf.tanh(new_cell_state), name='new_hidden_state')
+        return new_hidden_state, new_cell_state
 
-    @staticmethod
-    def _split_opt_ins(opt_ins, inner_keys, num_splits):
-        with tf.name_scope('split_opt_ins'):
-            for ov in opt_ins.values():
-                for ik in inner_keys:
-                    ov[ik + '_spl'] = tf.split(ov[ik + '_spl'], num_splits)
-        return opt_ins
-
-    def _optimizer_core(self, optimizer_ins, num_exercises, states, gpu_idx):
+    def _optimizer_core(self, optimizer_ins, state, gpu_idx):
         optimizer_ins = self._extend_with_permutations(optimizer_ins, gpu_idx)
-        optimizer_ins = self._forward_permute(optimizer_ins)
+        optimizer_ins = self._forward_permute(optimizer_ins, ['o'], ['sigma'])
         ndims = self._get_optimizer_ins_ndims(optimizer_ins)
         if ndims == 2:
             optimizer_ins = self._expand_num_ex_dim_in_opt_ins(optimizer_ins, ['o', 'sigma'])
         optimizer_ins, num_concatenated = self._concat_opt_ins(optimizer_ins, ['o', 'sigma'])
 
-        rnn_output_by_res_layers = tf.split(states[0], self._rnn_for_res_layers, axis=-1)
+        rnn_output_by_res_layers = tf.split(state[0], self._rnn_for_res_layers, axis=-1)
         rnn_input_by_res_layers = list()
 
-        return self._empty_core(optimizer_ins)
+        for res_idx, (res_vars, rnn_part) in enumerate(zip(self._opt_trainable['res_layers'], rnn_output_by_res_layers)):
+            optimizer_ins, rnn_input_part = self._apply_res_layer(
+                optimizer_ins, res_vars, rnn_part, 'res_layer_%s' % res_idx)
+            rnn_input_by_res_layers.append(rnn_input_part)
+
+        optimizer_ins = self._split_opt_ins(optimizer_ins, ['o_c', 'sigma_c'], num_concatenated)
+        optimizer_outs = self._mv_tensors(optimizer_ins, ['o_c_spl', 'sigma_c_spl'], ['o_pr', 'sigma_pr'])
+        optimizer_outs = self._backward_permute(optimizer_outs, ['o_pr'], ['sigma_pr'])
+
+        rnn_input = tf.stack(rnn_input_by_res_layers, axis=-1)
+        rnn_input = tf.reduce_mean(rnn_input, axis=-2)
+
+        state = self._apply_lstm_layer(rnn_input, state)
+        return optimizer_outs, state
 
     def __init__(self,
                  pupil,
@@ -414,6 +433,7 @@ class ResNet4Lstm(Meta):
                  num_res_layers=4,
                  res_size=1000,
                  num_gpus=1,
+
                  regime='train',
                  optimizer_for_opt_type='adam'):
         self._pupil = pupil
@@ -445,6 +465,7 @@ class ResNet4Lstm(Meta):
             train_with_meta_optimizer_op=None,
             reset_train_states=None,
             reset_inference_state=None,
+            reset_permutation_matrices=None,
             meta_optimizer_saver=None,
             loss=None
         )
@@ -493,6 +514,8 @@ class ResNet4Lstm(Meta):
                 *[self._reset_optimizer_states('train', gpu_idx)
                   for gpu_idx in range(self._num_gpus)])
             self._hooks['reset_inference_state'] = self._reset_optimizer_states('inference', 0)
+
+            self._hooks['reset_permutation_matrices'] = tf.group(*self._reset_all_permutation_matrices())
         elif self._regime == 'inference':
             self._inference_graph()
             self._hooks['reset_inference_state'] = self._reset_optimizer_states('inference', 0)
