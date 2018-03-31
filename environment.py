@@ -385,84 +385,151 @@ class Environment(object):
         # When providing additions_to_feed_dict to train method abbreviation of 'value' entry is allowed
         # if tensor does not change during learning. It is possible to pass tensor value in 'value' entry.
         self._default_train_method_args = dict(
-            session_specs={'allow_soft_placement': False,
-                           'gpu_memory': None,
-                           'allow_growth': False,
-                           'log_device_placement': False,
-                           'visible_device_list': ""},
-            start_specs={'restore_path': None,
-                         'with_meta_optimizer': False,
-                         'meta_optimizer_restore_path': None,
-                         'save_path': None,
-                         'result_types': self.put_result_types_in_correct_order(
-                             ['loss', 'perplexity', 'accuracy']),
-                         'summary': False,
-                         'add_graph_to_summary': False,
-                         'batch_generator_class': self._default_batch_generator,
-                         'vocabulary': self._vocabulary},
+            session_specs=dict(
+                allow_soft_placement=False,
+                gpu_memory=None,
+                allow_growth=False,
+                log_device_placement=False,
+                visible_device_list=""
+            ),
+            start_specs=dict(
+                restore_path=None,
+                with_meta_optimizer=False,
+                meta_optimizer_restore_path=None,
+                save_path=None,
+                result_types=self.put_result_types_in_correct_order(
+                    ['loss', 'perplexity', 'accuracy']),
+                summary=False,
+                add_graph_to_summary=False,
+                batch_generator_class=self._default_batch_generator,
+                vocabulary=self._vocabulary
+            ),
             run=dict(
-                train_specs={'learning_rate': construct(default_learning_rate_control),
-                             'additions_to_feed_dict': list(),
-                             'stop': {'type': 'limit_steps', 'limit': 10000, 'name': 'stop'},
-                             'train_dataset': default_dataset,
-                             'batch_size': {'type': 'fixed', 'value': 64, 'name': 'batch_size'},
-                             'train_batch_kwargs': dict(),
-                             'checkpoint_steps': None,
-                             'debug': None,
-                             'validation_datasets': None,
-                             'validation_additions_to_feed_dict': list(),
-                             'validation_batch_size': 1,
-                             'valid_batch_kwargs': dict(),
-                             'validate_tokens_by_chars': False,
-                             'no_validation': False},
-                schedule={'to_be_collected_while_training': construct(default_collected_while_training),
-                          'printed_result_types':  self.put_result_types_in_correct_order(
-                             ['loss']),
-                          'printed_controllers': ['learning_rate'],
-                          'fuses': None,
-                          'fuse_tensors': construct(fuse_tensors),
-                          # 'prediction_examples': None,
-                          'example_length': None,
-                          'example_tensors': construct(example_tensors),
-                          'replicas': None,
-                          'random': {'number_of_runs': 5,
-                                     'length': 80},
-                          'train_tensor_schedule': construct(tensor_schedule),
-                          'validation_tensor_schedule': construct(valid_tensor_schedule)}
-                    )
-                                               )
+                train_specs=dict(
+                    learning_rate=construct(default_learning_rate_control),
+                    additions_to_feed_dict=list(),
+                    stop={'type': 'limit_steps', 'limit': 10000, 'name': 'stop'},
+                    train_dataset=default_dataset,
+                    batch_size={'type': 'fixed', 'value': 64, 'name': 'batch_size'},
+                    train_batch_kwargs=dict(),
+                    checkpoint_steps=None,
+                    debug=None,
+                    validation_datasets=None,
+                    validation_additions_to_feed_dict=list(),
+                    validation_batch_size=1,
+                    valid_batch_kwargs=dict(),
+                    validate_tokens_by_chars=False,
+                    no_validation=False
+                ),
+                schedule=dict(
+                    to_be_collected_while_training=construct(default_collected_while_training),
+                    printed_result_types=self.put_result_types_in_correct_order(
+                        ['loss']),
+                    printed_controllers=['learning_rate'],
+                    fuses=None,
+                    fuse_tensors=construct(fuse_tensors),
+                    example_length=None,
+                    example_tensors=construct(example_tensors),
+                    replicas=None,
+                    random={'number_of_runs': 5, 'length': 80},
+                    train_tensor_schedule=construct(tensor_schedule),
+                    validation_tensor_schedule=construct(valid_tensor_schedule)
+                )
+            )
+        )
+
+        self._default_train_optimizer_method_args = dict(
+            session_specs=dict(
+                allow_soft_placement=False,
+                gpu_memory=None,
+                allow_growth=False,
+                log_device_placement=False,
+                visible_device_list=""
+            ),
+            start_specs=dict(
+                restore_path=None,
+                with_meta_optimizer=False,
+                meta_optimizer_restore_path=None,
+                save_path=None,
+                result_types=self.put_result_types_in_correct_order(
+                    ['loss', 'perplexity', 'accuracy']),
+                summary=False,
+                add_graph_to_summary=False,
+                batch_generator_class=self._default_batch_generator,
+                vocabulary=self._vocabulary
+            ),
+            run=dict(
+                train_specs=dict(
+                    learning_rate=construct(default_learning_rate_control),
+                    additions_to_feed_dict=list(),
+                    stop={'type': 'limit_steps', 'limit': 10000, 'name': 'stop'},
+                    train_dataset=default_dataset,
+                    batch_size={'type': 'fixed', 'value': 64, 'name': 'batch_size'},
+                    train_batch_kwargs=dict(),
+                    checkpoint_steps=None,
+                    debug=None,
+                    validation_datasets=None,
+                    validation_additions_to_feed_dict=list(),
+                    validation_batch_size=1,
+                    valid_batch_kwargs=dict(),
+                    validate_tokens_by_chars=False,
+                    no_validation=False
+                ),
+                schedule=dict(
+                    to_be_collected_while_training=construct(default_collected_while_training),
+                    printed_result_types=self.put_result_types_in_correct_order(
+                        ['loss']),
+                    printed_controllers=['learning_rate'],
+                    fuses=None,
+                    fuse_tensors=construct(fuse_tensors),
+                    example_length=None,
+                    example_tensors=construct(example_tensors),
+                    replicas=None,
+                    random={'number_of_runs': 5, 'length': 80},
+                    train_tensor_schedule=construct(tensor_schedule),
+                    validation_tensor_schedule=construct(valid_tensor_schedule)
+                )
+            )
+        )
+
         self._default_test_method_args = dict(
-            session_specs={'allow_soft_placement': False,
-                           'gpu_memory': None,
-                           'allow_growth': False,
-                           'log_device_placement': False,
-                           'visible_device_list': ""},
-            start_specs={'restore_path': None,
-                         'save_path': None,
-                         'print_results': True,
-                         'result_types': self.put_result_types_in_correct_order(
-                             ['loss', 'perplexity', 'accuracy']),
-                         'verbose': True,
-                         'batch_generator_class': self._default_batch_generator,
-                         'vocabulary': self._vocabulary},
-            work=dict(additions_to_feed_dict=list(),
-                      debug=None,
-                      validation_datasets=None,
-                      validation_batch_size=1,
-                      validate_tokens_by_chars=False,
-                      valid_batch_kwargs=dict(),
-                      printed_result_types=self.put_result_types_in_correct_order(['loss']),
-                      fuses=None,
-                      fuse_tensors=construct(fuse_tensors),
-                      fuse_file_name=None,
-                      example_length=None,
-                      example_tensors=construct(example_tensors),
-                      replicas=None,
-                      random={'number_of_runs': 5,
-                              'length': 80},
-                      validation_tensor_schedule=construct(valid_tensor_schedule)
-                    )
-                                               )
+            session_specs=dict(
+                allow_soft_placement=False,
+                gpu_memory=None,
+                allow_growth=False,
+                log_device_placement=False,
+                visible_device_list=""
+            ),
+            start_specs=dict(
+                restore_path=None,
+                save_path=None,
+                print_results=True,
+                result_types=self.put_result_types_in_correct_order(
+                    ['loss', 'perplexity', 'accuracy']
+                ),
+                verbose=True,
+                batch_generator_class=self._default_batch_generator,
+                vocabulary=self._vocabulary
+            ),
+            work=dict(
+                additions_to_feed_dict=list(),
+                debug=None,
+                validation_datasets=None,
+                validation_batch_size=1,
+                validate_tokens_by_chars=False,
+                valid_batch_kwargs=dict(),
+                printed_result_types=self.put_result_types_in_correct_order(['loss']),
+                fuses=None,
+                fuse_tensors=construct(fuse_tensors),
+                fuse_file_name=None,
+                example_length=None,
+                example_tensors=construct(example_tensors),
+                replicas=None,
+                random={'number_of_runs': 5,
+                        'length': 80},
+                validation_tensor_schedule=construct(valid_tensor_schedule)
+            )
+        )
         # This attribute is used solely for controlling learning parameters (learning rate, additions_to_feed_dict)
         # It is used by instances of Controller class
         # BPI stands for bits per input. It is cross entropy computed using logarithm for base 2
