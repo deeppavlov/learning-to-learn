@@ -447,9 +447,7 @@ class Environment(object):
                 visible_device_list=""
             ),
             start_specs=dict(
-                restore_path=None,
-                with_meta_optimizer=False,
-                meta_optimizer_restore_path=None,
+                restore_optimizer_path=None,
                 save_path=None,
                 result_types=self.put_result_types_in_correct_order(
                     ['loss', 'perplexity', 'accuracy']),
@@ -464,6 +462,8 @@ class Environment(object):
                     additions_to_feed_dict=list(),
                     stop={'type': 'limit_steps', 'limit': 10000, 'name': 'stop'},
                     train_dataset=default_dataset,
+                    pupil_restore_paths=None,
+                    num_exercises=10,
                     batch_size={'type': 'fixed', 'value': 64, 'name': 'batch_size'},
                     train_batch_kwargs=dict(),
                     checkpoint_steps=None,
