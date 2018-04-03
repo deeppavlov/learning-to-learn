@@ -1,3 +1,4 @@
+import itertools
 import numpy as np
 import inspect
 import os
@@ -1033,3 +1034,16 @@ def print_optimizer_ins(opt_ins):
             print('')
             print(ik)
             print(iv)
+
+
+def create_distribute_map(num_distributed, result_length):
+    div = result_length // num_distributed
+    mod = result_length % num_distributed
+    if num_distributed < result_length:
+        num_repeats = [div] * num_distributed
+        for i in range(mod):
+            num_repeats[i] += 1
+    else:
+        num_repeats = [1] * result_length
+    map_ = list(itertools.chain(*[[i] * n_rep for i, n_rep in enumerate(num_repeats)]))
+    return map_

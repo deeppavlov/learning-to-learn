@@ -9,39 +9,39 @@ class ResNet4Lstm(Meta):
     def check_kwargs(**kwargs):
         pass
 
-    # def _create_optimizer_states(self, num_exercises, var_scope, gpu_idx):
-    #     with tf.variable_scope(var_scope):
-    #         with tf.variable_scope('gpu_%s' % gpu_idx):
-    #             states = [
-    #                 tf.get_variable(
-    #                     'h',
-    #                     shape=[num_exercises, self._num_lstm_nodes],
-    #                     initializer=tf.zeros_initializer(),
-    #                     trainable=False),
-    #                 tf.get_variable(
-    #                     'c',
-    #                     shape=[num_exercises, self._num_lstm_nodes],
-    #                     initializer=tf.zeros_initializer(),
-    #                     trainable=False)
-    #             ]
-    #             return states
-
     def _create_optimizer_states(self, num_exercises, var_scope, gpu_idx):
-        return []
+        with tf.variable_scope(var_scope):
+            with tf.variable_scope('gpu_%s' % gpu_idx):
+                states = [
+                    tf.get_variable(
+                        'h',
+                        shape=[num_exercises, self._num_lstm_nodes],
+                        initializer=tf.zeros_initializer(),
+                        trainable=False),
+                    tf.get_variable(
+                        'c',
+                        shape=[num_exercises, self._num_lstm_nodes],
+                        initializer=tf.zeros_initializer(),
+                        trainable=False)
+                ]
+                return states
 
-    # @staticmethod
-    # def _reset_optimizer_states(var_scope, gpu_idx):
-    #     with tf.variable_scope(var_scope, reuse=True):
-    #         with tf.variable_scope('gpu_%s' % gpu_idx):
-    #             h = tf.get_variable('h')
-    #             c = tf.get_variable('c')
-    #             h_shape = h.get_shape.as_list()
-    #             c_shape = c.get_shape().as_list()
-    #             reset_ops = [
-    #                 tf.assign(h, tf.zeros(h_shape)),
-    #                 tf.assign(c, tf.zeros(c_shape))
-    #             ]
-    #             return tf.group(*reset_ops)
+    # def _create_optimizer_states(self, num_exercises, var_scope, gpu_idx):
+    #     return []
+
+    @staticmethod
+    def _reset_optimizer_states(var_scope, gpu_idx):
+        with tf.variable_scope(var_scope, reuse=True):
+            with tf.variable_scope('gpu_%s' % gpu_idx):
+                h = tf.get_variable('h')
+                c = tf.get_variable('c')
+                h_shape = h.get_shape.as_list()
+                c_shape = c.get_shape().as_list()
+                reset_ops = [
+                    tf.assign(h, tf.zeros(h_shape)),
+                    tf.assign(c, tf.zeros(c_shape))
+                ]
+                return tf.group(*reset_ops)
 
     @staticmethod
     def _reset_optimizer_states(var_scope, gpu_idx):
@@ -421,7 +421,8 @@ class ResNet4Lstm(Meta):
         rnn_input = tf.stack(rnn_input_by_res_layers, axis=-1)
         rnn_input = tf.reduce_mean(rnn_input, axis=-2)
 
-        state = self._apply_lstm_layer(rnn_input, state)
+        state = self._apply_lstm_layer(
+            rnn_input, state, self._opt_trainable['lstm_matrix'], self._opt_trainable['lstm_bias'])
         return optimizer_outs, state
 
     def __init__(self,
@@ -466,6 +467,8 @@ class ResNet4Lstm(Meta):
             reset_train_states=None,
             reset_inference_state=None,
             reset_permutation_matrices=None,
+            reset_pupil_grad_eval_pupil_storage=None,
+            reset_optimizer_grad_pupil_storage=None,
             meta_optimizer_saver=None,
             loss=None
         )
@@ -486,6 +489,14 @@ class ResNet4Lstm(Meta):
             self._pupil_trainable_variables, self._pupil_grad_eval_pupil_storage, self._optimizer_grad_pupil_storage, \
                 self._pupil_savers = self._create_pupil_variables_and_savers(
                     self._pupil, self._num_exercises, self._exercise_gpu_map)
+            self._hooks['reset_pupil_grad_eval_pupil_storage'] = tf.group(
+                *self._pupil.reset_storage(
+                    self._pupil_grad_eval_pupil_storage)
+            )
+            self._hooks['reset_optimizer_grad_pupil_storage'] = tf.group(
+                *self._pupil.reset_storage(
+                    self._optimizer_grad_pupil_storage)
+            )
             self._add_standard_train_hooks()
         else:
             self._exercise_gpu_map = None

@@ -1,3 +1,4 @@
+import random
 import time
 import numpy as np
 import re
@@ -13,10 +14,10 @@ from tensorflow.python import debug as tf_debug
 from useful_functions import InvalidArgumentError
 from useful_functions import (construct, add_index_to_filename_if_needed, match_two_dicts, create_path,
                               check_if_key_in_nested_dict, add_missing_to_list, print_and_log,
-                              apply_temperature, sample, is_int)
+                              apply_temperature, sample, is_int, create_distribute_map)
 from args_parsing import parse_1_set_of_kwargs, parse_train_method_arguments, \
     formalize_and_create_insertions_for_build_hps, formalize_and_create_insertions_for_other_hps, \
-    create_all_args_for_launches, configure_args_for_launches
+    create_all_args_for_launches, configure_args_for_launches, parse_train_optimizer_method_arguments
 from handler import Handler
 from subword_nmt.apply_bpe import BPE
 from bpe import prepare_for_bpe, bpe_post_processing
@@ -361,9 +362,17 @@ class Environment(object):
         # Every results_collect_interval-th step BPC, accuracy, perplexity are collected
         # Every print_per_collected-th point containing BPC, accuracy and perplexity is printed
         # Together with every example_per_print-th point example is printed
-        default_collected_while_training = {'results_collect_interval': 100,
-                                            'print_per_collected': 1,
-                                            'example_per_print': 1}
+        default_collected_while_training = {
+            'results_collect_interval': 100,
+            'print_per_collected': 1,
+            'example_per_print': 1
+        }
+
+        optimizer_inference_default_collected_while_training = {
+            'results_collect_interval': 10,
+            'print_per_collected': 1,
+            'example_per_print': 1
+        }
 
         default_collected_on_validation = {}
 
@@ -448,9 +457,10 @@ class Environment(object):
             ),
             start_specs=dict(
                 restore_optimizer_path=None,
+                with_meta_optimizer=False,
                 save_path=None,
                 result_types=self.put_result_types_in_correct_order(
-                    ['loss', 'perplexity', 'accuracy']),
+                    ['loss']),
                 summary=False,
                 add_graph_to_summary=False,
                 batch_generator_class=self._default_batch_generator,
@@ -461,33 +471,48 @@ class Environment(object):
                     learning_rate=construct(default_learning_rate_control),
                     additions_to_feed_dict=list(),
                     stop={'type': 'limit_steps', 'limit': 10000, 'name': 'stop'},
-                    train_dataset=default_dataset,
+
                     pupil_restore_paths=None,
                     num_exercises=10,
+                    reset_period=None,
+
+                    restore_paths_datasets_map=None,
+
+                    train_datasets=[default_dataset],
                     batch_size={'type': 'fixed', 'value': 64, 'name': 'batch_size'},
                     train_batch_kwargs=dict(),
+
                     checkpoint_steps=None,
-                    debug=None,
+                    debug=None
+                ),
+                optimizer_inference=dict(
+                    opt_inf_is_performed=False,
+                    opt_inf_stop=None,
+                    opt_inf_pupil_restore_paths=None,
+                    opt_inf_additions_to_feed_dict=None,
+                    opt_inf_to_be_collected_while_training=construct(
+                        optimizer_inference_default_collected_while_training),
                     validation_datasets=None,
                     validation_additions_to_feed_dict=list(),
                     validation_batch_size=1,
                     valid_batch_kwargs=dict(),
                     validate_tokens_by_chars=False,
-                    no_validation=False
-                ),
-                schedule=dict(
-                    to_be_collected_while_training=construct(default_collected_while_training),
-                    printed_result_types=self.put_result_types_in_correct_order(
-                        ['loss']),
-                    printed_controllers=['learning_rate'],
+                    no_validation=False,
                     fuses=None,
                     fuse_tensors=construct(fuse_tensors),
                     example_length=None,
                     example_tensors=construct(example_tensors),
                     replicas=None,
                     random={'number_of_runs': 5, 'length': 80},
+                    opt_inf_train_tensor_schedule=construct(tensor_schedule),
+                    opt_inf_validation_tensor_schedule=construct(valid_tensor_schedule)
+                ),
+                schedule=dict(
+                    to_be_collected_while_training=construct(default_collected_while_training),
+                    printed_result_types=self.put_result_types_in_correct_order(
+                        ['loss']),
+                    printed_controllers=['learning_rate'],
                     train_tensor_schedule=construct(tensor_schedule),
-                    validation_tensor_schedule=construct(valid_tensor_schedule)
                 )
             )
         )
@@ -978,20 +1003,24 @@ class Environment(object):
         res = self._handler.dispense_example_results(training_step)
         return res
 
-    def _validate(self,
-                  batch_generator_class,
-                  validation_dataset,
-                  validation_batch_size,
-                  valid_batch_kwargs,
-                  training_step=None,
-                  additional_feed_dict=dict(),
-                  save_to_file=None,
-                  save_to_storage=None,
-                  print_results=None):
+    def _validate(
+            self,
+            batch_generator_class,
+            validation_dataset,
+            validation_batch_size,
+            valid_batch_kwargs,
+            training_step=None,
+            additional_feed_dict=None,
+            save_to_file=None,
+            save_to_storage=None,
+            print_results=None
+    ):
+        if additional_feed_dict is None:
+            additional_feed_dict = dict()
         # print('valid_batch_kwargs:', valid_batch_kwargs)
         if 'reset_validation_state' in self._hooks:
             self._session.run(self._hooks['reset_validation_state'])
-        #print('batch_generator_class:', batch_generator_class)
+        # print('batch_generator_class:', batch_generator_class)
         valid_batches = batch_generator_class(validation_dataset[0], validation_batch_size, **valid_batch_kwargs)
         length = valid_batches.get_dataset_length()
         inputs, labels = valid_batches.next()
@@ -1345,12 +1374,14 @@ class Environment(object):
             self.set_in_storage(step=step)
         return step
 
-    def train(self,
-              *args,
-              start_session=True,
-              close_session=True,
-              set_passed_parameters_as_default=False,
-              **kwargs):
+    def train(
+            self,
+            *args,
+            start_session=True,
+            close_session=True,
+            set_passed_parameters_as_default=False,
+            **kwargs
+    ):
         """The method responsible for model training. User may specify what intermediate results he wishes to
         collect. He may regulate learning process (see arguments). It is also possible to start learning from a check
         point. User may choose if he wishes to limit number of steps
@@ -1442,10 +1473,12 @@ class Environment(object):
             close_session=close_session,
             set_passed_parameters_as_default=set_passed_parameters_as_default,
             kwargs=kwargs)
-        tmp_output = parse_train_method_arguments(self,
-                                                  args,
-                                                  kwargs,
-                                                  set_passed_parameters_as_default=set_passed_parameters_as_default)
+        tmp_output = parse_train_method_arguments(
+            self,
+            args,
+            kwargs,
+            set_passed_parameters_as_default=set_passed_parameters_as_default
+        )
         session_specs = tmp_output['session_specs']
         start_specs = tmp_output['start_specs']
         run_specs_set = tmp_output['run']
@@ -1470,9 +1503,6 @@ class Environment(object):
         self._restore_pupil(start_specs['restore_path'])
         if start_specs['with_meta_optimizer']:
             self._restore_meta_optimizer(start_specs['meta_optimizer_restore_path'])
-
-        # print('start_specs:', start_specs)
-        if start_specs['with_meta_optimizer']:
             processing_type = 'train_with_meta'
         else:
             processing_type = 'train'
@@ -1503,6 +1533,349 @@ class Environment(object):
             self._create_checkpoint('final', checkpoints_path)
         self._handler.log_finish_time()
         self._handler.close()
+
+    def train_optimizer(
+            self,
+            *args,
+            start_session=True,
+            close_session=True,
+            set_passed_parameters_as_default=False,
+            **kwargs
+    ):
+        self._store_launch_parameters(
+            'optimizer',
+            args=args,
+            start_session=start_session,
+            close_session=close_session,
+            set_passed_parameters_as_default=set_passed_parameters_as_default,
+            kwargs=kwargs)
+        tmp_output = parse_train_optimizer_method_arguments(
+            self,
+            args,
+            kwargs,
+            set_passed_parameters_as_default=set_passed_parameters_as_default
+        )
+        session_specs = tmp_output['session_specs']
+        start_specs = tmp_output['start_specs']
+        run_specs_set = tmp_output['run']
+        all_tensor_aliases = self._all_tensor_aliases_from_train_method_arguments([(start_specs, run_specs_set)])
+        # print('(Environment.train)all_tensor_aliases:', all_tensor_aliases)
+        self._create_missing_hooks(all_tensor_aliases)
+
+        if start_session:
+            self._start_session(session_specs['allow_soft_placement'],
+                                session_specs['log_device_placement'],
+                                session_specs['gpu_memory'],
+                                session_specs['allow_growth'],
+                                session_specs['visible_device_list'])
+        self._train_optimizer_repeatedly(start_specs, run_specs_set)
+        if close_session:
+            self._close_session()
+
+    def _train_optimizer_repeatedly(self, start_specs, run_specs_set):
+        # initializing model
+        self.flush_storage()
+        self._session.run(tf.global_variables_initializer())
+        self._restore_meta_optimizer(start_specs['restore_optimizer_path'])
+        processing_type = 'train_meta_optimizer'
+
+        self._handler = Handler(self,
+                                self._hooks,
+                                processing_type,
+                                start_specs['save_path'],
+                                start_specs['result_types'],
+                                summary=start_specs['summary'],
+                                add_graph_to_summary=start_specs['add_graph_to_summary'],
+                                batch_generator_class=start_specs['batch_generator_class'],
+                                vocabulary=start_specs['vocabulary'])
+        self._handler.log_launch()
+        if start_specs['save_path'] is not None:
+            checkpoints_path = start_specs['save_path'] + '/checkpoints'
+            create_path(checkpoints_path)
+        else:
+            checkpoints_path = None
+        init_step = 0
+        for run_specs in run_specs_set:
+            init_step = self._train_optimizer(
+                run_specs,
+                checkpoints_path,
+                start_specs['batch_generator_class'],
+                start_specs['vocabulary'],
+                init_step=init_step
+            )
+        if checkpoints_path is not None:
+            self._create_checkpoint('final', checkpoints_path)
+        self._handler.log_finish_time()
+        self._handler.close()
+
+    def _fill_train_meta_optimizer_feed_dict_with_inputs_and_labels(
+            self, feed_dict, pupil_grad_eval_batch_gens, optimizer_grad_batch_gens):
+        for inp_placeholder, lbl_placeholder, b_gen in zip(
+                self._hooks['pupil_grad_eval_inputs'],
+                self._hooks['pupil_grad_eval_labels'],
+                pupil_grad_eval_batch_gens
+        ):
+            inp, lbl = b_gen.next()
+            feed_dict[inp_placeholder] = inp
+            feed_dict[lbl_placeholder] = lbl
+        for inp_placeholder, lbl_placeholder, b_gen in zip(
+                self._hooks['optimizer_grad_inputs'],
+                self._hooks['optimizer_grad_labels'],
+                optimizer_grad_batch_gens
+        ):
+            inp, lbl = b_gen.next()
+            feed_dict[inp_placeholder] = inp
+            feed_dict[lbl_placeholder] = lbl
+        return feed_dict
+
+    def _reset_exercises(
+            self,
+            num_exercises,
+            pupil_restore_paths,
+            datasets,
+            batch_generator_class,
+            batch_size_controller,
+            train_batch_kwargs,
+            restore_paths_datasets_map,
+            random_=True
+    ):
+        num_paths = len(pupil_restore_paths)
+        if random_:
+            if num_paths > num_exercises:
+                paths = random.sample(list(enumerate(pupil_restore_paths)), num_exercises)
+            else:
+                map_ = create_distribute_map(num_paths, num_exercises)
+                paths = [pupil_restore_paths[i] for i in map_]
+            if restore_paths_datasets_map is None:
+                restore_paths_datasets_map = [random.choice(
+                    [i for i, _ in enumerate(datasets)]) for _ in pupil_restore_paths]
+        else:
+            if num_paths > num_exercises:
+                paths = pupil_restore_paths[:num_exercises]
+            else:
+                map_ = create_distribute_map(num_paths, num_exercises)
+                paths = [pupil_restore_paths[i] for i in map_]
+            if restore_paths_datasets_map is None:
+                restore_paths_datasets_map = create_distribute_map(len(datasets), num_paths)
+        pupil_grad_eval_batch_gens = list()
+        optimizer_grad_batch_gens = list()
+        batch_size = batch_size_controller.get()
+        tb_kwargs = self._build_batch_kwargs(train_batch_kwargs)
+        for saver, path in zip(self._hooks['pupil_savers'], paths):
+            saver.restore(self._session, path)
+            pupil_grad_eval_batch_gens.append(batch_generator_class(
+                    datasets[restore_paths_datasets_map[path[0]]][0],
+                    batch_size,
+                    **tb_kwargs,
+                    random_batch_initiation=True
+                )
+            )
+            optimizer_grad_batch_gens.append(batch_generator_class(
+                    datasets[restore_paths_datasets_map[path[0]]][0],
+                    batch_size,
+                    **tb_kwargs,
+                    random_batch_initiation=True
+                )
+            )
+
+        self._session.run(self._hooks['reset_permutation_matrices'])
+        self._session.run(self._hooks['reset_train_states'])
+        self._session.run(self._hooks['reset_pupil_grad_eval_pupil_storage'])
+        self._session.run(self._hooks['reset_optimizer_grad_pupil_storage'])
+        return pupil_grad_eval_batch_gens, optimizer_grad_batch_gens
+
+    def _train_optimizer(
+            self,
+            run_specs,
+            checkpoints_path,
+            batch_generator_class,
+            vocabulary,
+            init_step=0
+    ):
+        """It is a method that does actual training and responsible for one training pass through dataset. It is called
+        from train method (maybe several times)
+        Args:
+            kwargs should include all entries defined in self._pupil_default_training"""
+        train_specs = construct(run_specs['train_specs'])
+        schedule = construct(run_specs['schedule'])
+        optimizer_inference = construct(run_specs['optimizer_inference'])
+        step = init_step
+
+        # creating batch generator
+
+        # resetting step in control_storage
+        self.set_in_storage(step=step)
+        learning_rate_controller = Controller(self._storage,
+                                              train_specs['learning_rate'])
+        train_feed_dict_additions = train_specs['additions_to_feed_dict']
+
+            # print('train_feed_dict_additions:', train_feed_dict_additions)
+        additional_controllers = list()
+        for addition in train_feed_dict_additions:
+            additional_controllers.append(Controller(self._storage, addition['value']))
+
+        if train_specs['stop']['type'] == 'limit_steps':
+            train_specs['stop']['limit'] += init_step
+        should_continue = Controller(self._storage, train_specs['stop'])
+
+        to_be_collected_while_training = schedule['to_be_collected_while_training']
+        collect_interval = to_be_collected_while_training['results_collect_interval']
+        print_per_collected = to_be_collected_while_training['print_per_collected']
+
+        if optimizer_inference['opt_inf_is_performed'] is None:
+            it_is_time_for_opt_inf = Controller(
+                self._storage,
+                {'type': 'always_false'}
+            )
+        else:
+            opt_inf_period = collect_interval * print_per_collected
+            it_is_time_for_opt_inf = Controller(
+                self._storage,
+                {'type': 'periodic_truth',
+                 'period': opt_inf_period})
+        batch_size_controller = Controller(self._storage, train_specs['batch_size'])
+        if train_specs['checkpoint_steps'] is not None and checkpoints_path is not None:
+            if train_specs['checkpoint_steps']['type'] == 'true_on_steps':
+                for idx in range(len(train_specs['checkpoint_steps']['steps'])):
+                    train_specs['checkpoint_steps']['steps'][idx] += init_step
+            it_is_time_to_create_checkpoint = Controller(self._storage, train_specs['checkpoint_steps'])
+        else:
+            it_is_time_to_create_checkpoint = Controller(self._storage,
+                                                         {'type': 'always_false'})
+
+        it_is_time_to_reset_exercises = Controller(self._storage, train_specs['reset_period'])
+
+        if train_specs['debug'] is not None:
+            should_start_debugging = Controller(self._storage, train_specs['debug'])
+        else:
+            should_start_debugging = Controller(self._storage,
+                                                {'type': 'true_on_steps',
+                                                 'steps': []})
+
+        train_batch_kwargs = dict()
+        train_batch_kwargs_controller_specs = list()
+        for key, batch_arg in train_specs['train_batch_kwargs'].items():
+            if isinstance(batch_arg, dict):
+                if 'type' in batch_arg:
+                    train_batch_kwargs[key] = Controller(self._storage, batch_arg)
+                    train_batch_kwargs_controller_specs.append(batch_arg)
+                else:
+                    train_batch_kwargs[key] = batch_arg
+            else:
+                train_batch_kwargs[key] = batch_arg
+
+        if 'learning_rate' in schedule['printed_controllers']:
+            controllers_for_printing = [learning_rate_controller]
+        else:
+            controllers_for_printing = []
+
+        controllers_for_printing.extend(additional_controllers)
+
+        self._handler.set_optimizer_train_schedule(
+            schedule
+        )
+
+        self._handler.set_controllers(controllers_for_printing)
+        pupil_grad_eval_batch_gens, optimizer_grad_batch_gens = self._reset_exercises(
+            train_specs['num_exercises'],
+            train_specs['pupil_restore_paths'],
+            train_specs['datasets'],
+            batch_generator_class,
+            batch_size_controller,
+            train_batch_kwargs,
+            train_specs['restore_paths_datasets_map'],
+            random_=False
+        )
+        feed_dict = dict()
+        while should_continue.get():
+            if should_start_debugging.get():
+                self._session = tf_debug.LocalCLIDebugWrapperSession(self._session)
+                self._session.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
+
+            if it_is_time_to_create_checkpoint.get():
+                self._create_checkpoint(step, checkpoints_path)
+
+            feed_dict = self._fill_train_meta_optimizer_feed_dict_with_inputs_and_labels(
+                feed_dict, pupil_grad_eval_batch_gens, optimizer_grad_batch_gens)
+
+            learning_rate = learning_rate_controller.get()
+            feed_dict[self._hooks['learning_rate_for_optimizer_training']] = learning_rate
+
+            # print('(Environment._train)self._hooks:', self._hooks)
+            train_operations = self._handler.get_tensors('train_meta_optimizer', step)
+            # print('train_operations:', train_operations)
+            # print('feed_dict:', feed_dict)
+
+            train_res = self._session.run(train_operations, feed_dict=feed_dict)
+            # here loss is given in bits per input (BPI)
+
+            self._handler.process_results(step, train_res, regime='train')
+            if it_is_time_for_opt_inf.get():
+                for pupil_name, path in optimizer_inference['opt_inf_pupil_restore_paths'].items():
+                    print('\nOptimizer inference on pupil "%s"' % pupil_name)
+                    tmp_output = parse_train_method_arguments(
+                        self,
+                        [],
+                        dict(
+                            restore_path=path,
+                            with_meta_optimizer=True,
+                            result_types=['loss'],
+                            batch_generator_class=batch_generator_class,
+                            vocabulary=vocabulary,
+                            learning_rate=None,
+                            additions_to_feed_dict=optimizer_inference['opt_inf_additions_to_feed_dict'],
+                            stop=optimizer_inference['opt_inf_stop'],
+                            train_dataset=train_specs['train_dataset'],
+                            batch_size=train_specs['batch_size'],
+                            train_batch_kwargs=train_specs['train_batch_kwargs'],
+                            validation_datasets=optimizer_inference['validation_datasets'],
+                            validation_additions_to_feed_dict=optimizer_inference['validation_additions_to_feed_dict'],
+                            validation_batch_size=optimizer_inference['validation_batch_size'],
+                            valid_batch_kwargs=optimizer_inference['valid_batch_kwargs'],
+                            validate_tokens_by_chars=optimizer_inference['validate_tokens_by_chars'],
+                            no_validation=optimizer_inference['no_validation'],
+                            to_be_collected_while_training=optimizer_inference[
+                                'opt_inf_to_be_collected_while_training'],
+                            printed_result_types=schedule['printed_result_types'],
+                            printed_controllers=[],
+                            fuses=optimizer_inference['fuses'],
+                            fuse_tensors=optimizer_inference['fuse_tensors'],
+                            example_length=optimizer_inference['example_length'],
+                            exmaple_tensors=optimizer_inference['example_tensors'],
+                            replicas=optimizer_inference['replicas'],
+                            random=optimizer_inference['random'],
+                            train_tensor_schedule=optimizer_inference['opt_inf_train_tensor_schedule'],
+                            validation_tensor_schedule=optimizer_inference['opt_inf_validation_tensor_schedule']
+                        ),
+                        set_passed_parameters_as_default=False
+                    )
+                    start_specs = tmp_output['start_specs']
+                    run_specs_set = tmp_output['run']
+                    all_tensor_aliases = self._all_tensor_aliases_from_train_method_arguments(
+                        [(start_specs, run_specs_set)])
+                    self._create_missing_hooks(all_tensor_aliases)
+                    self._restore_pupil(start_specs['restore_path'])
+                    _ = self._train(
+                        run_specs_set[0],
+                        None,
+                        start_specs['batch_generator_class'],
+                        start_specs['with_meta_optimizer'],
+                        init_step=0
+                    )
+
+            step += 1
+            if it_is_time_to_reset_exercises.get():
+                pupil_grad_eval_batch_gens, optimizer_grad_batch_gens = self._reset_exercises(
+                    train_specs['num_exercises'],
+                    train_specs['pupil_restore_paths'],
+                    train_specs['datasets'],
+                    batch_generator_class,
+                    batch_size_controller,
+                    train_batch_kwargs,
+                    train_specs['restore_paths_datasets_map']
+                )
+            self.set_in_storage(step=step)
+        return step
 
     def _several_launches_without_rebuilding(self,
                                              queue,

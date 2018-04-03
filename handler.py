@@ -9,6 +9,53 @@ class Handler(object):
 
     _stars = '*'*30
 
+    def _create_train_fields(self):
+        self._train_files = dict()
+        if self._save_path is not None:
+            self._train_files['loss'] = self._save_path + '/' + 'loss_train.txt'
+            self._train_files['perplexity'] = self._save_path + '/' + 'perplexity_train.txt'
+            self._train_files['accuracy'] = self._save_path + '/' + 'accuracy_train.txt'
+            if self._bpc:
+                self._train_files['bpc'] = self._save_path + '/' + 'bpc_train.txt'
+            self._train_files['pickle_tensors'] = self._save_path + '/' + 'tensors_train.pickle'
+        self._train_dataset_name = None
+        self._dataset_specific = dict()
+        self._controllers = None
+        self._results_collect_interval = None
+        self._print_per_collected = None
+        self._example_per_print = None
+        self._train_tensor_schedule = None
+        self._validation_tensor_schedule = None
+
+        self._fuses = None
+        self._print_fuses = True
+        self._fuse_file_name = None
+        self._fuse_tensor_schedule = None
+
+        self._print_examples = True
+        self._example_file_name = None
+        self._example_tensor_schedule = None
+
+        self._processed_fuse_index = None
+
+        self._text_is_being_accumulated = False
+        self._accumulated_text = None
+        self._accumulated_input = None
+        self._accumulated_predictions = None
+        self._accumulated_prob_vecs = None
+
+        self._printed_result_types = None
+        self._printed_controllers = None
+        if self._summary and self._save_path is not None:
+            self._writer = tf.summary.FileWriter(self._save_path + '/' + 'summary')
+            if self._add_graph_to_summary:
+                self._writer.add_graph(tf.get_default_graph())
+
+        self._training_step = None
+        self._accumulation_is_performed = False
+        self._accumulated_tensors = dict()
+        self._accumulated = dict([(res_key, None) for res_key in self._result_types])
+
     def __init__(self,
                  environment_instance,
                  hooks,
@@ -61,62 +108,18 @@ class Handler(object):
 
         self._print_order = ['loss', 'bpc', 'perplexity', 'accuracy']
 
+        self._summary = summary
+        self._add_graph_to_summary = add_graph_to_summary
+
         if self._processing_type == 'train' or self._processing_type == 'train_with_meta':
-            self._train_files = dict()
-            if self._save_path is not None:
-                self._train_files['loss'] = self._save_path + '/' + 'loss_train.txt'
-                self._train_files['perplexity'] = self._save_path + '/' + 'perplexity_train.txt'
-                self._train_files['accuracy'] = self._save_path + '/' + 'accuracy_train.txt'
-                if self._bpc:
-                    self._train_files['bpc'] = self._save_path + '/' + 'bpc_train.txt'
-                self._train_files['pickle_tensors'] = self._save_path + '/' + 'tensors_train.pickle'
-            self._train_dataset_name = None
-            self._dataset_specific = dict()
-            self._controllers = None
-            self._results_collect_interval = None
-            self._print_per_collected = None
-            self._example_per_print = None
-            self._train_tensor_schedule = None
-            self._validation_tensor_schedule = None
-
-            self._fuses = None
-            self._print_fuses = True
-            self._fuse_file_name = None
-            self._fuse_tensor_schedule = None
-
-            self._print_examples = True
-            self._example_file_name = None
-            self._example_tensor_schedule = None
-
-            self._processed_fuse_index = None
-
-            self._text_is_being_accumulated = False
-            self._accumulated_text = None
-            self._accumulated_input = None
-            self._accumulated_predictions = None
-            self._accumulated_prob_vecs = None
-
-            self._printed_result_types = None
-            self._printed_controllers = None
-            if summary and self._save_path is not None:
-                self._writer = tf.summary.FileWriter(self._save_path + '/' + 'summary')
-                if add_graph_to_summary:
-                    self._writer.add_graph(tf.get_default_graph())
+            self._create_train_fields()
             self._environment_instance.init_storage('train',
                                                     steps=list(),
                                                     loss=list(),
                                                     perplexity=list(),
                                                     accuracy=list(),
                                                     bpc=list())
-            self._training_step = None
-            self._accumulation_is_performed = False
-            self._accumulated_tensors = dict()
 
-            # self._accumulated = dict(loss=None, perplexity=None, accuracy=None)
-            # if self._bpc:
-            #     self._accumulated['bpc'] = None
-
-            self._accumulated = dict([(res_key, None) for res_key in self._result_types])
         if self._processing_type == 'test':
             self._name_of_dataset_on_which_accumulating = None
             self._dataset_specific = dict()
@@ -192,6 +195,10 @@ class Handler(object):
                 fd.close()
             self._environment_instance.set_in_storage(launches=list())
 
+        if self._processing_type == 'train_meta_optimizer':
+            self._create_train_fields()
+
+
         # The order in which tensors are presented in the list returned by get_additional_tensors method
         # It is a list. Each element is either tensor alias or a tuple if corresponding hook is pointing to a list of
         # tensors. Such tuple contains tensor alias, and sizes of nested lists
@@ -224,7 +231,7 @@ class Handler(object):
                     #print('dataset_name:', dataset_name)
                     self._environment_instance.init_storage(dataset_name, **init_dict)
 
-    def set_new_run_schedule(self, schedule, train_dataset_name, validation_dataset_names):
+    def set_new_run_schedule(self, schedule, train_dataset_name, validation_dataset_names, save_direction='main'):
         self._results_collect_interval = schedule['to_be_collected_while_training']['results_collect_interval']
         if self._results_collect_interval is not None:
             if self._result_types is not None:
@@ -270,6 +277,29 @@ class Handler(object):
             if len(self._printed_result_types) > 0:
                 self._print_results = True
         self._switch_datasets(train_dataset_name, validation_dataset_names)
+
+    def set_optimizer_train_schedule(self, schedule):
+        self._results_collect_interval = schedule['to_be_collected_while_training']['results_collect_interval']
+        if self._results_collect_interval is not None:
+            if self._result_types is not None:
+                self._save_to_file = True
+                self._save_to_storage = True
+            else:
+                self._save_to_file = False
+                self._save_to_storage = False
+        else:
+            self._save_to_file = False
+            self._save_to_storage = False
+        self._print_per_collected = schedule['to_be_collected_while_training']['print_per_collected']
+
+        self._train_tensor_schedule = schedule['train_tensor_schedule']
+
+        self._printed_controllers = schedule['printed_controllers']
+        self._printed_result_types = schedule['printed_result_types']
+
+        if self._printed_result_types is not None:
+            if len(self._printed_result_types) > 0:
+                self._print_results = True
 
     def set_test_specs(self, validation_dataset_names=None, fuses=None, replicas=None, random=None):
         if validation_dataset_names is not None:
@@ -713,7 +743,8 @@ class Handler(object):
             self._last_run_tensor_order[tensors_use]['borders'] = [start, pointer]
         return additional_tensors
 
-    def _print_tensors(self, instructions, print_step_number=False, indent=0):
+    @staticmethod
+    def _print_tensors(instructions, print_step_number=False, indent=0):
         if print_step_number:
             print('\n'*indent + 'step:', instructions['step'])
         print(instructions['message'])

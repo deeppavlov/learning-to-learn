@@ -1,3 +1,4 @@
+import random
 import numpy as np
 import tensorflow as tf
 from useful_functions import (create_vocabulary, get_positions_in_vocabulary, char2vec, pred2vec, pred2vec_fast,
@@ -33,7 +34,7 @@ class LstmBatchGenerator(object):
     def vec2char_fast(vec, vocabulary):
         return vec2char(vec, vocabulary)
 
-    def __init__(self, text, batch_size, num_unrollings=1, vocabulary=None):
+    def __init__(self, text, batch_size, num_unrollings=1, vocabulary=None, random_batch_initiation=False):
         self._text = text
         self._text_size = len(text)
         self._batch_size = batch_size
@@ -41,8 +42,11 @@ class LstmBatchGenerator(object):
         self._vocabulary_size = len(self.vocabulary)
         self.character_positions_in_vocabulary = get_positions_in_vocabulary(self.vocabulary)
         self._num_unrollings = num_unrollings
-        segment = self._text_size // batch_size
-        self._cursor = [offset * segment for offset in range(batch_size)]
+        if random_batch_initiation:
+            self._cursor = random.sample(range(self._text_size), batch_size)
+        else:
+            segment = self._text_size // batch_size
+            self._cursor = [offset * segment for offset in range(batch_size)]
         self._last_batch = self._start_batch()
 
     def get_dataset_length(self):
@@ -112,7 +116,7 @@ class LstmFastBatchGenerator(object):
     def vec2char_fast(vec, vocabulary):
         return vec2char_fast(vec, vocabulary)
 
-    def __init__(self, text, batch_size, num_unrollings=1, vocabulary=None):
+    def __init__(self, text, batch_size, num_unrollings=1, vocabulary=None, random_batch_initiation=False):
         self._text = text
         self._text_size = len(text)
         self._batch_size = batch_size
@@ -120,8 +124,11 @@ class LstmFastBatchGenerator(object):
         self._vocabulary_size = len(self.vocabulary)
         self.character_positions_in_vocabulary = get_positions_in_vocabulary(self.vocabulary)
         self._num_unrollings = num_unrollings
-        segment = self._text_size // batch_size
-        self._cursor = [offset * segment for offset in range(batch_size)]
+        if random_batch_initiation:
+            self._cursor = random.sample(range(self._text_size), batch_size)
+        else:
+            segment = self._text_size // batch_size
+            self._cursor = [offset * segment for offset in range(batch_size)]
         self._last_batch = self._start_batch()
 
     def get_dataset_length(self):
@@ -700,6 +707,10 @@ class Lstm(Model):
                                  name='saved_state_%s_%s' % (layer_idx, 1))]
                         )
         return storage_dictionary
+
+    @staticmethod
+    def reset_storage(storage):
+        return compose_reset_list(storage['states'])
 
     def _add_train_storage(self):
         storage = self.create_storage(self._base_device, 'train_storage')

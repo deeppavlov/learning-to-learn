@@ -34,12 +34,28 @@ def process_abbreviation_in_1_entry(key, value, method_name):
         set_controller_name_in_specs(new_value, 'checkpoint_steps')
     if key == 'learning_rate':
         set_controller_name_in_specs(new_value, 'learning_rate')
+
     if key == 'debug':
         if isinstance(value, int):
             new_value = {'type': 'true_on_steps', 'steps': [value]}
         else:
             new_value = None
         set_controller_name_in_specs(new_value, 'debug')
+    if key == 'optimizer_inference_period':
+        if isinstance(value, int):
+            new_value = {
+                'type': 'periodic_truth',
+                'period': value
+            }
+        set_controller_name_in_specs(new_value, 'optimizer_inference_period')
+    if key == 'optimizer_inference_stop':
+        if isinstance(value, int):
+            new_value = {
+                'type': 'limit_steps',
+                'limit': value
+            }
+        set_controller_name_in_specs(new_value, 'optimizer_inference_num_steps')
+
     if method_name == 'train':
         if key == 'additions_to_feed_dict':
             # print('inside additions_to_feed_dict shortcuts processing')
@@ -158,22 +174,50 @@ def process_train_dataset_shortcuts(env_instance,
                                     set_of_kwargs,
                                     taken_names):
     if 'train_dataset' in set_of_kwargs:
-        taken_names.extend(set_of_kwargs['train_dataset'].keys())
+        taken_names.extend(list(set_of_kwargs['train_dataset'].keys()))
         return set_of_kwargs['train_dataset']
     if 'train_dataset_name' in set_of_kwargs:
         if set_of_kwargs['train_dataset_name'] not in env_instance.datasets.keys():
             raise InvalidArgumentError("Wrong value '%s' of variable '%s'\nAllowed values: '%s'" %
                                        (set_of_kwargs['train_dataset_name'], "set_of_kwargs['train_dataset_name']",
-                                        list(env_instance.datasets.keys())))
+                                        list(env_instance.datasets.keys())),
+                                       set_of_kwargs['train_dataset_name'],
+                                       "set_of_kwargs['train_dataset_name']",
+                                       list(env_instance.datasets.keys()))
         return [env_instance.datasets[set_of_kwargs['train_dataset_name']], set_of_kwargs['train_dataset_name']]
     if 'train_dataset_text' in set_of_kwargs:
-        key, value =  process_input_text_dataset(set_of_kwargs['train_dataset_text'], taken_names)
+        key, value = process_input_text_dataset(set_of_kwargs['train_dataset_text'], taken_names)
         taken_names.append(key)
         return [value, key]
     if 'train_dataset_filename' in set_of_kwargs:
         key, value = process_dataset_filename(env_instance, set_of_kwargs['train_dataset_filename'])
         taken_names.append(key)
         return [value, key]
+    if 'train_datasets' in set_of_kwargs:
+        taken_names.extend(list(set_of_kwargs['train_dataset'].keys()))
+        return set_of_kwargs['train_datasets']
+    if 'train_dataset_names' in set_of_kwargs:
+        all_names_are_present = True
+        for name in set_of_kwargs['train_dataset_names']:
+            all_names_are_present = all_names_are_present and (name in list(env_instance.datasets.keys()))
+        if not all_names_are_present:
+            raise InvalidArgumentError("Wrong value '%s' of variable '%s'\nAllowed values: '%s'" %
+                                       (set_of_kwargs['train_dataset_names'], "set_of_kwargs['train_dataset_names']",
+                                        list(env_instance.datasets.keys())),
+                                       set_of_kwargs['train_dataset_names'],
+                                       "set_of_kwargs['train_dataset_names']",
+                                       list(env_instance.datasets.keys()))
+        return [[env_instance.datasets[name], name] for name in list(env_instance.datasets.keys())]
+    if 'train_dataset_texts' in set_of_kwargs:
+        ret = [list(process_input_text_dataset(text, taken_names))[::-1]
+               for text in set_of_kwargs['train_dataset_texts']]
+        taken_names.extend([d[1] for d in ret])
+        return ret
+    if 'train_dataset_filenames' in set_of_kwargs:
+        ret = [list(process_dataset_filename(filename, taken_names))[::-1]
+               for filename in set_of_kwargs['train_dataset_filenames']]
+        taken_names.extend([d[1] for d in ret])
+        return ret
 
 
 def process_input_text_dataset(input, taken_names):
@@ -204,11 +248,9 @@ def parse_1_set_of_kwargs(env_instance,
     kwargs_to_parse = construct(kwargs_to_parse)
     process_abbreviations(env_instance, kwargs_to_parse, method_name)
     if old_arguments is None:
+        current_arguments = env_instance.get_default_method_parameters(method_name)
         if only_repeated:
-            tmp = env_instance.get_default_method_parameters(method_name)
-            current_arguments = tmp[repeated_key]
-        else:
-            current_arguments = env_instance.get_default_method_parameters(method_name)
+            current_arguments = current_arguments[repeated_key]
     else:
         current_arguments = construct(old_arguments)
 
@@ -272,6 +314,27 @@ def parse_train_method_arguments(env_instance,
         parsed_arguments = parse_list_of_sets_of_kwargs(env_instance,
                                                         train_args,
                                                         'train',
+                                                        'run')
+
+    return parsed_arguments
+
+
+def parse_train_optimizer_method_arguments(
+    env_instance,
+    train_args,
+    train_kwargs,
+    set_passed_parameters_as_default=False
+):
+    if len(train_args) == 0:
+        #print('train_kwargs:', train_kwargs)
+        parsed_arguments = parse_list_of_sets_of_kwargs(env_instance,
+                                                        [train_kwargs],
+                                                        'train_optimizer',
+                                                        'run')
+    else:
+        parsed_arguments = parse_list_of_sets_of_kwargs(env_instance,
+                                                        train_args,
+                                                        'train_optimizer',
                                                         'run')
 
     return parsed_arguments
