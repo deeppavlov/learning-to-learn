@@ -1047,3 +1047,10 @@ def create_distribute_map(num_distributed, result_length):
         num_repeats = [1] * result_length
     map_ = list(itertools.chain(*[[i] * n_rep for i, n_rep in enumerate(num_repeats)]))
     return map_
+
+
+def remove_keys_from_dictionary(d, keys):
+    for key in keys:
+        if key in d:
+            del d[key]
+    return d

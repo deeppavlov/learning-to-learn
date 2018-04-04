@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from useful_functions import InvalidArgumentError, search_in_nested_dictionary,\
-                                  construct, paste_into_nested_structure, unite_dicts
+                                  construct, paste_into_nested_structure, unite_dicts, remove_keys_from_dictionary
 
 
 # general args parsing. Used for test and train methods
@@ -127,19 +127,20 @@ def process_batch_kwargs_shortcuts(set_of_kwargs, method_name):
 def process_datasets_shortcuts(env_instance,
                                set_of_kwargs):
     taken_names = list(env_instance.datasets.keys())
-    train_dataset = process_train_dataset_shortcuts(env_instance, set_of_kwargs, taken_names)
-    keys_to_remove = ['train_dataset', 'train_dataset_name', 'train_dataset_text', 'train_dataset_filename']
-    for key in keys_to_remove:
-        if key in set_of_kwargs:
-            del set_of_kwargs[key]
+    train_dataset = process_single_dataset_shortcut(env_instance, set_of_kwargs, taken_names, 'train_dataset')
     set_of_kwargs['train_dataset'] = train_dataset
+    train_dataset = process_single_dataset_shortcut(env_instance, set_of_kwargs, taken_names, 'train_datasets')
+    set_of_kwargs['train_datasets'] = train_dataset
+    train_dataset = process_single_dataset_shortcut(env_instance, set_of_kwargs, taken_names, 'opt_inf_train_datasets')
+    set_of_kwargs['opt_inf_train_datasets'] = train_dataset
+    train_dataset = process_single_dataset_shortcut(
+        env_instance, set_of_kwargs, taken_names, 'opt_inf_validation_datasets')
+    set_of_kwargs['opt_inf_validation_datasets'] = train_dataset
     validation_datasets = process_validation_datasets_shortcuts(env_instance, set_of_kwargs, taken_names)
-    keys_to_remove = ['validation_datasets', 'validation_dataset_names',
-                      'validation_dataset_texts', 'validation_dataset_filenames']
-    for key in keys_to_remove:
-        if key in set_of_kwargs:
-            del set_of_kwargs[key]
     set_of_kwargs['validation_datasets'] = validation_datasets
+    if 'opt_inf_train_datasets' in set_of_kwargs and 'opt_inf_validation_datasets' in set_of_kwargs:
+        if len(set_of_kwargs['opt_inf_validation_datasets']) == 1:
+            set_of_kwargs['opt_inf_validation_datasets'] *= len(set_of_kwargs['opt_inf_train_datasets'])
 
 
 def process_validation_datasets_shortcuts(env_instance,
@@ -167,57 +168,121 @@ def process_validation_datasets_shortcuts(env_instance,
             key, value = env_instance.process_dataset_filename(filename)
             taken_names.append(key)
             validation_datasets.append([value, key])
+    _ = remove_keys_from_dictionary(
+        set_of_kwargs,
+        ['validation_datasets', 'validation_dataset_names', 'validation_dataset_texts', 'validation_dataset_filenames'])
     return validation_datasets
 
 
-def process_train_dataset_shortcuts(env_instance,
-                                    set_of_kwargs,
-                                    taken_names):
-    if 'train_dataset' in set_of_kwargs:
+def process_shortcut_with_dataset_names(
+        env_instance,
+        set_of_kwargs,
+        key
+):
+    all_names_are_present = True
+    for name in set_of_kwargs[key]:
+        all_names_are_present = all_names_are_present and (name in list(env_instance.datasets.keys()))
+    if not all_names_are_present:
+        raise InvalidArgumentError("Wrong value '%s' of variable '%s'\nAllowed values: '%s'" %
+                                   (set_of_kwargs[key], "set_of_kwargs[%s]" % key,
+                                    list(env_instance.datasets.keys())),
+                                   set_of_kwargs[key],
+                                   "set_of_kwargs[%s]" % key,
+                                   list(env_instance.datasets.keys()))
+    return [[env_instance.datasets[name], name] for name in list(env_instance.datasets.keys())]
+
+
+def process_shortcut_with_dataset_texts(
+        set_of_kwargs,
+        taken_names,
+        key
+):
+    ret = [list(process_input_text_dataset(text, taken_names))[::-1]
+           for text in set_of_kwargs[key]]
+    taken_names.extend([d[1] for d in ret])
+    return ret
+
+
+def process_shortcut_with_dataset_filename(
+        set_of_kwargs,
+        taken_names,
+        key
+):
+    ret = [list(process_dataset_filename(filename, taken_names))[::-1]
+           for filename in set_of_kwargs[key]]
+    taken_names.extend([d[1] for d in ret])
+    return ret
+
+
+def process_standard_combination_of_list_of_dataset_abbreviations(
+        env_instance,
+        set_of_kwargs,
+        taken_names,
+        checked_keys
+):
+    if checked_keys[0] in set_of_kwargs:
         taken_names.extend(list(set_of_kwargs['train_dataset'].keys()))
-        return set_of_kwargs['train_dataset']
-    if 'train_dataset_name' in set_of_kwargs:
-        if set_of_kwargs['train_dataset_name'] not in env_instance.datasets.keys():
-            raise InvalidArgumentError("Wrong value '%s' of variable '%s'\nAllowed values: '%s'" %
-                                       (set_of_kwargs['train_dataset_name'], "set_of_kwargs['train_dataset_name']",
-                                        list(env_instance.datasets.keys())),
-                                       set_of_kwargs['train_dataset_name'],
-                                       "set_of_kwargs['train_dataset_name']",
-                                       list(env_instance.datasets.keys()))
-        return [env_instance.datasets[set_of_kwargs['train_dataset_name']], set_of_kwargs['train_dataset_name']]
-    if 'train_dataset_text' in set_of_kwargs:
-        key, value = process_input_text_dataset(set_of_kwargs['train_dataset_text'], taken_names)
-        taken_names.append(key)
-        return [value, key]
-    if 'train_dataset_filename' in set_of_kwargs:
-        key, value = process_dataset_filename(env_instance, set_of_kwargs['train_dataset_filename'])
-        taken_names.append(key)
-        return [value, key]
-    if 'train_datasets' in set_of_kwargs:
-        taken_names.extend(list(set_of_kwargs['train_dataset'].keys()))
-        return set_of_kwargs['train_datasets']
-    if 'train_dataset_names' in set_of_kwargs:
-        all_names_are_present = True
-        for name in set_of_kwargs['train_dataset_names']:
-            all_names_are_present = all_names_are_present and (name in list(env_instance.datasets.keys()))
-        if not all_names_are_present:
-            raise InvalidArgumentError("Wrong value '%s' of variable '%s'\nAllowed values: '%s'" %
-                                       (set_of_kwargs['train_dataset_names'], "set_of_kwargs['train_dataset_names']",
-                                        list(env_instance.datasets.keys())),
-                                       set_of_kwargs['train_dataset_names'],
-                                       "set_of_kwargs['train_dataset_names']",
-                                       list(env_instance.datasets.keys()))
-        return [[env_instance.datasets[name], name] for name in list(env_instance.datasets.keys())]
-    if 'train_dataset_texts' in set_of_kwargs:
-        ret = [list(process_input_text_dataset(text, taken_names))[::-1]
-               for text in set_of_kwargs['train_dataset_texts']]
-        taken_names.extend([d[1] for d in ret])
+        ret = set_of_kwargs['train_datasets']
+    elif checked_keys[1] in set_of_kwargs:
+        ret = process_shortcut_with_dataset_names(env_instance, set_of_kwargs, 'train_dataset_names')
+    elif checked_keys[2] in set_of_kwargs:
+        ret = process_shortcut_with_dataset_texts(set_of_kwargs, taken_names, 'train_dataset_texts')
+    elif checked_keys[3] in set_of_kwargs:
+        ret = process_shortcut_with_dataset_filename(set_of_kwargs, taken_names, 'train_dataset_filenames')
+    _ = remove_keys_from_dictionary(
+        set_of_kwargs, checked_keys)
+    return ret
+
+
+def process_single_dataset_shortcut(
+        env_instance,
+        set_of_kwargs,
+        taken_names,
+        key
+):
+    if key == 'train_dataset':
+        if 'train_dataset' in set_of_kwargs:
+            taken_names.extend(list(set_of_kwargs['train_dataset'].keys()))
+            ret = set_of_kwargs['train_dataset']
+        elif 'train_dataset_name' in set_of_kwargs:
+            if set_of_kwargs['train_dataset_name'] not in env_instance.datasets.keys():
+                raise InvalidArgumentError("Wrong value '%s' of variable '%s'\nAllowed values: '%s'" %
+                                           (set_of_kwargs['train_dataset_name'], "set_of_kwargs['train_dataset_name']",
+                                            list(env_instance.datasets.keys())),
+                                           set_of_kwargs['train_dataset_name'],
+                                           "set_of_kwargs['train_dataset_name']",
+                                           list(env_instance.datasets.keys()))
+            ret = [env_instance.datasets[set_of_kwargs['train_dataset_name']], set_of_kwargs['train_dataset_name']]
+        elif 'train_dataset_text' in set_of_kwargs:
+            key, value = process_input_text_dataset(set_of_kwargs['train_dataset_text'], taken_names)
+            taken_names.append(key)
+            ret = [value, key]
+        elif 'train_dataset_filename' in set_of_kwargs:
+            key, value = process_dataset_filename(env_instance, set_of_kwargs['train_dataset_filename'])
+            taken_names.append(key)
+            ret = [value, key]
+        _ = remove_keys_from_dictionary(
+            set_of_kwargs, ['train_dataset', 'train_dataset_name', 'train_dataset_text', 'train_dataset_filename'])
         return ret
-    if 'train_dataset_filenames' in set_of_kwargs:
-        ret = [list(process_dataset_filename(filename, taken_names))[::-1]
-               for filename in set_of_kwargs['train_dataset_filenames']]
-        taken_names.extend([d[1] for d in ret])
-        return ret
+
+    if key == 'train_datasets':
+        return process_standard_combination_of_list_of_dataset_abbreviations(
+            env_instance, set_of_kwargs, taken_names,
+            ['train_datasets', 'train_dataset_names', 'train_dataset_texts', 'train_dataset_filenames'])
+
+    if key == 'opt_inf_train_datasets':
+        return process_standard_combination_of_list_of_dataset_abbreviations(
+            env_instance, set_of_kwargs, taken_names,
+            ['opt_inf_train_datasets', 'opt_inf_train_dataset_names',
+             'opt_inf_train_dataset_texts', 'opt_inf_train_dataset_filenames']
+        )
+
+    if key == 'opt_inf_validation_datasets':
+        return process_standard_combination_of_list_of_dataset_abbreviations(
+            env_instance, set_of_kwargs, taken_names,
+            ['opt_inf_validation_datasets', 'opt_inf_validation_dataset_names',
+             'opt_inf_validation_dataset_texts', 'opt_inf_validation_dataset_filenames']
+        )
 
 
 def process_input_text_dataset(input, taken_names):

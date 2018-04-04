@@ -492,7 +492,8 @@ class Environment(object):
                     opt_inf_additions_to_feed_dict=None,
                     opt_inf_to_be_collected_while_training=construct(
                         optimizer_inference_default_collected_while_training),
-                    validation_datasets=None,
+                    opt_inf_train_datasets=None,
+                    opt_inf_validation_datasets=None,
                     validation_additions_to_feed_dict=list(),
                     validation_batch_size=1,
                     valid_batch_kwargs=dict(),
@@ -511,7 +512,7 @@ class Environment(object):
                     to_be_collected_while_training=construct(default_collected_while_training),
                     printed_result_types=self.put_result_types_in_correct_order(
                         ['loss']),
-                    printed_controllers=['learning_rate'],
+                    printed_controllers=[],
                     train_tensor_schedule=construct(tensor_schedule),
                 )
             )
@@ -797,6 +798,12 @@ class Environment(object):
         d = self._storage[dataset_name]
         for key, value in kwargs.items():
             d[key] = value
+
+    def init_meta_optimizer_training_storage(self, opt_inf_pupil_names):
+        self._storage = dict()
+        self._storage['train'] = {'steps': []}
+        for name in opt_inf_pupil_names:
+            self._storage[name] = {'steps': []}
 
     def append_to_storage(self, dataset_name, **kwargs):
         if dataset_name is not None:
@@ -1093,12 +1100,12 @@ class Environment(object):
                 returned_list.append(tensor_alias)
         return returned_list
 
-    def _check_if_validation_is_needed(self, run_specs_set):
+    def _check_if_validation_is_needed(self, run_specs_set, where_no_validation_key):
         """This method is not finished yet. Fuses, random and replicas should also be taken in account"""
         validation_is_needed = False
         for run_specs in run_specs_set:
             validation_is_needed = validation_is_needed or \
-                                   not run_specs['train_specs']['no_validation']
+                                   not run_specs[where_no_validation_key]['no_validation']
         return validation_is_needed
 
     def _all_tensor_aliases_from_train_method_arguments(self, args_for_launches, evaluation=None):
@@ -1106,13 +1113,12 @@ class Environment(object):
         list_of_required_tensors_aliases = list()
         result_types_for_launches = list()
         for start_specs in start_specs_for_launches:
-            if not start_specs['with_meta_optimizer']:
-                result_types_for_launches = add_missing_to_list(
-                    result_types_for_launches, start_specs['result_types'])
+            result_types_for_launches = add_missing_to_list(
+                result_types_for_launches, start_specs['result_types'])
         list_of_required_tensors_aliases.extend(result_types_for_launches)
         for start_specs, run_specs_set in zip(start_specs_for_launches, run_specs_for_launches):
             # if not start_specs['with_meta_optimizer']:
-            if self._check_if_validation_is_needed(run_specs_set):
+            if self._check_if_validation_is_needed(run_specs_set, 'train_specs'):
                 for result_type in start_specs['result_types']:
                     list_of_required_tensors_aliases.append('validation_' + result_type)
 
@@ -1128,6 +1134,35 @@ class Environment(object):
                     alias = 'validation_' + result_type
                     if alias not in list_of_required_tensors_aliases:
                         list_of_required_tensors_aliases.append(alias)
+        return list_of_required_tensors_aliases
+
+    def _all_tensor_aliases_from_train_meta_optimizer_method_arguments(self, args_for_launches):
+        start_specs_for_launches, run_specs_for_launches = zip(*args_for_launches)
+        list_of_required_tensors_aliases = list()
+        result_types_for_launches = list()
+        for start_specs in start_specs_for_launches:
+            result_types_for_launches = add_missing_to_list(
+                result_types_for_launches, start_specs['result_types'])
+        list_of_required_tensors_aliases.extend(result_types_for_launches)
+        for start_specs, run_specs_set in zip(start_specs_for_launches, run_specs_for_launches):
+            # if not start_specs['with_meta_optimizer']:
+            if self._check_if_validation_is_needed(run_specs_set, 'optimizer_inference'):
+                for result_type in start_specs['result_types']:
+                    list_of_required_tensors_aliases.append('validation_' + result_type)
+        for run_specs_set in run_specs_for_launches:
+            for run_specs in run_specs_set:
+                train_aliases = self._get_all_tensors_from_schedule(
+                    run_specs['schedule']['train_tensor_schedule'])
+                list_of_required_tensors_aliases = add_missing_to_list(
+                    list_of_required_tensors_aliases, train_aliases)
+                valid_aliases = self._get_all_tensors_from_schedule(
+                    run_specs['optimizer_inference']['opt_inf_train_tensor_schedule'])
+                list_of_required_tensors_aliases = add_missing_to_list(
+                    list_of_required_tensors_aliases, valid_aliases)
+                valid_aliases = self._get_all_tensors_from_schedule(
+                    run_specs['optimizer_inference']['opt_inf_validation_tensor_schedule'])
+                list_of_required_tensors_aliases = add_missing_to_list(
+                    list_of_required_tensors_aliases, valid_aliases)
         return list_of_required_tensors_aliases
 
     @staticmethod
@@ -1185,7 +1220,8 @@ class Environment(object):
                checkpoints_path,
                batch_generator_class,
                with_meta_optimizer,
-               init_step=0):
+               init_step=0,
+               pupil_name=None):
         """It is a method that does actual training and responsible for one training pass through dataset. It is called
         from train method (maybe several times)
         Args:
@@ -1558,7 +1594,8 @@ class Environment(object):
         session_specs = tmp_output['session_specs']
         start_specs = tmp_output['start_specs']
         run_specs_set = tmp_output['run']
-        all_tensor_aliases = self._all_tensor_aliases_from_train_method_arguments([(start_specs, run_specs_set)])
+        all_tensor_aliases = self._all_tensor_aliases_from_train_meta_optimizer_method_arguments(
+            [(start_specs, run_specs_set)])
         # print('(Environment.train)all_tensor_aliases:', all_tensor_aliases)
         self._create_missing_hooks(all_tensor_aliases)
 
@@ -1684,12 +1721,50 @@ class Environment(object):
         self._session.run(self._hooks['reset_optimizer_grad_pupil_storage'])
         return pupil_grad_eval_batch_gens, optimizer_grad_batch_gens
 
+    @staticmethod
+    def _create_train_method_run_specs_from_meta_optimizer_train_method_arguments(
+            train_specs,
+            optimizer_inference,
+            schedule,
+            train_dataset,
+            validation_dataset
+    ):
+        new_train_specs = dict(
+            learning_rate=None,
+            additions_to_feed_dict=optimizer_inference['opt_inf_additions_to_feed_dict'],
+            stop=optimizer_inference['opt_inf_stop'],
+            train_dataset=train_dataset,
+            batch_size=train_specs['batch_size'],
+            train_batch_kwargs=train_specs['train_batch_kwargs'],
+            checkpoint_steps=None,
+            debug=None,
+            validation_datasets=validation_dataset,
+            validation_additions_to_feed_dict=optimizer_inference['validation_additions_to_feed_dict'],
+            validation_batch_size=optimizer_inference['validation_batch_size'],
+            valid_batch_kwargs=optimizer_inference['valid_batch_kwargs'],
+            validate_tokens_by_chars=optimizer_inference['validate_tokens_by_chars'],
+            no_validation=optimizer_inference['no_validation']
+        )
+        new_schedule = dict(
+            to_be_collected_while_training=optimizer_inference['opt_inf_to_be_collected_while_training'],
+            printed_result_types=schedule['printed_result_types'],
+            printed_controllers=schedule['printed_controllers'],
+            fuses=optimizer_inference['fuses'],
+            fuse_tensors=optimizer_inference['fuse_tensors'],
+            example_length=optimizer_inference['example_length'],
+            example_tensors=optimizer_inference['example_tensors'],
+            replicas=optimizer_inference['replicas'],
+            random=optimizer_inference['random'],
+            train_tensor_schedule=optimizer_inference['opt_inf_train_tensor_schedule'],
+            validation_tensor_schedule=optimizer_inference['opt_inf_validation_tensor_schedule']
+        )
+        return {'train_specs': new_train_specs, 'schedule': new_schedule}
+
     def _train_optimizer(
             self,
             run_specs,
             checkpoints_path,
             batch_generator_class,
-            vocabulary,
             init_step=0
     ):
         """It is a method that does actual training and responsible for one training pass through dataset. It is called
@@ -1813,53 +1888,19 @@ class Environment(object):
             if it_is_time_for_opt_inf.get():
                 for pupil_name, path in optimizer_inference['opt_inf_pupil_restore_paths'].items():
                     print('\nOptimizer inference on pupil "%s"' % pupil_name)
-                    tmp_output = parse_train_method_arguments(
-                        self,
-                        [],
-                        dict(
-                            restore_path=path,
-                            with_meta_optimizer=True,
-                            result_types=['loss'],
-                            batch_generator_class=batch_generator_class,
-                            vocabulary=vocabulary,
-                            learning_rate=None,
-                            additions_to_feed_dict=optimizer_inference['opt_inf_additions_to_feed_dict'],
-                            stop=optimizer_inference['opt_inf_stop'],
-                            train_dataset=train_specs['train_dataset'],
-                            batch_size=train_specs['batch_size'],
-                            train_batch_kwargs=train_specs['train_batch_kwargs'],
-                            validation_datasets=optimizer_inference['validation_datasets'],
-                            validation_additions_to_feed_dict=optimizer_inference['validation_additions_to_feed_dict'],
-                            validation_batch_size=optimizer_inference['validation_batch_size'],
-                            valid_batch_kwargs=optimizer_inference['valid_batch_kwargs'],
-                            validate_tokens_by_chars=optimizer_inference['validate_tokens_by_chars'],
-                            no_validation=optimizer_inference['no_validation'],
-                            to_be_collected_while_training=optimizer_inference[
-                                'opt_inf_to_be_collected_while_training'],
-                            printed_result_types=schedule['printed_result_types'],
-                            printed_controllers=[],
-                            fuses=optimizer_inference['fuses'],
-                            fuse_tensors=optimizer_inference['fuse_tensors'],
-                            example_length=optimizer_inference['example_length'],
-                            exmaple_tensors=optimizer_inference['example_tensors'],
-                            replicas=optimizer_inference['replicas'],
-                            random=optimizer_inference['random'],
-                            train_tensor_schedule=optimizer_inference['opt_inf_train_tensor_schedule'],
-                            validation_tensor_schedule=optimizer_inference['opt_inf_validation_tensor_schedule']
-                        ),
-                        set_passed_parameters_as_default=False
+                    run_specs = self._create_train_method_run_specs_from_meta_optimizer_train_method_arguments(
+                        train_specs,
+                        optimizer_inference,
+                        schedule,
+                        optimizer_inference['opt_inf_train_datasets']['pupil_name'],
+                        optimizer_inference['opt_inf_validation_datasets']['pupil_name']
                     )
-                    start_specs = tmp_output['start_specs']
-                    run_specs_set = tmp_output['run']
-                    all_tensor_aliases = self._all_tensor_aliases_from_train_method_arguments(
-                        [(start_specs, run_specs_set)])
-                    self._create_missing_hooks(all_tensor_aliases)
-                    self._restore_pupil(start_specs['restore_path'])
+                    self._restore_pupil(path)
                     _ = self._train(
-                        run_specs_set[0],
+                        run_specs,
                         None,
-                        start_specs['batch_generator_class'],
-                        start_specs['with_meta_optimizer'],
+                        batch_generator_class,
+                        True,
                         init_step=0
                     )
 

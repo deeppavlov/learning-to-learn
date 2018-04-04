@@ -9,17 +9,59 @@ class Handler(object):
 
     _stars = '*'*30
 
+    def _compose_prefix_for_file_names(self, key='DEFAULT'):
+        if key == 'DEFAULT':
+            if len(self._save_path) > 0:
+                prefix = self._save_path + '/'
+            else:
+                prefix = ''
+        else:
+            if len(self._save_path) > 0:
+                prefix = self._save_path + '/' + key + '/'
+            else:
+                prefix = key + '/'
+        return prefix
+
+    def _add_results_file_name_set(self, key='DEFAULT', postfix='train'):
+        if key not in self._file_names:
+            self._file_names[key] = dict()
+        d = self._file_names[key]
+        prefix = self._compose_prefix_for_file_names(key=key)
+        if 'results' not in d:
+            d['results'] = dict()
+        res = d['results']
+        res['loss'] = prefix + '/results/loss_' + postfix + '.txt'
+        res['perplexity'] = prefix + '/results/perplexity_' + postfix + '.txt'
+        res['accuracy'] = prefix + '/results/accuracy_' + postfix + '.txt'
+        res['bpc'] = prefix + 'results/bpc_' + postfix + '.txt'
+        res['pickle_tensors'] = prefix + 'results/pickle_tensors_' + postfix + '.pickle'
+
+    def _add_opt_inf_results_file_name_templates(self, key='DEFAULT', postfix=''):
+        if key not in self._file_names:
+            self._file_names[key] = dict()
+        d = self._file_names[key]
+        prefix = self._compose_prefix_for_file_names(key=key)
+        if 'results' not in d:
+            d['results'] = dict()
+        res = d['results']
+        res['loss'] = prefix + '/results/loss_' + postfix + '/step%s.txt'
+        res['perplexity'] = prefix + '/results/perplexity_' + postfix + '/step%s.txt'
+        res['accuracy'] = prefix + '/results/accuracy_' + postfix + '/step%s.txt'
+        res['bpc'] = prefix + 'results/bpc_' + postfix + '/step%s.txt'
+
+    def _add_example_file_names(self, key='DEFAULT', fuse_file_name=None, example_file_name=None):
+        if key not in self._file_names:
+            self._file_names[key] = dict()
+        d = self._file_names[key]
+        prefix = self._compose_prefix_for_file_names(key=key)
+        if fuse_file_name is not None:
+            d['fuses'] = prefix + fuse_file_name
+
+        if example_file_name is not None:
+            d['examples'] = prefix + example_file_name
+
     def _create_train_fields(self):
-        self._train_files = dict()
-        if self._save_path is not None:
-            self._train_files['loss'] = self._save_path + '/' + 'loss_train.txt'
-            self._train_files['perplexity'] = self._save_path + '/' + 'perplexity_train.txt'
-            self._train_files['accuracy'] = self._save_path + '/' + 'accuracy_train.txt'
-            if self._bpc:
-                self._train_files['bpc'] = self._save_path + '/' + 'bpc_train.txt'
-            self._train_files['pickle_tensors'] = self._save_path + '/' + 'tensors_train.pickle'
-        self._train_dataset_name = None
-        self._dataset_specific = dict()
+
         self._controllers = None
         self._results_collect_interval = None
         self._print_per_collected = None
@@ -29,11 +71,9 @@ class Handler(object):
 
         self._fuses = None
         self._print_fuses = True
-        self._fuse_file_name = None
         self._fuse_tensor_schedule = None
 
         self._print_examples = True
-        self._example_file_name = None
         self._example_tensor_schedule = None
 
         self._processed_fuse_index = None
@@ -45,7 +85,6 @@ class Handler(object):
         self._accumulated_prob_vecs = None
 
         self._printed_result_types = None
-        self._printed_controllers = None
         if self._summary and self._save_path is not None:
             self._writer = tf.summary.FileWriter(self._save_path + '/' + 'summary')
             if self._add_graph_to_summary:
@@ -56,32 +95,35 @@ class Handler(object):
         self._accumulated_tensors = dict()
         self._accumulated = dict([(res_key, None) for res_key in self._result_types])
 
-    def __init__(self,
-                 environment_instance,
-                 hooks,
-                 processing_type,
-                 save_path,
-                 result_types,
-                 summary=False,
-                 add_graph_to_summary=False,
-                 save_to_file=None,
-                 save_to_storage=None,
-                 print_results=None,
-                 batch_generator_class=None,
-                 vocabulary=None,
-                 # several_launches method specific
-                 eval_dataset_names=None,
-                 hyperparameters=None,
-                 # test method specific
-                 validation_dataset_names=None,
-                 validation_tensor_schedule=None,
-                 printed_result_types=None,
-                 fuses=None,
-                 fuse_tensor_schedule=None,
-                 fuse_file_name=None,
-                 example_tensor_schedule=None,
-                 example_file_name=None,
-                 verbose=True):
+    def __init__(
+            self,
+            environment_instance,
+            hooks,
+            processing_type,
+            save_path,
+            result_types,
+            summary=False,
+            add_graph_to_summary=False,
+            save_to_file=None,
+            save_to_storage=None,
+            print_results=None,
+            batch_generator_class=None,
+            vocabulary=None,
+            # several_launches method specific
+            eval_dataset_names=None,
+            hyperparameters=None,
+            # test method specific
+            validation_dataset_names=None,
+            validation_tensor_schedule=None,
+            printed_result_types=None,
+            fuses=None,
+            fuse_tensor_schedule=None,
+            fuse_file_name=None,
+            example_tensor_schedule=None,
+            example_file_name=None,
+            verbose=True,
+            opt_inf_pupil_names=None
+        ):
         self._verbose = verbose
         if printed_result_types is None:
             printed_result_types = ['loss']
@@ -111,8 +153,12 @@ class Handler(object):
         self._summary = summary
         self._add_graph_to_summary = add_graph_to_summary
 
+        self._file_names = dict()
+
         if self._processing_type == 'train' or self._processing_type == 'train_with_meta':
             self._create_train_fields()
+            self._add_results_file_name_set()
+            self._add_example_file_names(fuse_file_name=fuse_file_name, example_file_name=example_file_name)
             self._environment_instance.init_storage('train',
                                                     steps=list(),
                                                     loss=list(),
@@ -141,18 +187,10 @@ class Handler(object):
             if self._fuses is not None:
                 for fuse in self._fuses:
                     fuse['results'] = list()
-            if fuse_file_name is not None:
-                self._fuse_file_name = fuse_file_name
-            elif self._fuses is not None and self._save_path is not None:
-                self._fuse_file_name = add_index_to_filename_if_needed(self._save_path + '/fuses.txt')
             self._fuse_tensor_schedule = fuse_tensor_schedule
 
             self._processed_fuse_index = None
 
-            if example_file_name is not None:
-                self._example_file_name = example_file_name
-            elif self._save_path is not None:
-                self._example_file_name = add_index_to_filename_if_needed(self._save_path + '/examples.txt')
             self._example_tensor_schedule = example_tensor_schedule
 
             if self._print_results is None:
@@ -167,6 +205,7 @@ class Handler(object):
             self._accumulated_input = None
             self._accumulated_predictions = None
             self._accumulated_prob_vecs = None
+            self._add_example_file_names(fuse_file_name=fuse_file_name, example_file_name=example_file_name)
 
         if self._processing_type == 'several_launches':
             self._result_types = result_types
@@ -197,6 +236,11 @@ class Handler(object):
 
         if self._processing_type == 'train_meta_optimizer':
             self._create_train_fields()
+            self._opt_inf_pupil_names = opt_inf_pupil_names
+            self._environment_instance.init_meta_optimizer_training_storage(self._opt_inf_pupil_names)
+            for pupil_name in self._opt_inf_pupil_names:
+                self._add_opt_inf_results_file_name_templates(key=pupil_name, postfix='train')
+                self._add_opt_inf_results_file_name_templates(key=pupil_name, postfix='validation')
 
 
         # The order in which tensors are presented in the list returned by get_additional_tensors method
@@ -231,6 +275,10 @@ class Handler(object):
                     #print('dataset_name:', dataset_name)
                     self._environment_instance.init_storage(dataset_name, **init_dict)
 
+    def _add_validation_experiment_instruments(self, pupil_name, postfix):
+        self._add_results_file_name_set(key=pupil_name, postfix=postfix)
+
+
     def set_new_run_schedule(self, schedule, train_dataset_name, validation_dataset_names, save_direction='main'):
         self._results_collect_interval = schedule['to_be_collected_while_training']['results_collect_interval']
         if self._results_collect_interval is not None:
@@ -257,7 +305,6 @@ class Handler(object):
             self._accumulated_tensors[tensor_use] = dict()
             for tensor_alias, step_schedule in tensor_instructions.items():
                 self._accumulated_tensors[tensor_use][tensor_alias] = {'values': list(), 'steps': step_schedule}
-        self._printed_controllers = schedule['printed_controllers']
         self._printed_result_types = schedule['printed_result_types']
 
         self._fuses = schedule['fuses']
@@ -294,7 +341,6 @@ class Handler(object):
 
         self._train_tensor_schedule = schedule['train_tensor_schedule']
 
-        self._printed_controllers = schedule['printed_controllers']
         self._printed_result_types = schedule['printed_result_types']
 
         if self._printed_result_types is not None:
@@ -809,8 +855,7 @@ class Handler(object):
                 #         else:
                 #             print(c)
                 #print('controller._specifications:', controller._specifications)
-                if controller.name in self._printed_controllers:
-                    print('%s:' % controller.name, controller.get())
+                print('%s:' % controller.name, controller.get())
 
     def _print_standard_report(self,
                                indents=[0, 0],
