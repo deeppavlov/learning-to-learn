@@ -1309,21 +1309,20 @@ class Environment(object):
         batch_generator_specs_should_change = Controller(self._storage, change_tracker_specs)
 
         if not with_meta_optimizer:
-            controllers_for_printing = [learning_rate_controller]
+            controllers = [learning_rate_controller]
         else:
-            controllers_for_printing = list()
+            controllers = list()
 
-        controllers_for_printing.extend(additional_controllers)
-        controllers_for_printing.append(batch_size_controller)
+        controllers.extend(additional_controllers)
+        controllers.append(batch_size_controller)
         batch_kwargs_controllers = list()
         for batch_kwarg in train_batch_kwargs.values():
             if isinstance(batch_kwarg, Controller):
                 batch_kwargs_controllers.append(batch_kwarg)
-        controllers_for_printing.extend(batch_kwargs_controllers)
+        controllers.extend(batch_kwargs_controllers)
         self._handler.set_new_run_schedule(schedule,
-                                           train_specs['train_dataset'][1],
                                            [dataset[1] for dataset in train_specs['validation_datasets']])
-        self._handler.set_controllers(controllers_for_printing)
+        self._handler.set_controllers(controllers)
 
         batch_size = batch_size_controller.get()
         tb_kwargs = self._build_batch_kwargs(train_batch_kwargs)

@@ -3,62 +3,53 @@ import numpy as np
 import datetime as dt
 # import os
 from useful_functions import create_path, add_index_to_filename_if_needed, construct, nested2string, \
-    WrongMethodCallError
+    WrongMethodCallError, extend_dictionary
 
 class Handler(object):
 
     _stars = '*'*30
 
-    def _compose_prefix_for_file_names(self, key='DEFAULT'):
-        if key == 'DEFAULT':
-            if len(self._save_path) > 0:
-                prefix = self._save_path + '/'
-            else:
-                prefix = ''
-        else:
-            if len(self._save_path) > 0:
-                prefix = self._save_path + '/' + key + '/'
-            else:
-                prefix = key + '/'
-        return prefix
+    def _compose_prefix(self, prefix):
+        res = ''
+        # print('(Handler._compose_prefix)self._save_path:', self._save_path)
+        if len(self._save_path) > 0:
+            res = res + self._save_path + '/'
+        if len(prefix) > 0:
+            res = res + prefix + '/'
+        return res
 
-    def _add_results_file_name_set(self, key='DEFAULT', postfix='train'):
-        if key not in self._file_names:
-            self._file_names[key] = dict()
-        d = self._file_names[key]
-        prefix = self._compose_prefix_for_file_names(key=key)
+    def _add_results_file_name_set(self, prefix='', key_path=None, postfix='train'):
+        prefix = self._compose_prefix(prefix)
+        d = extend_dictionary(self._file_names, key_path)
         if 'results' not in d:
             d['results'] = dict()
         res = d['results']
-        res['loss'] = prefix + '/results/loss_' + postfix + '.txt'
-        res['perplexity'] = prefix + '/results/perplexity_' + postfix + '.txt'
-        res['accuracy'] = prefix + '/results/accuracy_' + postfix + '.txt'
-        res['bpc'] = prefix + 'results/bpc_' + postfix + '.txt'
-        res['pickle_tensors'] = prefix + 'results/pickle_tensors_' + postfix + '.pickle'
+        for res_type in self._result_types:
+            file_name = prefix + 'results/%s_' % res_type + postfix + '.txt'
+            create_path(file_name, file_name_is_in_path=True)
+            res[res_type] = file_name
 
-    def _add_opt_inf_results_file_name_templates(self, key='DEFAULT', postfix=''):
-        if key not in self._file_names:
-            self._file_names[key] = dict()
-        d = self._file_names[key]
-        prefix = self._compose_prefix_for_file_names(key=key)
+    def _add_opt_inf_results_file_name_templates(self, prefix='', key_path=None, postfix='train'):
+        prefix = self._compose_prefix(prefix)
+        d = extend_dictionary(self._file_names, key_path)
         if 'results' not in d:
             d['results'] = dict()
         res = d['results']
-        res['loss'] = prefix + '/results/loss_' + postfix + '/step%s.txt'
-        res['perplexity'] = prefix + '/results/perplexity_' + postfix + '/step%s.txt'
-        res['accuracy'] = prefix + '/results/accuracy_' + postfix + '/step%s.txt'
-        res['bpc'] = prefix + 'results/bpc_' + postfix + '/step%s.txt'
+        for res_type in self._result_types:
+            res[res_type] = prefix + '/results/%s_' % res_type + postfix + '/step%s.txt'
 
-    def _add_example_file_names(self, key='DEFAULT', fuse_file_name=None, example_file_name=None):
-        if key not in self._file_names:
-            self._file_names[key] = dict()
-        d = self._file_names[key]
-        prefix = self._compose_prefix_for_file_names(key=key)
+    def _add_example_file_names(self, prefix='', key_path=None, fuse_file_name=None, example_file_name=None):
+        prefix = self._compose_prefix(prefix)
+        d = extend_dictionary(self._file_names, key_path)
         if fuse_file_name is not None:
-            d['fuses'] = prefix + fuse_file_name
+            file_name = prefix + fuse_file_name
+            create_path(file_name, file_name_is_in_path=True)
+            d['fuses'] = file_name
 
         if example_file_name is not None:
-            d['examples'] = prefix + example_file_name
+            file_name = prefix + example_file_name
+            create_path(file_name, file_name_is_in_path=True)
+            d['examples'] = file_name
 
     def _create_train_fields(self):
 
@@ -85,6 +76,8 @@ class Handler(object):
         self._accumulated_prob_vecs = None
 
         self._printed_result_types = None
+        self._printed_controllers=None
+
         if self._summary and self._save_path is not None:
             self._writer = tf.summary.FileWriter(self._save_path + '/' + 'summary')
             if self._add_graph_to_summary:
@@ -131,6 +124,7 @@ class Handler(object):
         # print('Initializing Handler! pid = %s' % os.getpid())
         self._processing_type = processing_type
         self._environment_instance = environment_instance
+        print('(Handler.__init__)save_path:', save_path)
         self._save_path = save_path
         self._current_log_path = None
         self._result_types = self._environment_instance.put_result_types_in_correct_order(result_types)
@@ -157,8 +151,9 @@ class Handler(object):
 
         if self._processing_type == 'train' or self._processing_type == 'train_with_meta':
             self._create_train_fields()
-            self._add_results_file_name_set()
-            self._add_example_file_names(fuse_file_name=fuse_file_name, example_file_name=example_file_name)
+            if self._save_path is not None:
+                self._add_results_file_name_set(key_path=['train'])
+                self._add_example_file_names(fuse_file_name=fuse_file_name, example_file_name=example_file_name)
             self._environment_instance.init_storage('train',
                                                     steps=list(),
                                                     loss=list(),
@@ -168,10 +163,11 @@ class Handler(object):
 
         if self._processing_type == 'test':
             self._name_of_dataset_on_which_accumulating = None
-            self._dataset_specific = dict()
             self._validation_tensor_schedule = validation_tensor_schedule
             self._validation_dataset_names = validation_dataset_names
-            self._switch_datasets(validation_dataset_names=self._validation_dataset_names)
+            if self._save_path is not None:
+                for dataset_name in self._validation_dataset_names:
+                    self._add_results_file_name_set(postfix=dataset_name, key_path=[dataset_name])
             self._printed_result_types = printed_result_types
             self._accumulated_tensors = dict(
                 valid_print_tensors=dict(),
@@ -205,7 +201,8 @@ class Handler(object):
             self._accumulated_input = None
             self._accumulated_predictions = None
             self._accumulated_prob_vecs = None
-            self._add_example_file_names(fuse_file_name=fuse_file_name, example_file_name=example_file_name)
+            if self._save_path is not None:
+                self._add_example_file_names(fuse_file_name=fuse_file_name, example_file_name=example_file_name)
 
         if self._processing_type == 'several_launches':
             self._result_types = result_types
@@ -217,8 +214,6 @@ class Handler(object):
             if self._hyperparameters is not None:
                 self._order.extend(self._hyperparameters)
 
-            create_path(self._save_path)
-            self._file_names = dict()
             self._tmpl = '%s '*(len(self._order) - 1) + '%s\n'
             result_names = list()
             for result_type in self._order:
@@ -228,19 +223,21 @@ class Handler(object):
                     result_names.append(self._hyperparameter_name_string(result_type))
             for dataset_name in eval_dataset_names:
                 self._file_names[dataset_name] = self._save_path + '/' + dataset_name + '.txt'
-                fd = open(self._file_names[dataset_name],
-                          'a')
-                fd.write(self._tmpl % tuple(result_names))
-                fd.close()
+                with open(self._file_names[dataset_name], 'a') as fd:
+                    fd.write(self._tmpl % tuple(result_names))
+
             self._environment_instance.set_in_storage(launches=list())
 
         if self._processing_type == 'train_meta_optimizer':
             self._create_train_fields()
             self._opt_inf_pupil_names = opt_inf_pupil_names
             self._environment_instance.init_meta_optimizer_training_storage(self._opt_inf_pupil_names)
-            for pupil_name in self._opt_inf_pupil_names:
-                self._add_opt_inf_results_file_name_templates(key=pupil_name, postfix='train')
-                self._add_opt_inf_results_file_name_templates(key=pupil_name, postfix='validation')
+            if self._save_path is not None:
+                for pupil_name in self._opt_inf_pupil_names:
+                    self._add_opt_inf_results_file_name_templates(
+                        prefix=pupil_name, key_path=[pupil_name], postfix='train')
+                    self._add_opt_inf_results_file_name_templates(
+                        prefix=pupil_name, key_path=[pupil_name], postfix='validation')
 
 
         # The order in which tensors are presented in the list returned by get_additional_tensors method
@@ -275,11 +272,15 @@ class Handler(object):
                     #print('dataset_name:', dataset_name)
                     self._environment_instance.init_storage(dataset_name, **init_dict)
 
-    def _add_validation_experiment_instruments(self, pupil_name, postfix):
-        self._add_results_file_name_set(key=pupil_name, postfix=postfix)
+    def _add_validation_experiment_instruments(self, dataset_name):
+        self._add_results_file_name_set(key_path=[dataset_name], postfix=dataset_name)
+        init_dict = dict()
+        for key in self._result_types:
+            if not self._environment_instance.check_if_key_in_storage([dataset_name, key]):
+                init_dict[key] = list()
+        self._environment_instance.init_storage(dataset_name, **init_dict)
 
-
-    def set_new_run_schedule(self, schedule, train_dataset_name, validation_dataset_names, save_direction='main'):
+    def set_new_run_schedule(self, schedule, validation_dataset_names, save_direction='main'):
         self._results_collect_interval = schedule['to_be_collected_while_training']['results_collect_interval']
         if self._results_collect_interval is not None:
             if self._result_types is not None:
@@ -312,18 +313,22 @@ class Handler(object):
         if self._fuses is not None:
             for fuse in self._fuses:
                 fuse['results'] = list()
-        if self._fuse_file_name is None and self._fuses is not None and self._save_path is not None:
-            self._fuse_file_name = add_index_to_filename_if_needed(self._save_path + '/fuses.txt')
 
         self._example_tensor_schedule = schedule['example_tensors']
 
-        if self._example_file_name is None and self._save_path is not None:
-            self._example_file_name = add_index_to_filename_if_needed(self._save_path + '/examples.txt')
+        if self._save_path is not None:
+            if save_direction == 'main':
+                self._add_example_file_names()
+            else:
+                self._add_example_file_names(prefix=save_direction, key_path=[save_direction])
 
         if self._printed_result_types is not None:
             if len(self._printed_result_types) > 0:
                 self._print_results = True
-        self._switch_datasets(train_dataset_name, validation_dataset_names)
+        self._printed_controllers = schedule['printed_controllers']
+        if self._save_path is not None:
+            for dataset_name in validation_dataset_names:
+                self._add_validation_experiment_instruments(dataset_name)
 
     def set_optimizer_train_schedule(self, schedule):
         self._results_collect_interval = schedule['to_be_collected_while_training']['results_collect_interval']
@@ -346,10 +351,6 @@ class Handler(object):
         if self._printed_result_types is not None:
             if len(self._printed_result_types) > 0:
                 self._print_results = True
-
-    def set_test_specs(self, validation_dataset_names=None, fuses=None, replicas=None, random=None):
-        if validation_dataset_names is not None:
-            self._switch_datasets(validation_dataset_names=validation_dataset_names)
 
     def set_controllers(self, controllers):
         self._controllers = controllers
@@ -399,7 +400,7 @@ class Handler(object):
             # print('(stop_accumulation)counter:', counter)
             if self._save_path is not None:
                 if save_to_file:
-                    file_name = self._dataset_specific[self._name_of_dataset_on_which_accumulating]['files'][key]
+                    file_name = self._file_names[self._name_of_dataset_on_which_accumulating]['results'][key]
                     with open(file_name, 'a') as f:
                         if self._training_step is not None:
                             f.write('%s %s\n' % (self._training_step, mean))
@@ -653,13 +654,13 @@ class Handler(object):
 
     def _save_datum(self, descriptor, step, datum, processing_type, dataset_name):
         if processing_type == 'train':
-            file_name = self._train_files[descriptor]
+            file_name = self._file_names['train']['results'][descriptor]
             # print('file_name:', file_name)
             # print('self._train_files:', self._train_files)
             with open(file_name, 'a') as f:
                 f.write('%s %s\n' % (step, datum))
         elif processing_type == 'validation':
-            file_name = self._dataset_specific[dataset_name]['files'][descriptor]
+            file_name = self._file_names[dataset_name]['results'][descriptor]
             with open(file_name, 'a') as f:
                 f.write('%s %s\n' % (step, datum))
 
@@ -855,7 +856,8 @@ class Handler(object):
                 #         else:
                 #             print(c)
                 #print('controller._specifications:', controller._specifications)
-                print('%s:' % controller.name, controller.get())
+                if controller.name in self._printed_controllers:
+                    print('%s:' % controller.name, controller.get())
 
     def _print_standard_report(self,
                                indents=[0, 0],

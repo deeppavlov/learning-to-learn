@@ -128,14 +128,19 @@ def process_datasets_shortcuts(env_instance,
                                set_of_kwargs):
     taken_names = list(env_instance.datasets.keys())
     train_dataset = process_single_dataset_shortcut(env_instance, set_of_kwargs, taken_names, 'train_dataset')
-    set_of_kwargs['train_dataset'] = train_dataset
-    train_dataset = process_single_dataset_shortcut(env_instance, set_of_kwargs, taken_names, 'train_datasets')
-    set_of_kwargs['train_datasets'] = train_dataset
-    train_dataset = process_single_dataset_shortcut(env_instance, set_of_kwargs, taken_names, 'opt_inf_train_datasets')
-    set_of_kwargs['opt_inf_train_datasets'] = train_dataset
-    train_dataset = process_single_dataset_shortcut(
+    if train_dataset is not None:
+        set_of_kwargs['train_dataset'] = train_dataset
+    train_datasets = process_single_dataset_shortcut(env_instance, set_of_kwargs, taken_names, 'train_datasets')
+    if train_datasets is not None:
+        set_of_kwargs['train_datasets'] = train_datasets
+    opt_inf_train_datasets = process_single_dataset_shortcut(
+        env_instance, set_of_kwargs, taken_names, 'opt_inf_train_datasets')
+    if opt_inf_train_datasets is not None:
+        set_of_kwargs['opt_inf_train_datasets'] = opt_inf_train_datasets
+    opt_inf_validation_datasets = process_single_dataset_shortcut(
         env_instance, set_of_kwargs, taken_names, 'opt_inf_validation_datasets')
-    set_of_kwargs['opt_inf_validation_datasets'] = train_dataset
+    if opt_inf_validation_datasets is not None:
+        set_of_kwargs['opt_inf_validation_datasets'] = opt_inf_validation_datasets
     validation_datasets = process_validation_datasets_shortcuts(env_instance, set_of_kwargs, taken_names)
     set_of_kwargs['validation_datasets'] = validation_datasets
     if 'opt_inf_train_datasets' in set_of_kwargs and 'opt_inf_validation_datasets' in set_of_kwargs:
@@ -220,6 +225,9 @@ def process_standard_combination_of_list_of_dataset_abbreviations(
         taken_names,
         checked_keys
 ):
+    # print('(process_standard_combination_of_list_of_dataset_abbreviations)set_of_kwargs:', set_of_kwargs)
+    # print('(process_standard_combination_of_list_of_dataset_abbreviations)taken_names:', taken_names)
+    # print('(process_standard_combination_of_list_of_dataset_abbreviations)checked_keys:', checked_keys)
     if checked_keys[0] in set_of_kwargs:
         taken_names.extend(list(set_of_kwargs['train_dataset'].keys()))
         ret = set_of_kwargs['train_datasets']
@@ -229,6 +237,8 @@ def process_standard_combination_of_list_of_dataset_abbreviations(
         ret = process_shortcut_with_dataset_texts(set_of_kwargs, taken_names, 'train_dataset_texts')
     elif checked_keys[3] in set_of_kwargs:
         ret = process_shortcut_with_dataset_filename(set_of_kwargs, taken_names, 'train_dataset_filenames')
+    else:
+        ret = None
     _ = remove_keys_from_dictionary(
         set_of_kwargs, checked_keys)
     return ret
@@ -261,6 +271,8 @@ def process_single_dataset_shortcut(
             key, value = process_dataset_filename(env_instance, set_of_kwargs['train_dataset_filename'])
             taken_names.append(key)
             ret = [value, key]
+        else:
+            ret = None
         _ = remove_keys_from_dictionary(
             set_of_kwargs, ['train_dataset', 'train_dataset_name', 'train_dataset_text', 'train_dataset_filename'])
         return ret

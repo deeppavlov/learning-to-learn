@@ -1054,3 +1054,14 @@ def remove_keys_from_dictionary(d, keys):
         if key in d:
             del d[key]
     return d
+
+
+def extend_dictionary(dictionary, key_path):
+    d = dictionary
+    if key_path is None:
+        key_path = []
+    for key in key_path:
+        if key not in d:
+            d[key] = dict()
+        d = d[key]
+    return d
