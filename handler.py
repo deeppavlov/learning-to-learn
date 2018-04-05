@@ -128,6 +128,7 @@ class Handler(object):
         self._save_path = save_path
         self._current_log_path = None
         self._result_types = self._environment_instance.put_result_types_in_correct_order(result_types)
+        self._meta_optimizer_train_result_types = None
         self._bpc = 'bpc' in self._result_types
         self._hooks = hooks
         self._last_run_tensor_order = dict()
@@ -238,6 +239,20 @@ class Handler(object):
                         prefix=pupil_name, key_path=[pupil_name], postfix='train')
                     self._add_opt_inf_results_file_name_templates(
                         prefix=pupil_name, key_path=[pupil_name], postfix='validation')
+            self._meta_optimizer_train_result_types = list()
+            print_order_additions = list()
+            for res_type in self._print_order:
+                if res_type in self._result_types:
+                    start_res_type = 'start_' + res_type
+                    if start_res_type in self._hooks:
+                        self._meta_optimizer_train_result_types.append(start_res_type)
+                        print_order_additions.append(start_res_type)
+                    end_res_type = 'end_' + res_type
+                    if end_res_type in self._hooks:
+                        self._meta_optimizer_train_result_types.append(end_res_type)
+                        print_order_additions.append(end_res_type)
+            self._print_order.extend(print_order_additions)
+
 
 
         # The order in which tensors are presented in the list returned by get_additional_tensors method
@@ -753,10 +768,13 @@ class Handler(object):
             tensors.append(self._hooks['optimizer_train_op'])
             current['tensors']['optimizer_train_op'] = [pointer, pointer + 1]
             pointer += 1
-            for res_type in self._result_types:
-                start_metric = 'start_' + res_type
-                if start_metric in self._hooks:
-                    current['tensors'][start_metric] = [pointer, pointer + 1]
+            for res_type in self._meta_optimizer_train_result_types:
+                tensors.append(self._hooks[res_type])
+                current['tensors'][res_type] = [pointer, pointer + 1]
+            self._last_run_tensor_order['basic']['borders'] = [start, pointer]
+            if self._train_tensor_schedule is not None:
+                additional_tensors = self._get_additional_tensors(self._train_tensor_schedule, step, pointer)
+                tensors.extend(additional_tensors)
         # print(tensors)
         return tensors
 
