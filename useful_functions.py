@@ -1065,3 +1065,11 @@ def extend_dictionary(dictionary, key_path):
             d[key] = dict()
         d = d[key]
     return d
+
+
+def construct_dict_without_none_entries(dictionary):
+    res = dict()
+    for k, v in dictionary.items():
+        if v is not None:
+            res[k] = v
+    return res

@@ -1,6 +1,6 @@
 import tensorflow as tf
 from meta import Meta
-from useful_functions import block_diagonal, custom_matmul, custom_add, flatten
+from useful_functions import block_diagonal, custom_matmul, custom_add, flatten, construct_dict_without_none_entries
 
 
 class ResNet4Lstm(Meta):
@@ -470,7 +470,9 @@ class ResNet4Lstm(Meta):
             reset_pupil_grad_eval_pupil_storage=None,
             reset_optimizer_grad_pupil_storage=None,
             meta_optimizer_saver=None,
-            loss=None
+            loss=None,
+            start_loss=None,
+            end_loss=None,
         )
 
         if regime == 'train':
@@ -532,4 +534,4 @@ class ResNet4Lstm(Meta):
             self._hooks['reset_inference_state'] = self._reset_optimizer_states('inference', 0)
 
     def get_default_hooks(self):
-        return dict(self._hooks.items())
+        return construct_dict_without_none_entries(self._hooks)

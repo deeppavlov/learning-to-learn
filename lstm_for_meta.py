@@ -5,7 +5,7 @@ from useful_functions import (create_vocabulary, get_positions_in_vocabulary, ch
                               vec2char, vec2char_fast, char2id, id2char, flatten, get_available_gpus,
                               device_name_scope, average_gradients, get_num_gpus_and_bs_on_gpus, custom_matmul,
                               custom_add, InvalidArgumentError, compose_save_list, compose_reset_list,
-                              compose_randomize_list)
+                              compose_randomize_list, construct_dict_without_none_entries)
 
 url = 'http://mattmahoney.net/dc/'
 
@@ -407,9 +407,18 @@ class Lstm(Model):
             new_storage = dict(
                 states=new_states
             )
-
+            labels_shape = labels.get_shape().as_list()
+            logits = tf.reshape(logits, labels_shape)
+            print('(LstmForMeta.loss_and_opt_ins)labels_shape:', labels.get_shape().as_list())
+            print('(LstmForMeta.loss_and_opt_ins)logits_shape:', logits.get_shape().as_list())
+            sce = tf.nn.softmax_cross_entropy_with_logits(
+                labels=tf.reshape(labels, [-1, labels_shape[-1]]),
+                logits=tf.reshape(logits, [-1, labels_shape[-1]])
+            )
             loss = tf.reduce_mean(
-                tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits))
+                tf.reshape(sce, labels_shape[:-1]),
+                axis=[-1, -2]
+            )
             optimizer_ins = self._acomplish_optimizer_ins(optimizer_ins, trainable_variables)
             return loss, optimizer_ins, new_storage
 
@@ -748,14 +757,32 @@ class Lstm(Model):
 
     def _prepare_inputs_and_labels(self, inputs, labels):
         with tf.device(self._base_device):
-            inputs = tf.reshape(inputs, [self._num_unrollings, self._batch_size])
-            labels = tf.reshape(labels, [self._num_unrollings * self._batch_size])
+            """last dimension is excess and has size one"""
+            inputs_shape = inputs.get_shape().as_list()
+            batch_size = inputs_shape[-2]
+            num_unrollings = inputs_shape[-3]
+            ndims = len(inputs_shape)
+            # print('(LstmForMeta._prepare_inputs_and_labels)inputs_shape:', inputs_shape)
+            if ndims == 4:
+                num_exercises = inputs_shape[0]
+            else:
+                num_exercises = None
+            if ndims == 4:
+                new_inp_shape = [num_exercises, num_unrollings, batch_size]
+                prepared_lbls_shape = [num_exercises, num_unrollings*batch_size]
+                lbls_for_loss_shape = [num_exercises, num_unrollings, batch_size, self._vec_dim]
+            elif ndims == 3:
+                prepared_lbls_shape = [num_unrollings * batch_size]
+                new_inp_shape = [num_unrollings, batch_size]
+                lbls_for_loss_shape = [num_unrollings, batch_size, self._vec_dim]
+            inputs = tf.reshape(inputs, new_inp_shape)
+            labels = tf.reshape(labels, prepared_lbls_shape)
             inputs = tf.one_hot(inputs, self._vocabulary_size)
             labels = tf.one_hot(labels, self._vocabulary_size)
             self._hooks['labels_prepared'] = labels
             labels = tf.reshape(
                 labels,
-                shape=(self._num_unrollings, self._batch_size, self._vec_dim))
+                shape=lbls_for_loss_shape)
             return inputs, labels
 
     def _distribute_by_gpus(self, inputs, labels):
@@ -890,7 +917,7 @@ class Lstm(Model):
             )
 
     def get_default_hooks(self):
-        return dict(self._hooks.items())
+        return construct_dict_without_none_entries(self._hooks)
 
     def get_building_parameters(self):
         pass

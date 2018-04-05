@@ -325,7 +325,7 @@ class Meta(object):
             for ik in inner_keys:
                 iv = ov[ik]
                 if isinstance(iv, list):
-                    for idx, tensor in iv:
+                    for idx, tensor in enumerate(iv):
                         iv[idx] = tf.expand_dims(tensor, axis=0)
                 else:
                     ov[ik] = tf.expand_dims(iv, axis=0)
@@ -537,6 +537,11 @@ class Meta(object):
                     train_op = self._optimizer_for_optimizer_training.apply_gradients(zip(grads, v))
                     self._hooks['optimizer_train_op'] = train_op
 
+                    all_start_losses = tf.concat(start_losses_by_gpu, 0)
+                    all_end_losses = tf.concat(end_losses_by_gpu, 0)
+                    self._hooks['start_loss'] = tf.reduce_mean(all_start_losses)
+                    self._hooks['end_loss'] = tf.reduce_mean(all_end_losses)
+
     def _inference_graph(self):
         with tf.name_scope('optimizer_inference_graph'):
             with tf.device('/gpu:0'):
@@ -552,7 +557,7 @@ class Meta(object):
                 # opt = tf.train.GradientDescentOptimizer(1.)
                 # grads, vars = zip(*opt.compute_gradients(start_loss))
                 optimizer_outs, new_optimizer_states = self._optimizer_core(
-                    optimizer_ins, None, optimizer_states, 0)
+                    optimizer_ins, optimizer_states, 0)
                 # print('\n(Meta._inference_graph)optimizer_outs:')
                 # print_optimizer_ins(optimizer_outs)
                 # optimizer_outs = self._backward_permute(optimizer_outs, ['o_pr'], ['sigma_pr'], collapse_1st_dim=True)

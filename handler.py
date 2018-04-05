@@ -515,14 +515,14 @@ class Handler(object):
         print(self._form_fuse_msg(training_step))
 
     def _save_fuse_results(self, training_step):
-        with open(self._fuse_file_name, 'a', encoding='utf-8') as f:
+        with open(self._file_names['fuses'], 'a', encoding='utf-8') as f:
             f.write(self._form_fuse_msg(training_step) + '\n'*2)
 
     def _print_example_results(self, training_step):
         print(self._form_example_msg(training_step))
 
     def _save_example_results(self, training_step):
-        with open(self._example_file_name, 'a', encoding='utf-8') as f:
+        with open(self._file_names['examples'], 'a', encoding='utf-8') as f:
             f.write(self._form_example_msg(training_step) + '\n'*2)
 
     def clean_fuse_results(self):
@@ -749,6 +749,14 @@ class Handler(object):
             if self._example_tensor_schedule is not None:
                 additional_tensors = self._get_additional_tensors(self._example_tensor_schedule, step, pointer)
                 tensors.extend(additional_tensors)
+        if regime == 'train_meta_optimizer':
+            tensors.append(self._hooks['optimizer_train_op'])
+            current['tensors']['optimizer_train_op'] = [pointer, pointer + 1]
+            pointer += 1
+            for res_type in self._result_types:
+                start_metric = 'start_' + res_type
+                if start_metric in self._hooks:
+                    current['tensors'][start_metric] = [pointer, pointer + 1]
         # print(tensors)
         return tensors
 
@@ -1119,6 +1127,10 @@ class Handler(object):
             res = args[1]
             tokens = args[2]
             self._process_validation_by_chars_results(step, res, tokens)
+        if regime =='train_meta_optimizer':
+            step = args[0]
+            res = args[1]
+            self._process_train_optimizer_results(step, res)
 
     def log_launch(self):
         if self._save_path is None:
