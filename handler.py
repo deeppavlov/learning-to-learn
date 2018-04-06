@@ -18,13 +18,13 @@ class Handler(object):
             res = res + prefix + '/'
         return res
 
-    def _add_results_file_name_set(self, prefix='', key_path=None, postfix='train'):
+    def _add_results_file_name_set(self, result_types, prefix='', key_path=None, postfix='train'):
         prefix = self._compose_prefix(prefix)
         d = extend_dictionary(self._file_names, key_path)
         if 'results' not in d:
             d['results'] = dict()
         res = d['results']
-        for res_type in self._result_types:
+        for res_type in result_types:
             file_name = prefix + 'results/%s_' % res_type + postfix + '.txt'
             create_path(file_name, file_name_is_in_path=True)
             res[res_type] = file_name
@@ -76,7 +76,7 @@ class Handler(object):
         self._accumulated_prob_vecs = None
 
         self._printed_result_types = None
-        self._printed_controllers=None
+        self._printed_controllers = None
 
         if self._summary and self._save_path is not None:
             self._writer = tf.summary.FileWriter(self._save_path + '/' + 'summary')
@@ -153,7 +153,7 @@ class Handler(object):
         if self._processing_type == 'train' or self._processing_type == 'train_with_meta':
             self._create_train_fields()
             if self._save_path is not None:
-                self._add_results_file_name_set(key_path=['train'])
+                self._add_results_file_name_set(self._result_types, key_path=['train'])
                 self._add_example_file_names(fuse_file_name=fuse_file_name, example_file_name=example_file_name)
             self._environment_instance.init_storage('train',
                                                     steps=list(),
@@ -168,7 +168,7 @@ class Handler(object):
             self._validation_dataset_names = validation_dataset_names
             if self._save_path is not None:
                 for dataset_name in self._validation_dataset_names:
-                    self._add_results_file_name_set(postfix=dataset_name, key_path=[dataset_name])
+                    self._add_results_file_name_set(self._result_types, postfix=dataset_name, key_path=[dataset_name])
             self._printed_result_types = printed_result_types
             self._accumulated_tensors = dict(
                 valid_print_tensors=dict(),
@@ -245,12 +245,27 @@ class Handler(object):
                 if res_type in self._result_types:
                     start_res_type = 'start_' + res_type
                     if start_res_type in self._hooks:
-                        self._meta_optimizer_train_result_types.append(start_res_type)
-                        print_order_additions.append(start_res_type)
+                        if start_res_type not in self._meta_optimizer_train_result_types:
+                            self._meta_optimizer_train_result_types.append(start_res_type)
+                        if start_res_type not in self._print_order:
+                            print_order_additions.append(start_res_type)
+                        if res_type in self._printed_result_types:
+                            if start_res_type not in self._printed_result_types:
+                                self._printed_result_types.append(start_res_type)
+
                     end_res_type = 'end_' + res_type
                     if end_res_type in self._hooks:
-                        self._meta_optimizer_train_result_types.append(end_res_type)
-                        print_order_additions.append(end_res_type)
+                        if end_res_type not in self._meta_optimizer_train_result_types:
+                            self._meta_optimizer_train_result_types.append(end_res_type)
+                        if end_res_type not in self._print_order:
+                            print_order_additions.append(end_res_type)
+                        if res_type in self._printed_result_types:
+                            if end_res_type not in self._printed_result_types:
+                                self._printed_result_types.append(end_res_type)
+            self._add_results_file_name_set(
+                self._meta_optimizer_train_result_types,
+                key_path=['train']
+            )
             self._print_order.extend(print_order_additions)
 
 
@@ -288,7 +303,7 @@ class Handler(object):
                     self._environment_instance.init_storage(dataset_name, **init_dict)
 
     def _add_validation_experiment_instruments(self, dataset_name):
-        self._add_results_file_name_set(key_path=[dataset_name], postfix=dataset_name)
+        self._add_results_file_name_set(self._result_types, key_path=[dataset_name], postfix=dataset_name)
         init_dict = dict()
         for key in self._result_types:
             if not self._environment_instance.check_if_key_in_storage([dataset_name, key]):
@@ -886,9 +901,11 @@ class Handler(object):
                     print('%s:' % controller.name, controller.get())
 
     def _print_standard_report(self,
-                               indents=[0, 0],
+                               indents=None,
                                regime='train',
                                **kwargs):
+        if indents is None:
+            indents = [0, 0]
         for _ in range(indents[0]):
             print('')
         if regime == 'train':
@@ -947,22 +964,25 @@ class Handler(object):
         instructions['message'] = 'train tensors:'
         instructions['results'] = dict()
         extracted_for_printing = self._extract_results(last_order, 'train_print_tensors', train_res)
-        #print('extracted_for_printing:', extracted_for_printing)
+        # print('extracted_for_printing:', extracted_for_printing)
         instructions['results'].update(extracted_for_printing)
         return instructions
 
+    @staticmethod
     def _toss_train_results(
-            self,
-            res
+            res,
+            result_types
     ):
         d = dict()
-        for r, res_type in zip(res, self._result_types):
+        for r, res_type in zip(res, result_types):
             d[res_type] = r
         return d
 
     def _process_train_results(self,
                                step,
-                               train_res):
+                               train_res,
+                               result_types,
+                               msg='results on train dataset'):
         # print('step:', step)
         # print('train_res:', train_res)
         #print(self._last_run_tensor_order)
@@ -973,7 +993,7 @@ class Handler(object):
         # else:
         #     [loss, perplexity, accuracy] = tmp
 
-        res_dict = self._toss_train_results(tmp)
+        res_dict = self._toss_train_results(tmp, result_types)
 
         if self._printed_result_types is not None:
             if self._results_collect_interval is not None:
@@ -996,7 +1016,7 @@ class Handler(object):
                     self._print_standard_report(
                         indents=[2, 0],
                         step=step,
-                        message='results on train dataset',
+                        message=msg,
                         **res_dict
                     )
         if self._results_collect_interval is not None:
@@ -1020,7 +1040,7 @@ class Handler(object):
                 #                                                  perplexity=perplexity,
                 #                                                  accuracy=accuracy,
                 #                                                  steps=step)
-                self._save_several_data(self._result_types,
+                self._save_several_data(result_types,
                                         step,
                                         tmp)
                 self._environment_instance.append_to_storage('train',
@@ -1056,7 +1076,7 @@ class Handler(object):
         instructions['message'] = 'fuse tensors:\nchar = %s' % self._form_string_char(char)
         instructions['results'] = dict()
         extracted_for_printing = self._extract_results(last_order, 'fuse_print_tensors', fuse_res)
-        #print('extracted_for_printing:', extracted_for_printing)
+        # print('extracted_for_printing:', extracted_for_printing)
         instructions['results'].update(extracted_for_printing)
         return instructions
 
@@ -1066,7 +1086,7 @@ class Handler(object):
         instructions['message'] = 'example tensors:\nchar = %s' % self._form_string_char(char)
         instructions['results'] = dict()
         extracted_for_printing = self._extract_results(last_order, 'example_print_tensors', example_res)
-        #print('extracted_for_printing:', extracted_for_printing)
+        # print('extracted_for_printing:', extracted_for_printing)
         instructions['results'].update(extracted_for_printing)
         return instructions
 
@@ -1122,7 +1142,7 @@ class Handler(object):
         if regime == 'train':
             step = args[0]
             res = args[1]
-            self._process_train_results(step, res)
+            self._process_train_results(step, res, self._result_types)
         if regime == 'validation':
             step = args[0]
             res = args[1]
@@ -1148,7 +1168,10 @@ class Handler(object):
         if regime =='train_meta_optimizer':
             step = args[0]
             res = args[1]
-            self._process_train_optimizer_results(step, res)
+            self._process_train_results(
+                step, res, self._meta_optimizer_train_result_types,
+                msg='results on meta optimizer train op'
+            )
 
     def log_launch(self):
         if self._save_path is None:
