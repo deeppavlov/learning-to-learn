@@ -799,11 +799,13 @@ class Environment(object):
         for key, value in kwargs.items():
             d[key] = value
 
-    def init_meta_optimizer_training_storage(self, opt_inf_pupil_names):
+    def init_meta_optimizer_training_storage(self, opt_inf_pupil_names=None, train_init=None, opt_inf_init=None):
         self._storage = dict()
-        self._storage['train'] = {'steps': []}
-        for name in opt_inf_pupil_names:
-            self._storage[name] = {'steps': []}
+        if train_init is not None:
+            self._storage['train'] = construct(train_init)
+        if opt_inf_init is not None and opt_inf_pupil_names is not None:
+            for name in opt_inf_pupil_names:
+                self._storage[name] = construct(opt_inf_init)
 
     def append_to_storage(self, dataset_name, **kwargs):
         if dataset_name is not None:
@@ -812,6 +814,9 @@ class Environment(object):
             d = self._storage
         for key, value in kwargs.items():
             d[key].append(value)
+
+    def append_to_meta_optimizer_storage(self, pupil_name, optimizer_training_step, **kwargs):
+        pass
 
     def flush_storage(self):
         self._storage = {'step': None}
@@ -1846,7 +1851,8 @@ class Environment(object):
         controllers_for_printing.extend(additional_controllers)
 
         self._handler.set_optimizer_train_schedule(
-            schedule
+            schedule,
+            list(optimizer_inference['restore_paths'].keys())
         )
 
         self._handler.set_controllers(controllers_for_printing)
@@ -1895,6 +1901,7 @@ class Environment(object):
                         optimizer_inference['opt_inf_validation_datasets']['pupil_name']
                     )
                     self._restore_pupil(path)
+                    self._handler.set_pupil_name(pupil_name)
                     _ = self._train(
                         run_specs,
                         None,
@@ -1902,6 +1909,7 @@ class Environment(object):
                         True,
                         init_step=0
                     )
+                    self._handler.set_pupil_name(None)
 
             step += 1
             if it_is_time_to_reset_exercises.get():

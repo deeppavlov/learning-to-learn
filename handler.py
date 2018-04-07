@@ -36,7 +36,9 @@ class Handler(object):
             d['results'] = dict()
         res = d['results']
         for res_type in self._result_types:
-            res[res_type] = prefix + '/results/%s_' % res_type + postfix + '/step%s.txt'
+            file_name = prefix + 'results/%s_' % res_type + postfix + '/step%s.txt'
+            res[res_type] = file_name
+            create_path(file_name, file_name_is_in_path=True)
 
     def _add_example_file_names(self, prefix='', key_path=None, fuse_file_name=None, example_file_name=None):
         prefix = self._compose_prefix(prefix)
@@ -115,7 +117,6 @@ class Handler(object):
             example_tensor_schedule=None,
             example_file_name=None,
             verbose=True,
-            opt_inf_pupil_names=None
         ):
         self._verbose = verbose
         if printed_result_types is None:
@@ -230,15 +231,15 @@ class Handler(object):
             self._environment_instance.set_in_storage(launches=list())
 
         if self._processing_type == 'train_meta_optimizer':
+            self._opt_inf_results_collect_interval = None
+            self._opt_inf_print_per_collected = None
+            self._opt_inf_example_per_print = None
+
+            self._name_of_pupil_for_optimizer_inference = None
+            self._meta_optimizer_training_step = None
+
             self._create_train_fields()
-            self._opt_inf_pupil_names = opt_inf_pupil_names
-            self._environment_instance.init_meta_optimizer_training_storage(self._opt_inf_pupil_names)
-            if self._save_path is not None:
-                for pupil_name in self._opt_inf_pupil_names:
-                    self._add_opt_inf_results_file_name_templates(
-                        prefix=pupil_name, key_path=[pupil_name], postfix='train')
-                    self._add_opt_inf_results_file_name_templates(
-                        prefix=pupil_name, key_path=[pupil_name], postfix='validation')
+            self._opt_inf_pupil_names = None
             self._meta_optimizer_train_result_types = list()
             print_order_additions = list()
             for res_type in self._print_order:
@@ -268,39 +269,22 @@ class Handler(object):
             )
             self._print_order.extend(print_order_additions)
 
+            train_init = dict(
+                steps=list()
+            )
+            for res_type in self._meta_optimizer_train_result_types:
+                train_init[res_type] = list()
 
+            self._environment_instance.init_meta_optimizer_training_storage(
+                train_init=train_init
+            )
 
         # The order in which tensors are presented in the list returned by get_additional_tensors method
         # It is a list. Each element is either tensor alias or a tuple if corresponding hook is pointing to a list of
         # tensors. Such tuple contains tensor alias, and sizes of nested lists
 
-    def _switch_datasets(self, train_dataset_name=None, validation_dataset_names=None):
-        if train_dataset_name is not None:
-            self._train_dataset_name = train_dataset_name
-        if validation_dataset_names is not None:
-            #print('validation_dataset_names:', validation_dataset_names)
-            #print('env._storage:', self._environment_instance._storage)
-            for dataset_name in validation_dataset_names:
-                if dataset_name not in self._dataset_specific.keys():
-                    new_files = dict()
-                    if self._save_path is not None:
-                        new_files['loss'] = (self._save_path + '/' + 'loss_validation_%s.txt' % dataset_name)
-                        new_files['perplexity'] = (self._save_path + '/' +
-                                                   'perplexity_validation_%s.txt' % dataset_name)
-                        new_files['accuracy'] = (self._save_path + '/' + 'accuracy_validation_%s.txt' % dataset_name)
-                        if self._bpc:
-                            new_files['bpc'] = (self._save_path + '/' + 'bpc_validation_%s.txt' % dataset_name)
-                        new_files['pickle_tensors'] = (self._save_path + '/' +
-                                                       'tensors_validation_%s.pickle' % dataset_name)
-
-                    self._dataset_specific[dataset_name] = {'name': dataset_name,
-                                                            'files': new_files}
-                    init_dict = dict()
-                    for key in self._result_types:
-                        if not self._environment_instance.check_if_key_in_storage([dataset_name, key]):
-                            init_dict[key] = list()
-                    #print('dataset_name:', dataset_name)
-                    self._environment_instance.init_storage(dataset_name, **init_dict)
+    def set_pupil_name(self, pupil_name):
+        self._name_of_pupil_for_optimizer_inference = pupil_name
 
     def _add_validation_experiment_instruments(self, dataset_name):
         self._add_results_file_name_set(self._result_types, key_path=[dataset_name], postfix=dataset_name)
@@ -360,7 +344,15 @@ class Handler(object):
             for dataset_name in validation_dataset_names:
                 self._add_validation_experiment_instruments(dataset_name)
 
-    def set_optimizer_train_schedule(self, schedule):
+    def set_optimizer_train_schedule(self, schedule, opt_inf_pupil_names):
+        self._opt_inf_pupil_names = opt_inf_pupil_names
+        if self._save_path is not None:
+            for pupil_name in self._opt_inf_pupil_names:
+                self._add_opt_inf_results_file_name_templates(
+                    prefix=pupil_name, key_path=[pupil_name], postfix='train')
+                self._add_opt_inf_results_file_name_templates(
+                    prefix=pupil_name, key_path=[pupil_name], postfix='validation')
+
         self._results_collect_interval = schedule['to_be_collected_while_training']['results_collect_interval']
         if self._results_collect_interval is not None:
             if self._result_types is not None:
@@ -381,6 +373,21 @@ class Handler(object):
         if self._printed_result_types is not None:
             if len(self._printed_result_types) > 0:
                 self._print_results = True
+
+        opt_inf_init = dict(
+            steps=list()
+        )
+        for res_type in self._result_types:
+            opt_inf_init[res_type] = list()
+
+        self._environment_instance.init_meta_optimizer_training_storage(
+            self._opt_inf_pupil_names,
+            opt_inf_init=opt_inf_init
+        )
+        self._opt_inf_results_collect_interval = schedule[
+            'opt_inf_to_be_collected_while_training']['results_collect_interval']
+        self._opt_inf_print_per_collected = schedule['opt_inf_to_be_collected_while_training']['print_per_collected']
+        self._opt_inf_example_per_print = schedule['opt_inf_to_be_collected_while_training']['example_per_print']
 
     def set_controllers(self, controllers):
         self._controllers = controllers
@@ -982,6 +989,8 @@ class Handler(object):
                                step,
                                train_res,
                                result_types,
+                               results_collect_interval,
+                               print_per_collected,
                                msg='results on train dataset'):
         # print('step:', step)
         # print('train_res:', train_res)
@@ -996,8 +1005,8 @@ class Handler(object):
         res_dict = self._toss_train_results(tmp, result_types)
 
         if self._printed_result_types is not None:
-            if self._results_collect_interval is not None:
-                if step % (self._results_collect_interval * self._print_per_collected) == 0:
+            if results_collect_interval is not None:
+                if step % (results_collect_interval * print_per_collected) == 0:
                     # if self._bpc:
                     #     self._print_standard_report(indents=[2, 0],
                     #                                 step=step,
@@ -1019,8 +1028,8 @@ class Handler(object):
                         message=msg,
                         **res_dict
                     )
-        if self._results_collect_interval is not None:
-            if step % self._results_collect_interval == 0:
+        if results_collect_interval is not None:
+            if step % results_collect_interval == 0:
                 # if self._bpc:
                 #     if self._save_path is not None:
                 #         # self._save_several_data(['loss', 'perplexity', 'accuracy', 'bpc'],
@@ -1052,7 +1061,7 @@ class Handler(object):
             print_instructions = self._form_train_tensor_print_instructions(step,
                                                                             train_res,
                                                                             self._last_run_tensor_order)
-            other_stuff_is_printed = (step % (self._results_collect_interval * self._print_per_collected) == 0)
+            other_stuff_is_printed = (step % (results_collect_interval * print_per_collected) == 0)
             if other_stuff_is_printed:
                 indent = 0
             else:
@@ -1142,7 +1151,8 @@ class Handler(object):
         if regime == 'train':
             step = args[0]
             res = args[1]
-            self._process_train_results(step, res, self._result_types)
+            self._process_train_results(
+                step, res, self._result_types, self._results_collect_interval, self._print_per_collected)
         if regime == 'validation':
             step = args[0]
             res = args[1]
@@ -1165,11 +1175,12 @@ class Handler(object):
             res = args[1]
             tokens = args[2]
             self._process_validation_by_chars_results(step, res, tokens)
-        if regime =='train_meta_optimizer':
+        if regime == 'train_meta_optimizer':
             step = args[0]
             res = args[1]
             self._process_train_results(
                 step, res, self._meta_optimizer_train_result_types,
+                self._opt_inf_results_collect_interval, self._opt_inf_print_per_collected,
                 msg='results on meta optimizer train op'
             )
 
