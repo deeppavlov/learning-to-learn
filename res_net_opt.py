@@ -1,6 +1,7 @@
 import tensorflow as tf
 from meta import Meta
-from useful_functions import block_diagonal, custom_matmul, custom_add, flatten, construct_dict_without_none_entries
+from useful_functions import (block_diagonal, custom_matmul, custom_add, flatten,
+                              construct_dict_without_none_entries, print_optimizer_ins)
 
 
 class ResNet4Lstm(Meta):
@@ -277,6 +278,7 @@ class ResNet4Lstm(Meta):
     @staticmethod
     def _apply_res_core(vars, opt_ins, rnn_part, scope):
         with tf.name_scope(scope):
+            print('(ResNet4Lstm._apply_res_core)opt_ins:', opt_ins)
             opt_ins_united = tf.concat(opt_ins, -1)
             rnn_stack_num = opt_ins_united.get_shape().as_list()[-2]
             rnn_part = tf.stack([rnn_part]*rnn_stack_num, axis=-2)
@@ -294,8 +296,9 @@ class ResNet4Lstm(Meta):
                     ins['embedding_layer']['o_c'],
                     ins['embedding_layer']['sigma_c'],
                     ins['lstm_layer_0']['o_c'],
-                    ins['lstm_layer_0']['o_sigma']
+                    ins['lstm_layer_0']['sigma_c']
                 ]
+                print('(ResNet4Lstm._apply_res_layer)core_inps:', core_inps)
                 o, sigma, emb_rnn_part = self._apply_res_core(
                     res_vars['embedding_layer'], core_inps, rnn_part, 'embedding_layer')
                 ins['embedding_layer']['o_c'] = o
@@ -400,16 +403,25 @@ class ResNet4Lstm(Meta):
 
     def _optimizer_core(self, optimizer_ins, state, gpu_idx):
         optimizer_ins = self._extend_with_permutations(optimizer_ins, gpu_idx)
-        optimizer_ins = self._forward_permute(optimizer_ins, ['o'], ['sigma'])
+        print('(ResNet4Lstm._optimizer_core)optimizer_ins\nBEFORE DIMS EXPANSION:')
+        print_optimizer_ins(optimizer_ins)
         ndims = self._get_optimizer_ins_ndims(optimizer_ins)
         if ndims == 2:
             optimizer_ins = self._expand_num_ex_dim_in_opt_ins(optimizer_ins, ['o', 'sigma'])
+        print('(ResNet4Lstm._optimizer_core)optimizer_ins\nBEFORE PERMUTATION:')
+        print_optimizer_ins(optimizer_ins)
+        optimizer_ins = self._forward_permute(optimizer_ins, ['o'], ['sigma'])
+        print('(ResNet4Lstm._optimizer_core)optimizer_ins\nBEFORE CONCATENATION:')
+        print_optimizer_ins(optimizer_ins)
         optimizer_ins, num_concatenated = self._concat_opt_ins(optimizer_ins, ['o', 'sigma'])
-
+        print('(ResNet4Lstm._optimizer_core)optimizer_ins\nAFTER CONCATENATION:')
+        print_optimizer_ins(optimizer_ins)
         rnn_output_by_res_layers = tf.split(state[0], self._rnn_for_res_layers, axis=-1)
+        # print('(ResNet4Lstm._optimizer_core)rnn_output_by_res_layers:', rnn_output_by_res_layers)
         rnn_input_by_res_layers = list()
 
-        for res_idx, (res_vars, rnn_part) in enumerate(zip(self._opt_trainable['res_layers'], rnn_output_by_res_layers)):
+        for res_idx, (res_vars, rnn_part) in enumerate(
+                zip(self._opt_trainable['res_layers'], rnn_output_by_res_layers)):
             optimizer_ins, rnn_input_part = self._apply_res_layer(
                 optimizer_ins, res_vars, rnn_part, 'res_layer_%s' % res_idx)
             rnn_input_by_res_layers.append(rnn_input_part)

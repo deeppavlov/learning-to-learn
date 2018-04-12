@@ -409,8 +409,8 @@ class Lstm(Model):
             )
             labels_shape = labels.get_shape().as_list()
             logits = tf.reshape(logits, labels_shape)
-            print('(LstmForMeta.loss_and_opt_ins)labels_shape:', labels.get_shape().as_list())
-            print('(LstmForMeta.loss_and_opt_ins)logits_shape:', logits.get_shape().as_list())
+            # print('(LstmForMeta.loss_and_opt_ins)labels_shape:', labels.get_shape().as_list())
+            # print('(LstmForMeta.loss_and_opt_ins)logits_shape:', logits.get_shape().as_list())
             sce = tf.nn.softmax_cross_entropy_with_logits(
                 labels=tf.reshape(labels, [-1, labels_shape[-1]]),
                 logits=tf.reshape(logits, [-1, labels_shape[-1]])

@@ -249,6 +249,7 @@ class Meta(object):
 
     def _eval_pupil_gradients_for_optimizer_inference(self):
         loss, optimizer_ins, storage_save_ops = self._pupil.loss_and_opt_ins_for_inference()
+        # print('(Meta._eval_pupil_gradients_for_optimizer_inference)optimizer_ins:', optimizer_ins)
         s_vectors, map_ = retrieve_from_inner_dicts(optimizer_ins, 's')
         # print('(Meta._eval_pupil_gradients_for_optimizer_inference)map_:', map_)
         sigma_vectors = tf.gradients(loss, s_vectors)
