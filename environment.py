@@ -815,8 +815,15 @@ class Environment(object):
         for key, value in kwargs.items():
             d[key].append(value)
 
-    def append_to_meta_optimizer_storage(self, pupil_name, optimizer_training_step, **kwargs):
-        pass
+    def append_to_optimizer_inference_storage(self, pupil_name, regime, optimizer_training_step, **kwargs):
+        if optimizer_training_step in self._storage[pupil_name]['steps']:
+            index = self._storage[pupil_name]['steps'].index(optimizer_training_step)
+        else:
+            index = len(self._storage[pupil_name]['steps'])
+            for key, value in kwargs.items():
+                self._storage[pupil_name][regime][key].append(list())
+        for key, value in kwargs.items():
+            self._storage[pupil_name][regime][key][index].append(value)
 
     def flush_storage(self):
         self._storage = {'step': None}
@@ -1742,7 +1749,7 @@ class Environment(object):
             train_batch_kwargs=train_specs['train_batch_kwargs'],
             checkpoint_steps=None,
             debug=None,
-            validation_datasets=validation_dataset,
+            validation_datasets=[validation_dataset],
             validation_additions_to_feed_dict=optimizer_inference['validation_additions_to_feed_dict'],
             validation_batch_size=optimizer_inference['validation_batch_size'],
             valid_batch_kwargs=optimizer_inference['valid_batch_kwargs'],
@@ -1902,6 +1909,8 @@ class Environment(object):
                     )
                     self._restore_pupil(path)
                     self._handler.set_pupil_name(pupil_name)
+                    self._handler.set_meta_optimizer_training_step(step)
+                    self._handler.set_meta_optimizer_inference_flag(True)
                     _ = self._train(
                         run_specs,
                         None,
@@ -1910,6 +1919,8 @@ class Environment(object):
                         init_step=0
                     )
                     self._handler.set_pupil_name(None)
+                    self._handler.set_meta_optimizer_training_step(None)
+                    self._handler.set_meta_optimizer_inference_flag(False)
 
             step += 1
             if it_is_time_to_reset_exercises.get():
