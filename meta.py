@@ -273,7 +273,7 @@ class Meta(object):
         with tf.name_scope('split_opt_ins'):
             for ov in opt_ins.values():
                 for ik in inner_keys:
-                    ov[ik + '_spl'] = tf.split(ov[ik + '_spl'], num_splits)
+                    ov[ik + '_spl'] = tf.split(ov[ik], num_splits, axis=-2)
         return opt_ins
 
     @staticmethod
