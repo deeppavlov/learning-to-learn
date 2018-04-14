@@ -345,7 +345,7 @@ class ResNet4Lstm(Meta):
                 ]
                 layer_name = 'lstm_layer_%s' % layer_idx
                 o, sigma, rnn_part = self._apply_res_core(
-                    res_vars[layer_name], core_inps, rnn_part, layer_name, self._pupil_dims[layer_name])
+                    res_vars[layer_name], core_inps, rnn_part, layer_name, self._pupil_dims['lstm_layers'][layer_idx])
                 lstm_rnn_parts.append(rnn_part)
                 ins['lstm_layer_%s' % layer_idx]['o_c'] = o
                 ins['lstm_layer_%s' % layer_idx]['sigma_c'] = sigma
@@ -377,7 +377,7 @@ class ResNet4Lstm(Meta):
                 ]
                 layer_name = 'output_layer_%s' % layer_idx
                 o, sigma, rnn_part = self._apply_res_core(
-                    res_vars[layer_name], core_inps, rnn_part, layer_name, self._pupil_dims[layer_name])
+                    res_vars[layer_name], core_inps, rnn_part, layer_name, self._pupil_dims['output_layers'][layer_idx])
                 output_rnn_parts.append(rnn_part)
                 ins['output_layer_%s' % layer_idx]['o_c'] = o
                 ins['output_layer_%s' % layer_idx]['sigma_c'] = sigma
