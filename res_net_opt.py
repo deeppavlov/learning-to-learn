@@ -420,7 +420,7 @@ class ResNet4Lstm(Meta):
         # print('(ResNet4Lstm._optimizer_core)optimizer_ins\nAFTER CONCATENATION:')
         # print_optimizer_ins(optimizer_ins)
         rnn_output_by_res_layers = tf.split(state[0], self._rnn_for_res_layers, axis=-1)
-        print("(ResNet4Lstm._optimizer_core)self._opt_trainable['res_layers']:", self._opt_trainable['res_layers'])
+        # print("(ResNet4Lstm._optimizer_core)self._opt_trainable['res_layers']:", self._opt_trainable['res_layers'])
         rnn_input_by_res_layers = list()
         # print('(ResNet4Lstm._optimizer_core)rnn_output_by_res_layers:', rnn_output_by_res_layers)
         for res_idx, (res_vars, rnn_part) in enumerate(
