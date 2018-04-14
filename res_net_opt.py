@@ -224,10 +224,9 @@ class ResNet4Lstm(Meta):
                             else:
                                 pupil_next_layer_dims = output_layers[layer_idx+1]
                             res_layer_params['output_layer_%s' % layer_idx] = self._res_core_vars(
-                                [pupil_previous_layer_dims,
-                                 layer_dims],
+                                [pupil_previous_layer_dims],
                                 [layer_dims],
-                                [pupil_next_layer_dims, layer_dims],
+                                [pupil_next_layer_dims],
                                 rnn_part,
                                 self._res_size,
                                 'output_layer_%s_core' % layer_idx
@@ -285,6 +284,8 @@ class ResNet4Lstm(Meta):
             matrices = vars[0]
             biases = vars[1]
             for m, b in zip(matrices, biases):
+                # print('\n(ResNet4Lstm._apply_res_core)hs:', hs)
+                # print('(ResNet4Lstm._apply_res_core)m:', m)
                 hs = tf.nn.relu(custom_add(custom_matmul(hs, m), b))
             rnn_part_dim = hs.get_shape().as_list()[-1] - sum(target_dims)
             return tf.split(hs, list(target_dims) + [rnn_part_dim], axis=-1)
