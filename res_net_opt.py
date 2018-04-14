@@ -276,10 +276,12 @@ class ResNet4Lstm(Meta):
     @staticmethod
     def _apply_res_core(vars, opt_ins, rnn_part, scope, target_dims):
         with tf.name_scope(scope):
+            # print("\n(ResNet4Lstm._apply_res_core)rnn_part:", rnn_part)
             # print('(ResNet4Lstm._apply_res_core)opt_ins:', opt_ins)
             opt_ins_united = tf.concat(opt_ins, -1)
             rnn_stack_num = opt_ins_united.get_shape().as_list()[-2]
             rnn_part = tf.stack([rnn_part]*rnn_stack_num, axis=-2)
+            # print("(ResNet4Lstm._apply_res_core)rnn_part:", rnn_part)
             hs = tf.concat([opt_ins_united, rnn_part], -1)
             matrices = vars[0]
             biases = vars[1]
@@ -288,7 +290,9 @@ class ResNet4Lstm(Meta):
                 # print('(ResNet4Lstm._apply_res_core)m:', m)
                 hs = tf.nn.relu(custom_add(custom_matmul(hs, m), b))
             rnn_part_dim = hs.get_shape().as_list()[-1] - sum(target_dims)
-            return tf.split(hs, list(target_dims) + [rnn_part_dim], axis=-1)
+            o, sigma, rnn_part = tf.split(hs, list(target_dims) + [rnn_part_dim], axis=-1)
+            # print("(ResNet4Lstm._apply_res_core)rnn_part:", rnn_part)
+            return o, sigma, tf.reduce_mean(rnn_part, axis=-2)
 
     def _apply_res_layer(self, ins, res_vars, rnn_part, scope):
         with tf.name_scope(scope):
@@ -437,9 +441,8 @@ class ResNet4Lstm(Meta):
         optimizer_outs = self._mv_tensors(optimizer_ins, ['o_c_spl', 'sigma_c_spl'], ['o_pr', 'sigma_pr'])
         optimizer_outs = self._backward_permute(optimizer_outs, ['o_pr'], ['sigma_pr'])
 
-        rnn_input = tf.stack(rnn_input_by_res_layers, axis=-1)
+        rnn_input = tf.concat(rnn_input_by_res_layers, -1)
         rnn_input = tf.reduce_mean(rnn_input, axis=-2)
-
         state = self._apply_lstm_layer(
             rnn_input, state, self._opt_trainable['lstm_matrix'], self._opt_trainable['lstm_bias'])
         return optimizer_outs, state
