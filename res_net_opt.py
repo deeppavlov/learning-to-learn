@@ -171,11 +171,10 @@ class ResNet4Lstm(Meta):
         return matrices, biases
 
     def _create_optimizer_trainable_vars(self):
-        pupil_dims = self._pupil.get_layer_dims()
         if self._emb_layer_is_present:
-            embedding_layer = pupil_dims['embedding_layer']
-        lstm_layers = pupil_dims['lstm_layers']
-        output_layers = pupil_dims['output_layers']
+            embedding_layer = self._pupil_dims['embedding_layer']
+        lstm_layers = self._pupil_dims['lstm_layers']
+        output_layers = self._pupil_dims['output_layers']
         num_layers = self._pupil_net_size['num_layers']
         num_output_layers = self._pupil_net_size['num_output_layers']
         vars = dict()
@@ -276,7 +275,7 @@ class ResNet4Lstm(Meta):
         return padded
 
     @staticmethod
-    def _apply_res_core(vars, opt_ins, rnn_part, scope):
+    def _apply_res_core(vars, opt_ins, rnn_part, scope, target_dims):
         with tf.name_scope(scope):
             # print('(ResNet4Lstm._apply_res_core)opt_ins:', opt_ins)
             opt_ins_united = tf.concat(opt_ins, -1)
@@ -287,7 +286,8 @@ class ResNet4Lstm(Meta):
             biases = vars[1]
             for m, b in zip(matrices, biases):
                 hs = tf.nn.relu(custom_add(custom_matmul(hs, m), b))
-            return hs
+            rnn_part_dim = hs.get_shape().as_list()[-1] - sum(target_dims)
+            return tf.split(hs, list(target_dims) + [rnn_part_dim], axis=-1)
 
     def _apply_res_layer(self, ins, res_vars, rnn_part, scope):
         with tf.name_scope(scope):
@@ -299,8 +299,10 @@ class ResNet4Lstm(Meta):
                     ins['lstm_layer_0']['sigma_c']
                 ]
                 # print('(ResNet4Lstm._apply_res_layer)core_inps:', core_inps)
+                # print('(ResNet4Lstm._apply_res_layer)res_vars:', res_vars)
                 o, sigma, emb_rnn_part = self._apply_res_core(
-                    res_vars['embedding_layer'], core_inps, rnn_part, 'embedding_layer')
+                    res_vars['embedding_layer'], core_inps, rnn_part,
+                    'embedding_layer', self._pupil_dims['embedding_layer'])
                 ins['embedding_layer']['o_c'] = o
                 ins['embedding_layer']['sigma_c'] = sigma
             else:
@@ -334,7 +336,7 @@ class ResNet4Lstm(Meta):
                 core_inps = [
                     *previous_layer_tensors,
                     ins['lstm_layer_%s' % layer_idx]['o_c'],
-                    ins['lstm_layer_%s' % layer_idx]['o_sigma'],
+                    ins['lstm_layer_%s' % layer_idx]['sigma_c'],
                     self._pad(ins['lstm_layer_%s' % layer_idx]['o_c'], -1),
                     self._pad(ins['lstm_layer_%s' % layer_idx]['sigma_c'], -1),
                     self._pad(ins['lstm_layer_%s' % layer_idx]['o_c'], 1),
@@ -343,7 +345,7 @@ class ResNet4Lstm(Meta):
                 ]
                 layer_name = 'lstm_layer_%s' % layer_idx
                 o, sigma, rnn_part = self._apply_res_core(
-                    res_vars[layer_name], core_inps, rnn_part, layer_name)
+                    res_vars[layer_name], core_inps, rnn_part, layer_name, self._pupil_dims[layer_name])
                 lstm_rnn_parts.append(rnn_part)
                 ins['lstm_layer_%s' % layer_idx]['o_c'] = o
                 ins['lstm_layer_%s' % layer_idx]['sigma_c'] = sigma
@@ -370,11 +372,12 @@ class ResNet4Lstm(Meta):
                 core_inps = [
                     *previous_layer_tensors,
                     ins['output_layer_%s' % layer_idx]['o_c'],
-                    ins['output_layer_%s' % layer_idx]['o_sigma'],
+                    ins['output_layer_%s' % layer_idx]['sigma_c'],
                     *next_layer_tensors
                 ]
                 layer_name = 'output_layer_%s' % layer_idx
-                o, sigma, rnn_part = self._apply_res_core(res_vars[layer_name], core_inps, rnn_part, layer_name)
+                o, sigma, rnn_part = self._apply_res_core(
+                    res_vars[layer_name], core_inps, rnn_part, layer_name, self._pupil_dims[layer_name])
                 output_rnn_parts.append(rnn_part)
                 ins['output_layer_%s' % layer_idx]['o_c'] = o
                 ins['output_layer_%s' % layer_idx]['sigma_c'] = sigma
@@ -417,9 +420,9 @@ class ResNet4Lstm(Meta):
         # print('(ResNet4Lstm._optimizer_core)optimizer_ins\nAFTER CONCATENATION:')
         # print_optimizer_ins(optimizer_ins)
         rnn_output_by_res_layers = tf.split(state[0], self._rnn_for_res_layers, axis=-1)
-        # print('(ResNet4Lstm._optimizer_core)rnn_output_by_res_layers:', rnn_output_by_res_layers)
+        print("(ResNet4Lstm._optimizer_core)self._opt_trainable['res_layers']:", self._opt_trainable['res_layers'])
         rnn_input_by_res_layers = list()
-
+        # print('(ResNet4Lstm._optimizer_core)rnn_output_by_res_layers:', rnn_output_by_res_layers)
         for res_idx, (res_vars, rnn_part) in enumerate(
                 zip(self._opt_trainable['res_layers'], rnn_output_by_res_layers)):
             optimizer_ins, rnn_input_part = self._apply_res_layer(
@@ -451,6 +454,7 @@ class ResNet4Lstm(Meta):
                  optimizer_for_opt_type='adam'):
         self._pupil = pupil
         self._pupil_net_size = self._pupil.get_net_size()
+        self._pupil_dims = self._pupil.get_layer_dims()
         self._emb_layer_is_present = 'embedding_size' in self._pupil_net_size
         self._num_exercises = num_exercises
         self._num_lstm_nodes = num_lstm_nodes
