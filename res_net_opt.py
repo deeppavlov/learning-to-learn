@@ -393,7 +393,7 @@ class ResNet4Lstm(Meta):
             x = tf.concat(
                 [tf.nn.dropout(
                     inp,
-                    self._dropout_keep_prob),
+                    self._optimizer_dropout_keep_prob),
                  state[0]],
                 -1,
                 name='X')
@@ -453,7 +453,6 @@ class ResNet4Lstm(Meta):
                  num_res_layers=4,
                  res_size=1000,
                  num_gpus=1,
-
                  regime='train',
                  optimizer_for_opt_type='adam'):
         self._pupil = pupil
@@ -493,8 +492,10 @@ class ResNet4Lstm(Meta):
             loss=None,
             start_loss=None,
             end_loss=None,
+            optimizer_dropout_keep_prob=None
         )
 
+        self._optimizer_dropout_keep_prob = tf.placeholder(tf.float32, name='optimizer_dropout_keep_prob')
         if regime == 'train':
             ex_per_gpu = self._num_exercises // self._num_gpus
             remaining = self._num_exercises - self._num_gpus * ex_per_gpu

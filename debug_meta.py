@@ -38,8 +38,14 @@ env.build_optimizer(
 )
 
 
-add_feed = [{'placeholder': 'dropout', 'value': 0.9}]
-valid_add_feed = [{'placeholder': 'dropout', 'value': 1.}]
+add_feed = [
+    {'placeholder': 'dropout', 'value': .9},
+    {'placeholder': 'optimizer_dropout_keep_prob', 'value': .9}
+]
+valid_add_feed = [
+    {'placeholder': 'dropout', 'value': 1.},
+    {'placeholder': 'optimizer_dropout_keep_prob', 'value': 1.}
+]
 
 env.train(
     with_meta_optimizer=True,
