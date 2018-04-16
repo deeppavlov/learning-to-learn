@@ -498,7 +498,8 @@ class ResNet4Lstm(Meta):
             loss=None,
             start_loss=None,
             end_loss=None,
-            optimizer_dropout_keep_prob=None
+            optimizer_dropout_keep_prob=None,
+            pupil_trainable_initializers=None
         )
 
         self._optimizer_dropout_keep_prob = tf.placeholder(tf.float32, name='optimizer_dropout_keep_prob')
@@ -517,8 +518,9 @@ class ResNet4Lstm(Meta):
             self._pupil_grad_eval_inputs, self._pupil_grad_eval_labels,\
                 self._optimizer_grad_inputs, self._optimizer_grad_labels = tmp
             self._pupil_trainable_variables, self._pupil_grad_eval_pupil_storage, self._optimizer_grad_pupil_storage, \
-                self._pupil_savers = self._create_pupil_variables_and_savers(
+                self._pupil_savers, self._pupil_trainable_initializers = self._create_pupil_variables_and_savers(
                     self._pupil, self._num_exercises, self._exercise_gpu_map)
+            self._hooks['pupil_trainable_initializers'] = self._pupil_trainable_initializers
             self._hooks['reset_pupil_grad_eval_pupil_storage'] = tf.group(
                 *self._pupil.reset_storage(
                     self._pupil_grad_eval_pupil_storage)

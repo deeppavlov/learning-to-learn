@@ -1720,8 +1720,11 @@ class Environment(object):
         optimizer_grad_batch_gens = list()
         batch_size = batch_size_controller.get()
         tb_kwargs = self._build_batch_kwargs(train_batch_kwargs)
-        for idx, (saver, path) in enumerate(zip(self._hooks['pupil_savers'], paths)):
-            if path is not None:
+        for idx, (saver, pupil_trainable_initializer, path) in enumerate(
+                zip(self._hooks['pupil_savers'], self._hooks['pupil_trainable_initializers'], paths)):
+            if path is None:
+                self._session.run(pupil_trainable_initializer)
+            else:
                 saver.restore(self._session, path)
             pupil_grad_eval_batch_gens.append(batch_generator_class(
                     datasets[restore_paths_datasets_map[idx]][0],
@@ -1731,7 +1734,7 @@ class Environment(object):
                 )
             )
             optimizer_grad_batch_gens.append(batch_generator_class(
-                    datasets[restore_paths_datasets_map[path[0]]][0],
+                    datasets[restore_paths_datasets_map[idx]][0],
                     batch_size,
                     **tb_kwargs,
                     random_batch_initiation=True

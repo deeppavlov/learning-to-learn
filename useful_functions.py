@@ -1073,3 +1073,20 @@ def construct_dict_without_none_entries(dictionary):
         if v is not None:
             res[k] = v
     return res
+
+
+def values_from_nested(nested):
+    accumulated_values = list()
+    if isinstance(nested, dict):
+        for v in nested.values():
+            if isinstance(v, (dict, list, tuple)):
+                accumulated_values.extend(values_from_nested(v))
+            else:
+                accumulated_values.append(v)
+    elif isinstance(nested, (list, tuple)):
+        for v in nested:
+            if isinstance(v, (dict, list, tuple)):
+                accumulated_values.extend(values_from_nested(v))
+            else:
+                accumulated_values.append(v)
+    return accumulated_values

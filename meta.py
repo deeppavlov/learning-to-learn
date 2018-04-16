@@ -2,7 +2,7 @@ import tensorflow as tf
 from useful_functions import (construct, get_keys_from_nested, get_obj_elem_by_path, device_name_scope,
                               write_elem_in_obj_by_path, stop_gradient_in_nested, compose_save_list, average_gradients,
                               retrieve_from_inner_dicts, distribute_into_inner_dicts, print_optimizer_ins,
-                              custom_matmul)
+                              custom_matmul, values_from_nested)
 
 
 LEARNING_RATE_FOR_EMPTY_CORE = 1.
@@ -209,16 +209,23 @@ class Meta(object):
         pupil_grad_eval_pupil_storage = list()
         optimizer_grad_pupil_storage = list()
         savers = list()
+        pupil_trainable_initializers = list()
         for ex_idx in range(num_exercises):
             tr = pupil.create_trainable_variables_dictionary_for_optimizer(
                 gpu_map[ex_idx], 'trainable_vars_ex_%s' % ex_idx)
             savers.append(pupil.create_saver(tr))
+            pupil_trainable_initializers.append(
+                tf.variables_initializer(
+                    values_from_nested(tr), name='trainable_variables_initializer_for_ex_%s' % ex_idx
+                )
+            )
             trainable.append(tr)
             pupil_grad_eval_pupil_storage.append(pupil.create_storage(
                 gpu_map[ex_idx], 'pupil_grad_eval_states_ex_%s' % ex_idx))
             optimizer_grad_pupil_storage.append(
                 pupil.create_storage(gpu_map[ex_idx], 'optimizer_grad_states_ex_%s' % ex_idx))
-        return trainable, pupil_grad_eval_pupil_storage, optimizer_grad_pupil_storage, savers
+        return trainable, pupil_grad_eval_pupil_storage, optimizer_grad_pupil_storage, savers,\
+            pupil_trainable_initializers
 
     def _add_standard_train_hooks(self):
         self._hooks['pupil_grad_eval_inputs'] = self._pupil_grad_eval_inputs
