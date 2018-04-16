@@ -502,6 +502,7 @@ class ResNet4Lstm(Meta):
         )
 
         self._optimizer_dropout_keep_prob = tf.placeholder(tf.float32, name='optimizer_dropout_keep_prob')
+        self._hooks['optimizer_dropout_keep_prob'] = self._optimizer_dropout_keep_prob
         if regime == 'train':
             ex_per_gpu = self._num_exercises // self._num_gpus
             remaining = self._num_exercises - self._num_gpus * ex_per_gpu
