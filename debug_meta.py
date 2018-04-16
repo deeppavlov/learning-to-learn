@@ -65,3 +65,7 @@ env.train(
     summary=True,
     add_graph_to_summary=True
 )
+
+env.train_optimizer(
+
+)
