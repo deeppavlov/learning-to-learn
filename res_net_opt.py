@@ -292,7 +292,7 @@ class ResNet4Lstm(Meta):
             rnn_part_dim = hs.get_shape().as_list()[-1] - sum(target_dims)
             o, sigma, rnn_part = tf.split(hs, list(target_dims) + [rnn_part_dim], axis=-1)
             # print("(ResNet4Lstm._apply_res_core)rnn_part:", rnn_part)
-            return o, sigma, tf.reduce_mean(rnn_part, axis=-2)
+            return o, sigma, rnn_part
 
     def _apply_res_layer(self, ins, res_vars, rnn_part, scope):
         with tf.name_scope(scope):
@@ -389,6 +389,9 @@ class ResNet4Lstm(Meta):
                 output_rnn_parts.append(output_rnn_part)
                 ins['output_layer_%s' % layer_idx]['o_c'] = o
                 ins['output_layer_%s' % layer_idx]['sigma_c'] = sigma
+            # print("(ResNet4Lstm._apply_res_layer)emb_rnn_part:", emb_rnn_part)
+            # print("(ResNet4Lstm._apply_res_layer)lstm_rnn_parts:", lstm_rnn_parts)
+            # print("(ResNet4Lstm._apply_res_layer)output_rnn_parts:", output_rnn_parts)
             return ins, emb_rnn_part + sum(lstm_rnn_parts + output_rnn_parts)
 
     def _apply_lstm_layer(self, inp, state, matrix, bias, scope='lstm'):
