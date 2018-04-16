@@ -321,7 +321,7 @@ class Meta(object):
             return len(s.get_shape().as_list())
 
     @staticmethod
-    def _expand_num_ex_dim_in_opt_ins(opt_ins, inner_keys):
+    def _expand_exercise_dim(opt_ins, inner_keys):
         for ov in opt_ins.values():
             for ik in inner_keys:
                 iv = ov[ik]
@@ -330,6 +330,20 @@ class Meta(object):
                         iv[idx] = tf.expand_dims(tensor, axis=0)
                 else:
                     ov[ik] = tf.expand_dims(iv, axis=0)
+        return opt_ins
+
+    @staticmethod
+    def _collapse_exercise_dim(opt_ins, inner_keys):
+        for ov in opt_ins.values():
+            for ik in inner_keys:
+                iv = ov[ik]
+                if isinstance(iv, list):
+                    for idx, tensor in enumerate(iv):
+                        tensor_shape = tensor.get_shape().as_list()
+                        iv[idx] = tf.reshape(tensor, shape=tensor_shape[1:])
+                else:
+                    tensor_shape = iv.get_shape().as_list()
+                    ov[ik] = tf.reshape(iv, shape=tensor_shape[1:])
         return opt_ins
 
     @staticmethod
@@ -557,8 +571,10 @@ class Meta(object):
                 # print_optimizer_ins(optimizer_ins)
                 # opt = tf.train.GradientDescentOptimizer(1.)
                 # grads, vars = zip(*opt.compute_gradients(start_loss))
+                optimizer_ins = self._expand_exercise_dim(optimizer_ins, ['o', 'sigma'])
                 optimizer_outs, new_optimizer_states = self._optimizer_core(
                     optimizer_ins, optimizer_states, 0)
+                optimizer_outs = self._collapse_exercise_dim(optimizer_outs, ['o_pr', 'sigma_pr'])
                 # print('\n(Meta._inference_graph)optimizer_outs:')
                 # print_optimizer_ins(optimizer_outs)
                 # optimizer_outs = self._backward_permute(optimizer_outs, ['o_pr'], ['sigma_pr'], collapse_1st_dim=True)

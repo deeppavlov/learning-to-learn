@@ -419,9 +419,9 @@ class ResNet4Lstm(Meta):
         optimizer_ins = self._extend_with_permutations(optimizer_ins, gpu_idx)
         # print('(ResNet4Lstm._optimizer_core)optimizer_ins\nBEFORE DIMS EXPANSION:')
         # print_optimizer_ins(optimizer_ins)
-        ndims = self._get_optimizer_ins_ndims(optimizer_ins)
-        if ndims == 2:
-            optimizer_ins = self._expand_num_ex_dim_in_opt_ins(optimizer_ins, ['o', 'sigma'])
+        # ndims = self._get_optimizer_ins_ndims(optimizer_ins)
+        # if ndims == 2:
+        #     optimizer_ins = self._expand_num_ex_dim_in_opt_ins(optimizer_ins, ['o', 'sigma'])
         # print('(ResNet4Lstm._optimizer_core)optimizer_ins\nBEFORE PERMUTATION:')
         # print_optimizer_ins(optimizer_ins)
         optimizer_ins = self._forward_permute(optimizer_ins, ['o'], ['sigma'])
