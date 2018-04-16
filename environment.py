@@ -491,7 +491,7 @@ class Environment(object):
                     opt_inf_additions_to_feed_dict=None,
                     opt_inf_to_be_collected_while_training=construct(
                         optimizer_inference_default_collected_while_training),
-                    opt_inf_train_datasets=None,
+                    opt_inf_train_datasets=[default_dataset],
                     opt_inf_validation_datasets=None,
                     validation_additions_to_feed_dict=list(),
                     validation_batch_size=1,

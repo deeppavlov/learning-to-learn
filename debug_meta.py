@@ -38,35 +38,47 @@ env.build_optimizer(
 )
 
 
-add_feed = [
+train_opt_add_feed = [
     {'placeholder': 'dropout', 'value': .9},
     {'placeholder': 'optimizer_dropout_keep_prob', 'value': .9}
+]
+opt_inf_add_feed = [
+    {'placeholder': 'dropout', 'value': .9},
+    {'placeholder': 'optimizer_dropout_keep_prob', 'value': 1.}
 ]
 valid_add_feed = [
     {'placeholder': 'dropout', 'value': 1.},
     {'placeholder': 'optimizer_dropout_keep_prob', 'value': 1.}
 ]
 
-env.train(
-    with_meta_optimizer=True,
-    save_path='debug_empty_meta_optimizer/not_changing_variables_issue',
-    batch_size=64,
-    num_unrollings=3,
-    vocabulary=vocabulary,
-    checkpoint_steps=2000,
-    result_types=['loss'],
-    printed_result_types=['loss'],
-    stop=40000,
-    train_dataset_text=train_text,
-    validation_dataset_texts=[valid_text],
-    results_collect_interval=100,
-    additions_to_feed_dict=add_feed,
-    validation_additions_to_feed_dict=valid_add_feed,
-    summary=True,
-    add_graph_to_summary=True
-)
+# env.train(
+#     with_meta_optimizer=True,
+#     save_path='debug_empty_meta_optimizer/not_changing_variables_issue',
+#     batch_size=64,
+#     num_unrollings=3,
+#     vocabulary=vocabulary,
+#     checkpoint_steps=2000,
+#     result_types=['loss'],
+#     printed_result_types=['loss'],
+#     stop=40000,
+#     train_dataset_text=train_text,
+#     validation_dataset_texts=[valid_text],
+#     results_collect_interval=100,
+#     additions_to_feed_dict=opt_inf_add_feed,
+#     validation_additions_to_feed_dict=valid_add_feed,
+#     summary=True,
+#     add_graph_to_summary=True
+# )
 
 env.train_optimizer(
     save_path='meta_optimizer_training_debug',
-
+    additions_to_feed_dict=train_opt_add_feed,
+    pupil_restore_paths=['debug_empty_meta_optimizer/not_changing_variables_issue/checkpoints/0'],
+    reset_period=3,
+    opt_inf_is_performed=True,
+    opt_inf_stop=10,
+    opt_inf_pupil_restore_paths=['opt_inf_pupil_restore_paths'],
+    opt_inf_additions_to_feed_dict=opt_inf_add_feed,
+    opt_inf_validation_texts=[valid_text],
+    validation_additions_to_feed_dict=valid_add_feed
 )
