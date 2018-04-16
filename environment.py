@@ -756,6 +756,15 @@ class Environment(object):
         self._update_dict(self._default_train_method_args, update)
 
     @property
+    def default_train_optimizer_method_args(self):
+        return construct(self._default_train_optimizer_method_args)
+
+    @default_train_optimizer_method_args.setter
+    def default_train_optimizer_method_args(self, update):
+        """update is a dictionary which should match keys of self._pupil_default_training"""
+        self._update_dict(self._default_train_optimizer_method_args, update)
+
+    @property
     def default_test_method_args(self):
         return construct(self._default_test_method_args)
 
@@ -770,6 +779,8 @@ class Environment(object):
             return self.default_train_method_args
         if method_name == 'test':
             return self.default_test_method_args
+        if method_name == 'train_optimizer':
+            return self.default_train_optimizer_method_args
         return None
 
     def _start_session(self, allow_soft_placement, log_device_placement, gpu_memory, allow_growth, visible_device_list):

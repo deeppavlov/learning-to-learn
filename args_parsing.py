@@ -322,14 +322,18 @@ def parse_1_set_of_kwargs(env_instance,
     # print('\n\n_parse_1_set_of_kwargs method:\nkwargs_to_parse:\n', kwargs_to_parse, '\nmethod_name:\n',
     #       method_name, '\nrepeated_key:\n', repeated_key, '\nonly_repeated:\n', only_repeated, '\nold_arguments:\n',
     #       old_arguments)
+    # print("(parse_1_set_of_kwargs)kwargs_to_parse:", kwargs_to_parse)
     kwargs_to_parse = construct(kwargs_to_parse)
     process_abbreviations(env_instance, kwargs_to_parse, method_name)
+    # print("(parse_1_set_of_kwargs)kwargs_to_parse:", kwargs_to_parse)
     if old_arguments is None:
         current_arguments = env_instance.get_default_method_parameters(method_name)
         if only_repeated:
             current_arguments = current_arguments[repeated_key]
     else:
         current_arguments = construct(old_arguments)
+
+    # print("(parse_1_set_of_kwargs)current_arguments:", current_arguments)
 
     for key, value in kwargs_to_parse.items():
         paste_into_nested_structure(current_arguments, key, value)
@@ -344,6 +348,7 @@ def parse_list_of_sets_of_kwargs(env_instance,
                                  repeated_key):
     # print('\n\n_parse_list_of_sets_of_kwargs method\nlist_of_sets:\n', list_of_sets, '\nmethod_name:\n', method_name,
     #       '\nrepeated_key:\n', repeated_key)
+    # print("(parse_list_of_sets_of_kwargs)list_of_sets:", list_of_sets)
     parsed = parse_1_set_of_kwargs(env_instance,
                                    list_of_sets[0],
                                    method_name,

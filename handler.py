@@ -130,7 +130,7 @@ class Handler(object):
         # print('Initializing Handler! pid = %s' % os.getpid())
         self._processing_type = processing_type
         self._environment_instance = environment_instance
-        print('(Handler.__init__)save_path:', save_path)
+        # print('(Handler.__init__)save_path:', save_path)
         self._save_path = save_path
         self._current_log_path = None
         self._result_types = self._environment_instance.put_result_types_in_correct_order(result_types)
