@@ -457,7 +457,6 @@ class Environment(object):
             ),
             start_specs=dict(
                 restore_optimizer_path=None,
-                with_meta_optimizer=False,
                 save_path=None,
                 result_types=self.put_result_types_in_correct_order(
                     ['loss']),
@@ -1663,17 +1662,29 @@ class Environment(object):
                 self._hooks['pupil_grad_eval_labels'],
                 pupil_grad_eval_batch_gens
         ):
-            inp, lbl = b_gen.next()
-            feed_dict[inp_placeholder] = inp
-            feed_dict[lbl_placeholder] = lbl
+            if isinstance(inp_placeholder, list):
+                for inp_plhld, lbl_plhld in zip(inp_placeholder, lbl_placeholder):
+                    inp, lbl = b_gen.next()
+                    feed_dict[inp_plhld] = inp
+                    feed_dict[lbl_plhld] = lbl
+            else:
+                inp, lbl = b_gen.next()
+                feed_dict[inp_placeholder] = inp
+                feed_dict[lbl_placeholder] = lbl
         for inp_placeholder, lbl_placeholder, b_gen in zip(
                 self._hooks['optimizer_grad_inputs'],
                 self._hooks['optimizer_grad_labels'],
                 optimizer_grad_batch_gens
         ):
-            inp, lbl = b_gen.next()
-            feed_dict[inp_placeholder] = inp
-            feed_dict[lbl_placeholder] = lbl
+            if isinstance(inp_placeholder, list):
+                for inp_plhld, lbl_plhld in zip(inp_placeholder, lbl_placeholder):
+                    inp, lbl = b_gen.next()
+                    feed_dict[inp_plhld] = inp
+                    feed_dict[lbl_plhld] = lbl
+            else:
+                inp, lbl = b_gen.next()
+                feed_dict[inp_placeholder] = inp
+                feed_dict[lbl_placeholder] = lbl
         return feed_dict
 
     def _reset_exercises(
