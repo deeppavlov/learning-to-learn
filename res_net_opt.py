@@ -416,7 +416,7 @@ class ResNet4Lstm(Meta):
             new_hidden_state = tf.multiply(output_gate, tf.tanh(new_cell_state), name='new_hidden_state')
         return new_hidden_state, new_cell_state
 
-    def _optimizer_core(self, optimizer_ins, state, gpu_idx):
+    def _optimizer_core(self, optimizer_ins, state, gpu_idx, permute=True):
         optimizer_ins = self._extend_with_permutations(optimizer_ins, gpu_idx)
         # print('(ResNet4Lstm._optimizer_core)optimizer_ins\nBEFORE DIMS EXPANSION:')
         # print_optimizer_ins(optimizer_ins)
@@ -426,7 +426,8 @@ class ResNet4Lstm(Meta):
 
         # print('(ResNet4Lstm._optimizer_core)optimizer_ins\nBEFORE PERMUTATION:')
         # print_optimizer_ins(optimizer_ins)
-        optimizer_ins = self._forward_permute(optimizer_ins, ['o'], ['sigma'])
+        if permute:
+            optimizer_ins = self._forward_permute(optimizer_ins, ['o'], ['sigma'])
         # print('(ResNet4Lstm._optimizer_core)optimizer_ins\nBEFORE CONCATENATION:')
         # print_optimizer_ins(optimizer_ins)
         optimizer_ins, num_concatenated = self._concat_opt_ins(optimizer_ins, ['o', 'sigma'])
@@ -444,7 +445,8 @@ class ResNet4Lstm(Meta):
 
         optimizer_ins = self._split_opt_ins(optimizer_ins, ['o_c', 'sigma_c'], num_concatenated)
         optimizer_outs = self._mv_tensors(optimizer_ins, ['o_c_spl', 'sigma_c_spl'], ['o_pr', 'sigma_pr'])
-        optimizer_outs = self._backward_permute(optimizer_outs, ['o_pr'], ['sigma_pr'])
+        if permute:
+            optimizer_outs = self._backward_permute(optimizer_outs, ['o_pr'], ['sigma_pr'])
 
         rnn_input = tf.concat(rnn_input_by_res_layers, -1)
         rnn_input = tf.reduce_mean(rnn_input, axis=-2)

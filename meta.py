@@ -613,7 +613,7 @@ class Meta(object):
                 # grads, vars = zip(*opt.compute_gradients(start_loss))
                 optimizer_ins = self._expand_exercise_dim(optimizer_ins, ['o', 'sigma'])
                 optimizer_outs, new_optimizer_states = self._optimizer_core(
-                    optimizer_ins, optimizer_states, 0)
+                    optimizer_ins, optimizer_states, 0, permute=False)
                 optimizer_outs = self._collapse_exercise_dim(optimizer_outs, ['o_pr', 'sigma_pr'])
                 # print('\n(Meta._inference_graph)optimizer_outs:')
                 # print_optimizer_ins(optimizer_outs)
