@@ -69,6 +69,17 @@ class Meta(object):
         return stacked_by_gpu
 
     @staticmethod
+    def _filter_opt_flow_dict(flow, remaining_inner_keys):
+        new = dict()
+        for ok, ov in flow.items():
+            new[ok] = dict()
+            d = new[ok]
+            for ik in remaining_inner_keys:
+                if ik in flow[ok]:
+                    d[ik] = flow[ok][ik]
+        return new
+
+    @staticmethod
     def _retrieve_and_unstack_trainable_variables(num_exercises, trainable_by_gpu):
         """trainable_by_gpu is a list of dicts each containing layer information, e. g.:
             embedding_layer: {'matrix': t1, 'o': t2, 's': t3, 'sigma': t4}
@@ -211,9 +222,9 @@ class Meta(object):
         savers = list()
         pupil_trainable_initializers = list()
         for ex_idx in range(num_exercises):
-            tr = pupil.create_trainable_variables_dictionary_for_optimizer(
+            tr, tr_pupil_format = pupil.create_trainable_variables_dictionary_for_optimizer(
                 gpu_map[ex_idx], 'trainable_vars_ex_%s' % ex_idx)
-            savers.append(pupil.create_saver(tr))
+            savers.append(pupil.create_saver(tr_pupil_format))
             pupil_trainable_initializers.append(
                 tf.variables_initializer(
                     values_from_nested(tr), name='trainable_variables_initializer_for_ex_%s' % ex_idx
@@ -235,23 +246,37 @@ class Meta(object):
         self._hooks['pupil_savers'] = self._pupil_savers
 
     @staticmethod
-    def _stop_gradients_in_o_and_s(optimizer_ins):
+    def _stop_gradients_in_opt_ins(optimizer_ins, inner_keys):
         for v in optimizer_ins.values():
-            v['o'] = tf.stop_gradient(v['o'])
-            v['s'] = tf.stop_gradient(v['s'])
+            for ik in inner_keys:
+                # print("\n(Meta._stop_gradients_in_o_and_s)v['o']:", v['o'])
+                if isinstance(v[ik], (list, tuple)):
+                    for idx, t in enumerate(v[ik]):
+                        v[ik][idx] = tf.stop_gradient(t)
+                else:
+                    v[ik] = tf.stop_gradient(v[ik])
         return optimizer_ins
 
     def _eval_pupil_gradients_for_optimizer_training(
             self, pupil_grad_eval_inputs, pupil_grad_eval_labels,
             pupil_trainable_variables, pupil_grad_eval_pupil_storage):
+        # print("(Meta._eval_pupil_gradients_for_optimizer_training)pupil_grad_eval_inputs:", pupil_grad_eval_inputs)
         loss, optimizer_ins, new_storage = self._pupil.loss_and_opt_ins(
             pupil_grad_eval_inputs, pupil_grad_eval_labels,
             pupil_grad_eval_pupil_storage, opt_ins=pupil_trainable_variables)
+        # print('(Meta._eval_pupil_gradients_for_optimizer_training)AFTER LOSS_AND_OPT_INS')
+        # print_optimizer_ins(optimizer_ins)
         s_vectors, map_ = retrieve_from_inner_dicts(optimizer_ins, 's')
+        # print('(Meta._eval_pupil_gradients_for_optimizer_training)s_vectors:', s_vectors)
+        # print('(Meta._eval_pupil_gradients_for_optimizer_training)map_:', map_)
         sigma_vectors = tf.gradients(loss, s_vectors)
         sigma_vectors = [tf.stop_gradient(sigma) for sigma in sigma_vectors]
-        optimizer_ins = self._stop_gradients_in_o_and_s(optimizer_ins)
+        optimizer_ins = self._stop_gradients_in_opt_ins(optimizer_ins, ['o', 's'])
+        # print('(Meta._eval_pupil_gradients_for_optimizer_training)AFTER GRADIENT STOPPING')
+        # print_optimizer_ins(optimizer_ins)
         optimizer_ins = distribute_into_inner_dicts(optimizer_ins, 'sigma', sigma_vectors, map_)
+        # print('(Meta._eval_pupil_gradients_for_optimizer_training)AFTER SIGMA DISTRIBUTION')
+        # print_optimizer_ins(optimizer_ins)
         return optimizer_ins, stop_gradient_in_nested(new_storage), loss
 
     def _eval_pupil_gradients_for_optimizer_inference(self):
@@ -509,26 +534,34 @@ class Meta(object):
                         tmp_states = optimizer_states
                         one_gpu_end_loss = 0
                         one_gpu_start_loss = 0
+                        new_pupil_trainable_by_gpu = list()
+                        # print("(Meta._train_graph)pupil_grad_eval_inputs:", pupil_grad_eval_inputs)
                         for unr_idx in range(self._num_optimizer_unrollings):
                             with tf.name_scope('optimizer_unrolling_%s' % unr_idx):
                                 optimizer_ins, pupil_grad_eval_pupil_storage[gpu_idx], start_loss =\
                                     self._eval_pupil_gradients_for_optimizer_training(
-                                        pupil_grad_eval_inputs[gpu_idx], pupil_grad_eval_labels[gpu_idx],
+                                        pupil_grad_eval_inputs[gpu_idx][unr_idx],
+                                        pupil_grad_eval_labels[gpu_idx][unr_idx],
                                         pupil_trainable_variables[gpu_idx], pupil_grad_eval_pupil_storage[gpu_idx]
                                     )
+                                # print("(Meta._train_graph)BEFORE OPTIMIZER CORE:")
+                                # print_optimizer_ins(optimizer_ins)
                                 optimizer_outs, tmp_states = self._optimizer_core(
-                                    optimizer_ins, self._num_ex_per_gpu[gpu_idx], tmp_states, gpu_idx)
+                                    optimizer_ins, tmp_states, gpu_idx)
                                 optimizer_outs = self._compose_phi_and_psi(optimizer_outs)
-                                mods = self._compose_mods(optimizer_outs)
-                                new_pupil_trainable = self._sub_mods(mods)
+                                optimizer_outs_with_mods = self._compose_mods(optimizer_outs)
+                                optimizer_outs_mods_are_applied = self._sub_mods(optimizer_outs_with_mods)
+                                npt = self._filter_opt_flow_dict(
+                                    optimizer_outs_mods_are_applied, ['matrix', 'bias'])
+                                new_pupil_trainable_by_gpu.append(npt)
                                 end_loss, _, optimizer_grad_pupil_storage[gpu_idx] = self._pupil.loss_and_opt_ins(
-                                    optimizer_grad_inputs[gpu_idx], optimizer_grad_labels[gpu_idx],
-                                    optimizer_grad_pupil_storage[gpu_idx], opt_ins=new_pupil_trainable)
+                                    optimizer_grad_inputs[gpu_idx][unr_idx], optimizer_grad_labels[gpu_idx][unr_idx],
+                                    optimizer_grad_pupil_storage[gpu_idx], opt_ins=npt)
                                 one_gpu_start_loss += start_loss
                                 one_gpu_end_loss += end_loss
                         one_gpu_end_loss += self._l2_loss(self._regularization_rate)
                         new_pupil_trainable = self._retrieve_and_unstack_trainable_variables(
-                            self._num_exercises, new_pupil_trainable)
+                            self._num_exercises, new_pupil_trainable_by_gpu)
                         pupil_grad_eval_pupil_storage = self._unstack_storages(
                             self._num_exercises, pupil_grad_eval_pupil_storage)
                         optimizer_grad_pupil_storage = self._unstack_storages(

@@ -1,3 +1,4 @@
+from itertools import chain
 import tensorflow as tf
 from meta import Meta
 from useful_functions import (block_diagonal, custom_matmul, custom_add, flatten,
@@ -422,6 +423,7 @@ class ResNet4Lstm(Meta):
         # ndims = self._get_optimizer_ins_ndims(optimizer_ins)
         # if ndims == 2:
         #     optimizer_ins = self._expand_num_ex_dim_in_opt_ins(optimizer_ins, ['o', 'sigma'])
+
         # print('(ResNet4Lstm._optimizer_core)optimizer_ins\nBEFORE PERMUTATION:')
         # print_optimizer_ins(optimizer_ins)
         optimizer_ins = self._forward_permute(optimizer_ins, ['o'], ['sigma'])
@@ -459,6 +461,7 @@ class ResNet4Lstm(Meta):
                  num_res_layers=4,
                  res_size=1000,
                  num_gpus=1,
+                 regularization_rate=6e-6,
                  regime='train',
                  optimizer_for_opt_type='adam'):
         self._pupil = pupil
@@ -476,6 +479,7 @@ class ResNet4Lstm(Meta):
             self._base_device = '/gpu:0'
         else:
             self._base_device = '/cpu:0'
+        self._regularization_rate = regularization_rate
         self._regime = regime
 
         self._optimizer_for_opt_type = optimizer_for_opt_type
@@ -520,16 +524,18 @@ class ResNet4Lstm(Meta):
             self._pupil_trainable_variables, self._pupil_grad_eval_pupil_storage, self._optimizer_grad_pupil_storage, \
                 self._pupil_savers, self._pupil_trainable_initializers = self._create_pupil_variables_and_savers(
                     self._pupil, self._num_exercises, self._exercise_gpu_map)
+            # print("(ResNet4Lstm.__init__)self._pupil_grad_eval_pupil_storage:", self._pupil_grad_eval_pupil_storage)
+            self._hooks['pupil_savers'] = self._pupil_savers
             self._hooks['pupil_trainable_initializers'] = self._pupil_trainable_initializers
             self._hooks['reset_pupil_grad_eval_pupil_storage'] = tf.group(
-                *self._pupil.reset_storage(
-                    self._pupil_grad_eval_pupil_storage)
+                *chain(*[self._pupil.reset_storage(stor) for stor in self._pupil_grad_eval_pupil_storage])
             )
             self._hooks['reset_optimizer_grad_pupil_storage'] = tf.group(
-                *self._pupil.reset_storage(
-                    self._optimizer_grad_pupil_storage)
+                *chain(*[self._pupil.reset_storage(stor) for stor in self._optimizer_grad_pupil_storage])
             )
             self._add_standard_train_hooks()
+
+            self._additional_loss = 0
         else:
             self._exercise_gpu_map = None
             self._pupil_grad_eval_inputs, self._pupil_grad_eval_labels, \
@@ -540,7 +546,7 @@ class ResNet4Lstm(Meta):
         with tf.device(self._base_device):
             self._opt_trainable = self._create_optimizer_trainable_vars()
 
-        self._create_permutation_matrices(1, 0)
+        # self._create_permutation_matrices(1, 0)
 
         if self._regime == 'train':
             self._learning_rate_for_optimizer_training = tf.placeholder(

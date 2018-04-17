@@ -48,6 +48,7 @@ class Controller(object):
         return new_specs
 
     def __init__(self, storage, specifications):
+        # print("(Controller.__init__)specifications:", specifications)
         self._storage = storage
         self._specifications = specifications
         if self._specifications['type'] == 'limit_steps':
@@ -647,8 +648,8 @@ class Environment(object):
             else:
                 actual_names.append(builder_name)
         loss_builder_names, not_loss_builder_names = self._split_to_loss_and_not_loss_names(actual_names)
-        #print('loss_builder_names:', loss_builder_names)
-        #print('not_loss_builder_names:', not_loss_builder_names)
+        # print('loss_builder_names:', loss_builder_names)
+        # print('not_loss_builder_names:', not_loss_builder_names)
         for builder_name in loss_builder_names:
             self._add_hook(builder_name)
         for builder_name in not_loss_builder_names:
@@ -1087,7 +1088,7 @@ class Environment(object):
         # print('valid_batch_kwargs:', valid_batch_kwargs)
         if 'reset_validation_state' in self._hooks:
             self._session.run(self._hooks['reset_validation_state'])
-        #print('batch_generator_class:', batch_generator_class)
+        # print('batch_generator_class:', batch_generator_class)
         valid_batches = batch_generator_class(validation_dataset[0], validation_batch_size, **valid_batch_kwargs)
         length = valid_batches.get_dataset_length()
         inputs, labels, correct_tokens = valid_batches.next_with_tokens()
@@ -1265,6 +1266,7 @@ class Environment(object):
             # print('train_feed_dict_additions:', train_feed_dict_additions)
         additional_controllers = list()
         for addition in train_feed_dict_additions:
+            print("(Environment._train)addition:", addition)
             additional_controllers.append(Controller(self._storage, addition['value']))
 
         if train_specs['stop']['type'] == 'limit_steps':
@@ -1658,7 +1660,6 @@ class Environment(object):
                 run_specs,
                 checkpoints_path,
                 start_specs['batch_generator_class'],
-                start_specs['vocabulary'],
                 init_step=init_step
             )
         if checkpoints_path is not None:
@@ -1709,6 +1710,7 @@ class Environment(object):
             restore_paths_datasets_map,
             random_=True
     ):
+        # print('(Environment._reset_exercises)self._hooks:', self._hooks)
         num_paths = len(pupil_restore_paths)
         if random_:
             if num_paths > num_exercises:
@@ -1821,9 +1823,10 @@ class Environment(object):
                                               train_specs['learning_rate'])
         train_feed_dict_additions = train_specs['additions_to_feed_dict']
 
-            # print('train_feed_dict_additions:', train_feed_dict_additions)
+        # print('train_feed_dict_additions:', train_feed_dict_additions)
         additional_controllers = list()
         for addition in train_feed_dict_additions:
+            # print("(Environment._train_optimizer)addition:", addition)
             additional_controllers.append(Controller(self._storage, addition['value']))
 
         if train_specs['stop']['type'] == 'limit_steps':
@@ -1885,14 +1888,17 @@ class Environment(object):
 
         self._handler.set_optimizer_train_schedule(
             schedule,
-            list(optimizer_inference['restore_paths'].keys())
+            list(optimizer_inference['opt_inf_pupil_restore_paths'].keys()),
+            optimizer_inference['opt_inf_to_be_collected_while_training'],
+            optimizer_inference['opt_inf_train_tensor_schedule'],
+            optimizer_inference['opt_inf_validation_tensor_schedule']
         )
 
         self._handler.set_controllers(controllers_for_printing)
         pupil_grad_eval_batch_gens, optimizer_grad_batch_gens = self._reset_exercises(
             train_specs['num_exercises'],
             train_specs['pupil_restore_paths'],
-            train_specs['datasets'],
+            train_specs['train_datasets'],
             batch_generator_class,
             batch_size_controller,
             train_batch_kwargs,
@@ -1925,7 +1931,7 @@ class Environment(object):
             self._handler.process_results(step, train_res, regime='train')
             if it_is_time_for_opt_inf.get():
                 for pupil_name, path in optimizer_inference['opt_inf_pupil_restore_paths'].items():
-                    print('\nOptimizer inference on pupil "%s"' % pupil_name)
+                    # print('\nOptimizer inference on pupil "%s"' % pupil_name)
                     run_specs = self._create_train_method_run_specs_from_meta_optimizer_train_method_arguments(
                         train_specs,
                         optimizer_inference,
@@ -1970,10 +1976,10 @@ class Environment(object):
                                              evaluation):
 
         self._build_pupil(kwargs_for_building)
-        #print('args_for_launches:', args_for_launches)
+        # print('args_for_launches:', args_for_launches)
         all_tensor_aliases = self._all_tensor_aliases_from_train_method_arguments(
             args_for_launches, evaluation=evaluation)
-        #print('all_tensor_aliases:', all_tensor_aliases)
+        # print('all_tensor_aliases:', all_tensor_aliases)
         self._create_missing_hooks(all_tensor_aliases)
         self._start_session(session_specs['allow_soft_placement'],
                             session_specs['log_device_placement'],
@@ -2004,8 +2010,8 @@ class Environment(object):
                                     None,
                                     evaluation['result_types'])
             for dataset_name, dataset in datasets.items():
-                #print('dataset_name:', dataset_name)
-                #print('dataset:', dataset)
+                # print('dataset_name:', dataset_name)
+                # print('dataset:', dataset)
                 means = self._validate(eval_batch_gen_class,
                                        dataset,
                                        evaluation['batch_size'],
@@ -2015,7 +2021,7 @@ class Environment(object):
                                        save_to_storage=False,
                                        print_results=False)
                 result[dataset_name] = means
-            #print('result in process:', result)
+            # print('result in process:', result)
             queue.put(result)
 
     @staticmethod
@@ -2233,7 +2239,7 @@ class Environment(object):
                 for char in human_replica:
                     feed = batch_generator_class.char2vec(char, character_positions_in_vocabulary, 0, 2)
                     feed_char = batch_generator_class.vec2char_fast(np.reshape(feed, (1, -1)), vocabulary)[0]
-                    print('feed.shape:', feed.shape)
+                    # print('feed.shape:', feed.shape)
                     feed_dict = dict(feed_dict_base.items())
                     feed_dict[sample_input] = feed
                     excess_pred = sample_prediction.eval(feed_dict=feed_dict, session=self._session)
@@ -2381,7 +2387,7 @@ class Environment(object):
         self._hooks['reset_validation_state'].run(session=self._session)
         greeting = 'Здравствуйте, я бот.'
         # print_and_log('Bot: ' + greeting, _print=False, fn=log_path)
-        print('(Environment.one_chat)inq:', inq)
+        # print('(Environment.one_chat)inq:', inq)
         _ = inq.get()
         # _ = inq.get(block=False)
         outq.put(greeting)

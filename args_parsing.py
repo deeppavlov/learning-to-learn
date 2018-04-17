@@ -41,22 +41,22 @@ def process_abbreviation_in_1_entry(key, value, method_name):
         else:
             new_value = None
         set_controller_name_in_specs(new_value, 'debug')
-    if key == 'optimizer_inference_period':
-        if isinstance(value, int):
-            new_value = {
-                'type': 'periodic_truth',
-                'period': value
-            }
-        set_controller_name_in_specs(new_value, 'optimizer_inference_period')
-    if key == 'optimizer_inference_stop':
+    if key == 'opt_inf_stop':
         if isinstance(value, int):
             new_value = {
                 'type': 'limit_steps',
                 'limit': value
             }
         set_controller_name_in_specs(new_value, 'optimizer_inference_num_steps')
+    if key == 'reset_period':
+        if isinstance(value, int):
+            new_value = {
+                'type': 'periodic_truth',
+                'limit': value
+            }
+        set_controller_name_in_specs(new_value, 'optimizer_inference_num_steps')
 
-    if method_name == 'train':
+    if method_name == 'train' or 'train_optimizer':
         if key == 'additions_to_feed_dict':
             # print('inside additions_to_feed_dict shortcuts processing')
             if new_value is not None:

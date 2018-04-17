@@ -359,7 +359,9 @@ class Handler(object):
             for dataset_name in validation_dataset_names:
                 self._add_validation_experiment_instruments(dataset_name)
 
-    def set_optimizer_train_schedule(self, schedule, opt_inf_pupil_names):
+    def set_optimizer_train_schedule(
+            self, schedule, opt_inf_pupil_names,
+            opt_inf_to_be_collected_while_training, opt_inf_train_tensor_schedule, opt_inf_validation_tensor_schedule):
         self._opt_inf_pupil_names = opt_inf_pupil_names
         if self._save_path is not None:
             for pupil_name in self._opt_inf_pupil_names:
@@ -402,10 +404,9 @@ class Handler(object):
             self._opt_inf_pupil_names,
             opt_inf_init=opt_inf_init
         )
-        self._opt_inf_results_collect_interval = schedule[
-            'opt_inf_to_be_collected_while_training']['results_collect_interval']
-        self._opt_inf_print_per_collected = schedule['opt_inf_to_be_collected_while_training']['print_per_collected']
-        self._opt_inf_example_per_print = schedule['opt_inf_to_be_collected_while_training']['example_per_print']
+        self._opt_inf_results_collect_interval = opt_inf_to_be_collected_while_training['results_collect_interval']
+        self._opt_inf_print_per_collected = opt_inf_to_be_collected_while_training['print_per_collected']
+        self._opt_inf_example_per_print = opt_inf_to_be_collected_while_training['example_per_print']
 
     def set_controllers(self, controllers):
         self._controllers = controllers

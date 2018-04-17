@@ -190,10 +190,12 @@ def construct(obj):
         new_obj = tuple(base)
     elif isinstance(obj, str):
         new_obj = str(obj)
-    elif isinstance(obj, (int, float, complex, type(None))) or inspect.isclass(obj):
-        new_obj = obj
     else:
-        raise TypeError("Object of unsupported type was passed to construct function: %s" % type(obj))
+        new_obj = obj
+    # elif isinstance(obj, (int, float, complex, type(None))) or inspect.isclass(obj):
+    #     new_obj = obj
+    # else:
+    #     raise TypeError("Object of unsupported type was passed to construct function: %s" % type(obj))
     return new_obj
 
 
@@ -305,6 +307,7 @@ def synchronous_flatten(*nested):
                     o.extend(f)
         except TypeError:
             print('(synchronous_flatten)nested:', nested)
+            raise
     return output
 
 
@@ -452,10 +455,10 @@ def link_into_dictionary(old_dictionary, old_keys, new_key):
 
 
 def paste_into_nested_structure(structure, searched_key, value_to_paste):
-    #print('***********************')
+    # print('***********************')
     if isinstance(structure, dict):
         for key, value, in structure.items():
-            #print('key:', key)
+            # print('key:', key)
             if key == searched_key:
                 structure[key] = construct(value_to_paste)
             else:
@@ -834,7 +837,11 @@ def custom_matmul(a, b, base_ndims=None, eq=None, name='custom_matmul'):
                 raise InvalidArgumentError(
                     'if len(a.shape) - base_ndims[0] > 0 and len(b.shape) - base_ndims[1] > 0 than '
                     'a and b have to satisfy condition \n'
-                    'len(a.shape) - base_ndims[0] == len(b.shape) - base_ndims[1]',
+                    'len(a.shape) - base_ndims[0] == len(b.shape) - base_ndims[1]\n'
+                    'whereas\n'
+                    'a.shape = %s\n'
+                    'b.shape = %s\n'
+                    'base_ndims = %s' % (a_shape, b_shape, base_ndims),
                     [a, b],
                     'tensors a and b',
                     'tensors which satisfy \n'
@@ -873,8 +880,8 @@ def custom_add(a, b, base_ndims=None, name='custom_add'):
                                longest_indices[:mapped_ndims] + longest_indices[max_ndims-smallest_base:]
                 backward_perm = longest_indices[diff:diff+mapped_ndims] + longest_indices[:diff] \
                                 + longest_indices[max_ndims-smallest_base:]
-                print(forward_perm)
-                print(backward_perm)
+                # print(forward_perm)
+                # print(backward_perm)
                 if b_is_broadcasted:
                     a_tr = tf.transpose(a, perm=forward_perm)
                     res_tr = a_tr + b
@@ -1027,13 +1034,16 @@ def distribute_into_inner_dicts(d, key, to_distribute, map_):
 
 def print_optimizer_ins(opt_ins):
     """Help method for debugging meta optimizers"""
-    for ok, ov in opt_ins.items():
-        print('\n'*2)
+    for idx, (ok, ov) in enumerate(opt_ins.items()):
         print(ok)
         for ik, iv in ov.items():
             print('')
             print(ik)
             print(iv)
+        if idx < len(opt_ins) - 1:
+            print('\n' * 2)
+    print('*' * 20)
+    print('\n' * 2)
 
 
 def create_distribute_map(num_distributed, result_length):

@@ -232,7 +232,7 @@ class Lstm(Model):
             new_cell_state = tf.add(forget_gate * state[1], input_gate * transform_vec, name='new_cell_state')
             new_hidden_state = tf.multiply(output_gate, tf.tanh(new_cell_state), name='new_hidden_state')
         optimizer_ins = {'lstm_layer_%s' % layer_idx: {'o': x, 's': s}}
-        return new_hidden_state, (new_hidden_state, new_cell_state), optimizer_ins
+        return new_hidden_state, [new_hidden_state, new_cell_state], optimizer_ins
 
     def _rnn_iter(self, embedding, all_states, lstm_matrices, lstm_biases):
         optimizer_ins = dict()
@@ -419,7 +419,7 @@ class Lstm(Model):
                 tf.reshape(sce, labels_shape[:-1]),
                 axis=[-1, -2]
             )
-            optimizer_ins = self._acomplish_optimizer_ins(optimizer_ins, trainable_variables)
+            optimizer_ins = self._acomplish_optimizer_ins(optimizer_ins, trainable)
             return loss, optimizer_ins, new_storage
 
     def loss_and_opt_ins_for_inference(self):
@@ -617,19 +617,20 @@ class Lstm(Model):
                     self._hooks['validation_predictions'] = self.sample_prediction
 
     def _pack_trainable_to_optimizer_format(self, trainable):
+        # print("(Lstm._pack_trainable_to_optimizer_format)trainable:", trainable)
         opt_ins = dict()
         opt_ins['embedding_layer'] = dict(
             matrix=trainable['embedding_matrix']
         )
         for i in range(self._num_layers):
             opt_ins['lstm_layer_%s' % i] = dict(
-                matrix=trainable['lstm_matrix_%s' % i],
-                bias=trainable['lstm_bias_%s' % i]
+                matrix=trainable['lstm_matrices'][i],
+                bias=trainable['lstm_biases'][i]
             )
         for i in range(self._num_output_layers):
             opt_ins['output_layer_%s' % i] = dict(
-                matrix=trainable['output_matrix_%s' % i],
-                bias=trainable['output_bias_%s' % i]
+                matrix=trainable['output_matrices'][i],
+                bias=trainable['output_biases'][i]
             )
         return opt_ins
 
@@ -672,11 +673,13 @@ class Lstm(Model):
         return variables_dictionary
 
     def create_trainable_variables_dictionary_for_optimizer(self, device, name_scope):
+        """Returns variable dictionary in 2 formats: for optimizer and for pupil"""
         variables_dictionary = self._create_trainable_variables_dictionary(device, name_scope)
-        return self._pack_trainable_to_optimizer_format(variables_dictionary)
+        return self._pack_trainable_to_optimizer_format(variables_dictionary), variables_dictionary
 
     @staticmethod
     def create_saver(var_dict):
+        # print("(Lstm.create_saver)var_dict:", var_dict)
         with tf.device('/cpu:0'):
             saved_vars = dict()
             saved_vars['embedding_matrix'] = var_dict['embedding_matrix']
