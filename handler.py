@@ -386,11 +386,13 @@ class Handler(object):
             if len(self._printed_result_types) > 0:
                 self._print_results = True
 
+        meta_optimizer_print_result_types = list()
         for res_type in self._printed_result_types:
             start_res_type = 'start_' + res_type
             end_res_type = 'end_' + res_type
-            self._printed_result_types.append(start_res_type)
-            self._printed_result_types.append(end_res_type)
+            meta_optimizer_print_result_types.append(start_res_type)
+            meta_optimizer_print_result_types.append(end_res_type)
+        self._printed_result_types.extend(meta_optimizer_print_result_types)
 
         opt_inf_init = dict(
             steps=list()
