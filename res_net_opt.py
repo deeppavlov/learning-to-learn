@@ -561,6 +561,7 @@ class ResNet4Lstm(Meta):
                     learning_rate=self._learning_rate_for_optimizer_training)
             self._train_graph()
             self._inference_graph()
+            print([self._reset_optimizer_states('train', gpu_idx) for gpu_idx in range(self._num_gpus)])
             self._hooks['reset_train_states'] = tf.group(
                 *[self._reset_optimizer_states('train', gpu_idx)
                   for gpu_idx in range(self._num_gpus)])
