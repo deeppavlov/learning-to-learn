@@ -78,10 +78,12 @@ env.train_optimizer(
     additions_to_feed_dict=train_opt_add_feed,
     pupil_restore_paths=['debug_empty_meta_optimizer/not_changing_variables_issue/checkpoints/0'],
     reset_period=3,
+    train_dataset_texts=[train_text],
     opt_inf_is_performed=True,
     opt_inf_stop=10,
     opt_inf_pupil_restore_paths={'ignoramus': 'debug_empty_meta_optimizer/not_changing_variables_issue/checkpoints/0'},
     opt_inf_additions_to_feed_dict=opt_inf_add_feed,
     opt_inf_validation_texts=[valid_text],
-    validation_additions_to_feed_dict=valid_add_feed
+    validation_additions_to_feed_dict=valid_add_feed,
+    vocabulary=vocabulary
 )

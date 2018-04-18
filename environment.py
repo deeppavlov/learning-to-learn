@@ -1250,6 +1250,7 @@ class Environment(object):
         Args:
             kwargs should include all entries defined in self._pupil_default_training"""
         train_specs = construct(run_specs['train_specs'])
+        print("(Environment._train)train_specs['train_batch_kwargs']:", train_specs['train_batch_kwargs'])
         schedule = construct(run_specs['schedule'])
         step = init_step
 
@@ -1263,7 +1264,7 @@ class Environment(object):
         train_feed_dict_additions = train_specs['additions_to_feed_dict']
         validation_additional_feed_dict = train_specs['validation_additions_to_feed_dict']
 
-            # print('train_feed_dict_additions:', train_feed_dict_additions)
+        # print('train_feed_dict_additions:', train_feed_dict_additions)
         additional_controllers = list()
         for addition in train_feed_dict_additions:
             print("(Environment._train)addition:", addition)
@@ -1350,6 +1351,7 @@ class Environment(object):
 
         batch_size = batch_size_controller.get()
         tb_kwargs = self._build_batch_kwargs(train_batch_kwargs)
+        print("(Environment._train)tb_kwargs:", tb_kwargs)
         train_batches = batch_generator_class(train_specs['train_dataset'][0], batch_size, **tb_kwargs)
         feed_dict = dict()
         while should_continue.get():
@@ -1541,6 +1543,8 @@ class Environment(object):
         session_specs = tmp_output['session_specs']
         start_specs = tmp_output['start_specs']
         run_specs_set = tmp_output['run']
+        # print("(Environment.train)run_specs_set[0]['train_specs']['train_batch_kwargs']:",
+        #       run_specs_set[0]['train_specs']['train_batch_kwargs'])
         all_tensor_aliases = self._all_tensor_aliases_from_train_method_arguments([(start_specs, run_specs_set)])
         # print('(Environment.train)all_tensor_aliases:', all_tensor_aliases)
         self._create_missing_hooks(all_tensor_aliases)
@@ -1710,7 +1714,7 @@ class Environment(object):
             restore_paths_datasets_map,
             random_=True
     ):
-        # print('(Environment._reset_exercises)self._hooks:', self._hooks)
+        # print('(Environment._reset_exercises)restore_paths_datasets_map:', restore_paths_datasets_map)
         num_paths = len(pupil_restore_paths)
         if random_:
             if num_paths > num_exercises:
@@ -1720,7 +1724,7 @@ class Environment(object):
                 paths = [pupil_restore_paths[i] for i in map_]
             if restore_paths_datasets_map is None:
                 restore_paths_datasets_map = [random.choice(
-                    [i for i, _ in enumerate(datasets)]) for _ in pupil_restore_paths]
+                    [i for i, _ in enumerate(datasets)]) for _ in paths]
         else:
             if num_paths > num_exercises:
                 paths = pupil_restore_paths[:num_exercises]
@@ -1728,17 +1732,21 @@ class Environment(object):
                 map_ = create_distribute_map(num_paths, num_exercises)
                 paths = [pupil_restore_paths[i] for i in map_]
             if restore_paths_datasets_map is None:
-                restore_paths_datasets_map = create_distribute_map(len(datasets), num_paths)
+                restore_paths_datasets_map = create_distribute_map(len(datasets), len(paths))
         pupil_grad_eval_batch_gens = list()
         optimizer_grad_batch_gens = list()
         batch_size = batch_size_controller.get()
         tb_kwargs = self._build_batch_kwargs(train_batch_kwargs)
+        # print("(Environment._reset_exercises)restore_paths_datasets_map:", restore_paths_datasets_map)
+        # print("(Environment._reset_exercises)datasets:", datasets)
         for idx, (saver, pupil_trainable_initializer, path) in enumerate(
                 zip(self._hooks['pupil_savers'], self._hooks['pupil_trainable_initializers'], paths)):
             if path is None:
                 self._session.run(pupil_trainable_initializer)
             else:
                 saver.restore(self._session, path)
+            # print("(Environment._reset_exercises)restore_paths_datasets_map:", restore_paths_datasets_map)
+            # print("(Environment._reset_exercises)idx:", idx)
             pupil_grad_eval_batch_gens.append(batch_generator_class(
                     datasets[restore_paths_datasets_map[idx]][0],
                     batch_size,
@@ -1895,6 +1903,7 @@ class Environment(object):
         )
 
         self._handler.set_controllers(controllers_for_printing)
+        # print("(Environment._train_optimizer)train_specs['train_datasets']:", train_specs['train_datasets'])
         pupil_grad_eval_batch_gens, optimizer_grad_batch_gens = self._reset_exercises(
             train_specs['num_exercises'],
             train_specs['pupil_restore_paths'],

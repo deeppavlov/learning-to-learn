@@ -122,6 +122,19 @@ def process_batch_kwargs_shortcuts(set_of_kwargs, method_name):
             if 'vocabulary' in set_of_kwargs:
                 set_of_kwargs['valid_batch_kwargs']['vocabulary'] = list(set_of_kwargs['vocabulary'])
                 del set_of_kwargs['vocabulary']
+    if method_name == 'train_optimizer':
+        if 'train_batch_kwargs' not in set_of_kwargs:
+            set_of_kwargs['train_batch_kwargs'] = dict()
+        if 'vocabulary' in set_of_kwargs:
+            if 'vocabulary' not in set_of_kwargs['train_batch_kwargs']:
+                set_of_kwargs['train_batch_kwargs']['vocabulary'] = set_of_kwargs['vocabulary']
+            del set_of_kwargs['vocabulary']
+        if 'valid_batch_kwargs' not in set_of_kwargs:
+            set_of_kwargs['valid_batch_kwargs'] = dict()
+        if 'vocabulary' in set_of_kwargs['train_batch_kwargs']:
+            if 'vocabulary' not in set_of_kwargs['valid_batch_kwargs']:
+                set_of_kwargs['valid_batch_kwargs']['vocabulary'] = list(
+                    set_of_kwargs['train_batch_kwargs']['vocabulary'])
 
 
 def process_datasets_shortcuts(env_instance,
