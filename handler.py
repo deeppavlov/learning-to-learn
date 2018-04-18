@@ -259,9 +259,6 @@ class Handler(object):
                             self._meta_optimizer_train_result_types.append(start_res_type)
                         if start_res_type not in self._print_order:
                             print_order_additions.append(start_res_type)
-                        if res_type in self._printed_result_types:
-                            if start_res_type not in self._printed_result_types:
-                                self._printed_result_types.append(start_res_type)
 
                     end_res_type = 'end_' + res_type
                     if end_res_type in self._hooks:
@@ -269,9 +266,7 @@ class Handler(object):
                             self._meta_optimizer_train_result_types.append(end_res_type)
                         if end_res_type not in self._print_order:
                             print_order_additions.append(end_res_type)
-                        if res_type in self._printed_result_types:
-                            if end_res_type not in self._printed_result_types:
-                                self._printed_result_types.append(end_res_type)
+
             self._add_results_file_name_set(
                 self._meta_optimizer_train_result_types,
                 key_path=['train']
@@ -390,6 +385,12 @@ class Handler(object):
         if self._printed_result_types is not None:
             if len(self._printed_result_types) > 0:
                 self._print_results = True
+
+        for res_type in self._printed_result_types:
+            start_res_type = 'start_' + res_type
+            end_res_type = 'end_' + res_type
+            self._printed_result_types.append(start_res_type)
+            self._printed_result_types.append(end_res_type)
 
         opt_inf_init = dict(
             steps=list()

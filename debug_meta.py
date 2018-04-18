@@ -20,9 +20,9 @@ env = Environment(
     vocabulary=vocabulary)
 
 env.build_pupil(
-    batch_size=64,
+    batch_size=32,
     num_layers=1,
-    num_nodes=[400],
+    num_nodes=[100],
     num_output_layers=1,
     num_output_nodes=[],
     vocabulary_size=vocabulary_size,
@@ -35,7 +35,9 @@ env.build_pupil(
 
 env.build_optimizer(
     regime='train',
-    num_optimizer_unrollings=7
+    num_optimizer_unrollings=7,
+    num_exercises=5,
+    res_size=250,
 )
 
 

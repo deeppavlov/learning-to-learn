@@ -40,11 +40,11 @@ class ResNet4Lstm(Meta):
 
     @staticmethod
     def _create_permutation_matrix(size, num_exercises):
-        return tf.one_hot(
-            tf.stack(
+        with tf.device('/cpu:0'):
+            map_ = tf.stack(
                 [tf.random_shuffle([i for i in range(size)])
-                 for _ in range(num_exercises)]),
-            size)
+                 for _ in range(num_exercises)])
+        return tf.one_hot(map_, size)
 
     def _reset_permutations(self, gpu_idx):
         variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='permutation_matrices_on_gpu_%s' % gpu_idx)
