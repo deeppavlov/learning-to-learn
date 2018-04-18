@@ -54,8 +54,14 @@ class Handler(object):
             create_path(file_name, file_name_is_in_path=True)
             d['examples'] = file_name
 
-    def _get_optimizer_inference_file_name(self, regime):
-        return self._file_names[self._name_of_pupil_for_optimizer_inference][regime] % \
+    def _get_optimizer_inference_file_name(self, regime, res_type):
+        # print("(Handler._get_optimizer_inference_file_name)self._file_names:", self._file_names)
+        # print("(Handler._get_optimizer_inference_file_name)self._name_of_pupil_for_optimizer_inference:",
+        #       self._name_of_pupil_for_optimizer_inference)
+        # print("(Handler._get_optimizer_inference_file_name)regime:", regime)
+        # print("(Handler._get_optimizer_inference_file_name)self._meta_optimizer_training_step:",
+        #       self._meta_optimizer_training_step)
+        return self._file_names[self._name_of_pupil_for_optimizer_inference][regime]['results'][res_type] % \
                self._meta_optimizer_training_step
 
     def _create_train_fields(self):
@@ -280,7 +286,8 @@ class Handler(object):
                 train_init[res_type] = list()
 
             self._environment_instance.init_meta_optimizer_training_storage(
-                train_init=train_init
+                train_init=train_init,
+                wipe_storage=True
             )
 
         # The order in which tensors are presented in the list returned by get_additional_tensors method
@@ -399,7 +406,7 @@ class Handler(object):
         )
         opt_inf_init['train'] = dict()
         opt_inf_init['validation'] = dict()
-        for res_type in self._result_types:
+        for res_type in self._result_types + ['steps']:
             opt_inf_init['train'][res_type] = list()
             opt_inf_init['validation'][res_type] = list()
 
@@ -410,6 +417,8 @@ class Handler(object):
         self._opt_inf_results_collect_interval = opt_inf_to_be_collected_while_training['results_collect_interval']
         self._opt_inf_print_per_collected = opt_inf_to_be_collected_while_training['print_per_collected']
         self._opt_inf_example_per_print = opt_inf_to_be_collected_while_training['example_per_print']
+
+        self._printed_controllers = schedule['printed_controllers']
 
     def set_controllers(self, controllers):
         self._controllers = controllers
@@ -460,7 +469,7 @@ class Handler(object):
             if self._save_path is not None:
                 if save_to_file:
                     if self._meta_optimizer_inference_is_performed:
-                        file_name = self._get_optimizer_inference_file_name('validation')
+                        file_name = self._get_optimizer_inference_file_name('validation', key)
                     else:
                         file_name = self._file_names[self._name_of_dataset_on_which_accumulating]['results'][key]
                     with open(file_name, 'a') as f:
@@ -722,7 +731,7 @@ class Handler(object):
 
     def _save_datum(self, descriptor, step, datum, processing_type, dataset_name):
         if self._meta_optimizer_inference_is_performed:
-            file_name = self._get_optimizer_inference_file_name(processing_type)
+            file_name = self._get_optimizer_inference_file_name(processing_type, descriptor)
         else:
             if processing_type == 'train':
                 file_name = self._file_names['train']['results'][descriptor]

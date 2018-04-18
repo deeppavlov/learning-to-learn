@@ -542,6 +542,7 @@ class ResNet4Lstm(Meta):
         if self._regime == 'train':
             self._learning_rate_for_optimizer_training = tf.placeholder(
                 tf.float32, name='learning_rate_for_optimizer_training')
+            self._hooks['learning_rate_for_optimizer_training'] = self._learning_rate_for_optimizer_training
             if self._optimizer_for_opt_type == 'adam':
                 self._optimizer_for_optimizer_training = tf.train.AdamOptimizer(
                     learning_rate=self._learning_rate_for_optimizer_training)

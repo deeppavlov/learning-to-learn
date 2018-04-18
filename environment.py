@@ -512,7 +512,7 @@ class Environment(object):
                     to_be_collected_while_training=construct(default_collected_while_training),
                     printed_result_types=self.put_result_types_in_correct_order(
                         ['loss']),
-                    printed_controllers=[],
+                    printed_controllers=['learning_rate'],
                     train_tensor_schedule=construct(tensor_schedule),
                 )
             )
@@ -810,8 +810,10 @@ class Environment(object):
         for key, value in kwargs.items():
             d[key] = value
 
-    def init_meta_optimizer_training_storage(self, opt_inf_pupil_names=None, train_init=None, opt_inf_init=None):
-        self._storage = dict()
+    def init_meta_optimizer_training_storage(self, opt_inf_pupil_names=None, train_init=None,
+                                             opt_inf_init=None, wipe_storage=False):
+        if self._storage is None or wipe_storage:
+            self._storage = dict()
         if train_init is not None:
             self._storage['train'] = construct(train_init)
         if opt_inf_init is not None and opt_inf_pupil_names is not None:
@@ -819,6 +821,7 @@ class Environment(object):
                 self._storage[name] = construct(opt_inf_init)
 
     def append_to_storage(self, dataset_name, **kwargs):
+        # print("(Environment.append_to_storage)self._storage:", self._storage)
         if dataset_name is not None:
             d = self._storage[dataset_name]
         else:
@@ -1244,22 +1247,25 @@ class Environment(object):
                batch_generator_class,
                with_meta_optimizer,
                init_step=0,
-               pupil_name=None):
+               storage=None):
         """It is a method that does actual training and responsible for one training pass through dataset. It is called
         from train method (maybe several times)
         Args:
             kwargs should include all entries defined in self._pupil_default_training"""
         train_specs = construct(run_specs['train_specs'])
-        print("(Environment._train)train_specs['train_batch_kwargs']:", train_specs['train_batch_kwargs'])
+        # print("(Environment._train)train_specs['train_batch_kwargs']:", train_specs['train_batch_kwargs'])
         schedule = construct(run_specs['schedule'])
         step = init_step
 
+        if storage is None:
+            storage = self._storage
         # creating batch generator
 
         # resetting step in control_storage
-        self.set_in_storage(step=step)
+        storage['step'] = step
+        # self.set_in_storage(step=step)
         if not with_meta_optimizer:
-            learning_rate_controller = Controller(self._storage,
+            learning_rate_controller = Controller(storage,
                                                   train_specs['learning_rate'])
         train_feed_dict_additions = train_specs['additions_to_feed_dict']
         validation_additional_feed_dict = train_specs['validation_additions_to_feed_dict']
@@ -1267,12 +1273,12 @@ class Environment(object):
         # print('train_feed_dict_additions:', train_feed_dict_additions)
         additional_controllers = list()
         for addition in train_feed_dict_additions:
-            print("(Environment._train)addition:", addition)
-            additional_controllers.append(Controller(self._storage, addition['value']))
+            # print("(Environment._train)addition:", addition)
+            additional_controllers.append(Controller(storage, addition['value']))
 
         if train_specs['stop']['type'] == 'limit_steps':
             train_specs['stop']['limit'] += init_step
-        should_continue = Controller(self._storage, train_specs['stop'])
+        should_continue = Controller(storage, train_specs['stop'])
 
         to_be_collected_while_training = schedule['to_be_collected_while_training']
         collect_interval = to_be_collected_while_training['results_collect_interval']
@@ -1280,21 +1286,21 @@ class Environment(object):
         example_per_print = to_be_collected_while_training['example_per_print']
 
         if train_specs['no_validation'] or collect_interval is None:
-            it_is_time_for_validation = Controller(self._storage,
+            it_is_time_for_validation = Controller(storage,
                                                    {'type': 'always_false'})
-            it_is_time_for_example = Controller(self._storage,
+            it_is_time_for_example = Controller(storage,
                                                 {'type': 'always_false'})
         else:
             valid_period = collect_interval * print_per_collected
-            it_is_time_for_validation = Controller(self._storage,
+            it_is_time_for_validation = Controller(storage,
                                                    {'type': 'periodic_truth',
                                                     'period': valid_period})
             if example_per_print is None:
-                it_is_time_for_example = Controller(self._storage,
+                it_is_time_for_example = Controller(storage,
                                                     {'type': 'always_false'})
             else:
                 example_period = valid_period * example_per_print
-                it_is_time_for_example = Controller(self._storage,
+                it_is_time_for_example = Controller(storage,
                                                     {'type': 'periodic_truth',
                                                      'period': example_period})
 
@@ -1302,19 +1308,19 @@ class Environment(object):
             if train_specs['checkpoint_steps']['type'] == 'true_on_steps':
                 for idx in range(len(train_specs['checkpoint_steps']['steps'])):
                     train_specs['checkpoint_steps']['steps'][idx] += init_step
-            it_is_time_to_create_checkpoint = Controller(self._storage, train_specs['checkpoint_steps'])
+            it_is_time_to_create_checkpoint = Controller(storage, train_specs['checkpoint_steps'])
         else:
-            it_is_time_to_create_checkpoint = Controller(self._storage,
+            it_is_time_to_create_checkpoint = Controller(storage,
                                                          {'type': 'always_false'})
 
-        batch_size_controller = Controller(self._storage, train_specs['batch_size'])
+        batch_size_controller = Controller(storage, train_specs['batch_size'])
         batch_size_change_tracker_specs = Controller.create_change_tracking_specifications(train_specs['batch_size'])
-        batch_size_should_change = Controller(self._storage, batch_size_change_tracker_specs)
+        batch_size_should_change = Controller(storage, batch_size_change_tracker_specs)
 
         if train_specs['debug'] is not None:
-            should_start_debugging = Controller(self._storage, train_specs['debug'])
+            should_start_debugging = Controller(storage, train_specs['debug'])
         else:
-            should_start_debugging = Controller(self._storage,
+            should_start_debugging = Controller(storage,
                                                 {'type': 'true_on_steps',
                                                  'steps': []})
 
@@ -1323,7 +1329,7 @@ class Environment(object):
         for key, batch_arg in train_specs['train_batch_kwargs'].items():
             if isinstance(batch_arg, dict):
                 if 'type' in batch_arg:
-                    train_batch_kwargs[key] = Controller(self._storage, batch_arg)
+                    train_batch_kwargs[key] = Controller(storage, batch_arg)
                     train_batch_kwargs_controller_specs.append(batch_arg)
                 else:
                     train_batch_kwargs[key] = batch_arg
@@ -1331,7 +1337,7 @@ class Environment(object):
                 train_batch_kwargs[key] = batch_arg
         change_tracker_specs = Controller.create_change_tracking_specifications(
             train_batch_kwargs_controller_specs)
-        batch_generator_specs_should_change = Controller(self._storage, change_tracker_specs)
+        batch_generator_specs_should_change = Controller(storage, change_tracker_specs)
 
         if not with_meta_optimizer:
             controllers = [learning_rate_controller]
@@ -1351,7 +1357,7 @@ class Environment(object):
 
         batch_size = batch_size_controller.get()
         tb_kwargs = self._build_batch_kwargs(train_batch_kwargs)
-        print("(Environment._train)tb_kwargs:", tb_kwargs)
+        # print("(Environment._train)tb_kwargs:", tb_kwargs)
         train_batches = batch_generator_class(train_specs['train_dataset'][0], batch_size, **tb_kwargs)
         feed_dict = dict()
         while should_continue.get():
@@ -1432,7 +1438,7 @@ class Environment(object):
                             training_step=step,
                             additional_feed_dict=valid_add_feed_dict)
             step += 1
-            self.set_in_storage(step=step)
+            storage['step'] = step
         return step
 
     def train(
@@ -1737,6 +1743,7 @@ class Environment(object):
         optimizer_grad_batch_gens = list()
         batch_size = batch_size_controller.get()
         tb_kwargs = self._build_batch_kwargs(train_batch_kwargs)
+        # print("(Environment._reset_exercises)tb_kwargs:", tb_kwargs)
         # print("(Environment._reset_exercises)restore_paths_datasets_map:", restore_paths_datasets_map)
         # print("(Environment._reset_exercises)datasets:", datasets)
         for idx, (saver, pupil_trainable_initializer, path) in enumerate(
@@ -1836,7 +1843,7 @@ class Environment(object):
         for addition in train_feed_dict_additions:
             # print("(Environment._train_optimizer)addition:", addition)
             additional_controllers.append(Controller(self._storage, addition['value']))
-
+        # print("(Environment._train_optimizer)additional_controllers:", [ac.name for ac in additional_controllers])
         if train_specs['stop']['type'] == 'limit_steps':
             train_specs['stop']['limit'] += init_step
         should_continue = Controller(self._storage, train_specs['stop'])
@@ -1928,25 +1935,30 @@ class Environment(object):
 
             learning_rate = learning_rate_controller.get()
             feed_dict[self._hooks['learning_rate_for_optimizer_training']] = learning_rate
-
+            for addition, add_controller in zip(train_feed_dict_additions, additional_controllers):
+                feed_dict[self._hooks[addition['placeholder']]] = add_controller.get()
             # print('(Environment._train)self._hooks:', self._hooks)
             train_operations = self._handler.get_tensors('train_meta_optimizer', step)
             # print('train_operations:', train_operations)
             # print('feed_dict:', feed_dict)
-
+            # print("(Environment._train_optimizer)feed_dict:", feed_dict)
             train_res = self._session.run(train_operations, feed_dict=feed_dict)
             # here loss is given in bits per input (BPI)
 
             self._handler.process_results(step, train_res, regime='train')
             if it_is_time_for_opt_inf.get():
-                for pupil_name, path in optimizer_inference['opt_inf_pupil_restore_paths'].items():
+                for idx, (pupil_name, path) in enumerate(optimizer_inference['opt_inf_pupil_restore_paths'].items()):
                     # print('\nOptimizer inference on pupil "%s"' % pupil_name)
+                    # print("(Environment._train_optimizer)optimizer_inference['opt_inf_train_datasets']:",
+                    #       optimizer_inference['opt_inf_train_datasets'])
+                    # print("(Environment._train_optimizer)optimizer_inference['opt_inf_validation_datasets']:",
+                    #       optimizer_inference['opt_inf_validation_datasets'])
                     run_specs = self._create_train_method_run_specs_from_meta_optimizer_train_method_arguments(
                         train_specs,
                         optimizer_inference,
                         schedule,
-                        optimizer_inference['opt_inf_train_datasets']['pupil_name'],
-                        optimizer_inference['opt_inf_validation_datasets']['pupil_name']
+                        optimizer_inference['opt_inf_train_datasets'][idx],
+                        optimizer_inference['opt_inf_validation_datasets'][idx]
                     )
                     self._restore_pupil(path)
                     self._handler.set_pupil_name(pupil_name)
@@ -1957,7 +1969,8 @@ class Environment(object):
                         None,
                         batch_generator_class,
                         True,
-                        init_step=0
+                        init_step=0,
+                        storage=self._storage[pupil_name]
                     )
                     self._handler.set_pupil_name(None)
                     self._handler.set_meta_optimizer_training_step(None)

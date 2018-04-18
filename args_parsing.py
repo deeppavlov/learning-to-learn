@@ -57,7 +57,7 @@ def process_abbreviation_in_1_entry(key, value, method_name):
         set_controller_name_in_specs(new_value, 'optimizer_inference_num_steps')
 
     if method_name == 'train' or 'train_optimizer':
-        if key == 'additions_to_feed_dict':
+        if key == 'additions_to_feed_dict' or key == 'opt_inf_additions_to_feed_dict':
             # print('inside additions_to_feed_dict shortcuts processing')
             if new_value is not None:
                 for addition in new_value:
@@ -135,6 +135,12 @@ def process_batch_kwargs_shortcuts(set_of_kwargs, method_name):
             if 'vocabulary' not in set_of_kwargs['valid_batch_kwargs']:
                 set_of_kwargs['valid_batch_kwargs']['vocabulary'] = list(
                     set_of_kwargs['train_batch_kwargs']['vocabulary'])
+        if 'num_unrollings' in set_of_kwargs:
+            if 'num_unrollings' not in set_of_kwargs['train_batch_kwargs']:
+                set_of_kwargs['train_batch_kwargs']['num_unrollings'] = set_of_kwargs['num_unrollings']
+            if 'num_unrollings' not in set_of_kwargs['valid_batch_kwargs']:
+                set_of_kwargs['valid_batch_kwargs'] = {'num_unrollings': 1}
+            del set_of_kwargs['num_unrollings']
 
 
 def process_datasets_shortcuts(env_instance,
@@ -242,14 +248,14 @@ def process_standard_combination_of_list_of_dataset_abbreviations(
     # print('(process_standard_combination_of_list_of_dataset_abbreviations)taken_names:', taken_names)
     # print('(process_standard_combination_of_list_of_dataset_abbreviations)checked_keys:', checked_keys)
     if checked_keys[0] in set_of_kwargs:
-        taken_names.extend(list(set_of_kwargs['train_dataset'].keys()))
-        ret = set_of_kwargs['train_datasets']
+        taken_names.extend([ds[1] for ds in set_of_kwargs[checked_keys[0]]])
+        ret = set_of_kwargs[checked_keys[0]]
     elif checked_keys[1] in set_of_kwargs:
-        ret = process_shortcut_with_dataset_names(env_instance, set_of_kwargs, 'train_dataset_names')
+        ret = process_shortcut_with_dataset_names(env_instance, set_of_kwargs, checked_keys[1])
     elif checked_keys[2] in set_of_kwargs:
-        ret = process_shortcut_with_dataset_texts(set_of_kwargs, taken_names, 'train_dataset_texts')
+        ret = process_shortcut_with_dataset_texts(set_of_kwargs, taken_names, checked_keys[2])
     elif checked_keys[3] in set_of_kwargs:
-        ret = process_shortcut_with_dataset_filename(set_of_kwargs, taken_names, 'train_dataset_filenames')
+        ret = process_shortcut_with_dataset_filename(set_of_kwargs, taken_names, checked_keys[3])
     else:
         ret = None
     _ = remove_keys_from_dictionary(

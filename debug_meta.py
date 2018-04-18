@@ -83,7 +83,10 @@ env.train_optimizer(
     opt_inf_stop=10,
     opt_inf_pupil_restore_paths={'ignoramus': 'debug_empty_meta_optimizer/not_changing_variables_issue/checkpoints/0'},
     opt_inf_additions_to_feed_dict=opt_inf_add_feed,
-    opt_inf_validation_texts=[valid_text],
+    opt_inf_validation_dataset_texts=[valid_text],
+    opt_inf_train_dataset_texts=[train_text],
     validation_additions_to_feed_dict=valid_add_feed,
-    vocabulary=vocabulary
+    vocabulary=vocabulary,
+    batch_size=32,
+    num_unrollings=3
 )
