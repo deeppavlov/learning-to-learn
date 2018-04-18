@@ -1629,7 +1629,9 @@ class Environment(object):
         run_specs_set = tmp_output['run']
         all_tensor_aliases = self._all_tensor_aliases_from_train_meta_optimizer_method_arguments(
             [(start_specs, run_specs_set)])
-        # print('(Environment.train)all_tensor_aliases:', all_tensor_aliases)
+        # print('(Environment.train_optimizer)all_tensor_aliases:', all_tensor_aliases)
+        # print("(Environment.train_optimizer)run_specs_set[0]['optimizer_inference']['valid_batch_kwargs']:",
+        #       run_specs_set[0]['optimizer_inference']['valid_batch_kwargs'])
         self._create_missing_hooks(all_tensor_aliases)
 
         if start_session:
@@ -1783,6 +1785,10 @@ class Environment(object):
             train_dataset,
             validation_dataset
     ):
+        # print("(Environment._create_train_method_run_specs_from_meta_optimizer_train_method_arguments)"
+        #       "train_specs['train_batch_kwargs']:", train_specs['train_batch_kwargs'])
+        # print("(Environment._create_train_method_run_specs_from_meta_optimizer_train_method_arguments)"
+        #       "optimizer_inference['valid_batch_kwargs']:", optimizer_inference['valid_batch_kwargs'])
         new_train_specs = dict(
             learning_rate=None,
             additions_to_feed_dict=optimizer_inference['opt_inf_additions_to_feed_dict'],
@@ -1873,6 +1879,7 @@ class Environment(object):
             it_is_time_to_create_checkpoint = Controller(self._storage,
                                                          {'type': 'always_false'})
 
+        # print("(Environment._train_optimizer)train_specs['reset_period']:", train_specs['reset_period'])
         it_is_time_to_reset_exercises = Controller(self._storage, train_specs['reset_period'])
 
         if train_specs['debug'] is not None:
@@ -1981,7 +1988,7 @@ class Environment(object):
                 pupil_grad_eval_batch_gens, optimizer_grad_batch_gens = self._reset_exercises(
                     train_specs['num_exercises'],
                     train_specs['pupil_restore_paths'],
-                    train_specs['datasets'],
+                    train_specs['train_datasets'],
                     batch_generator_class,
                     batch_size_controller,
                     train_batch_kwargs,

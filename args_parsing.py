@@ -52,7 +52,7 @@ def process_abbreviation_in_1_entry(key, value, method_name):
         if isinstance(value, int):
             new_value = {
                 'type': 'periodic_truth',
-                'limit': value
+                'period': value
             }
         set_controller_name_in_specs(new_value, 'optimizer_inference_num_steps')
 
@@ -90,6 +90,8 @@ def process_abbreviations(env_instance, set_of_kwargs, method_name):
             set_of_kwargs['summary'] = False
     process_datasets_shortcuts(env_instance, set_of_kwargs)
     process_batch_kwargs_shortcuts(set_of_kwargs, method_name)
+    # print("(args_parsing.process_abbreviations)set_of_kwargs['valid_batch_kwargs']:",
+    #       set_of_kwargs['valid_batch_kwargs'])
 
 
 def process_batch_kwargs_shortcuts(set_of_kwargs, method_name):
@@ -108,7 +110,7 @@ def process_batch_kwargs_shortcuts(set_of_kwargs, method_name):
             set_of_kwargs['valid_batch_kwargs'] = dict()
         if 'num_unrollings' in set_of_kwargs['train_batch_kwargs']:
             if 'num_unrollings' not in set_of_kwargs['valid_batch_kwargs']:
-                set_of_kwargs['valid_batch_kwargs'] = {'num_unrollings': 1}
+                set_of_kwargs['valid_batch_kwargs']['num_unrollings'] = 1
         if 'vocabulary' in set_of_kwargs['train_batch_kwargs']:
             if 'vocabulary' not in set_of_kwargs['valid_batch_kwargs']:
                 set_of_kwargs['valid_batch_kwargs']['vocabulary'] = list(
@@ -133,13 +135,16 @@ def process_batch_kwargs_shortcuts(set_of_kwargs, method_name):
             set_of_kwargs['valid_batch_kwargs'] = dict()
         if 'vocabulary' in set_of_kwargs['train_batch_kwargs']:
             if 'vocabulary' not in set_of_kwargs['valid_batch_kwargs']:
+                # print("(args_parsing.process_batch_kwargs_shortcuts)entered valid batch kwargs setting")
                 set_of_kwargs['valid_batch_kwargs']['vocabulary'] = list(
                     set_of_kwargs['train_batch_kwargs']['vocabulary'])
+                # print("(args_parsing.process_batch_kwargs_shortcuts)set_of_kwargs['valid_batch_kwargs']:",
+                #       set_of_kwargs['valid_batch_kwargs'])
         if 'num_unrollings' in set_of_kwargs:
             if 'num_unrollings' not in set_of_kwargs['train_batch_kwargs']:
                 set_of_kwargs['train_batch_kwargs']['num_unrollings'] = set_of_kwargs['num_unrollings']
             if 'num_unrollings' not in set_of_kwargs['valid_batch_kwargs']:
-                set_of_kwargs['valid_batch_kwargs'] = {'num_unrollings': 1}
+                set_of_kwargs['valid_batch_kwargs']['num_unrollings'] = 1
             del set_of_kwargs['num_unrollings']
 
 
@@ -345,6 +350,7 @@ def parse_1_set_of_kwargs(env_instance,
     kwargs_to_parse = construct(kwargs_to_parse)
     process_abbreviations(env_instance, kwargs_to_parse, method_name)
     # print("(parse_1_set_of_kwargs)kwargs_to_parse:", kwargs_to_parse)
+    # print("(parse_1_set_of_kwargs)kwargs_to_parse['valid_batch_kwargs']:", kwargs_to_parse['valid_batch_kwargs'])
     if old_arguments is None:
         current_arguments = env_instance.get_default_method_parameters(method_name)
         if only_repeated:

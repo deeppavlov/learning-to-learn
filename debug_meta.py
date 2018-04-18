@@ -57,7 +57,7 @@ valid_add_feed = [
 # env.train(
 #     with_meta_optimizer=True,
 #     save_path='debug_empty_meta_optimizer/not_changing_variables_issue',
-#     batch_size=64,
+#     batch_size=32,
 #     num_unrollings=3,
 #     vocabulary=vocabulary,
 #     checkpoint_steps=2000,
