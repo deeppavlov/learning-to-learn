@@ -370,9 +370,9 @@ class Environment(object):
         }
 
         optimizer_inference_default_collected_while_training = {
-            'results_collect_interval': 10,
-            'print_per_collected': 1,
-            'example_per_print': 1
+            'opt_inf_results_collect_interval': 10,
+            'opt_inf_print_per_collected': 1,
+            'opt_inf_example_per_print': 1
         }
 
         default_collected_on_validation = {}
@@ -1242,13 +1242,16 @@ class Environment(object):
             valid_add_feed_dict[self._hooks[addition['placeholder']]] = addition['value']
         return valid_add_feed_dict
 
-    def _train(self,
-               run_specs,
-               checkpoints_path,
-               batch_generator_class,
-               with_meta_optimizer,
-               init_step=0,
-               storage=None):
+    def _train(
+            self,
+            run_specs,
+            checkpoints_path,
+            batch_generator_class,
+            with_meta_optimizer,
+            init_step=0,
+            storage=None,
+            meta_optimizer_training_is_performed=False
+        ):
         """It is a method that does actual training and responsible for one training pass through dataset. It is called
         from train method (maybe several times)
         Args:
@@ -1806,8 +1809,16 @@ class Environment(object):
             validate_tokens_by_chars=optimizer_inference['validate_tokens_by_chars'],
             no_validation=optimizer_inference['no_validation']
         )
+        collected_while_training = dict(
+            results_collect_interval=optimizer_inference[
+                'opt_inf_to_be_collected_while_training']['opt_inf_results_collect_interval'],
+            print_per_collected=optimizer_inference[
+                'opt_inf_to_be_collected_while_training']['opt_inf_print_per_collected'],
+            example_per_print=optimizer_inference[
+                'opt_inf_to_be_collected_while_training']['opt_inf_example_per_print']
+        )
         new_schedule = dict(
-            to_be_collected_while_training=optimizer_inference['opt_inf_to_be_collected_while_training'],
+            to_be_collected_while_training=collected_while_training,
             printed_result_types=schedule['printed_result_types'],
             printed_controllers=schedule['printed_controllers'],
             fuses=optimizer_inference['fuses'],

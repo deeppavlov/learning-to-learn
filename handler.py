@@ -254,6 +254,10 @@ class Handler(object):
             self._meta_optimizer_training_step = None
 
             self._create_train_fields()
+            self._opt_train_results_collect_interval = None
+            self._opt_train_print_per_collected = None
+            self._opt_train_example_per_print = None
+
             self._opt_inf_pupil_names = None
             self._meta_optimizer_train_result_types = list()
             print_order_additions = list()
@@ -375,8 +379,9 @@ class Handler(object):
                 self._add_opt_inf_results_file_name_templates(
                     prefix=pupil_name, key_path=[pupil_name, 'validation'], postfix='validation')
 
-        self._results_collect_interval = schedule['to_be_collected_while_training']['results_collect_interval']
-        if self._results_collect_interval is not None:
+        self._opt_train_results_collect_interval = schedule['to_be_collected_while_training']['results_collect_interval']
+        # print("(Handler.set_optimizer_train_schedule)self._results_collect_interval:", self._results_collect_interval)
+        if self._opt_train_results_collect_interval is not None:
             if self._result_types is not None:
                 self._save_to_file = True
                 self._save_to_storage = True
@@ -386,7 +391,7 @@ class Handler(object):
         else:
             self._save_to_file = False
             self._save_to_storage = False
-        self._print_per_collected = schedule['to_be_collected_while_training']['print_per_collected']
+        self._opt_train_print_per_collected = schedule['to_be_collected_while_training']['print_per_collected']
 
         self._train_tensor_schedule = schedule['train_tensor_schedule']
 
@@ -417,9 +422,10 @@ class Handler(object):
             self._opt_inf_pupil_names,
             opt_inf_init=opt_inf_init
         )
-        self._opt_inf_results_collect_interval = opt_inf_to_be_collected_while_training['results_collect_interval']
-        self._opt_inf_print_per_collected = opt_inf_to_be_collected_while_training['print_per_collected']
-        self._opt_inf_example_per_print = opt_inf_to_be_collected_while_training['example_per_print']
+        self._opt_inf_results_collect_interval = opt_inf_to_be_collected_while_training[
+            'opt_inf_results_collect_interval']
+        self._opt_inf_print_per_collected = opt_inf_to_be_collected_while_training['opt_inf_print_per_collected']
+        self._opt_inf_example_per_print = opt_inf_to_be_collected_while_training['opt_inf_example_per_print']
 
         self._printed_controllers = schedule['printed_controllers']
 
@@ -1199,9 +1205,10 @@ class Handler(object):
         if regime == 'train_meta_optimizer':
             step = args[0]
             res = args[1]
+            # print("(Handler.process_results)self._results_collect_interval:", self._results_collect_interval)
             self._process_train_results(
                 step, res, self._meta_optimizer_train_result_types,
-                self._opt_inf_results_collect_interval, self._opt_inf_print_per_collected,
+                self._opt_train_results_collect_interval, self._opt_train_print_per_collected,
                 msg='results on meta optimizer train op'
             )
 

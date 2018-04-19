@@ -80,7 +80,7 @@ env.train_optimizer(
     reset_period=10,
     train_dataset_texts=[train_text],
     opt_inf_is_performed=True,
-    opt_inf_stop=10,
+    opt_inf_stop=100,
     opt_inf_pupil_restore_paths={'ignoramus': 'debug_empty_meta_optimizer/not_changing_variables_issue/checkpoints/0'},
     opt_inf_additions_to_feed_dict=opt_inf_add_feed,
     opt_inf_validation_dataset_texts=[valid_text],
@@ -88,5 +88,11 @@ env.train_optimizer(
     validation_additions_to_feed_dict=valid_add_feed,
     vocabulary=vocabulary,
     batch_size=32,
-    num_unrollings=3
+    num_unrollings=3,
+    learning_rate={'type': 'exponential_decay',
+                   'init': .001,
+                   'decay': .5,
+                   'period': 400},
+    results_collect_interval=30,
+    opt_inf_results_collect_interval=1
 )
