@@ -857,9 +857,10 @@ class Environment(object):
         elif model_type == 'meta_optimizer':
             self._hooks['saver'].save(self._session, path)
 
-    def _restore_pupil(self, restore_path):
+    def _restore_pupil(self, restore_path, verbose=True):
         if restore_path is not None:
-            print('restoring pupil from %s' % restore_path)
+            if verbose:
+                print('restoring pupil from %s' % restore_path)
             self._hooks['saver'].restore(self._session, restore_path)
 
     def _restore_meta_optimizer(self, restore_path):
@@ -1952,7 +1953,7 @@ class Environment(object):
             train_res = self._session.run(train_operations, feed_dict=feed_dict)
             # here loss is given in bits per input (BPI)
 
-            self._handler.process_results(step, train_res, regime='train')
+            self._handler.process_results(step, train_res, regime='train_meta_optimizer')
             if it_is_time_for_opt_inf.get():
                 for idx, (pupil_name, path) in enumerate(optimizer_inference['opt_inf_pupil_restore_paths'].items()):
                     # print('\nOptimizer inference on pupil "%s"' % pupil_name)
@@ -1967,10 +1968,11 @@ class Environment(object):
                         optimizer_inference['opt_inf_train_datasets'][idx],
                         optimizer_inference['opt_inf_validation_datasets'][idx]
                     )
+                    print('OPTIMIZER INFERENCE ON PUPIL %s\n' % pupil_name + '*' * 40)
                     self._restore_pupil(path)
                     self._handler.set_pupil_name(pupil_name)
                     self._handler.set_meta_optimizer_training_step(step)
-                    self._handler.set_meta_optimizer_inference_flag(True)
+                    self._handler.set_meta_optimizer_inference_flags(True, False)
                     _ = self._train(
                         run_specs,
                         None,
@@ -1979,9 +1981,10 @@ class Environment(object):
                         init_step=0,
                         storage=self._storage[pupil_name]
                     )
+                    print('*' * 40)
                     self._handler.set_pupil_name(None)
                     self._handler.set_meta_optimizer_training_step(None)
-                    self._handler.set_meta_optimizer_inference_flag(False)
+                    self._handler.set_meta_optimizer_inference_flags(False, False)
 
             step += 1
             if it_is_time_to_reset_exercises.get():

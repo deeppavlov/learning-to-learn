@@ -290,6 +290,8 @@ class Handler(object):
                 wipe_storage=True
             )
 
+            self._opt_inf_print_has_already_been_performed = False
+
         # The order in which tensors are presented in the list returned by get_additional_tensors method
         # It is a list. Each element is either tensor alias or a tuple if corresponding hook is pointing to a list of
         # tensors. Such tuple contains tensor alias, and sizes of nested lists
@@ -300,8 +302,9 @@ class Handler(object):
     def set_meta_optimizer_training_step(self, step):
         self._meta_optimizer_training_step = step
 
-    def set_meta_optimizer_inference_flag(self, flag):
-        self._meta_optimizer_inference_is_performed = flag
+    def set_meta_optimizer_inference_flags(self, moif, oiphabp):
+        self._meta_optimizer_inference_is_performed = moif
+        self._opt_inf_print_has_already_been_performed = oiphabp
 
     def _add_validation_experiment_instruments(self, dataset_name):
         self._add_results_file_name_set(self._result_types, key_path=[dataset_name], postfix=dataset_name)
@@ -759,6 +762,7 @@ class Handler(object):
                            data,
                            processing_type='train',
                            dataset_name=None):
+        # print("(Handler._save_several_data)descriptors:", descriptors)
         for descriptor, datum in zip(descriptors, data):
             if datum is not None:
                 self._save_datum(descriptor, step, datum, processing_type, dataset_name)
@@ -833,6 +837,7 @@ class Handler(object):
             for res_type in self._meta_optimizer_train_result_types:
                 tensors.append(self._hooks[res_type])
                 current['tensors'][res_type] = [pointer, pointer + 1]
+                pointer += 1
             self._last_run_tensor_order['basic']['borders'] = [start, pointer]
             if self._train_tensor_schedule is not None:
                 additional_tensors = self._get_additional_tensors(self._train_tensor_schedule, step, pointer)
@@ -1034,61 +1039,30 @@ class Handler(object):
                                msg='results on train dataset'):
         # print('step:', step)
         # print('train_res:', train_res)
-        #print(self._last_run_tensor_order)
+        # print("(Handler._process_train_results)self._last_run_tensor_order:", self._last_run_tensor_order)
         basic_borders = self._last_run_tensor_order['basic']['borders']
         tmp = train_res[basic_borders[0]+1:basic_borders[1]]
-        # if self._bpc:
-        #     [loss, perplexity, accuracy, bpc] = tmp
-        # else:
-        #     [loss, perplexity, accuracy] = tmp
-
+        # print("(Handler._process_train_results)result_types:", result_types)
         res_dict = self._toss_train_results(tmp, result_types)
 
         if self._printed_result_types is not None:
             if results_collect_interval is not None:
                 if step % (results_collect_interval * print_per_collected) == 0:
-                    # if self._bpc:
-                    #     self._print_standard_report(indents=[2, 0],
-                    #                                 step=step,
-                    #                                 loss=loss,
-                    #                                 bpc=bpc,
-                    #                                 perplexity=perplexity,
-                    #                                 accuracy=accuracy,
-                    #                                 message='results on train dataset')
-                    # else:
-                    #     self._print_standard_report(indents=[2, 0],
-                    #                                 step=step,
-                    #                                 loss=loss,
-                    #                                 perplexity=perplexity,
-                    #                                 accuracy=accuracy,
-                    #                                 message='results on train dataset')
+                    if self._meta_optimizer_inference_is_performed and \
+                            not self._opt_inf_print_has_already_been_performed:
+                        indents = [0, 0]
+                        self._opt_inf_print_has_already_been_performed = True
+                    else:
+                        indents = [2, 0]
+                    # print("(Handler._process_train_results)res_dict:", res_dict)
                     self._print_standard_report(
-                        indents=[2, 0],
+                        indents=indents,
                         step=step,
                         message=msg,
                         **res_dict
                     )
         if results_collect_interval is not None:
             if step % results_collect_interval == 0:
-                # if self._bpc:
-                #     if self._save_path is not None:
-                #         # self._save_several_data(['loss', 'perplexity', 'accuracy', 'bpc'],
-                #         #                         step,
-                #         #                         [loss, perplexity, accuracy, bpc])
-                #         self._save_several_data(self._result_types,
-                #                                 step,
-                #                                 tmp)
-                #     self._environment_instance.append_to_storage('train',
-                #                                                  steps=step,
-                #                                                  **res_dict)
-                # else:
-                #     if self._save_path is not None:
-                #         self._save_several_data(['loss', 'perplexity', 'accuracy'], step, [loss, perplexity, accuracy])
-                #     self._environment_instance.append_to_storage('train',
-                #                                                  loss=loss,
-                #                                                  perplexity=perplexity,
-                #                                                  accuracy=accuracy,
-                #                                                  steps=step)
                 self._save_several_data(result_types,
                                         step,
                                         tmp)

@@ -532,8 +532,8 @@ class Meta(object):
                         )
                         self._create_permutation_matrices(self._num_ex_on_gpus[gpu_idx], gpu_idx)
                         tmp_states = optimizer_states
-                        one_gpu_end_loss = 0
-                        one_gpu_start_loss = 0
+                        one_gpu_end_losses = list()
+                        one_gpu_start_losses = list()
                         new_pupil_trainable_by_gpu = list()
                         # print("(Meta._train_graph)pupil_grad_eval_inputs:", pupil_grad_eval_inputs)
                         for unr_idx in range(self._num_optimizer_unrollings):
@@ -557,9 +557,10 @@ class Meta(object):
                                 end_loss, _, optimizer_grad_pupil_storage[gpu_idx] = self._pupil.loss_and_opt_ins(
                                     optimizer_grad_inputs[gpu_idx][unr_idx], optimizer_grad_labels[gpu_idx][unr_idx],
                                     optimizer_grad_pupil_storage[gpu_idx], opt_ins=npt)
-                                one_gpu_start_loss += start_loss
-                                one_gpu_end_loss += end_loss
-                        one_gpu_end_loss += self._l2_loss(self._regularization_rate)
+                                one_gpu_start_losses.append(start_loss)
+                                one_gpu_end_losses.append(end_loss)
+                        one_gpu_end_loss = tf.reduce_mean(one_gpu_end_losses) + self._l2_loss(self._regularization_rate)
+                        one_gpu_start_loss = tf.reduce_mean(one_gpu_start_losses)
                         new_pupil_trainable = self._retrieve_and_unstack_trainable_variables(
                             self._num_exercises, new_pupil_trainable_by_gpu)
                         pupil_grad_eval_pupil_storage = self._unstack_storages(
@@ -594,6 +595,9 @@ class Meta(object):
 
                     all_start_losses = tf.concat(start_losses_by_gpu, 0)
                     all_end_losses = tf.concat(end_losses_by_gpu, 0)
+                    # with tf.device('/cpu:0'):
+                    #     all_start_losses = tf.Print(
+                    #         all_start_losses, [all_start_losses], message="all_start_losses: ")
                     self._hooks['start_loss'] = tf.reduce_mean(all_start_losses)
                     self._hooks['end_loss'] = tf.reduce_mean(all_end_losses)
 

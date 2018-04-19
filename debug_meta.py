@@ -77,7 +77,7 @@ env.train_optimizer(
     save_path='meta_optimizer_training_debug',
     additions_to_feed_dict=train_opt_add_feed,
     pupil_restore_paths=['debug_empty_meta_optimizer/not_changing_variables_issue/checkpoints/0'],
-    reset_period=3,
+    reset_period=10,
     train_dataset_texts=[train_text],
     opt_inf_is_performed=True,
     opt_inf_stop=10,
