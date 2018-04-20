@@ -461,6 +461,11 @@ class Meta(object):
                             #         v['matrix_mods'],
                             #         [v['matrix_mods']],
                             #         message='\n' + k + '\nmatrix:\n')
+                            # with tf.device('/cpu:0'):
+                            #     v['matrix_mods'] = tf.Print(
+                            #         v['matrix_mods'], [v['matrix_mods']], message="(%s)v['matrix_mods']: " % k,
+                            #         summarize=10
+                            #     )
 
                     if 'bias' in v:
                         with tf.name_scope('bias'):
@@ -547,7 +552,7 @@ class Meta(object):
                                 # print("(Meta._train_graph)BEFORE OPTIMIZER CORE:")
                                 # print_optimizer_ins(optimizer_ins)
                                 optimizer_outs, tmp_states = self._optimizer_core(
-                                    optimizer_ins, tmp_states, gpu_idx)
+                                    optimizer_ins, tmp_states, gpu_idx, permute=self._permute)
                                 optimizer_outs = self._compose_phi_and_psi(optimizer_outs)
                                 optimizer_outs_with_mods = self._compose_mods(optimizer_outs)
                                 optimizer_outs_mods_are_applied = self._sub_mods(optimizer_outs_with_mods)
@@ -591,6 +596,7 @@ class Meta(object):
                     grads_and_vars = average_gradients(tower_grads)
                     grads, v = self._tune_gradients(grads_and_vars)
                     train_op = self._optimizer_for_optimizer_training.apply_gradients(zip(grads, v))
+
                     self._hooks['optimizer_train_op'] = train_op
 
                     all_start_losses = tf.concat(start_losses_by_gpu, 0)

@@ -394,6 +394,27 @@ class Lstm(Model):
             output_matrices = trainable['output_matrices']
             output_biases = trainable['output_biases']
 
+            # with tf.device('/cpu:0'):
+            #     embedding_matrix = tf.Print(
+            #         embedding_matrix, [embedding_matrix], message="\nembedding_matrix: ", summarize=10)
+            #     n_lstm_matrices = list()
+            #     for lstm_matrix in lstm_matrices:
+            #         n_lstm_matrices.append(tf.Print(
+            #             lstm_matrix, [lstm_matrix], message="lstm_matrix: ", summarize=10))
+            #     n_output_matrices = list()
+            #     for output_matrix in output_matrices:
+            #         n_output_matrices.append(tf.Print(
+            #             output_matrix, [output_matrix], message="output_matrix: ", summarize=10))
+            #     lstm_matrices = n_lstm_matrices
+            #     output_matrices = n_output_matrices
+            #     n_saved_states = list()
+            #     for layer_saved_states in saved_states:
+            #         n_saved_states.append([
+            #             tf.Print(layer_saved_states[0], [layer_saved_states[0]], message="h: ", summarize=10),
+            #             tf.Print(layer_saved_states[1], [layer_saved_states[1]], message="c: ", summarize=10)
+            #         ])
+            #     saved_states = n_saved_states
+
             inputs, labels = self._prepare_inputs_and_labels(inputs, labels)
 
             embeddings, opt_ins = self._embed(inputs, embedding_matrix)
@@ -546,7 +567,7 @@ class Lstm(Model):
                     # grads, _ = tf.clip_by_global_norm(grads, 1.)
                     self.train_op = optimizer.apply_gradients(zip(grads, v))
                     self._hooks['train_op'] = self.train_op
-                    self._hooks['reset_train_state'] = tf.group(*reset_state_ops)
+                    self._hooks['reset_pupil_train_state'] = tf.group(*reset_state_ops)
                     # composing predictions
                     preds_by_char = list()
                     # print('preds:', preds)
@@ -724,6 +745,9 @@ class Lstm(Model):
     def reset_storage(storage):
         return compose_reset_list(storage['states'])
 
+    def reset_self_train_storage(self):
+        return self.reset_storage(self._train_storage)
+
     def _add_train_storage(self):
         storage = self.create_storage(self._base_device, 'train_storage')
         for k, v in storage.items():
@@ -838,7 +862,7 @@ class Lstm(Model):
             validation_labels_prepared=None,
             validation_predictions=None,
             reset_validation_state=None,
-            reset_train_state=None,
+            reset_pupil_train_state=None,
             randomize_sample_state=None,
             dropout=None,
             saver=None)

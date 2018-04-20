@@ -1726,6 +1726,7 @@ class Environment(object):
             restore_paths_datasets_map,
             random_=True
     ):
+        print("EXERCISES RESET!")
         # print('(Environment._reset_exercises)restore_paths_datasets_map:', restore_paths_datasets_map)
         num_paths = len(pupil_restore_paths)
         if random_:
@@ -1776,7 +1777,7 @@ class Environment(object):
             )
 
         self._session.run(self._hooks['reset_permutation_matrices'])
-        self._session.run(self._hooks['reset_train_states'])
+        self._session.run(self._hooks['reset_optimizer_train_state'])
         self._session.run(self._hooks['reset_pupil_grad_eval_pupil_storage'])
         self._session.run(self._hooks['reset_optimizer_grad_pupil_storage'])
         return pupil_grad_eval_batch_gens, optimizer_grad_batch_gens
@@ -1870,17 +1871,18 @@ class Environment(object):
         collect_interval = to_be_collected_while_training['results_collect_interval']
         print_per_collected = to_be_collected_while_training['print_per_collected']
 
-        if optimizer_inference['opt_inf_is_performed'] is None:
-            it_is_time_for_opt_inf = Controller(
-                self._storage,
-                {'type': 'always_false'}
-            )
-        else:
+        if optimizer_inference['opt_inf_is_performed']:
             opt_inf_period = collect_interval * print_per_collected
             it_is_time_for_opt_inf = Controller(
                 self._storage,
                 {'type': 'periodic_truth',
                  'period': opt_inf_period})
+
+        else:
+            it_is_time_for_opt_inf = Controller(
+                self._storage,
+                {'type': 'always_false'}
+            )
         batch_size_controller = Controller(self._storage, train_specs['batch_size'])
         if train_specs['checkpoint_steps'] is not None and checkpoints_path is not None:
             if train_specs['checkpoint_steps']['type'] == 'true_on_steps':
@@ -1979,6 +1981,9 @@ class Environment(object):
                         optimizer_inference['opt_inf_train_datasets'][idx],
                         optimizer_inference['opt_inf_validation_datasets'][idx]
                     )
+                    # print("(Environment._train_optimizer)self._hooks:", self._hooks)
+                    self._session.run(self._hooks['reset_optimizer_inference_pupil_storage'])
+                    self._session.run(self._hooks['reset_optimizer_inference_state'])
                     print('OPTIMIZER INFERENCE ON PUPIL %s\n' % pupil_name + '*' * 40)
                     self._restore_pupil(path)
                     self._handler.set_pupil_name(pupil_name)

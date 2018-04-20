@@ -125,20 +125,23 @@ class ResNet4Lstm(Meta):
             matrices, biases = list(), list()
             in_ndims = sum(flatten(left)) + sum(flatten(target)) + sum(flatten(right)) + rnn_part_size
             out_ndims = sum(flatten(target)) + rnn_part_size
-            stddev = 2. / (in_ndims + res_size)**.5
+            stddev = .0001 / (in_ndims + res_size)**.5
             with tf.variable_scope('in_core'):
                 matrices.append(
                     tf.get_variable(
                         'matrix',
                         shape=[in_ndims, res_size],
-                        initializer=tf.truncated_normal_initializer(stddev=stddev)
+                        initializer=tf.truncated_normal_initializer(stddev=stddev),
+                        # initializer=tf.zeros_initializer(),
+                        # trainable=False
                     )
                 )
                 biases.append(
                     tf.get_variable(
                         'bias',
                         shape=[res_size],
-                        initializer=tf.zeros_initializer()
+                        initializer=tf.zeros_initializer(),
+                        # trainable=False
                     )
                 )
             with tf.variable_scope('out_core'):
@@ -147,13 +150,16 @@ class ResNet4Lstm(Meta):
                         'matrix',
                         shape=[res_size, out_ndims],
                         initializer=tf.truncated_normal_initializer(stddev=stddev)
+                        # initializer=tf.zeros_initializer(),
+                        # trainable=False
                     )
                 )
                 biases.append(
                     tf.get_variable(
                         'bias',
                         shape=[out_ndims],
-                        initializer=tf.zeros_initializer()
+                        initializer=tf.zeros_initializer(),
+                        # trainable=False
                     )
                 )
             for m in matrices:
@@ -173,8 +179,8 @@ class ResNet4Lstm(Meta):
                 vars['res_layers'] = list()
                 for res_idx, rnn_part in enumerate(self._rnn_for_res_layers):
                     with tf.variable_scope('layer_%s' % res_idx):
+                        res_layer_params = dict()
                         if self._emb_layer_is_present:
-                            res_layer_params = dict()
                             res_layer_params['embedding_layer'] = self._res_core_vars(
                                 [()],
                                 [embedding_layer],
@@ -264,7 +270,7 @@ class ResNet4Lstm(Meta):
         return padded
 
     @staticmethod
-    def _apply_res_core(vars, opt_ins, rnn_part, scope, target_dims):
+    def _apply_res_core(vars, opt_ins, rnn_part, target,  scope, target_dims):
         with tf.name_scope(scope):
             # print("\n(ResNet4Lstm._apply_res_core)rnn_part:", rnn_part)
             # print('(ResNet4Lstm._apply_res_core)opt_ins:', opt_ins)
@@ -279,6 +285,7 @@ class ResNet4Lstm(Meta):
                 # print('\n(ResNet4Lstm._apply_res_core)hs:', hs)
                 # print('(ResNet4Lstm._apply_res_core)m:', m)
                 hs = tf.nn.relu(custom_add(custom_matmul(hs, m), b))
+            hs += tf.concat(target + [rnn_part], -1)
             rnn_part_dim = hs.get_shape().as_list()[-1] - sum(target_dims)
             o, sigma, rnn_part = tf.split(hs, list(target_dims) + [rnn_part_dim], axis=-1)
             # print("(ResNet4Lstm._apply_res_core)rnn_part:", rnn_part)
@@ -293,10 +300,14 @@ class ResNet4Lstm(Meta):
                     ins['lstm_layer_0']['o_c'],
                     ins['lstm_layer_0']['sigma_c']
                 ]
+                target = [
+                    ins['embedding_layer']['o_c'],
+                    ins['embedding_layer']['sigma_c']
+                ]
                 # print('(ResNet4Lstm._apply_res_layer)core_inps:', core_inps)
                 # print('(ResNet4Lstm._apply_res_layer)res_vars:', res_vars)
                 o, sigma, emb_rnn_part = self._apply_res_core(
-                    res_vars['embedding_layer'], core_inps, rnn_part,
+                    res_vars['embedding_layer'], core_inps, rnn_part, target,
                     'embedding_layer', self._pupil_dims['embedding_layer'])
                 ins['embedding_layer']['o_c'] = o
                 ins['embedding_layer']['sigma_c'] = sigma
@@ -338,9 +349,14 @@ class ResNet4Lstm(Meta):
                     self._pad(ins['lstm_layer_%s' % layer_idx]['sigma_c'], 1),
                     *next_layer_tensors
                 ]
+                target = [
+                    ins['lstm_layer_%s' % layer_idx]['o_c'],
+                    ins['lstm_layer_%s' % layer_idx]['sigma_c']
+                ]
                 layer_name = 'lstm_layer_%s' % layer_idx
                 o, sigma, lstm_rnn_part = self._apply_res_core(
-                    res_vars[layer_name], core_inps, rnn_part, layer_name, self._pupil_dims['lstm_layers'][layer_idx])
+                    res_vars[layer_name], core_inps, rnn_part, target,
+                    layer_name, self._pupil_dims['lstm_layers'][layer_idx])
                 lstm_rnn_parts.append(lstm_rnn_part)
                 ins['lstm_layer_%s' % layer_idx]['o_c'] = o
                 ins['lstm_layer_%s' % layer_idx]['sigma_c'] = sigma
@@ -370,12 +386,17 @@ class ResNet4Lstm(Meta):
                     ins['output_layer_%s' % layer_idx]['sigma_c'],
                     *next_layer_tensors
                 ]
+                target = [
+                    ins['output_layer_%s' % layer_idx]['o_c'],
+                    ins['output_layer_%s' % layer_idx]['sigma_c']
+                ]
                 layer_name = 'output_layer_%s' % layer_idx
                 # print("(ResNet4Lstm._apply_res_layer)layer_idx:", layer_idx)
                 # print("(ResNet4Lstm._apply_res_layer)core_inps:", core_inps)
                 # print("(ResNet4Lstm._apply_res_layer)rnn_part:", rnn_part)
                 o, sigma, output_rnn_part = self._apply_res_core(
-                    res_vars[layer_name], core_inps, rnn_part, layer_name, self._pupil_dims['output_layers'][layer_idx])
+                    res_vars[layer_name], core_inps, rnn_part, target,
+                    layer_name, self._pupil_dims['output_layers'][layer_idx])
                 output_rnn_parts.append(output_rnn_part)
                 ins['output_layer_%s' % layer_idx]['o_c'] = o
                 ins['output_layer_%s' % layer_idx]['sigma_c'] = sigma
@@ -453,6 +474,7 @@ class ResNet4Lstm(Meta):
                  res_size=1000,
                  num_gpus=1,
                  regularization_rate=6e-6,
+                 permute=True,
                  regime='train',
                  optimizer_for_opt_type='adam'):
         self._pupil = pupil
@@ -471,6 +493,7 @@ class ResNet4Lstm(Meta):
         else:
             self._base_device = '/cpu:0'
         self._regularization_rate = regularization_rate
+        self._permute = permute
         self._regime = regime
 
         self._optimizer_for_opt_type = optimizer_for_opt_type
@@ -484,11 +507,12 @@ class ResNet4Lstm(Meta):
             optimizer_train_op=None,
             learning_rate_for_optimizer_training=None,
             train_with_meta_optimizer_op=None,
-            reset_train_states=None,
-            reset_inference_state=None,
+            reset_optimizer_train_state=None,
+            reset_optimizer_inference_state=None,
             reset_permutation_matrices=None,
             reset_pupil_grad_eval_pupil_storage=None,
             reset_optimizer_grad_pupil_storage=None,
+            reset_optimizer_inference_pupil_storage=None,
             meta_optimizer_saver=None,
             loss=None,
             start_loss=None,
@@ -524,6 +548,7 @@ class ResNet4Lstm(Meta):
             self._hooks['reset_optimizer_grad_pupil_storage'] = tf.group(
                 *chain(*[self._pupil.reset_storage(stor) for stor in self._optimizer_grad_pupil_storage])
             )
+            self._hooks['reset_optimizer_inference_pupil_storage'] = tf.group(*self._pupil.reset_self_train_storage())
             self._add_standard_train_hooks()
 
             self._additional_loss = 0
@@ -552,17 +577,17 @@ class ResNet4Lstm(Meta):
             self._train_graph()
             self._inference_graph()
             # print([self._reset_optimizer_states('train', gpu_idx) for gpu_idx in range(self._num_gpus)])
-            self._hooks['reset_train_states'] = tf.group(
+            self._hooks['reset_optimizer_train_state'] = tf.group(
                 *chain(
                     *[self._reset_optimizer_states('train_optimizer_states', gpu_idx)
                       for gpu_idx in range(self._num_gpus)]))
-            self._hooks['reset_inference_state'] = self._reset_optimizer_states('inference_optimizer_states', 0)[0]
+            self._hooks['reset_optimizer_inference_state'] = self._reset_optimizer_states('inference_optimizer_states', 0)[0]
 
             self._hooks['reset_permutation_matrices'] = tf.group(
                 *self._reset_all_permutation_matrices())
         elif self._regime == 'inference':
             self._inference_graph()
-            self._hooks['reset_inference_state'] = self._reset_optimizer_states('inference', 0)
+            self._hooks['reset_optimizer_inference_state'] = self._reset_optimizer_states('inference', 0)
 
     def get_default_hooks(self):
         return construct_dict_without_none_entries(self._hooks)

@@ -37,7 +37,8 @@ env.build_optimizer(
     regime='train',
     num_optimizer_unrollings=7,
     num_exercises=5,
-    res_size=250,
+    res_size=1000,
+    permute=False
 )
 
 
@@ -56,7 +57,7 @@ valid_add_feed = [
 
 # env.train(
 #     with_meta_optimizer=True,
-#     save_path='debug_empty_meta_optimizer/not_changing_variables_issue',
+#     save_path='debug_empty_meta_optimizer/not_learning_issue_es20_nn20',
 #     batch_size=32,
 #     num_unrollings=3,
 #     vocabulary=vocabulary,
@@ -77,10 +78,11 @@ env.train_optimizer(
     save_path='meta_optimizer_training_debug',
     additions_to_feed_dict=train_opt_add_feed,
     pupil_restore_paths=['debug_empty_meta_optimizer/not_changing_variables_issue/checkpoints/0'],
+    # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
     reset_period=10,
     train_dataset_texts=[train_text],
-    opt_inf_is_performed=True,
-    opt_inf_stop=100,
+    opt_inf_is_performed=False,
+    opt_inf_stop=30,
     opt_inf_pupil_restore_paths={'ignoramus': 'debug_empty_meta_optimizer/not_changing_variables_issue/checkpoints/0'},
     opt_inf_additions_to_feed_dict=opt_inf_add_feed,
     opt_inf_validation_dataset_texts=[valid_text],
@@ -93,6 +95,7 @@ env.train_optimizer(
                    'init': .001,
                    'decay': .5,
                    'period': 400},
-    results_collect_interval=30,
-    opt_inf_results_collect_interval=1
+    results_collect_interval=1,
+    opt_inf_results_collect_interval=1,
+    permute=False,
 )
