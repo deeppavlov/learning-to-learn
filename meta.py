@@ -467,6 +467,26 @@ class Meta(object):
                             #         summarize=10
                             #     )
 
+                            o = tf.concat(v['o'], -2)
+                            sigma = tf.concat(v['sigma'], -2)
+                            if ndims == 2:
+                                o = tf.reshape(o, o.get_shape().as_list()[1:])
+                                sigma = tf.reshape(sigma, sigma.get_shape().as_list()[1:])
+                            basic_mods = tf.einsum(eq, o, sigma)
+                            rel_diff = (v['matrix_mods'] - basic_mods) / \
+                                       (tf.abs(basic_mods) + 1e-7) * (tf.to_float(tf.greater(basic_mods, 0.)) - .5) * 2.
+                            # v['matrix_mods'] = basic_mods
+                            with tf.device('/cpu:0'):
+                                v['matrix_mods'] = tf.Print(
+                                    v['matrix_mods'], [rel_diff],
+                                    "(relative difference)%s = " % k, summarize=20)
+                                v['matrix_mods'] = tf.Print(
+                                    v['matrix_mods'], [basic_mods],
+                                    "(basic_mods)%s = " % k, summarize=20)
+                                v['matrix_mods'] = tf.Print(
+                                    v['matrix_mods'], [v['matrix_mods']],
+                                    "(v['matrix_mods'])%s = " % k, summarize=20)
+
                     if 'bias' in v:
                         with tf.name_scope('bias'):
                             v['bias_mods'] = tf.reduce_sum(v['psi'], axis=-2)

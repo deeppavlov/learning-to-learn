@@ -131,8 +131,8 @@ class ResNet4Lstm(Meta):
                     tf.get_variable(
                         'matrix',
                         shape=[in_ndims, res_size],
-                        initializer=tf.truncated_normal_initializer(stddev=stddev),
-                        # initializer=tf.zeros_initializer(),
+                        # initializer=tf.truncated_normal_initializer(stddev=stddev),
+                        initializer=tf.zeros_initializer(),
                         # trainable=False
                     )
                 )
@@ -149,8 +149,8 @@ class ResNet4Lstm(Meta):
                     tf.get_variable(
                         'matrix',
                         shape=[res_size, out_ndims],
-                        initializer=tf.truncated_normal_initializer(stddev=stddev)
-                        # initializer=tf.zeros_initializer(),
+                        # initializer=tf.truncated_normal_initializer(stddev=stddev)
+                        initializer=tf.zeros_initializer(),
                         # trainable=False
                     )
                 )
@@ -427,7 +427,8 @@ class ResNet4Lstm(Meta):
         return new_hidden_state, new_cell_state
 
     def _optimizer_core(self, optimizer_ins, state, gpu_idx, permute=True):
-        optimizer_ins = self._extend_with_permutations(optimizer_ins, gpu_idx)
+        if permute:
+            optimizer_ins = self._extend_with_permutations(optimizer_ins, gpu_idx)
         # print('(ResNet4Lstm._optimizer_core)optimizer_ins\nBEFORE DIMS EXPANSION:')
         # print_optimizer_ins(optimizer_ins)
         # ndims = self._get_optimizer_ins_ndims(optimizer_ins)
@@ -581,13 +582,15 @@ class ResNet4Lstm(Meta):
                 *chain(
                     *[self._reset_optimizer_states('train_optimizer_states', gpu_idx)
                       for gpu_idx in range(self._num_gpus)]))
-            self._hooks['reset_optimizer_inference_state'] = self._reset_optimizer_states('inference_optimizer_states', 0)[0]
+            self._hooks['reset_optimizer_inference_state'] = self._reset_optimizer_states(
+                'inference_optimizer_states', 0)[0]
 
             self._hooks['reset_permutation_matrices'] = tf.group(
                 *self._reset_all_permutation_matrices())
         elif self._regime == 'inference':
             self._inference_graph()
-            self._hooks['reset_optimizer_inference_state'] = self._reset_optimizer_states('inference', 0)
+            self._hooks['reset_optimizer_inference_state'] = self._reset_optimizer_states(
+                'inference_optimizer_states', 0)
 
     def get_default_hooks(self):
         return construct_dict_without_none_entries(self._hooks)
