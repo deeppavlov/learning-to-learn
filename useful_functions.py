@@ -1100,3 +1100,50 @@ def values_from_nested(nested):
             else:
                 accumulated_values.append(v)
     return accumulated_values
+
+
+def l2_loss_per_elem(t):
+    shape = t.get_shape().as_list()
+    num_elems = 1
+    for dim in shape:
+        num_elems *= dim
+    return tf.nn.l2_loss(t) / num_elems
+
+
+def apply_to_nested(nested, func):
+    if isinstance(nested, list):
+        res = list()
+        for elem in nested:
+            res.append(apply_to_nested(elem, func))
+    elif isinstance(nested, tuple):
+        res = list()
+        for elem in nested:
+            res.append(apply_to_nested(elem, func))
+        res = tuple(res)
+    elif isinstance(nested, dict):
+        res = dict()
+        for k, v in nested.items():
+            res[k] = apply_to_nested(v, func)
+    else:
+        res = func(nested)
+    return res
+
+
+def tf_print_nested(nested, nested_name, input_, summarize, path=None):
+    if path is None:
+        path = []
+    with tf.device('/cpu:0'):
+        if isinstance(nested, (list, tuple)):
+            for idx, elem in enumerate(nested):
+                input_ = tf_print_nested(elem, nested_name, input_, summarize, path + [idx])
+        elif isinstance(nested, dict):
+            for k, v in nested.items():
+                input_ = tf_print_nested(v, nested_name, input_, summarize, path + [k])
+        else:
+            input_ = tf.Print(
+                input_,
+                [nested],
+                message=nested_name + ''.join(['[%s]']*len(path)) % tuple(path) + ' = ',
+                summarize=summarize
+            )
+    return input_

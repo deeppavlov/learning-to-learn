@@ -2,7 +2,7 @@ import tensorflow as tf
 from useful_functions import (construct, get_keys_from_nested, get_obj_elem_by_path, device_name_scope,
                               write_elem_in_obj_by_path, stop_gradient_in_nested, compose_save_list, average_gradients,
                               retrieve_from_inner_dicts, distribute_into_inner_dicts, print_optimizer_ins,
-                              custom_matmul, values_from_nested)
+                              custom_matmul, values_from_nested, apply_to_nested, l2_loss_per_elem, tf_print_nested)
 
 
 LEARNING_RATE_FOR_EMPTY_CORE = 1.
@@ -595,6 +595,10 @@ class Meta(object):
                 with tf.name_scope('unite_exercise_gradients'):
                     grads_and_vars = average_gradients(tower_grads)
                     grads, v = self._tune_gradients(grads_and_vars)
+
+                    # opt_vars_l2_norm = apply_to_nested(self._opt_trainable, l2_loss_per_elem)
+                    # grads[0] = tf_print_nested(opt_vars_l2_norm, 'opt_vars_l2_norm', grads[0], 10)
+
                     train_op = self._optimizer_for_optimizer_training.apply_gradients(zip(grads, v))
 
                     self._hooks['optimizer_train_op'] = train_op

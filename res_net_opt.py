@@ -285,7 +285,7 @@ class ResNet4Lstm(Meta):
                 # print('\n(ResNet4Lstm._apply_res_core)hs:', hs)
                 # print('(ResNet4Lstm._apply_res_core)m:', m)
                 hs = tf.nn.relu(custom_add(custom_matmul(hs, m), b))
-            hs += tf.concat(target + [rnn_part], -1)
+            hs += tf.concat(target + [tf.zeros(rnn_part.get_shape().as_list())], -1)
             rnn_part_dim = hs.get_shape().as_list()[-1] - sum(target_dims)
             o, sigma, rnn_part = tf.split(hs, list(target_dims) + [rnn_part_dim], axis=-1)
             # print("(ResNet4Lstm._apply_res_core)rnn_part:", rnn_part)
