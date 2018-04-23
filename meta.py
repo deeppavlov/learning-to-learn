@@ -610,7 +610,18 @@ class Meta(object):
                             start_losses_by_gpu.append(one_gpu_start_loss)
                             end_losses_by_gpu.append(one_gpu_end_loss)
                             grads_and_vars = self._compute_optimizer_gradients(one_gpu_end_loss)
+
+                            new_grads_and_vars = list()
+                            with tf.device('/cpu:0'):
+                                for gv in grads_and_vars:
+                                    new_grads_and_vars.append(
+                                        (tf.Print(
+                                            gv[0], [gv[0]], message="gpu %s, %s = " % (gpu_idx, gv[1].name)), gv[1])
+                                    )
+                            grads_and_vars = new_grads_and_vars
+
                             tower_grads.append(grads_and_vars)
+
             with tf.device(self._base_device):
                 with tf.name_scope('unite_exercise_gradients'):
                     grads_and_vars = average_gradients(tower_grads)

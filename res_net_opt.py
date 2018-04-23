@@ -125,14 +125,20 @@ class ResNet4Lstm(Meta):
             matrices, biases = list(), list()
             in_ndims = sum(flatten(left)) + sum(flatten(target)) + sum(flatten(right)) + rnn_part_size
             out_ndims = sum(flatten(target)) + rnn_part_size
-            stddev = .0001 / (in_ndims + res_size)**.5
+            out_stddev = 2. / (res_size + rnn_part_size)**.5
+            out_init = tf.concat(
+                [tf.zeros([res_size, sum(flatten(target))]),
+                 tf.truncated_normal([res_size, rnn_part_size], stddev=out_stddev)],
+                -1
+            )
+            in_stddev = 2. / (in_ndims + res_size)**.5
             with tf.variable_scope('in_core'):
                 matrices.append(
                     tf.get_variable(
                         'matrix',
                         shape=[in_ndims, res_size],
-                        # initializer=tf.truncated_normal_initializer(stddev=stddev),
-                        initializer=tf.zeros_initializer(),
+                        initializer=tf.truncated_normal_initializer(stddev=in_stddev),
+                        # initializer=tf.zeros_initializer(),
                         # trainable=False
                     )
                 )
@@ -148,9 +154,9 @@ class ResNet4Lstm(Meta):
                 matrices.append(
                     tf.get_variable(
                         'matrix',
-                        shape=[res_size, out_ndims],
-                        # initializer=tf.truncated_normal_initializer(stddev=stddev)
-                        initializer=tf.zeros_initializer(),
+                        # shape=[res_size, out_ndims],
+                        # initializer=tf.truncated_normal_initializer(stddev=in_stddev)
+                        initializer=out_init,
                         # trainable=False
                     )
                 )
@@ -159,6 +165,7 @@ class ResNet4Lstm(Meta):
                         'bias',
                         shape=[out_ndims],
                         initializer=tf.zeros_initializer(),
+                        # initializer=tf.truncated_normal_initializer(stddev=in_stddev)
                         # trainable=False
                     )
                 )
@@ -284,7 +291,11 @@ class ResNet4Lstm(Meta):
             for m, b in zip(matrices, biases):
                 # print('\n(ResNet4Lstm._apply_res_core)hs:', hs)
                 # print('(ResNet4Lstm._apply_res_core)m:', m)
-                hs = tf.nn.relu(custom_add(custom_matmul(hs, m), b))
+                matmul_res = custom_matmul(hs, m)
+                hs = tf.nn.relu(custom_add(matmul_res, b))
+                with tf.device('/cpu:0'):
+                    hs = tf.Print(
+                        hs, [matmul_res], message="(ResNetOpt._apply_res_core)(%s)matmul_res: " % scope, summarize=20)
             hs += tf.concat(target + [tf.zeros(rnn_part.get_shape().as_list())], -1)
             rnn_part_dim = hs.get_shape().as_list()[-1] - sum(target_dims)
             o, sigma, rnn_part = tf.split(hs, list(target_dims) + [rnn_part_dim], axis=-1)
