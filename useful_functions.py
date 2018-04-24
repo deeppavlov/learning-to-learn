@@ -1147,3 +1147,73 @@ def tf_print_nested(nested, nested_name, input_, summarize, path=None):
                 summarize=summarize
             )
     return input_
+
+
+def cum_and(l):
+    res = True
+    for elem in l:
+        res = res and elem
+    return res
+
+
+def sort_lists_map(lists):
+    list_len = len(lists[0])
+    values = [list() for _ in lists[0]]
+    for l in lists:
+        for idx, v in enumerate(l):
+            if v not in values[idx]:
+                values[idx].append(v)
+    new_values = list()
+    for v in values:
+        both_str_and_ints = not (cum_and([isinstance(elem, str) for elem in v]) or cum_and([isinstance(elem, int) for elem in v]))
+        if both_str_and_ints:
+            new_values.append(sorted(v, key=lambda elem: str(elem) if isinstance(elem, int) else elem))
+        else:
+            new_values.append(sorted(v))
+    values = new_values
+    periods = [1] * list_len
+    for idx in range(list_len-2, -1, -1):
+        periods[idx] = periods[idx+1] * len(values[idx+1])
+    return values, periods
+
+
+def sort_lists_of_ints_and_str(lists):
+    values, periods = sort_lists_map(lists)
+
+    def key_func(elem):
+        res = 0
+        for idx, v in enumerate(elem):
+            res += values[idx].index(v) * periods[idx]
+        return res
+    return sorted(lists, key=key_func)
+
+
+def go_through_nested_with_name_scopes_to_perform_func(nested, remaining_key_values, path, func):
+    if len(remaining_key_values) > 0:
+        for key in remaining_key_values[0]:
+            p = path + [key]
+            with tf.name_scope(str(key)):
+                go_through_nested_with_name_scopes_to_perform_func(nested, remaining_key_values[1:], p, func)
+    else:
+        write_elem_in_obj_by_path(nested, path, func(get_obj_elem_by_path(nested, path)))
+
+
+def go_through_nested_with_name_scopes_to_perform_func_and_distribute_results(
+        nested, remaining_key_values, path, func, results):
+    # print("(go_through_nested_with_name_scopes_to_perform_func_and_distribute_results)remaining_key_values:",
+    #       remaining_key_values)
+    # print("(go_through_nested_with_name_scopes_to_perform_func_and_distribute_results)path:",
+    #       path)
+    # print("(go_through_nested_with_name_scopes_to_perform_func_and_distribute_results)results:",
+    #       results)
+    if len(remaining_key_values) > 0:
+        for key in remaining_key_values[0]:
+            p = path + [key]
+            # print("(go_through_nested_with_name_scopes_to_perform_func_and_distribute_results)key:", key)
+            with tf.name_scope('ns_' + str(key)):
+                go_through_nested_with_name_scopes_to_perform_func_and_distribute_results(
+                    nested, remaining_key_values[1:], p, func, results)
+    else:
+        for res, t in zip(results, func(get_obj_elem_by_path(nested, path))):
+            # print("(go_through_nested_with_name_scopes_to_perform_func_and_distribute_results)t:", t)
+            write_elem_in_obj_by_path(res, path, t)

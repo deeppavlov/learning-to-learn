@@ -2,7 +2,9 @@ import tensorflow as tf
 from useful_functions import (construct, get_keys_from_nested, get_obj_elem_by_path, device_name_scope,
                               write_elem_in_obj_by_path, stop_gradient_in_nested, compose_save_list, average_gradients,
                               retrieve_from_inner_dicts, distribute_into_inner_dicts, print_optimizer_ins,
-                              custom_matmul, values_from_nested, apply_to_nested, l2_loss_per_elem, tf_print_nested)
+                              custom_matmul, values_from_nested, apply_to_nested, l2_loss_per_elem, tf_print_nested,
+                              sort_lists_of_ints_and_str, sort_lists_map,
+                              go_through_nested_with_name_scopes_to_perform_func_and_distribute_results)
 
 
 LEARNING_RATE_FOR_EMPTY_CORE = 1.
@@ -80,28 +82,28 @@ class Meta(object):
         return new
 
     @staticmethod
-    def _retrieve_and_unstack_trainable_variables(num_exercises, trainable_by_gpu):
+    def _retrieve_and_unstack_trainable_variables(num_exercises, trainable_on_gpu,
+                                                  name_scope='unstack_trainable_variables'):
         """trainable_by_gpu is a list of dicts each containing layer information, e. g.:
             embedding_layer: {'matrix': t1, 'o': t2, 's': t3, 'sigma': t4}
         t1, t2 and so on are stacked tensors for exercises on gpu.
         This method retrieves only tensors with trainable variables values, unstacks them and distributes among
         num_exercises dicts of structure similar to trainable_by_gpu[i]"""
-        allowed_keys = ['matrix', 'bias']
-        tmpl = construct(trainable_by_gpu[0])
-        unstacked = [dict() for _ in range(num_exercises)]
-        for ok, ov in tmpl.items():
-            for d in unstacked:
-                d[ok] = dict()
-            for ik in ov.keys():
-                allowed = False
-                for k in allowed_keys:
-                    allowed = allowed or (k == ik)
-                if allowed:
-                    to_distribute = list()
-                    for tr in trainable_by_gpu:
-                        to_distribute.extend(tf.unstack(tr[ok][ik]))
-                    for ex_idx, d in enumerate(unstacked):
-                        d[ok][ik] = to_distribute[ex_idx]
+        with tf.name_scope(name_scope):
+            allowed_keys = ['matrix', 'bias']
+            tmpl = construct(trainable_on_gpu)
+            unstacked = [dict() for _ in range(num_exercises)]
+            for ok, ov in tmpl.items():
+                with tf.name_scope(ok):
+                    for d in unstacked:
+                        d[ok] = dict()
+                    for ik in ov.keys():
+                        allowed = False
+                        for k in allowed_keys:
+                            allowed = allowed or (k == ik)
+                        if allowed:
+                            for t, d in zip(tf.unstack(trainable_on_gpu[ok][ik], name=ik), unstacked):
+                                d[ok][ik] = t
         return unstacked
 
     @staticmethod
@@ -119,17 +121,30 @@ class Meta(object):
                     )
         return stacked_by_gpu
 
+    # @staticmethod
+    # def _unstack_storage(num_exercises, storage, name_scope='unstack_storage'):
+    #     with tf.name_scope(name_scope):
+    #         tmpl = construct(storage)
+    #         unstacked = [construct(tmpl) for _ in range(num_exercises)]
+    #         paths = get_keys_from_nested(tmpl)
+    #         key_values, _ = sort_lists_map(paths)
+    #         paths = sort_lists_of_ints_and_str(paths)
+    #         for path in paths:
+    #             to_distribute = list()
+    #             to_distribute.extend(tf.unstack(get_obj_elem_by_path(storage, path)))
+    #             for unst, distr in zip(unstacked, to_distribute):
+    #                 write_elem_in_obj_by_path(unst, path, distr)
+    #     return unstacked
+
     @staticmethod
-    def _unstack_storages(num_exercises, storages):
-        tmpl = construct(storages[0])
-        unstacked = [construct(tmpl) for _ in range(num_exercises)]
-        paths = get_keys_from_nested(tmpl)
-        for path in paths:
-            to_distribute = list()
-            for st in storages:
-                to_distribute.extend(tf.unstack(get_obj_elem_by_path(st, path)))
-            for unst, distr in zip(unstacked, to_distribute):
-                write_elem_in_obj_by_path(unst, path, distr)
+    def _unstack_storage(num_exercises, storage, name_scope='unstack_storages'):
+        with tf.name_scope(name_scope):
+            tmpl = construct(storage)
+            unstacked = [construct(tmpl) for _ in range(num_exercises)]
+            paths = get_keys_from_nested(tmpl)
+            key_values, _ = sort_lists_map(paths)
+            go_through_nested_with_name_scopes_to_perform_func_and_distribute_results(
+                storage, key_values, [], tf.unstack, unstacked)
         return unstacked
 
     @classmethod
@@ -247,37 +262,44 @@ class Meta(object):
 
     @staticmethod
     def _stop_gradients_in_opt_ins(optimizer_ins, inner_keys):
-        for v in optimizer_ins.values():
-            for ik in inner_keys:
-                # print("\n(Meta._stop_gradients_in_o_and_s)v['o']:", v['o'])
-                if isinstance(v[ik], (list, tuple)):
-                    for idx, t in enumerate(v[ik]):
-                        v[ik][idx] = tf.stop_gradient(t)
-                else:
-                    v[ik] = tf.stop_gradient(v[ik])
+        with tf.name_scope('stop_gradients'):
+            for k, v in optimizer_ins.items():
+                with tf.name_scope(k):
+                    for ik in inner_keys:
+                        with tf.name_scope(ik):
+                            # print("\n(Meta._stop_gradients_in_o_and_s)v['o']:", v['o'])
+                            if isinstance(v[ik], (list, tuple)):
+                                for idx, t in enumerate(v[ik]):
+                                    v[ik][idx] = tf.stop_gradient(t)
+                            else:
+                                v[ik] = tf.stop_gradient(v[ik])
         return optimizer_ins
 
     def _eval_pupil_gradients_for_optimizer_training(
             self, pupil_grad_eval_inputs, pupil_grad_eval_labels,
             pupil_trainable_variables, pupil_grad_eval_pupil_storage):
-        # print("(Meta._eval_pupil_gradients_for_optimizer_training)pupil_grad_eval_inputs:", pupil_grad_eval_inputs)
-        loss, optimizer_ins, new_storage = self._pupil.loss_and_opt_ins(
-            pupil_grad_eval_inputs, pupil_grad_eval_labels,
-            pupil_grad_eval_pupil_storage, opt_ins=pupil_trainable_variables)
-        # print('(Meta._eval_pupil_gradients_for_optimizer_training)AFTER LOSS_AND_OPT_INS')
-        # print_optimizer_ins(optimizer_ins)
-        s_vectors, map_ = retrieve_from_inner_dicts(optimizer_ins, 's')
-        # print('(Meta._eval_pupil_gradients_for_optimizer_training)s_vectors:', s_vectors)
-        # print('(Meta._eval_pupil_gradients_for_optimizer_training)map_:', map_)
-        sigma_vectors = tf.gradients(loss, s_vectors)
-        sigma_vectors = [tf.stop_gradient(sigma) for sigma in sigma_vectors]
-        optimizer_ins = self._stop_gradients_in_opt_ins(optimizer_ins, ['o', 's'])
-        # print('(Meta._eval_pupil_gradients_for_optimizer_training)AFTER GRADIENT STOPPING')
-        # print_optimizer_ins(optimizer_ins)
-        optimizer_ins = distribute_into_inner_dicts(optimizer_ins, 'sigma', sigma_vectors, map_)
-        # print('(Meta._eval_pupil_gradients_for_optimizer_training)AFTER SIGMA DISTRIBUTION')
-        # print_optimizer_ins(optimizer_ins)
-        return optimizer_ins, stop_gradient_in_nested(new_storage), loss
+        with tf.name_scope('eval_pupil_gradients_for_optimizer_training'):
+            # print("(Meta._eval_pupil_gradients_for_optimizer_training)pupil_grad_eval_inputs:", pupil_grad_eval_inputs)
+            loss, optimizer_ins, new_storage = self._pupil.loss_and_opt_ins(
+                pupil_grad_eval_inputs, pupil_grad_eval_labels,
+                pupil_grad_eval_pupil_storage, opt_ins=pupil_trainable_variables)
+            # print('(Meta._eval_pupil_gradients_for_optimizer_training)AFTER LOSS_AND_OPT_INS')
+            # print_optimizer_ins(optimizer_ins)
+            s_vectors, map_ = retrieve_from_inner_dicts(optimizer_ins, 's')
+            # print('(Meta._eval_pupil_gradients_for_optimizer_training)s_vectors:', s_vectors)
+            # print('(Meta._eval_pupil_gradients_for_optimizer_training)map_:', map_)
+            sigma_vectors = tf.gradients(loss, s_vectors)
+            optimizer_ins = distribute_into_inner_dicts(optimizer_ins, 'sigma', sigma_vectors, map_)
+
+            optimizer_ins = self._stop_gradients_in_opt_ins(optimizer_ins, ['o', 's', 'sigma'])
+            # print('(Meta._eval_pupil_gradients_for_optimizer_training)AFTER GRADIENT STOPPING')
+            # print_optimizer_ins(optimizer_ins)
+
+            # print('(Meta._eval_pupil_gradients_for_optimizer_training)AFTER SIGMA DISTRIBUTION')
+            # print_optimizer_ins(optimizer_ins)
+            with tf.name_scope('stop_gradients_in_pupil_storage_subsequent_pupil_launches'):
+                new_storage = stop_gradient_in_nested(new_storage)
+        return optimizer_ins, new_storage, loss
 
     def _eval_pupil_gradients_for_optimizer_inference(self):
         loss, optimizer_ins, storage_save_ops = self._pupil.loss_and_opt_ins_for_inference()
@@ -333,7 +355,7 @@ class Meta(object):
                     with tf.name_scope('psi'):
                         # v['psi'] = v['sigma']
                         if isinstance(v['sigma_pr'], list):
-                            v['psi'] = tf.concat(v['sigma_pr'], axis=-2, name='phi')
+                            v['psi'] = tf.concat(v['sigma_pr'], axis=-2, name='psi')
                         else:
                             v['psi'] = v['sigma_pr']
                         # print('(Meta._compose_phi_and_psi)v["sigma_pr"]:', v['sigma_pr'])
@@ -467,25 +489,25 @@ class Meta(object):
                             #         summarize=10
                             #     )
 
-                            o = tf.concat(v['o'], -2)
-                            sigma = tf.concat(v['sigma'], -2)
-                            if ndims == 2:
-                                o = tf.reshape(o, o.get_shape().as_list()[1:])
-                                sigma = tf.reshape(sigma, sigma.get_shape().as_list()[1:])
-                            basic_mods = tf.einsum(eq, o, sigma)
-                            rel_diff = (v['matrix_mods'] - basic_mods) / \
-                                       (tf.abs(basic_mods) + 1e-7) * (tf.to_float(tf.greater(basic_mods, 0.)) - .5) * 2.
-                            # v['matrix_mods'] = basic_mods
-                            with tf.device('/cpu:0'):
-                                v['matrix_mods'] = tf.Print(
-                                    v['matrix_mods'], [rel_diff],
-                                    "(relative difference)%s = " % k, summarize=20)
-                                v['matrix_mods'] = tf.Print(
-                                    v['matrix_mods'], [basic_mods],
-                                    "(basic_mods)%s = " % k, summarize=20)
-                                v['matrix_mods'] = tf.Print(
-                                    v['matrix_mods'], [v['matrix_mods']],
-                                    "(v['matrix_mods'])%s = " % k, summarize=20)
+                            # o = tf.concat(v['o'], -2)
+                            # sigma = tf.concat(v['sigma'], -2)
+                            # if ndims == 2:
+                            #     o = tf.reshape(o, o.get_shape().as_list()[1:])
+                            #     sigma = tf.reshape(sigma, sigma.get_shape().as_list()[1:])
+                            # basic_mods = tf.einsum(eq, o, sigma)
+                            # rel_diff = (v['matrix_mods'] - basic_mods) / \
+                            #            (tf.abs(basic_mods) + 1e-7) * (tf.to_float(tf.greater(basic_mods, 0.)) - .5) * 2.
+                            # # v['matrix_mods'] = basic_mods
+                            # with tf.device('/cpu:0'):
+                            #     v['matrix_mods'] = tf.Print(
+                            #         v['matrix_mods'], [rel_diff],
+                            #         "(relative difference)%s = " % k, summarize=20)
+                            #     v['matrix_mods'] = tf.Print(
+                            #         v['matrix_mods'], [basic_mods],
+                            #         "(basic_mods)%s = " % k, summarize=20)
+                            #     v['matrix_mods'] = tf.Print(
+                            #         v['matrix_mods'], [v['matrix_mods']],
+                            #         "(v['matrix_mods'])%s = " % k, summarize=20)
 
                     if 'bias' in v:
                         with tf.name_scope('bias'):
@@ -498,18 +520,21 @@ class Meta(object):
     @staticmethod
     def _sub_mods(mods):
         with tf.name_scope('subtract_modifications'):
-            for v in mods.values():
-                if 'matrix' in v:
-                    v['matrix'] = v['matrix'] - v['matrix_mods']
-                if 'bias' in v:
-                    v['bias'] = v['bias'] - v['bias_mods']
+            for k, v in mods.items():
+                with tf.name_scope(k):
+                    if 'matrix' in v:
+                        v['matrix'] = tf.subtract(v['matrix'], v['matrix_mods'], name='matrix')
+                    if 'bias' in v:
+                        v['bias'] = tf.subtract(v['bias'], v['bias_mods'], name='bias')
             return mods
 
-    def _compute_optimizer_gradients(self, loss):
-        loss += self._additional_loss
-        optimizer_trainable_variables = tf.get_collection(
-            tf.GraphKeys.TRAINABLE_VARIABLES, scope='optimizer_trainable_variables')
-        return self._optimizer_for_optimizer_training.compute_gradients(loss, var_list=optimizer_trainable_variables)
+    def _compute_optimizer_gradients(self, loss, name_scope='compute_optimizer_gradients'):
+        with tf.name_scope(name_scope):
+            loss = tf.add(loss, self._additional_loss, name='loss_with_additional_loss')
+            optimizer_trainable_variables = tf.get_collection(
+                tf.GraphKeys.TRAINABLE_VARIABLES, scope='optimizer_trainable_variables')
+            return self._optimizer_for_optimizer_training.compute_gradients(
+                loss, var_list=optimizer_trainable_variables)
 
     @staticmethod
     def _l2_loss(reg_rate):
@@ -559,7 +584,6 @@ class Meta(object):
                         tmp_states = optimizer_states
                         one_gpu_end_losses = list()
                         one_gpu_start_losses = list()
-                        new_pupil_trainable_by_gpu = list()
                         # print("(Meta._train_graph)pupil_grad_eval_inputs:", pupil_grad_eval_inputs)
                         for unr_idx in range(self._num_optimizer_unrollings):
                             with tf.name_scope('optimizer_unrolling_%s' % unr_idx):
@@ -576,49 +600,84 @@ class Meta(object):
                                 optimizer_outs = self._compose_phi_and_psi(optimizer_outs)
                                 optimizer_outs_with_mods = self._compose_mods(optimizer_outs)
                                 optimizer_outs_mods_are_applied = self._sub_mods(optimizer_outs_with_mods)
-                                npt = self._filter_opt_flow_dict(
+                                new_pupil_trainable = self._filter_opt_flow_dict(
                                     optimizer_outs_mods_are_applied, ['matrix', 'bias'])
-                                new_pupil_trainable_by_gpu.append(npt)
                                 end_loss, _, optimizer_grad_pupil_storage[gpu_idx] = self._pupil.loss_and_opt_ins(
                                     optimizer_grad_inputs[gpu_idx][unr_idx], optimizer_grad_labels[gpu_idx][unr_idx],
-                                    optimizer_grad_pupil_storage[gpu_idx], opt_ins=npt)
+                                    optimizer_grad_pupil_storage[gpu_idx], opt_ins=new_pupil_trainable,
+                                    name_scope='pupil_loss_after_pupil_modification'
+                                )
                                 one_gpu_start_losses.append(start_loss)
                                 one_gpu_end_losses.append(end_loss)
                         one_gpu_end_loss = tf.reduce_mean(one_gpu_end_losses) + self._l2_loss(self._regularization_rate)
                         one_gpu_start_loss = tf.reduce_mean(one_gpu_start_losses)
                         new_pupil_trainable = self._retrieve_and_unstack_trainable_variables(
-                            self._num_exercises, new_pupil_trainable_by_gpu)
-                        pupil_grad_eval_pupil_storage = self._unstack_storages(
-                            self._num_exercises, pupil_grad_eval_pupil_storage)
-                        optimizer_grad_pupil_storage = self._unstack_storages(
-                            self._num_exercises, optimizer_grad_pupil_storage)
+                            self._num_exercises, new_pupil_trainable)
+                        # print("(Meta._train_graph)pupil_grad_eval_pupil_storage (before unstacking):",
+                        #       pupil_grad_eval_pupil_storage)
+                        pupil_grad_eval_pupil_storage[gpu_idx] = self._unstack_storage(
+                            self._num_exercises, pupil_grad_eval_pupil_storage[gpu_idx],
+                            name_scope='unstack_pupil_grad_eval_pupil_storage')
+                        # print("(Meta._train_graph)pupil_grad_eval_pupil_storage (after unstacking):",
+                        #       pupil_grad_eval_pupil_storage)
+                        optimizer_grad_pupil_storage[gpu_idx] = self._unstack_storage(
+                            self._num_exercises, optimizer_grad_pupil_storage[gpu_idx],
+                            name_scope='unstack_optimizer_grad_pupil_storage'
+                        )
+                        # print("(Meta._train_graph)self._gpu_borders:", self._gpu_borders)
+                        # print("(Meta._train_graph)len(self._pupil_trainable_variables):",
+                        #       len(self._pupil_trainable_variables))
+                        # print("(Meta._train_graph)len(self._pupil_grad_eval_pupil_storage):",
+                        #       len(self._pupil_grad_eval_pupil_storage))
+                        # print("(Meta._train_graph)len(self._optimizer_grad_pupil_storage):",
+                        #       len(self._optimizer_grad_pupil_storage))
+
+                        # print("(Meta._train_graph)new_pupil_trainable:", new_pupil_trainable)
+                        # print("(Meta._train_graph)pupil_grad_eval_pupil_storage:", pupil_grad_eval_pupil_storage)
+                        # print("(Meta._train_graph)self._optimizer_grad_pupil_storage"
+                        #       "[self._gpu_borders[gpu_idx][0]:self._gpu_borders[gpu_idx][1]]:",
+                        #       self._optimizer_grad_pupil_storage
+                        #           [self._gpu_borders[gpu_idx][0]:self._gpu_borders[gpu_idx][1]])
+                        # print("(Meta._train_graph)optimizer_grad_pupil_storage[gpu_idx]:",
+                        #       optimizer_grad_pupil_storage[gpu_idx])
                         save_ops = compose_save_list(
                             (optimizer_states, tmp_states),
                             name_scope='save_opt_states'
                         ) + compose_save_list(
-                            (self._pupil_trainable_variables, new_pupil_trainable), name_scope='save_pupil_train_vars'
+                            (self._pupil_trainable_variables[
+                                 self._gpu_borders[gpu_idx][0]:self._gpu_borders[gpu_idx][1]],
+                             new_pupil_trainable),
+                            name_scope='save_pupil_train_vars'
                         ) + compose_save_list(
-                            (self._pupil_grad_eval_pupil_storage, pupil_grad_eval_pupil_storage),
+                            (self._pupil_grad_eval_pupil_storage[
+                                 self._gpu_borders[gpu_idx][0]:self._gpu_borders[gpu_idx][1]],
+                             pupil_grad_eval_pupil_storage[gpu_idx]),
                             name_scope='save_pupil_grad_eval_pupil_storage'
                         ) + compose_save_list(
-                            (self._optimizer_grad_pupil_storage, optimizer_grad_pupil_storage),
+                            (self._optimizer_grad_pupil_storage[
+                                 self._gpu_borders[gpu_idx][0]:self._gpu_borders[gpu_idx][1]],
+                             optimizer_grad_pupil_storage[gpu_idx]),
                             name_scope='save_optimizer_grad_pupil_storage'
                         )
 
                         with tf.control_dependencies(save_ops):
-                            one_gpu_end_loss = tf.identity(one_gpu_end_loss)
+                            one_gpu_end_loss = tf.identity(one_gpu_end_loss, name='loss_on_gpu_%s' % gpu_idx)
                             start_losses_by_gpu.append(one_gpu_start_loss)
                             end_losses_by_gpu.append(one_gpu_end_loss)
-                            grads_and_vars = self._compute_optimizer_gradients(one_gpu_end_loss)
+                            grads_and_vars = self._compute_optimizer_gradients(
+                                one_gpu_end_loss, name_scope='compute_opt_grads_on_gpu_%s' % gpu_idx)
 
-                            new_grads_and_vars = list()
-                            with tf.device('/cpu:0'):
-                                for gv in grads_and_vars:
-                                    new_grads_and_vars.append(
-                                        (tf.Print(
-                                            gv[0], [gv[0]], message="gpu %s, %s = " % (gpu_idx, gv[1].name)), gv[1])
-                                    )
-                            grads_and_vars = new_grads_and_vars
+                            # new_grads_and_vars = list()
+                            # with tf.device('/cpu:0'):
+                            #     for gv in grads_and_vars:
+                            #         new_grads_and_vars.append(
+                            #             (tf.Print(
+                            #                 gv[0], [gv[0]], message="gpu %s, %s = " % (gpu_idx, gv[1].name),
+                            #                 summarize=10
+                            #             ),
+                            #              gv[1])
+                            #         )
+                            # grads_and_vars = new_grads_and_vars
 
                             tower_grads.append(grads_and_vars)
 

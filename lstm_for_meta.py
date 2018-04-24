@@ -364,7 +364,8 @@ class Lstm(Model):
         )
         return trainable
 
-    def loss_and_opt_ins(self, inputs, labels, storage, opt_ins=None, trainable_variables=None):
+    def loss_and_opt_ins(
+            self, inputs, labels, storage, opt_ins=None, trainable_variables=None, name_scope='pupil_loss'):
         """Args:
             either trainable_variables or opt_ins have to be provided
         optimizer_ins is a dictionary which keys are layer names and values are dictionaries with their parameters
@@ -373,7 +374,7 @@ class Lstm(Model):
         linear projection performed using layer weights. 'o', 's', 'matrix', 'bias' - can be stacked if several
         exercises are processed"""
         optimizer_ins = dict()
-        with tf.name_scope('pupil_loss'):
+        with tf.name_scope(name_scope):
             saved_states = storage['states']
             if opt_ins is not None:
                 trainable = self._extract_trainable_from_opt_ins(opt_ins)

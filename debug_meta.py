@@ -99,4 +99,6 @@ env.train_optimizer(
     results_collect_interval=1,
     opt_inf_results_collect_interval=1,
     permute=False,
+    summary=True,
+    add_graph_to_summary=True
 )

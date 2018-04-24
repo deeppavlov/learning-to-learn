@@ -2,7 +2,7 @@ from itertools import chain
 import tensorflow as tf
 from meta import Meta
 from useful_functions import (block_diagonal, custom_matmul, custom_add, flatten,
-                              construct_dict_without_none_entries, print_optimizer_ins)
+                              construct_dict_without_none_entries, print_optimizer_ins, construct)
 
 
 class ResNet4Lstm(Meta):
@@ -277,7 +277,7 @@ class ResNet4Lstm(Meta):
         return padded
 
     @staticmethod
-    def _apply_res_core(vars, opt_ins, rnn_part, target,  scope, target_dims):
+    def _apply_res_core(vars, opt_ins, rnn_part, target, scope, target_dims):
         with tf.name_scope(scope):
             # print("\n(ResNet4Lstm._apply_res_core)rnn_part:", rnn_part)
             # print('(ResNet4Lstm._apply_res_core)opt_ins:', opt_ins)
@@ -293,17 +293,21 @@ class ResNet4Lstm(Meta):
                 # print('(ResNet4Lstm._apply_res_core)m:', m)
                 matmul_res = custom_matmul(hs, m)
                 hs = tf.nn.relu(custom_add(matmul_res, b))
-                with tf.device('/cpu:0'):
-                    hs = tf.Print(
-                        hs, [matmul_res], message="(ResNetOpt._apply_res_core)(%s)matmul_res: " % scope, summarize=20)
+                # with tf.device('/cpu:0'):
+                #     hs = tf.Print(
+                #         hs, [matmul_res], message="(ResNetOpt._apply_res_core)(%s)matmul_res: " % scope, summarize=20)
             hs += tf.concat(target + [tf.zeros(rnn_part.get_shape().as_list())], -1)
             rnn_part_dim = hs.get_shape().as_list()[-1] - sum(target_dims)
             o, sigma, rnn_part = tf.split(hs, list(target_dims) + [rnn_part_dim], axis=-1)
             # print("(ResNet4Lstm._apply_res_core)rnn_part:", rnn_part)
+            with tf.device('/cpu:0'):
+                o = tf.Print(o, [o], message='(ResNetOpt._apply_res_core)(scope=%s)o: ' % scope, summarize=10)
+                sigma = tf.Print(sigma, [sigma], message='(ResNetOpt._apply_res_core)(scope=%s)sigma: ' % scope, summarize=10)
             return o, sigma, rnn_part
 
     def _apply_res_layer(self, ins, res_vars, rnn_part, scope):
         with tf.name_scope(scope):
+            outs = construct(ins)
             if self._emb_layer_is_present:
                 core_inps = [
                     ins['embedding_layer']['o_c'],
@@ -320,8 +324,8 @@ class ResNet4Lstm(Meta):
                 o, sigma, emb_rnn_part = self._apply_res_core(
                     res_vars['embedding_layer'], core_inps, rnn_part, target,
                     'embedding_layer', self._pupil_dims['embedding_layer'])
-                ins['embedding_layer']['o_c'] = o
-                ins['embedding_layer']['sigma_c'] = sigma
+                outs['embedding_layer']['o_c'] = o
+                outs['embedding_layer']['sigma_c'] = sigma
             else:
                 emb_rnn_part = 0
 
@@ -350,27 +354,27 @@ class ResNet4Lstm(Meta):
                         ins['lstm_layer_%s' % (layer_idx + 1)]['o_c'],
                         ins['lstm_layer_%s' % (layer_idx + 1)]['sigma_c']
                     ]
+                layer_name = 'lstm_layer_%s' % layer_idx
                 core_inps = [
                     *previous_layer_tensors,
-                    ins['lstm_layer_%s' % layer_idx]['o_c'],
-                    ins['lstm_layer_%s' % layer_idx]['sigma_c'],
-                    self._pad(ins['lstm_layer_%s' % layer_idx]['o_c'], -1),
-                    self._pad(ins['lstm_layer_%s' % layer_idx]['sigma_c'], -1),
-                    self._pad(ins['lstm_layer_%s' % layer_idx]['o_c'], 1),
-                    self._pad(ins['lstm_layer_%s' % layer_idx]['sigma_c'], 1),
+                    ins[layer_name]['o_c'],
+                    ins[layer_name]['sigma_c'],
+                    self._pad(ins[layer_name]['o_c'], -1),
+                    self._pad(ins[layer_name]['sigma_c'], -1),
+                    self._pad(ins[layer_name]['o_c'], 1),
+                    self._pad(ins[layer_name]['sigma_c'], 1),
                     *next_layer_tensors
                 ]
                 target = [
-                    ins['lstm_layer_%s' % layer_idx]['o_c'],
-                    ins['lstm_layer_%s' % layer_idx]['sigma_c']
+                    ins[layer_name]['o_c'],
+                    ins[layer_name]['sigma_c']
                 ]
-                layer_name = 'lstm_layer_%s' % layer_idx
                 o, sigma, lstm_rnn_part = self._apply_res_core(
                     res_vars[layer_name], core_inps, rnn_part, target,
                     layer_name, self._pupil_dims['lstm_layers'][layer_idx])
                 lstm_rnn_parts.append(lstm_rnn_part)
-                ins['lstm_layer_%s' % layer_idx]['o_c'] = o
-                ins['lstm_layer_%s' % layer_idx]['sigma_c'] = sigma
+                outs[layer_name]['o_c'] = o
+                outs[layer_name]['sigma_c'] = sigma
 
             output_rnn_parts = list()
             for layer_idx in range(self._pupil_net_size['num_output_layers']):
@@ -409,12 +413,13 @@ class ResNet4Lstm(Meta):
                     res_vars[layer_name], core_inps, rnn_part, target,
                     layer_name, self._pupil_dims['output_layers'][layer_idx])
                 output_rnn_parts.append(output_rnn_part)
-                ins['output_layer_%s' % layer_idx]['o_c'] = o
-                ins['output_layer_%s' % layer_idx]['sigma_c'] = sigma
+                layer_name = 'output_layer_%s' % layer_idx
+                outs[layer_name]['o_c'] = o
+                outs[layer_name]['sigma_c'] = sigma
             # print("(ResNet4Lstm._apply_res_layer)emb_rnn_part:", emb_rnn_part)
             # print("(ResNet4Lstm._apply_res_layer)lstm_rnn_parts:", lstm_rnn_parts)
             # print("(ResNet4Lstm._apply_res_layer)output_rnn_parts:", output_rnn_parts)
-            return ins, emb_rnn_part + sum(lstm_rnn_parts + output_rnn_parts)
+            return outs, emb_rnn_part + sum(lstm_rnn_parts + output_rnn_parts)
 
     def _apply_lstm_layer(self, inp, state, matrix, bias, scope='lstm'):
         with tf.name_scope(scope):
