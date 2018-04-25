@@ -27,7 +27,7 @@ env.build_pupil(
     num_output_nodes=[],
     vocabulary_size=vocabulary_size,
     embedding_size=150,
-    num_unrollings=3,
+    num_unrollings=4,
     init_parameter=3.,
     num_gpus=1,
     regime='training_with_meta_optimizer'
@@ -36,9 +36,9 @@ env.build_pupil(
 env.build_optimizer(
     regime='train',
     # regime='inference',
-    num_optimizer_unrollings=3,
+    num_optimizer_unrollings=5,
     num_exercises=5,
-    res_size=1000,
+    res_size=2000,
     permute=False
 )
 
@@ -91,12 +91,12 @@ env.train_optimizer(
     validation_additions_to_feed_dict=valid_add_feed,
     vocabulary=vocabulary,
     batch_size=32,
-    num_unrollings=3,
+    num_unrollings=4,
     learning_rate={'type': 'exponential_decay',
                    'init': .002,
                    'decay': .5,
                    'period': 400},
-    results_collect_interval=1,
+    results_collect_interval=50,
     opt_inf_results_collect_interval=1,
     permute=False,
     summary=True,

@@ -593,6 +593,9 @@ class Meta(object):
                                         pupil_grad_eval_labels[gpu_idx][unr_idx],
                                         pupil_trainable_variables[gpu_idx], pupil_grad_eval_pupil_storage[gpu_idx]
                                     )
+                                # print("(Meta._train_graph)pupil_trainable_variables[%s]:" % gpu_idx,
+                                #       pupil_trainable_variables[gpu_idx])
+
                                 # print("(Meta._train_graph)BEFORE OPTIMIZER CORE:")
                                 # print_optimizer_ins(optimizer_ins)
                                 optimizer_outs, tmp_states = self._optimizer_core(
@@ -602,13 +605,34 @@ class Meta(object):
                                 optimizer_outs_mods_are_applied = self._sub_mods(optimizer_outs_with_mods)
                                 new_pupil_trainable = self._filter_opt_flow_dict(
                                     optimizer_outs_mods_are_applied, ['matrix', 'bias'])
+
                                 end_loss, _, optimizer_grad_pupil_storage[gpu_idx] = self._pupil.loss_and_opt_ins(
                                     optimizer_grad_inputs[gpu_idx][unr_idx], optimizer_grad_labels[gpu_idx][unr_idx],
                                     optimizer_grad_pupil_storage[gpu_idx], opt_ins=new_pupil_trainable,
                                     name_scope='pupil_loss_after_pupil_modification'
                                 )
+
+                                # print("(Meta._train_graph)new_pupil_trainable:",
+                                #       new_pupil_trainable)
+
+                                pupil_trainable_variables[gpu_idx] = new_pupil_trainable
                                 one_gpu_start_losses.append(start_loss)
                                 one_gpu_end_losses.append(end_loss)
+                        one_gpu_start_losses = tf.stack(one_gpu_start_losses)
+                        one_gpu_end_losses = tf.stack(one_gpu_end_losses)
+
+                        with tf.device('/cpu:0'):
+                            one_gpu_start_losses = tf.Print(
+                                one_gpu_start_losses,
+                                [one_gpu_start_losses],
+                                message="start losses by unrollings on gpu %s: " % gpu_idx,
+                                summarize=20)
+                            one_gpu_end_losses = tf.Print(
+                                one_gpu_end_losses,
+                                [one_gpu_end_losses],
+                                message="end losses by unrollings on gpu %s: " % gpu_idx,
+                                summarize=20)
+
                         one_gpu_end_loss = tf.reduce_mean(one_gpu_end_losses) + self._l2_loss(self._regularization_rate)
                         one_gpu_start_loss = tf.reduce_mean(one_gpu_start_losses)
                         new_pupil_trainable = self._retrieve_and_unstack_trainable_variables(
@@ -709,6 +733,19 @@ class Meta(object):
 
                     all_start_losses = tf.concat(start_losses_by_gpu, 0)
                     all_end_losses = tf.concat(end_losses_by_gpu, 0)
+                    with tf.device('/cpu:0'):
+                        all_start_losses = tf.Print(
+                            all_start_losses,
+                            [all_start_losses],
+                            message='all start losses by gpu: ',
+                            summarize=20
+                        )
+                        all_end_losses = tf.Print(
+                            all_end_losses,
+                            [all_end_losses],
+                            message='all end losses by gpu: ',
+                            summarize=20
+                        )
                     # with tf.device('/cpu:0'):
                     #     all_start_losses = tf.Print(
                     #         all_start_losses, [all_start_losses], message="all_start_losses: ")
