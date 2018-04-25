@@ -1149,11 +1149,12 @@ def tf_print_nested(nested, nested_name, input_, summarize, path=None):
     return input_
 
 
-def cum_and(l):
-    res = True
-    for elem in l:
-        res = res and elem
-    return res
+def cum_and(l, name_scope='list_summation'):
+    with tf.name_scope(name_scope):
+        res = True
+        for elem in l:
+            res = res and elem
+        return res
 
 
 def sort_lists_map(lists):
@@ -1217,3 +1218,11 @@ def go_through_nested_with_name_scopes_to_perform_func_and_distribute_results(
         for res, t in zip(results, func(get_obj_elem_by_path(nested, path))):
             # print("(go_through_nested_with_name_scopes_to_perform_func_and_distribute_results)t:", t)
             write_elem_in_obj_by_path(res, path, t)
+
+
+def global_norm(tensor_list, name_scope='global_norm'):
+    with tf.name_scope(name_scope):
+        norm = 0
+        for t in tensor_list:
+            norm += tf.nn.l2_loss(t)
+        return tf.sqrt(norm)

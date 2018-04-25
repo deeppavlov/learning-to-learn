@@ -125,13 +125,13 @@ class ResNet4Lstm(Meta):
             matrices, biases = list(), list()
             in_ndims = sum(flatten(left)) + sum(flatten(target)) + sum(flatten(right)) + rnn_part_size
             out_ndims = sum(flatten(target)) + rnn_part_size
-            out_stddev = .0001 / (res_size + rnn_part_size)**.5
+            out_stddev = 1. / (res_size + rnn_part_size)**.5
             out_init = tf.concat(
                 [tf.zeros([res_size, sum(flatten(target))]),
                  tf.truncated_normal([res_size, rnn_part_size], stddev=out_stddev)],
                 -1
             )
-            in_stddev = .0001 / (in_ndims + res_size)**.5
+            in_stddev = 1. / (in_ndims + res_size)**.5
             with tf.variable_scope('in_core'):
                 matrices.append(
                     tf.get_variable(
@@ -239,7 +239,7 @@ class ResNet4Lstm(Meta):
                         vars['res_layers'].append(res_layer_params)
                 with tf.variable_scope('lstm'):
                     rnn_size = self._num_lstm_nodes
-                    stddev = .01 / (6 * rnn_size) ** .5
+                    stddev = 1. / (6 * rnn_size) ** .5
                     vars['lstm_matrix'] = tf.get_variable(
                         'lstm_matrix',
                         shape=[2 * rnn_size, 4 * rnn_size],

@@ -4,10 +4,11 @@ from useful_functions import (construct, get_keys_from_nested, get_obj_elem_by_p
                               retrieve_from_inner_dicts, distribute_into_inner_dicts, print_optimizer_ins,
                               custom_matmul, values_from_nested, apply_to_nested, l2_loss_per_elem, tf_print_nested,
                               sort_lists_of_ints_and_str, sort_lists_map,
-                              go_through_nested_with_name_scopes_to_perform_func_and_distribute_results)
+                              go_through_nested_with_name_scopes_to_perform_func_and_distribute_results, global_norm)
 
 
 LEARNING_RATE_FOR_EMPTY_CORE = 1.
+CLIP_NORM = 100.
 
 
 class Meta(object):
@@ -464,6 +465,7 @@ class Meta(object):
 
     @staticmethod
     def _compose_mods(optimizer_outs, learning_rate=None):
+        mods = list()
         with tf.name_scope('pupil_mods'):
             for k, v in optimizer_outs.items():
                 with tf.name_scope(k):
@@ -478,6 +480,7 @@ class Meta(object):
                             elif ndims == 2:
                                 eq = 'jk,jl->kl'
                             v['matrix_mods'] = tf.einsum(eq, v['phi'], v['psi'])  # / batch_size
+                            mods.append(v['matrix_mods'])
                             # with tf.device('/cpu:0'):
                             #     v['matrix_mods'] = tf.Print(
                             #         v['matrix_mods'],
@@ -512,10 +515,24 @@ class Meta(object):
                     if 'bias' in v:
                         with tf.name_scope('bias'):
                             v['bias_mods'] = tf.reduce_sum(v['psi'], axis=-2)
+                            mods.append(v['bias_mods'])
                             # with tf.device('/cpu:0'):
                             #     v['bias_mods'] = tf.Print(
                             #         v['bias_mods'], [v['bias_mods']], message='\n' + k + '\nbias:\n')
-            return optimizer_outs
+            with tf.name_scope('clip_gradients'):
+                factor = CLIP_NORM / tf.maximum(global_norm(mods), CLIP_NORM)
+                # norm = tf.stop_gradient(tf.maximum(global_norm(mods), 1.))
+                with tf.device('/cpu:0'):
+                    factor = tf.Print(factor, [factor], message='(Meta._compose_mods)factor: ')
+                for k, v in optimizer_outs.items():
+                    with tf.name_scope(k):
+                        if 'matrix_mods' in v:
+                            with tf.name_scope('matrix'):
+                                v['matrix_mods'] = tf.multiply(v['matrix_mods'], factor, name='matrix_mods')
+                        if 'bias_mods' in v:
+                            with tf.name_scope('bias'):
+                                v['bias_mods'] = tf.multiply(v['bias_mods'], factor, name='bias_mods')
+        return optimizer_outs
 
     @staticmethod
     def _sub_mods(mods):
@@ -624,13 +641,13 @@ class Meta(object):
                         with tf.device('/cpu:0'):
                             one_gpu_start_losses = tf.Print(
                                 one_gpu_start_losses,
-                                [one_gpu_start_losses],
-                                message="start losses by unrollings on gpu %s: " % gpu_idx,
+                                [tf.reduce_mean(one_gpu_start_losses, axis=-1)],
+                                message="(Meta._train_graph)start losses by unrollings on gpu %s: " % gpu_idx,
                                 summarize=20)
                             one_gpu_end_losses = tf.Print(
                                 one_gpu_end_losses,
-                                [one_gpu_end_losses],
-                                message="end losses by unrollings on gpu %s: " % gpu_idx,
+                                [tf.reduce_mean(one_gpu_end_losses, axis=-1)],
+                                message="(Meta._train_graph)end losses by unrollings on gpu %s: " % gpu_idx,
                                 summarize=20)
 
                         one_gpu_end_loss = tf.reduce_mean(one_gpu_end_losses) + self._l2_loss(self._regularization_rate)
@@ -733,19 +750,21 @@ class Meta(object):
 
                     all_start_losses = tf.concat(start_losses_by_gpu, 0)
                     all_end_losses = tf.concat(end_losses_by_gpu, 0)
-                    with tf.device('/cpu:0'):
-                        all_start_losses = tf.Print(
-                            all_start_losses,
-                            [all_start_losses],
-                            message='all start losses by gpu: ',
-                            summarize=20
-                        )
-                        all_end_losses = tf.Print(
-                            all_end_losses,
-                            [all_end_losses],
-                            message='all end losses by gpu: ',
-                            summarize=20
-                        )
+
+                    # with tf.device('/cpu:0'):
+                    #     all_start_losses = tf.Print(
+                    #         all_start_losses,
+                    #         [all_start_losses],
+                    #         message='all start losses by gpu: ',
+                    #         summarize=20
+                    #     )
+                    #     all_end_losses = tf.Print(
+                    #         all_end_losses,
+                    #         [all_end_losses],
+                    #         message='all end losses by gpu: ',
+                    #         summarize=20
+                    #     )
+
                     # with tf.device('/cpu:0'):
                     #     all_start_losses = tf.Print(
                     #         all_start_losses, [all_start_losses], message="all_start_losses: ")
