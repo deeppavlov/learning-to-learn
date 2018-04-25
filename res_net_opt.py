@@ -2,7 +2,7 @@ from itertools import chain
 import tensorflow as tf
 from meta import Meta
 from useful_functions import (block_diagonal, custom_matmul, custom_add, flatten,
-                              construct_dict_without_none_entries, print_optimizer_ins, construct)
+                              construct_dict_without_none_entries, print_optimizer_ins, construct, l2_loss_per_elem)
 
 
 class ResNet4Lstm(Meta):
@@ -154,9 +154,10 @@ class ResNet4Lstm(Meta):
                 matrices.append(
                     tf.get_variable(
                         'matrix',
-                        # shape=[res_size, out_ndims],
+                        shape=[res_size, out_ndims],
                         # initializer=tf.truncated_normal_initializer(stddev=in_stddev)
-                        initializer=out_init,
+                        # initializer=out_init,
+                        initializer=tf.zeros_initializer()
                         # trainable=False
                     )
                 )
@@ -165,6 +166,7 @@ class ResNet4Lstm(Meta):
                         'bias',
                         shape=[out_ndims],
                         initializer=tf.zeros_initializer(),
+                        # initializer=tf.constant_initializer(1e-12),
                         # initializer=tf.truncated_normal_initializer(stddev=in_stddev)
                         # trainable=False
                     )
@@ -276,33 +278,48 @@ class ResNet4Lstm(Meta):
             padded = tf.concat([kept, paddings], -2)
         return padded
 
-    @staticmethod
-    def _apply_res_core(vars, opt_ins, rnn_part, target, scope, target_dims):
+    # @staticmethod
+    # def _apply_res_core(vars, opt_ins, rnn_part, target, scope, target_dims):
+    def _apply_res_core(self, vars, opt_ins, rnn_part, target, scope, target_dims):
         with tf.name_scope(scope):
             # print("\n(ResNet4Lstm._apply_res_core)rnn_part:", rnn_part)
             # print('(ResNet4Lstm._apply_res_core)opt_ins:', opt_ins)
-            opt_ins_united = tf.concat(opt_ins, -1)
+            opt_ins_united = tf.concat(opt_ins, -1, name='opt_ins_united')
             rnn_stack_num = opt_ins_united.get_shape().as_list()[-2]
-            rnn_part = tf.stack([rnn_part]*rnn_stack_num, axis=-2)
+            rnn_part = tf.stack([rnn_part]*rnn_stack_num, axis=-2, name='stacked_rnn_part')
             # print("(ResNet4Lstm._apply_res_core)rnn_part:", rnn_part)
-            hs = tf.concat([opt_ins_united, rnn_part], -1)
+            hs = tf.concat([opt_ins_united, rnn_part], -1, name='opt_ins_with_rnn_part')
             matrices = vars[0]
             biases = vars[1]
-            for m, b in zip(matrices, biases):
+            for idx, (m, b) in enumerate(zip(matrices, biases)):
                 # print('\n(ResNet4Lstm._apply_res_core)hs:', hs)
                 # print('(ResNet4Lstm._apply_res_core)m:', m)
-                matmul_res = custom_matmul(hs, m)
-                hs = tf.nn.relu(custom_add(matmul_res, b))
                 # with tf.device('/cpu:0'):
                 #     hs = tf.Print(
-                #         hs, [matmul_res], message="(ResNetOpt._apply_res_core)(%s)matmul_res: " % scope, summarize=20)
-            hs += tf.concat(target + [tf.zeros(rnn_part.get_shape().as_list())], -1)
+                #         hs, [l2_loss_per_elem(hs)],
+                #         message="(ResNetOpt._apply_res_core)(%s)(%s)hs before: " % (scope, idx), summarize=20)
+                matmul_res = custom_matmul(hs, m)
+                if idx == 0:
+                    self._debug_tensors.append(matmul_res)
+                hs = tf.nn.relu(custom_add(matmul_res, b))
+                # hs = tf.tanh(custom_add(matmul_res, b))
+
+                # with tf.device('/cpu:0'):
+                #     hs = tf.Print(
+                #         hs, [l2_loss_per_elem(matmul_res)],
+                #         message="(ResNetOpt._apply_res_core)(%s)(%s)matmul_res: " % (scope, idx), summarize=20)
+            hs = tf.add(
+                hs,
+                tf.concat(target + [tf.zeros(rnn_part.get_shape().as_list())], -1, name='res_tensor'),
+                name='after_res_conn'
+            )
             rnn_part_dim = hs.get_shape().as_list()[-1] - sum(target_dims)
-            o, sigma, rnn_part = tf.split(hs, list(target_dims) + [rnn_part_dim], axis=-1)
+            o, sigma, rnn_part = tf.split(hs, list(target_dims) + [rnn_part_dim], axis=-1, name='o_sigma_and_rnn_part')
             # print("(ResNet4Lstm._apply_res_core)rnn_part:", rnn_part)
-            with tf.device('/cpu:0'):
-                o = tf.Print(o, [o], message='(ResNetOpt._apply_res_core)(scope=%s)o: ' % scope, summarize=10)
-                sigma = tf.Print(sigma, [sigma], message='(ResNetOpt._apply_res_core)(scope=%s)sigma: ' % scope, summarize=10)
+            # with tf.device('/cpu:0'):
+            #     o = tf.Print(o, [o], message='(ResNetOpt._apply_res_core)(scope=%s)o: ' % scope, summarize=10)
+            #     sigma = tf.Print(
+            #         sigma, [sigma], message='(ResNetOpt._apply_res_core)(scope=%s)sigma: ' % scope, summarize=10)
             return o, sigma, rnn_part
 
     def _apply_res_layer(self, ins, res_vars, rnn_part, scope):
@@ -537,6 +554,8 @@ class ResNet4Lstm(Meta):
             optimizer_dropout_keep_prob=None,
             pupil_trainable_initializers=None
         )
+
+        self._debug_tensors = list()
 
         self._optimizer_dropout_keep_prob = tf.placeholder(tf.float32, name='optimizer_dropout_keep_prob')
         self._hooks['optimizer_dropout_keep_prob'] = self._optimizer_dropout_keep_prob

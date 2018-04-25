@@ -672,10 +672,24 @@ class Meta(object):
                             #     for gv in grads_and_vars:
                             #         new_grads_and_vars.append(
                             #             (tf.Print(
-                            #                 gv[0], [gv[0]], message="gpu %s, %s = " % (gpu_idx, gv[1].name),
+                            #                 gv[0], [l2_loss_per_elem(gv[0])],
+                            #                 message="gpu %s, gradients by %s = " % (gpu_idx, gv[1].name),
                             #                 summarize=10
                             #             ),
                             #              gv[1])
+                            #         )
+                            # debug_grads = tf.gradients(one_gpu_end_loss, self._debug_tensors)
+                            # # print("(Meta._train_graph)self._debug_tensors:", self._debug_tensors)
+                            # # print("(Meta._train_graph)debug_grads:", debug_grads)
+                            # with tf.device('/cpu:0'):
+                            #     for idx, mres in enumerate(debug_grads):
+                            #         new_grads_and_vars[0] = (
+                            #             tf.Print(
+                            #                 new_grads_and_vars[0][0], [l2_loss_per_elem(mres)],
+                            #                 message="%s res layer in core matmul res grad: " % idx,
+                            #                 summarize=10
+                            #             ),
+                            #             new_grads_and_vars[0][1]
                             #         )
                             # grads_and_vars = new_grads_and_vars
 

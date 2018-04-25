@@ -36,7 +36,7 @@ env.build_pupil(
 env.build_optimizer(
     regime='train',
     # regime='inference',
-    num_optimizer_unrollings=7,
+    num_optimizer_unrollings=3,
     num_exercises=5,
     res_size=1000,
     permute=False
@@ -80,10 +80,10 @@ env.train_optimizer(
     additions_to_feed_dict=train_opt_add_feed,
     pupil_restore_paths=['debug_empty_meta_optimizer/not_changing_variables_issue/checkpoints/0'],
     # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
-    reset_period=10,
+    reset_period=1,
     train_dataset_texts=[train_text],
     opt_inf_is_performed=True,
-    opt_inf_stop=40,
+    opt_inf_stop=10,
     opt_inf_pupil_restore_paths={'ignoramus': 'debug_empty_meta_optimizer/not_changing_variables_issue/checkpoints/0'},
     opt_inf_additions_to_feed_dict=opt_inf_add_feed,
     opt_inf_validation_dataset_texts=[valid_text],
