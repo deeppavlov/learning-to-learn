@@ -154,10 +154,10 @@ class ResNet4Lstm(Meta):
                 matrices.append(
                     tf.get_variable(
                         'matrix',
-                        shape=[res_size, out_ndims],
+                        # shape=[res_size, out_ndims],
                         # initializer=tf.truncated_normal_initializer(stddev=in_stddev)
-                        # initializer=out_init,
-                        initializer=tf.zeros_initializer()
+                        initializer=out_init,
+                        # initializer=tf.zeros_initializer()
                         # trainable=False
                     )
                 )
@@ -165,8 +165,8 @@ class ResNet4Lstm(Meta):
                     tf.get_variable(
                         'bias',
                         shape=[out_ndims],
-                        initializer=tf.zeros_initializer(),
-                        # initializer=tf.constant_initializer(1e-12),
+                        # initializer=tf.zeros_initializer(),
+                        initializer=tf.constant_initializer(1e-15),
                         # initializer=tf.truncated_normal_initializer(stddev=in_stddev)
                         # trainable=False
                     )
