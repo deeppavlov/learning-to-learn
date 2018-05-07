@@ -1220,9 +1220,22 @@ def go_through_nested_with_name_scopes_to_perform_func_and_distribute_results(
             write_elem_in_obj_by_path(res, path, t)
 
 
+def global_l2_loss(tensor_list, name_scope='global_l2_loss'):
+    with tf.name_scope(name_scope):
+        loss = 0
+        for t in tensor_list:
+            loss += tf.nn.l2_loss(t)
+        return loss
+
+
 def global_norm(tensor_list, name_scope='global_norm'):
     with tf.name_scope(name_scope):
-        norm = 0
-        for t in tensor_list:
-            norm += tf.nn.l2_loss(t)
-        return tf.sqrt(norm)
+        return tf.sqrt(global_l2_loss(tensor_list))
+
+
+def filter_none_gradients(grads_and_vars):
+    res = list()
+    for gv in grads_and_vars:
+        if gv[0] is not None:
+            res.append(gv)
+    return res

@@ -3,12 +3,12 @@ from useful_functions import (construct, get_keys_from_nested, get_obj_elem_by_p
                               write_elem_in_obj_by_path, stop_gradient_in_nested, compose_save_list, average_gradients,
                               retrieve_from_inner_dicts, distribute_into_inner_dicts, print_optimizer_ins,
                               custom_matmul, values_from_nested, apply_to_nested, l2_loss_per_elem, tf_print_nested,
-                              sort_lists_of_ints_and_str, sort_lists_map,
+                              sort_lists_of_ints_and_str, sort_lists_map, global_l2_loss, filter_none_gradients,
                               go_through_nested_with_name_scopes_to_perform_func_and_distribute_results, global_norm)
 
 
 LEARNING_RATE_FOR_EMPTY_CORE = 1.
-CLIP_NORM = 100.
+CLIP_NORM = 1e+5
 
 
 class Meta(object):
@@ -186,8 +186,7 @@ class Meta(object):
                     stacked[k][stack_key] = tf.transpose(united, perm=perm)
         return stacked
 
-    @staticmethod
-    def _make_inputs_and_labels_placeholders(pupil, num_unrollings, num_exercises, gpu_map):
+    def _make_inputs_and_labels_placeholders(self, pupil, num_unrollings, num_exercises, gpu_map):
         """If both num_unrollings is not None outputs are lists of lists where
         inner list is for unrollings and outer is for exercises. If num_unrollings is None outputs are lists of
         placeholders."""
@@ -204,30 +203,46 @@ class Meta(object):
                 optimizer_grad_inputs.append(list())
                 optimizer_grad_labels.append(list())
             with tf.name_scope('exercise_%s' % ex_idx):
-                with tf.name_scope('pupil_grad_eval_placeholders'):
-                    if num_unrollings is not None:
-                        for i in range(num_unrollings):
+                if self._share_train_data:
+                    with tf.name_scope('placeholders'):
+                        if num_unrollings is not None:
+                            for i in range(num_unrollings):
+                                placeholders = pupil.make_inputs_and_labels_placeholders(
+                                    '/gpu:%s' % gpu_map[ex_idx], 'unrolling_%s' % i)
+                                pupil_grad_eval_inputs[ex_idx].append(placeholders['inputs'])
+                                pupil_grad_eval_labels[ex_idx].append(placeholders['labels'])
+                        else:
                             placeholders = pupil.make_inputs_and_labels_placeholders(
-                                '/gpu:%s' % gpu_map[ex_idx], 'unrolling_%s' % i)
-                            pupil_grad_eval_inputs[ex_idx].append(placeholders['inputs'])
-                            pupil_grad_eval_labels[ex_idx].append(placeholders['labels'])
-                    else:
-                        placeholders = pupil.make_inputs_and_labels_placeholders(
-                            '/gpu:%s' % gpu_map[ex_idx], None)
-                        pupil_grad_eval_inputs.append(placeholders['inputs'])
-                        pupil_grad_eval_labels.append(placeholders['labels'])
-                with tf.name_scope('optimizer_grad_placeholders'):
-                    if num_unrollings is not None:
-                        for i in range(num_unrollings):
+                                '/gpu:%s' % gpu_map[ex_idx], None)
+                            pupil_grad_eval_inputs.append(placeholders['inputs'])
+                            pupil_grad_eval_labels.append(placeholders['labels'])
+                    optimizer_grad_inputs = pupil_grad_eval_inputs
+                    optimizer_grad_labels = pupil_grad_eval_labels
+                else:
+                    with tf.name_scope('pupil_grad_eval_placeholders'):
+                        if num_unrollings is not None:
+                            for i in range(num_unrollings):
+                                placeholders = pupil.make_inputs_and_labels_placeholders(
+                                    '/gpu:%s' % gpu_map[ex_idx], 'unrolling_%s' % i)
+                                pupil_grad_eval_inputs[ex_idx].append(placeholders['inputs'])
+                                pupil_grad_eval_labels[ex_idx].append(placeholders['labels'])
+                        else:
                             placeholders = pupil.make_inputs_and_labels_placeholders(
-                                '/gpu:%s' % gpu_map[ex_idx], 'unrolling_%s' % i)
-                            optimizer_grad_inputs[ex_idx].append(placeholders['inputs'])
-                            optimizer_grad_labels[ex_idx].append(placeholders['labels'])
-                    else:
-                        placeholders = pupil.make_inputs_and_labels_placeholders(
-                            '/gpu:%s' % gpu_map[ex_idx], None)
-                        optimizer_grad_inputs.append(placeholders['inputs'])
-                        optimizer_grad_inputs.append(placeholders['labels'])
+                                '/gpu:%s' % gpu_map[ex_idx], None)
+                            pupil_grad_eval_inputs.append(placeholders['inputs'])
+                            pupil_grad_eval_labels.append(placeholders['labels'])
+                    with tf.name_scope('optimizer_grad_placeholders'):
+                        if num_unrollings is not None:
+                            for i in range(num_unrollings):
+                                placeholders = pupil.make_inputs_and_labels_placeholders(
+                                    '/gpu:%s' % gpu_map[ex_idx], 'unrolling_%s' % i)
+                                optimizer_grad_inputs[ex_idx].append(placeholders['inputs'])
+                                optimizer_grad_labels[ex_idx].append(placeholders['labels'])
+                        else:
+                            placeholders = pupil.make_inputs_and_labels_placeholders(
+                                '/gpu:%s' % gpu_map[ex_idx], None)
+                            optimizer_grad_inputs.append(placeholders['inputs'])
+                            optimizer_grad_inputs.append(placeholders['labels'])
         return pupil_grad_eval_inputs, pupil_grad_eval_labels, optimizer_grad_inputs, optimizer_grad_labels
 
     @staticmethod
@@ -403,54 +418,68 @@ class Meta(object):
 
     @staticmethod
     def _forward_permute(optimizer_ins, in_perm_keys, out_perm_keys, collapse_1st_dim=False):
-        for v in optimizer_ins.values():
-            for in_perm_key in in_perm_keys:
-                if 'in_perm' in v:
-                    if isinstance(v[in_perm_key], list):
-                        v[in_perm_key] = [custom_matmul(t, v['in_perm']) for t in v[in_perm_key]]
-                        if collapse_1st_dim:
-                            v['o'] = [tf.reshape(vec, vec.get_shape().as_list()[1:]) for vec in v['o']]
-                    else:
-                        v[in_perm_key] = custom_matmul(v[in_perm_key], v['in_perm'])
-                        if collapse_1st_dim:
-                            v['o'] = tf.reshape(v['o'], v['o'].get_shape().as_list()[1:])
-            for out_perm_key in out_perm_keys:
-                if 'out_perm' in v:
-                    if isinstance(v[out_perm_key], list):
-                        v[out_perm_key] = [custom_matmul(t, v['out_perm']) for t in v[out_perm_key]]
-                        if collapse_1st_dim:
-                            v['sigma'] = [tf.reshape(vec, vec.get_shape().as_list()[1:]) for vec in v['sigma']]
-                    else:
-                        v[out_perm_key] = custom_matmul(v[out_perm_key], v['out_perm'])
-                        if collapse_1st_dim:
-                            v['sigma'] = tf.reshape(v['sigma'], v['sigma'].get_shape().as_list()[1:])
+        with tf.name_scope('forward_permute'):
+            for k, v in optimizer_ins.items():
+                with tf.name_scope(k):
+                    if 'in_perm' in v:
+                        for in_perm_key in in_perm_keys:
+                            with tf.name_scope(in_perm_key):
+                                if isinstance(v[in_perm_key], list):
+                                    v[in_perm_key] = [custom_matmul(t, v['in_perm']) for t in v[in_perm_key]]
+                                    if collapse_1st_dim:
+                                        v['o'] = [tf.reshape(vec, vec.get_shape().as_list()[1:]) for vec in v['o']]
+                                else:
+                                    v[in_perm_key] = custom_matmul(v[in_perm_key], v['in_perm'])
+                                    if collapse_1st_dim:
+                                        v['o'] = tf.reshape(v['o'], v['o'].get_shape().as_list()[1:])
+                    if 'out_perm' in v:
+                        for out_perm_key in out_perm_keys:
+                            with tf.name_scope(out_perm_key):
+                                if isinstance(v[out_perm_key], list):
+                                    v[out_perm_key] = [custom_matmul(t, v['out_perm']) for t in v[out_perm_key]]
+                                    if collapse_1st_dim:
+                                        v['sigma'] = [
+                                            tf.reshape(vec, vec.get_shape().as_list()[1:]) for vec in v['sigma']]
+                                else:
+                                    v[out_perm_key] = custom_matmul(v[out_perm_key], v['out_perm'])
+                                    if collapse_1st_dim:
+                                        v['sigma'] = tf.reshape(v['sigma'], v['sigma'].get_shape().as_list()[1:])
         return optimizer_ins
 
     @staticmethod
     def _backward_permute(optimizer_outs, in_perm_keys, out_perm_keys, collapse_1st_dim=False):
-        for v in optimizer_outs.values():
-            for in_perm_key in in_perm_keys:
-                if 'in_perm' in v:
-                    in_tr = tf.matrix_transpose(v['in_perm'])
-                    if isinstance(v[in_perm_key], list):
-                        v[in_perm_key] = [custom_matmul(t, in_tr) for t in v[in_perm_key]]
-                        if collapse_1st_dim:
-                            v['o_pr'] = [tf.reshape(vec, vec.get_shape().as_list()[1:]) for vec in v['o_pr']]
-                    else:
-                        v[in_perm_key] = custom_matmul(v[in_perm_key], in_tr)
-                        if collapse_1st_dim:
-                            v['o_pr'] = tf.reshape(v['o_pr'], v['o_pr'].get_shape().as_list()[1:])
-            for out_perm_key in out_perm_keys:
-                if 'out_perm' in v:
-                    out_tr = tf.matrix_transpose(v['out_perm'])
-                    if isinstance(v[out_perm_key], list):
-                        v[out_perm_key] = [custom_matmul(t, out_tr) for t in v[out_perm_key]]
-                        if collapse_1st_dim:
-                            v['sigma_pr'] = [tf.reshape(vec, vec.get_shape().as_list()[1:]) for vec in v['sigma_pr']]
-                    else:
-                        v[out_perm_key] = custom_matmul(v[out_perm_key], out_tr)
-                        if collapse_1st_dim:
-                            v['sigma_pr'] = tf.reshape(v['sigma_pr'], v['sigma_pr'].get_shape().as_list()[1:])
+        with tf.name_scope('backward_permute'):
+            for k, v in optimizer_outs.items():
+                with tf.name_scope(k):
+                    if 'in_perm' in v:
+                        in_tr = tf.matrix_transpose(v['in_perm'])
+                        for in_perm_key in in_perm_keys:
+                            with tf.name_scope(in_perm_key):
+                                if isinstance(v[in_perm_key], list):
+                                    v[in_perm_key] = [custom_matmul(t, in_tr) for t in v[in_perm_key]]
+                                    if collapse_1st_dim:
+                                        v[in_perm_key] = [
+                                            tf.reshape(
+                                                vec, vec.get_shape().as_list()[1:]) for vec in v[in_perm_key]]
+                                else:
+                                    v[in_perm_key] = custom_matmul(v[in_perm_key], in_tr)
+                                    if collapse_1st_dim:
+                                        v[in_perm_key] = tf.reshape(
+                                            v[in_perm_key], v[in_perm_key].get_shape().as_list()[1:])
+                    if 'out_perm' in v:
+                        out_tr = tf.matrix_transpose(v['out_perm'])
+                        for out_perm_key in out_perm_keys:
+                            with tf.name_scope(out_perm_key):
+                                if isinstance(v[out_perm_key], list):
+                                    v[out_perm_key] = [custom_matmul(t, out_tr) for t in v[out_perm_key]]
+                                    if collapse_1st_dim:
+                                        v[out_perm_key] = [
+                                            tf.reshape(vec, vec.get_shape().as_list()[1:]) for vec in v[out_perm_key]]
+                                else:
+                                    v[out_perm_key] = custom_matmul(v[out_perm_key], out_tr)
+                                    if collapse_1st_dim:
+                                        v[out_perm_key] = tf.reshape(
+                                            v[out_perm_key], v[out_perm_key].get_shape().as_list()[1:])
         return optimizer_outs
 
     @staticmethod
@@ -463,24 +492,22 @@ class Meta(object):
                 v['sigma_pr'] = v['sigma']
         return optimizer_ins, []
 
-    @staticmethod
-    def _compose_mods(optimizer_outs, learning_rate=None):
+    def _compose_mods(self, optimizer_outs, learning_rate=None):
         mods = list()
         with tf.name_scope('pupil_mods'):
             for k, v in optimizer_outs.items():
                 with tf.name_scope(k):
                     if 'matrix' in v:
                         ndims = len(v['phi'].get_shape().as_list())
-                        batch_size = v['phi'].get_shape().as_list()[-2]
                         # print("\n(Meta._compose_mods)v['phi'].shape:", v['phi'].get_shape().as_list())
                         # print("\n(Meta._compose_mods)v['psi'].shape:", v['psi'].get_shape().as_list())
                         with tf.name_scope('matrix'):
-                            if ndims == 3:
-                                eq = 'ijk,ijl->ikl'
-                            elif ndims == 2:
-                                eq = 'jk,jl->kl'
-                            v['matrix_mods'] = tf.einsum(eq, v['phi'], v['psi'])  # / batch_size
-                            mods.append(v['matrix_mods'])
+                            with tf.name_scope('matrix_mods_computation'):
+                                if ndims == 3:
+                                    eq = 'ijk,ijl->ikl'
+                                elif ndims == 2:
+                                    eq = 'jk,jl->kl'
+                                v['matrix_mods'] = tf.einsum(eq, v['phi'], v['psi'])  # / batch_size
                             # with tf.device('/cpu:0'):
                             #     v['matrix_mods'] = tf.Print(
                             #         v['matrix_mods'],
@@ -492,38 +519,62 @@ class Meta(object):
                             #         summarize=10
                             #     )
 
-                            # o = tf.concat(v['o'], -2)
-                            # sigma = tf.concat(v['sigma'], -2)
-                            # if ndims == 2:
-                            #     o = tf.reshape(o, o.get_shape().as_list()[1:])
-                            #     sigma = tf.reshape(sigma, sigma.get_shape().as_list()[1:])
-                            # basic_mods = tf.einsum(eq, o, sigma)
-                            # rel_diff = (v['matrix_mods'] - basic_mods) / \
-                            #            (tf.abs(basic_mods) + 1e-7) * (tf.to_float(tf.greater(basic_mods, 0.)) - .5) * 2.
-                            # # v['matrix_mods'] = basic_mods
-                            # with tf.device('/cpu:0'):
-                            #     v['matrix_mods'] = tf.Print(
-                            #         v['matrix_mods'], [rel_diff],
-                            #         "(relative difference)%s = " % k, summarize=20)
-                            #     v['matrix_mods'] = tf.Print(
-                            #         v['matrix_mods'], [basic_mods],
-                            #         "(basic_mods)%s = " % k, summarize=20)
-                            #     v['matrix_mods'] = tf.Print(
-                            #         v['matrix_mods'], [v['matrix_mods']],
-                            #         "(v['matrix_mods'])%s = " % k, summarize=20)
+                            with tf.name_scope('basic_matrix_mods_computation'):
+                                o = tf.concat(v['o'], -2, name='o')
+                                sigma = tf.concat(v['sigma'], -2, name='sigma')
+                                if ndims == 2:
+                                    o = tf.reshape(o, o.get_shape().as_list()[1:])
+                                    sigma = tf.reshape(sigma, sigma.get_shape().as_list()[1:])
+                                basic_mods = tf.einsum(eq, o, sigma)
+                                
+                            with tf.name_scope('relative_difference_computation'):
+                                rel_diff = (v['matrix_mods'] - basic_mods) / \
+                                           (tf.abs(basic_mods) + 1e-7) * \
+                                           (tf.to_float(tf.greater(basic_mods, 0.)) - .5) * 2.
+
+                            # v['matrix_mods'] = basic_mods
+
+                            # v['matrix_mods'] = tf.zeros(basic_mods.get_shape().as_list())
+
+                            with tf.device('/cpu:0'):
+                                if k == 'lstm_layer_0':
+                                    v['matrix_mods'] = tf.Print(
+                                        v['matrix_mods'], [rel_diff],
+                                        "(relative difference)%s = " % k, summarize=20)
+                                #     v['matrix_mods'] = tf.Print(
+                                #         v['matrix_mods'], [basic_mods],
+                                #         "(basic_mods)%s = " % k, summarize=20)
+                                # v['matrix_mods'] = tf.Print(
+                                #     v['matrix_mods'], [v['matrix_mods']],
+                                #     "(v['matrix_mods'])%s = " % k, summarize=20)
+                            mods.append(v['matrix_mods'])
 
                     if 'bias' in v:
                         with tf.name_scope('bias'):
+                            # with tf.name_scope('basic_bias_mods_computation'):
+                            #     sigma = tf.concat(v['sigma'], -2, name='sigma')
+                            #     if ndims == 2:
+                            #         sigma = tf.reshape(sigma, sigma.get_shape().as_list()[1:])
+                            #     v['bias_mods'] = tf.reduce_sum(sigma, axis=-2, name='basic_bias_mods')
+
                             v['bias_mods'] = tf.reduce_sum(v['psi'], axis=-2)
+
+                            # v['bias_mods'] = tf.zeros(v['bias_mods'].get_shape().as_list())
                             mods.append(v['bias_mods'])
                             # with tf.device('/cpu:0'):
                             #     v['bias_mods'] = tf.Print(
                             #         v['bias_mods'], [v['bias_mods']], message='\n' + k + '\nbias:\n')
             with tf.name_scope('clip_gradients'):
-                factor = CLIP_NORM / tf.maximum(global_norm(mods), CLIP_NORM)
+                glob_norm = global_norm(mods)
+                factor = tf.divide(
+                    CLIP_NORM,
+                    tf.maximum(glob_norm, CLIP_NORM),
+                    name='factor')
                 # norm = tf.stop_gradient(tf.maximum(global_norm(mods), 1.))
-                with tf.device('/cpu:0'):
-                    factor = tf.Print(factor, [factor], message='(Meta._compose_mods)factor: ')
+
+                # with tf.device('/cpu:0'):
+                #     factor = tf.Print(factor, [factor], message='(Meta._compose_mods)factor: ')
+
                 for k, v in optimizer_outs.items():
                     with tf.name_scope(k):
                         if 'matrix_mods' in v:
@@ -532,6 +583,13 @@ class Meta(object):
                         if 'bias_mods' in v:
                             with tf.name_scope('bias'):
                                 v['bias_mods'] = tf.multiply(v['bias_mods'], factor, name='bias_mods')
+
+                glob_loss = global_l2_loss(mods)
+
+                # with tf.device('/cpu:0'):
+                #     glob_loss = tf.Print(glob_loss, [glob_norm], message="(Meta._compose_mods)glob_norm: ")
+
+                self._additional_loss += glob_loss / CLIP_NORM
         return optimizer_outs
 
     @staticmethod
@@ -638,17 +696,17 @@ class Meta(object):
                         one_gpu_start_losses = tf.stack(one_gpu_start_losses)
                         one_gpu_end_losses = tf.stack(one_gpu_end_losses)
 
-                        with tf.device('/cpu:0'):
-                            one_gpu_start_losses = tf.Print(
-                                one_gpu_start_losses,
-                                [tf.reduce_mean(one_gpu_start_losses, axis=-1)],
-                                message="(Meta._train_graph)start losses by unrollings on gpu %s: " % gpu_idx,
-                                summarize=20)
-                            one_gpu_end_losses = tf.Print(
-                                one_gpu_end_losses,
-                                [tf.reduce_mean(one_gpu_end_losses, axis=-1)],
-                                message="(Meta._train_graph)end losses by unrollings on gpu %s: " % gpu_idx,
-                                summarize=20)
+                        # with tf.device('/cpu:0'):
+                        #     one_gpu_start_losses = tf.Print(
+                        #         one_gpu_start_losses,
+                        #         [tf.reduce_mean(one_gpu_start_losses, axis=-1)],
+                        #         message="(Meta._train_graph)start losses by unrollings on gpu %s: " % gpu_idx,
+                        #         summarize=20)
+                        #     one_gpu_end_losses = tf.Print(
+                        #         one_gpu_end_losses,
+                        #         [tf.reduce_mean(one_gpu_end_losses, axis=-1)],
+                        #         message="(Meta._train_graph)end losses by unrollings on gpu %s: " % gpu_idx,
+                        #         summarize=20)
 
                         one_gpu_end_loss = tf.reduce_mean(one_gpu_end_losses) + self._l2_loss(self._regularization_rate)
                         one_gpu_start_loss = tf.reduce_mean(one_gpu_start_losses)
@@ -734,6 +792,7 @@ class Meta(object):
                             #         )
                             # grads_and_vars = new_grads_and_vars
 
+                            grads_and_vars = filter_none_gradients(grads_and_vars)
                             tower_grads.append(grads_and_vars)
 
             with tf.device(self._base_device):

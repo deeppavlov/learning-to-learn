@@ -125,13 +125,13 @@ class ResNet4Lstm(Meta):
             matrices, biases = list(), list()
             in_ndims = sum(flatten(left)) + sum(flatten(target)) + sum(flatten(right)) + rnn_part_size
             out_ndims = sum(flatten(target)) + rnn_part_size
-            out_stddev = 1. / (res_size + rnn_part_size)**.5
+            out_stddev = .01 / (res_size + rnn_part_size)**.5
             out_init = tf.concat(
                 [tf.zeros([res_size, sum(flatten(target))]),
                  tf.truncated_normal([res_size, rnn_part_size], stddev=out_stddev)],
                 -1
             )
-            in_stddev = 1. / (in_ndims + res_size)**.5
+            in_stddev = .01 / (in_ndims + res_size)**.5
             with tf.variable_scope('in_core'):
                 matrices.append(
                     tf.get_variable(
@@ -166,7 +166,7 @@ class ResNet4Lstm(Meta):
                         'bias',
                         shape=[out_ndims],
                         # initializer=tf.zeros_initializer(),
-                        initializer=tf.constant_initializer(1e-15),
+                        initializer=tf.constant_initializer(1e-15),  # because otherwise neurons will be dead
                         # initializer=tf.truncated_normal_initializer(stddev=in_stddev)
                         # trainable=False
                     )
@@ -298,6 +298,18 @@ class ResNet4Lstm(Meta):
                 #     hs = tf.Print(
                 #         hs, [l2_loss_per_elem(hs)],
                 #         message="(ResNetOpt._apply_res_core)(%s)(%s)hs before: " % (scope, idx), summarize=20)
+
+                # if scope == 'lstm_layer_0':
+                #     with tf.device('/cpu:0'):
+                #         m = tf.Print(
+                #             m, [tf.sqrt(l2_loss_per_elem(m))],
+                #             message="(ResNet4Lstm._apply_res_core)matrix_%s_%s: " % (scope, idx)
+                #         )
+                #         hs = tf.Print(
+                #             hs, [tf.sqrt(l2_loss_per_elem(hs))],
+                #             message="(ResNet4Lstm._apply_res_core)hs_%s_%s: " % (scope, idx)
+                #         )
+
                 matmul_res = custom_matmul(hs, m)
                 if idx == 0:
                     self._debug_tensors.append(matmul_res)
@@ -492,8 +504,8 @@ class ResNet4Lstm(Meta):
         if permute:
             optimizer_outs = self._backward_permute(optimizer_outs, ['o_pr'], ['sigma_pr'])
 
-        rnn_input = tf.concat(rnn_input_by_res_layers, -1)
-        rnn_input = tf.reduce_mean(rnn_input, axis=-2)
+        rnn_input = tf.concat(rnn_input_by_res_layers, -1, name='all_for_rnn')
+        rnn_input = tf.reduce_mean(rnn_input, axis=-2, name='rnn_input')
         state = self._apply_lstm_layer(
             rnn_input, state, self._opt_trainable['lstm_matrix'], self._opt_trainable['lstm_bias'])
         return optimizer_outs, state
@@ -509,6 +521,7 @@ class ResNet4Lstm(Meta):
                  num_gpus=1,
                  regularization_rate=6e-6,
                  permute=True,
+                 share_train_data=False,
                  regime='train',
                  optimizer_for_opt_type='adam'):
         self._pupil = pupil
@@ -528,6 +541,7 @@ class ResNet4Lstm(Meta):
             self._base_device = '/cpu:0'
         self._regularization_rate = regularization_rate
         self._permute = permute
+        self._share_train_data = share_train_data
         self._regime = regime
 
         self._optimizer_for_opt_type = optimizer_for_opt_type

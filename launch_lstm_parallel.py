@@ -50,16 +50,16 @@ env.build_pupil(
     num_gpus=1)
 
 print('building is finished')
-env.train(save_path='lstm_sample_test/scipop3_1000_bs256_11.12',
+env.train(save_path='lstm/test_res_net_1000_emb150_nl1_nn100_bs32_nu10',
           # restore_path='lstm_sample_test/scipop3_1000_bs256_11.12/checkpoints/2000',
           learning_rate={'type': 'exponential_decay',
-                         'init': 1.,
-                         'decay': .5,
-                         'period': 400},
+                         'init': 4.,
+                         'decay': .1,
+                         'period': 13000},
           batch_size=32,
           num_unrollings=10,
           vocabulary=vocabulary,
-          checkpoint_steps=2000,
+          checkpoint_steps=200,
           result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
           printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
           stop=40000,

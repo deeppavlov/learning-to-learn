@@ -475,10 +475,13 @@ class Lstm(Model):
                     mods['lstm_layer_%s' % layer_idx]['matrix']
                 )
             )
+            mod = mods['lstm_layer_%s' % layer_idx]['bias']
+            if len(mod.get_shape().as_list()) > 1:
+                mod = tf.reshape(mod, [-1], name='bias_mod_first_dims_collapsed')
             assign_ops.append(
                 tf.assign(
                     bias,
-                    mods['lstm_layer_%s' % layer_idx]['bias']
+                    mod
                 )
             )
         for layer_idx, (matr, bias) in enumerate(
@@ -490,10 +493,13 @@ class Lstm(Model):
                     mods['output_layer_%s' % layer_idx]['matrix']
                 )
             )
+            mod = mods['output_layer_%s' % layer_idx]['bias']
+            if len(mod.get_shape().as_list()) > 1:
+                mod = tf.reshape(mod, [-1], name='bias_mod_first_dims_collapsed')
             assign_ops.append(
                 tf.assign(
                     bias,
-                    mods['output_layer_%s' % layer_idx]['bias']
+                    mod
                 )
             )
         return assign_ops

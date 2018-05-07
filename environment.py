@@ -1726,7 +1726,7 @@ class Environment(object):
             restore_paths_datasets_map,
             random_=True
     ):
-        print("EXERCISES RESET!")
+        # print("EXERCISES RESET!")
         # print('(Environment._reset_exercises)restore_paths_datasets_map:', restore_paths_datasets_map)
         num_paths = len(pupil_restore_paths)
         if random_:
