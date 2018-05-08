@@ -127,8 +127,8 @@ class Handler(object):
             fuse_file_name=None,
             example_tensor_schedule=None,
             example_file_name=None,
-            verbose=True,
-        ):
+            verbose=True
+    ):
         self._verbose = verbose
         if printed_result_types is None:
             printed_result_types = ['loss']

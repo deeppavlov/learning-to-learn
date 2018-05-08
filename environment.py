@@ -21,6 +21,8 @@ from args_parsing import parse_1_set_of_kwargs, parse_train_method_arguments, \
 from handler import Handler
 from subword_nmt.apply_bpe import BPE
 from bpe import prepare_for_bpe, bpe_post_processing
+from tensors import perplexity_tensor, loss_tensor, accuracy_tensor, bpc_tensor, identity_tensor
+
 
 class Controller(object):
     """Controller is a class which instances are used for computing changing learning parameters. For example
@@ -125,151 +127,6 @@ class Controller(object):
     @property
     def name(self):
         return self._specifications['name']
-
-
-def perplexity_tensor(**kwargs):
-    with tf.name_scope('computing_perplexity'):
-        probabilities = kwargs['probabilities']
-        labels = kwargs['labels']
-        special_args = kwargs['special_args']
-        probabilities_shape = probabilities.get_shape().as_list()
-        length = probabilities_shape[1]
-        if 'dialog_switch' in special_args:
-            if special_args['dialog_switch']:
-                _, switch = tf.split(labels, [length, 1], axis=1, name='switch_vector')
-                switch = tf.reshape(switch, [-1], name='switch_reshaped')
-        if 'mark_vec_len' in special_args:
-            if special_args['mark_vec_len'] is not None:
-                probabilities, _ = tf.split(
-                    probabilities,
-                    [length - special_args['mark_vec_len'], special_args['mark_vec_len']],
-                    axis=1,
-                    name='word_and_punctuation_preds')
-        ln2 = np.log(2, dtype=np.float32)
-        shape = probabilities.get_shape().as_list()
-        probabilities = tf.where(probabilities > 1e-10,
-                                 probabilities,
-                                 np.full(tuple(shape), 1e-10),
-                                 name='to_small_values_in_probs_are_filtered')
-        log_probabilities = tf.divide(tf.log(probabilities), ln2, name='log2_probs')
-        entropy = tf.reduce_sum(- probabilities * log_probabilities, axis=1, name='entropy_not_mean')
-        perplexity = tf.exp(ln2 * entropy, name='perplexity_not_aver')
-        if 'dialog_switch' in special_args:
-            if special_args['dialog_switch']:
-                perplexity = tf.multiply(perplexity, switch, name='relevant_perplexity')
-                num_of_sensible_results = tf.reduce_sum(switch, name='num_of_sensible_results')
-                there_is_sensible = tf.not_equal(num_of_sensible_results, 0., name='there_is_sensible')
-                mean_perplexity = tf.divide(tf.reduce_sum(perplexity, name='sum_perplexity'),
-                                            (num_of_sensible_results + 1e-12),
-                                            name='mean_perplexity')
-                return tf.where(there_is_sensible, mean_perplexity, -1., name='perplexity')
-        return tf.reduce_mean(perplexity, name="perplexity")
-
-
-def loss_tensor(**kwargs):
-    with tf.name_scope('computing_loss'):
-        predictions = kwargs['predictions']
-        labels = kwargs['labels']
-        special_args = kwargs['special_args']
-        predictions_shape = predictions.get_shape().as_list()
-        length = predictions_shape[1]
-        # print('(loss_tensor)length:', length)
-        if 'dialog_switch' in special_args:
-            if special_args['dialog_switch']:
-                labels, switch = tf.split(labels, [length, 1], axis=1, name='labels_and_switch')
-                switch = tf.reshape(switch, [-1], name='switch_reshaped')
-        if 'mark_vec_len' in special_args:
-            if special_args['mark_vec_len'] is not None:
-                predictions, _ = tf.split(
-                    predictions,
-                    [length - special_args['mark_vec_len'], special_args['mark_vec_len']],
-                    axis=1,
-                    name='word_and_punctuation_preds')
-                labels, _ = tf.split(
-                    labels,
-                    [length - special_args['mark_vec_len'], special_args['mark_vec_len']],
-                    axis=1,
-                    name='word_and_punctuation_labels')
-        shape = predictions.get_shape().as_list()
-        predictions = tf.where(predictions > 1e-10,
-                               predictions,
-                               np.full(tuple(shape), 1e-10),
-                               name='to_small_values_in_probs_are_filtered')
-        log_predictions = tf.log(predictions, name='log_pred')
-        loss_on_characters = tf.reduce_sum(-labels * log_predictions, axis=1, name='loss_not_mean')
-        if 'dialog_switch' in special_args:
-            if special_args['dialog_switch']:
-                loss_on_characters = tf.multiply(loss_on_characters, switch, name='relevant_loss')
-                num_of_sensible_results = tf.reduce_sum(switch, name='num_of_sensible_results')
-                there_is_sensible = tf.not_equal(num_of_sensible_results, 0., name='there_is_sensible')
-                mean_loss = tf.divide(tf.reduce_sum(loss_on_characters, name='loss_sum'),
-                                      (num_of_sensible_results + 1e-12),
-                                      name='mean_loss')
-                return tf.where(there_is_sensible, mean_loss, -1., name='loss')
-        return tf.reduce_mean(loss_on_characters, name='loss')
-
-
-def bpc_tensor(**kwargs):
-    with tf.name_scope('computing_bpc'):
-        return kwargs['loss'] / np.log(2)
-
-
-def accuracy_tensor(**kwargs):
-    with tf.name_scope('computing_accuracy'):
-        predictions = kwargs['predictions']
-        labels = kwargs['labels']
-        special_args = kwargs['special_args']
-        predictions_shape = predictions.get_shape().as_list()
-        length = predictions_shape[1]
-        if 'dialog_switch' in special_args:
-            if special_args['dialog_switch']:
-                labels, switch = tf.split(labels,
-                                          [length, 1],
-                                          axis=1,
-                                          name='labels_and_switch')
-                switch = tf.reshape(switch, [-1], name='switch')
-        if 'mark_vec_len' in special_args:
-            if special_args['mark_vec_len'] is not None:
-                predictions, _ = tf.split(
-                    predictions,
-                    [length - special_args['mark_vec_len'], special_args['mark_vec_len']],
-                    axis=1,
-                    name='word_and_punctuation_preds')
-                labels, _ = tf.split(
-                    labels,
-                    [length - special_args['mark_vec_len'], special_args['mark_vec_len']],
-                    axis=1,
-                    name='word_and_punctuation_labels')
-        predictions = tf.argmax(predictions, axis=1, name='predictions')
-        labels = tf.argmax(labels, axis=1, name='labels')
-
-        # predictions = tf.Print(
-        #     predictions,
-        #     [predictions],
-        #     message='predictions_in_accuracy:', summarize=1200)
-        # labels = tf.Print(labels, [labels], message='labels_in_accuracy:', summarize=1200)
-
-        accuracy = tf.to_float(tf.equal(predictions, labels), name='accuracy_not_aver')
-        if 'dialog_switch' in special_args:
-            if special_args['dialog_switch']:
-                accuracy = tf.multiply(accuracy, switch, name='accuracy_relevant')
-                num_of_sensible_results = tf.reduce_sum(switch, name='num_of_sensible_results')
-                # num_of_sensible_results = tf.Print(num_of_sensible_results,
-                #                                    [num_of_sensible_results],
-                #                                    message='Number of sensible results in accuracy:')
-                there_is_sensible = tf.not_equal(num_of_sensible_results, 0., name='there_is_sensible')
-                mean_accuracy = tf.divide(tf.reduce_sum(accuracy, name='accuracy_sum'),
-                                          (num_of_sensible_results + 1e-12),
-                                          name='mean_accuracy')
-                return tf.where(there_is_sensible, mean_accuracy, -1., name='accuracy')
-        return tf.reduce_mean(accuracy, name='accuracy')
-
-
-def identity_tensor(**kwargs):
-    if len(kwargs) > 1:
-        raise InvalidArgumentError('kwargs should not contain 1 entry', kwargs, 'kwargs', 'len(kwargs)=1')
-    for value in kwargs.values():
-        return value
 
 
 class Environment(object):
@@ -587,7 +444,7 @@ class Environment(object):
         default_hooks = self._pupil.get_default_hooks()
         # print('(Environment._build_pupil)default_hooks:', default_hooks)
         self._hooks.update(default_hooks)
-        self._register_default_builders()
+        # self._register_default_builders()
 
     def build_optimizer(self, **kwargs):
         self._meta_optimizer_class.check_kwargs(**kwargs)
@@ -595,143 +452,6 @@ class Environment(object):
         self._meta_optimizer = self._meta_optimizer_class(self._pupil, **kwargs)
         default_hooks = self._meta_optimizer.get_default_hooks()
         self._hooks.update(default_hooks)
-
-    @staticmethod
-    def _split_to_loss_and_not_loss_names(names):
-        loss_names = list()
-        not_loss_names = list()
-        for name in names:
-            if 'loss' in name:
-                loss_names.append(name)
-            else:
-                not_loss_names.append(name)
-        return loss_names, not_loss_names
-
-    def _arguments_for_new_tensor_building(self, hooks, tensor_names):
-        arguments = dict()
-        for key, value in hooks.items():
-            if value not in self._hooks:
-                stars = '\n**********\n'
-                self._hooks[value] = tf.placeholder(tf.float32)
-                msg = "Warning! Adding to hooks shapeless placeholder %s " \
-                      "of type tf.float32 with alias '%s'" % (self._hooks[value].name, value)
-                print(stars + msg + stars)
-            arguments[key] = self._hooks[value]
-        for key, value in tensor_names.items():
-            arguments[key] = tf.get_default_graph().get_tensor_by_name(value)
-        return arguments
-
-    def _add_hook(self, builder_name):
-        if builder_name in self._builders:
-            builder = self._builders[builder_name]
-            kwargs = self._arguments_for_new_tensor_building(builder['hooks'],
-                                                             builder['tensor_names'])
-            kwargs['special_args'] = builder['special_args']
-            new_tensor = builder['f'](**kwargs)
-            self._hooks[builder['output_hook_name']] = new_tensor
-        else:
-            stars = '\n**********\n'
-            msg = "Warning! Adding to hooks shapeless placeholder of type tf.float32 with alias '%s'" % builder_name
-            print(stars + msg + stars)
-            self._hooks[builder_name] = tf.placeholder(tf.float32, name=builder_name)
-
-    def add_hooks(self, builder_names_or_builders=None, tensor_names=None):
-        if builder_names_or_builders is None:
-            builder_names_or_builders = list()
-        if tensor_names is None:
-            tensor_names = list()
-        actual_names = list()
-        for builder_name in builder_names_or_builders:
-            if isinstance(builder_name, dict):
-                self.register_builder(**builder_name)
-                actual_names.append(builder_name['output_hook_name'])
-            else:
-                actual_names.append(builder_name)
-        loss_builder_names, not_loss_builder_names = self._split_to_loss_and_not_loss_names(actual_names)
-        # print('loss_builder_names:', loss_builder_names)
-        # print('not_loss_builder_names:', not_loss_builder_names)
-        for builder_name in loss_builder_names:
-            self._add_hook(builder_name)
-        for builder_name in not_loss_builder_names:
-            self._add_hook(builder_name)
-        for alias, name in tensor_names:
-            self._hooks[alias] = tf.get_default_graph().get_tensor_by_name(name)
-
-    def register_build_function(self, function, name):
-        self._build_functions[name] = function
-
-    def print_available_builders(self):
-        for builder_name, builder in self._builders.items():
-            print(builder_name + ':', builder)
-
-    def register_builder(self,
-                         f=None,
-                         hooks=None,
-                         tensor_names=None,
-                         output_hook_name=None,
-                         special_args=None):
-        if hooks is None:
-            hooks = dict()
-        if tensor_names is None:
-            tensor_names = dict()
-        if isinstance(f, str):
-            f = self._build_functions[f]
-        self._builders[output_hook_name] = dict(f=f,
-                                                hooks=hooks,
-                                                tensor_names=tensor_names,
-                                                output_hook_name=output_hook_name,
-                                                special_args=special_args)
-
-    def _register_default_builders(self):
-        pupil_special_args = self._pupil.get_special_args()
-        train_perplexity_builder = dict(f=perplexity_tensor,
-                                        hooks={'probabilities': 'predictions',
-                                               'labels': 'labels_prepared'},
-                                        tensor_names=dict(),
-                                        output_hook_name='perplexity',
-                                        special_args=pupil_special_args)
-        valid_perplexity_builder = dict(f=perplexity_tensor,
-                                        hooks={'probabilities': 'validation_predictions',
-                                               'labels': 'validation_labels_prepared'},
-                                        tensor_names=dict(),
-                                        output_hook_name='validation_perplexity',
-                                        special_args=pupil_special_args)
-        valid_loss_builder = dict(f=loss_tensor,
-                                  hooks={'predictions': 'validation_predictions',
-                                         'labels': 'validation_labels_prepared'},
-                                  tensor_names=dict(),
-                                  output_hook_name='validation_loss',
-                                  special_args=pupil_special_args)
-        train_bpc_builder = dict(f=bpc_tensor,
-                                 hooks={'loss': 'loss'},
-                                 tensor_names=dict(),
-                                 output_hook_name='bpc',
-                                 special_args=pupil_special_args)
-        valid_bpc_builder=dict(f=bpc_tensor,
-                               hooks={'loss': 'validation_loss'},
-                               tensor_names=dict(),
-                               output_hook_name='validation_bpc',
-                               special_args=pupil_special_args)
-        train_accuracy_builder=dict(f=accuracy_tensor,
-                                    hooks={'predictions': 'predictions',
-                                          'labels': 'labels_prepared'},
-                                    tensor_names=dict(),
-                                    output_hook_name='accuracy',
-                                    special_args=pupil_special_args)
-        valid_accuracy_builder=dict(f=accuracy_tensor,
-                                    hooks={'predictions': 'validation_predictions',
-                                           'labels': 'validation_labels_prepared'},
-                                    tensor_names=dict(),
-                                    output_hook_name='validation_accuracy',
-                                    special_args=pupil_special_args)
-
-        self._builders = {'perplexity': train_perplexity_builder,
-                          'validation_perplexity': valid_perplexity_builder,
-                          'validation_loss': valid_loss_builder,
-                          'bpc': train_bpc_builder,
-                          'validation_bpc': valid_bpc_builder,
-                          'accuracy': train_accuracy_builder,
-                          'validation_accuracy': valid_accuracy_builder}
 
     @classmethod
     def _update_dict(cls, dict_to_update, update):
@@ -877,9 +597,7 @@ class Environment(object):
                                            'test',
                                            None,
                                            False)
-        all_tensor_aliases = self._all_tensor_aliases_from_test_method_arguments(tmp_output)
         # print('all_tensor_aliases:', all_tensor_aliases)
-        self._create_missing_hooks(all_tensor_aliases)
         session_specs = tmp_output['session_specs']
         start_specs = tmp_output['start_specs']
         work = tmp_output['work']
@@ -1214,13 +932,6 @@ class Environment(object):
             self._tensor_aliases_from_schedule(work['validation_tensor_schedule']))
         return list_of_required_tensors_aliases
 
-    def _create_missing_hooks(self, list_of_tensor_aliases):
-        missing = list()
-        for tensor_alias in list_of_tensor_aliases:
-            if tensor_alias not in self._hooks:
-                missing.append(tensor_alias)
-        self.add_hooks(missing)
-
     def _build_batch_kwargs(self, unprepared_kwargs):
         kwargs = dict()
         for key, arg in unprepared_kwargs.items():
@@ -1251,11 +962,12 @@ class Environment(object):
             init_step=0,
             storage=None,
             meta_optimizer_training_is_performed=False
-        ):
+    ):
         """It is a method that does actual training and responsible for one training pass through dataset. It is called
         from train method (maybe several times)
         Args:
             kwargs should include all entries defined in self._pupil_default_training"""
+        # print("(Environment._train)self._hooks:", self._hooks)
         train_specs = construct(run_specs['train_specs'])
         # print("(Environment._train)train_specs['train_batch_kwargs']:", train_specs['train_batch_kwargs'])
         schedule = construct(run_specs['schedule'])
@@ -1555,9 +1267,7 @@ class Environment(object):
         run_specs_set = tmp_output['run']
         # print("(Environment.train)run_specs_set[0]['train_specs']['train_batch_kwargs']:",
         #       run_specs_set[0]['train_specs']['train_batch_kwargs'])
-        all_tensor_aliases = self._all_tensor_aliases_from_train_method_arguments([(start_specs, run_specs_set)])
         # print('(Environment.train)all_tensor_aliases:', all_tensor_aliases)
-        self._create_missing_hooks(all_tensor_aliases)
 
         if start_session:
             self._start_session(session_specs['allow_soft_placement'],
@@ -1631,12 +1341,9 @@ class Environment(object):
         session_specs = tmp_output['session_specs']
         start_specs = tmp_output['start_specs']
         run_specs_set = tmp_output['run']
-        all_tensor_aliases = self._all_tensor_aliases_from_train_meta_optimizer_method_arguments(
-            [(start_specs, run_specs_set)])
         # print('(Environment.train_optimizer)all_tensor_aliases:', all_tensor_aliases)
         # print("(Environment.train_optimizer)run_specs_set[0]['optimizer_inference']['valid_batch_kwargs']:",
         #       run_specs_set[0]['optimizer_inference']['valid_batch_kwargs'])
-        self._create_missing_hooks(all_tensor_aliases)
 
         if start_session:
             self._start_session(session_specs['allow_soft_placement'],
@@ -2025,10 +1732,6 @@ class Environment(object):
 
         self._build_pupil(kwargs_for_building)
         # print('args_for_launches:', args_for_launches)
-        all_tensor_aliases = self._all_tensor_aliases_from_train_method_arguments(
-            args_for_launches, evaluation=evaluation)
-        # print('all_tensor_aliases:', all_tensor_aliases)
-        self._create_missing_hooks(all_tensor_aliases)
         self._start_session(session_specs['allow_soft_placement'],
                             session_specs['log_device_placement'],
                             session_specs['gpu_memory'],

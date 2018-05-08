@@ -19,6 +19,8 @@ env = Environment(
     batch_generator_classes=BatchGenerator,
     vocabulary=vocabulary)
 
+add_metrics = ['bpc', 'perplexity', 'accuracy']
+
 env.build_pupil(
     batch_size=32,
     num_layers=1,
@@ -31,6 +33,7 @@ env.build_pupil(
     init_parameter=3.,
     num_gpus=1,
     regime='training_with_meta_optimizer',
+    additional_metrics=add_metrics
 )
 
 env.build_optimizer(
@@ -41,7 +44,8 @@ env.build_optimizer(
     res_size=2000,
     permute=False,
     share_train_data=False,
-    optimizer_for_opt_type='adam'
+    optimizer_for_opt_type='adam',
+    additional_metrics=add_metrics
 )
 
 
@@ -80,6 +84,7 @@ for idx in [50, 0, 1, 10, 20, 24, 28, 32, 36, 40, 50, 60, 80, 100, 120, 160, 200
     step = idx * 200
     env.train_optimizer(
         save_path='res_net_relu/from_%s' % step,
+        result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
         additions_to_feed_dict=train_opt_add_feed,
         pupil_restore_paths=['lstm/test_res_net_1000_emb150_nl1_nn100_bs32_nu10/checkpoints/%s' % step],
         # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],

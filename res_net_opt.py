@@ -510,20 +510,27 @@ class ResNet4Lstm(Meta):
             rnn_input, state, self._opt_trainable['lstm_matrix'], self._opt_trainable['lstm_bias'])
         return optimizer_outs, state
 
-    def __init__(self,
-                 pupil,
-                 num_exercises=10,
-                 num_lstm_nodes=256,
-                 num_optimizer_unrollings=10,
-                 perm_period=None,
-                 num_res_layers=4,
-                 res_size=1000,
-                 num_gpus=1,
-                 regularization_rate=6e-6,
-                 permute=True,
-                 share_train_data=False,
-                 regime='train',
-                 optimizer_for_opt_type='adam'):
+    def __init__(
+            self,
+            pupil,
+            num_exercises=10,
+            num_lstm_nodes=256,
+            num_optimizer_unrollings=10,
+            perm_period=None,
+            num_res_layers=4,
+            res_size=1000,
+            num_gpus=1,
+            regularization_rate=6e-6,
+            clip_norm=1e+5,
+            permute=True,
+            share_train_data=False,
+            regime='train',
+            optimizer_for_opt_type='adam',
+            additional_metrics=None
+    ):
+        if additional_metrics is None:
+            additional_metrics = list()
+
         self._pupil = pupil
         self._pupil_net_size = self._pupil.get_net_size()
         self._pupil_dims = self._pupil.get_layer_dims()
@@ -540,11 +547,14 @@ class ResNet4Lstm(Meta):
         else:
             self._base_device = '/cpu:0'
         self._regularization_rate = regularization_rate
+        self._clip_norm = clip_norm
         self._permute = permute
         self._share_train_data = share_train_data
         self._regime = regime
 
         self._optimizer_for_opt_type = optimizer_for_opt_type
+
+        self._additional_metrics = additional_metrics
 
         self._hooks = dict(
             pupil_grad_eval_inputs=None,
@@ -568,6 +578,10 @@ class ResNet4Lstm(Meta):
             optimizer_dropout_keep_prob=None,
             pupil_trainable_initializers=None
         )
+        for add_metric in self._additional_metrics:
+            self._hooks['start_' + add_metric] = None
+            self._hooks['end_' + add_metric] = None
+            self._hooks[add_metric] = None
 
         self._debug_tensors = list()
 

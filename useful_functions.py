@@ -1239,3 +1239,34 @@ def filter_none_gradients(grads_and_vars):
         if gv[0] is not None:
             res.append(gv)
     return res
+
+
+def func_on_list_in_nested(nested, func):
+    """ Goes up to first list and stacks it. nested is a nested dictionary"""
+    for k, v in nested.items():
+        if isinstance(v, list):
+            nested[k] = func(v)
+        else:
+            nested[k] = func_on_list_in_nested(v, func)
+    return nested
+
+
+def append_to_nested(result, to_append):
+    """result and to_append are nested dicts"""
+    for k, v in to_append.items():
+        if isinstance(v, dict):
+            append_to_nested(result[k], v)
+        else:
+            result[k].append(v)
+    return result
+
+
+def get_average_with_weights_func(weights):
+    sum_ = float(sum(weights))
+    prep_weights = [w / sum_ for w in weights]
+    def average_func(values):
+        res = 0
+        for w, v in zip(prep_weights, values):
+            res += w * v
+        return res
+    return average_func

@@ -35,6 +35,7 @@ add_feed = [{'placeholder': 'dropout', 'value': 0.9} #,
 valid_add_feed = [# {'placeholder': 'sampling_prob', 'value': 1.},
                   {'placeholder': 'dropout', 'value': 1.}]
 
+add_metrics = ['bpc', 'perplexity', 'accuracy']
 
 env.build_pupil(
     batch_size=32,
@@ -47,7 +48,9 @@ env.build_pupil(
     num_unrollings=10,
     init_parameter=3.,
     # character_positions_in_vocabulary=cpiv,
-    num_gpus=1)
+    num_gpus=1,
+    additional_metrics=add_metrics
+)
 
 print('building is finished')
 env.train(save_path='lstm/test_res_net_1000_emb150_nl1_nn100_bs32_nu10',

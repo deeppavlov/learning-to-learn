@@ -4,8 +4,9 @@ from useful_functions import (construct, get_keys_from_nested, get_obj_elem_by_p
                               retrieve_from_inner_dicts, distribute_into_inner_dicts, print_optimizer_ins,
                               custom_matmul, values_from_nested, apply_to_nested, l2_loss_per_elem, tf_print_nested,
                               sort_lists_of_ints_and_str, sort_lists_map, global_l2_loss, filter_none_gradients,
-                              go_through_nested_with_name_scopes_to_perform_func_and_distribute_results, global_norm)
-
+                              go_through_nested_with_name_scopes_to_perform_func_and_distribute_results, global_norm,
+                              func_on_list_in_nested, append_to_nested)
+from tensors import perplexity_tensor, loss_tensor, accuracy_tensor, bpc_tensor, compute_metrics
 
 LEARNING_RATE_FOR_EMPTY_CORE = 1.
 CLIP_NORM = 1e+5
@@ -296,7 +297,7 @@ class Meta(object):
             pupil_trainable_variables, pupil_grad_eval_pupil_storage):
         with tf.name_scope('eval_pupil_gradients_for_optimizer_training'):
             # print("(Meta._eval_pupil_gradients_for_optimizer_training)pupil_grad_eval_inputs:", pupil_grad_eval_inputs)
-            loss, optimizer_ins, new_storage = self._pupil.loss_and_opt_ins(
+            loss, optimizer_ins, new_storage, predictions, labels = self._pupil.loss_and_opt_ins(
                 pupil_grad_eval_inputs, pupil_grad_eval_labels,
                 pupil_grad_eval_pupil_storage, opt_ins=pupil_trainable_variables)
             # print('(Meta._eval_pupil_gradients_for_optimizer_training)AFTER LOSS_AND_OPT_INS')
@@ -315,17 +316,17 @@ class Meta(object):
             # print_optimizer_ins(optimizer_ins)
             with tf.name_scope('stop_gradients_in_pupil_storage_subsequent_pupil_launches'):
                 new_storage = stop_gradient_in_nested(new_storage)
-        return optimizer_ins, new_storage, loss
+        return optimizer_ins, new_storage, loss, predictions, labels
 
     def _eval_pupil_gradients_for_optimizer_inference(self):
-        loss, optimizer_ins, storage_save_ops = self._pupil.loss_and_opt_ins_for_inference()
+        loss, optimizer_ins, storage_save_ops, predictions, labels = self._pupil.loss_and_opt_ins_for_inference()
         # print('(Meta._eval_pupil_gradients_for_optimizer_inference)optimizer_ins:', optimizer_ins)
         s_vectors, map_ = retrieve_from_inner_dicts(optimizer_ins, 's')
         # print('(Meta._eval_pupil_gradients_for_optimizer_inference)map_:', map_)
         sigma_vectors = tf.gradients(loss, s_vectors)
         optimizer_ins = distribute_into_inner_dicts(optimizer_ins, 'sigma', sigma_vectors, map_)
         # print('(Meta._eval_pupil_gradients_for_optimizer_inference)optimizer_ins:', optimizer_ins)
-        return optimizer_ins, storage_save_ops, loss
+        return optimizer_ins, storage_save_ops, loss, predictions, labels
 
     @staticmethod
     def _concat_opt_ins(opt_ins, inner_keys):
@@ -567,8 +568,8 @@ class Meta(object):
             with tf.name_scope('clip_gradients'):
                 glob_norm = global_norm(mods)
                 factor = tf.divide(
-                    CLIP_NORM,
-                    tf.maximum(glob_norm, CLIP_NORM),
+                    self._clip_norm,
+                    tf.maximum(glob_norm, self._clip_norm),
                     name='factor')
                 # norm = tf.stop_gradient(tf.maximum(global_norm(mods), 1.))
 
@@ -589,7 +590,7 @@ class Meta(object):
                 # with tf.device('/cpu:0'):
                 #     glob_loss = tf.Print(glob_loss, [glob_norm], message="(Meta._compose_mods)glob_norm: ")
 
-                self._additional_loss += glob_loss / CLIP_NORM
+                self._additional_loss += glob_loss / self._clip_norm
         return optimizer_outs
 
     @staticmethod
@@ -644,6 +645,12 @@ class Meta(object):
 
             start_losses_by_gpu = list()
             end_losses_by_gpu = list()
+            start_additional_metrics_by_gpu = dict()
+            end_additional_metrics_by_gpu = dict()
+            for add_metric in self._additional_metrics:
+                start_additional_metrics_by_gpu[add_metric] = list()
+                end_additional_metrics_by_gpu[add_metric] = list()
+
             tower_grads = list()
 
             for gpu_idx in range(self._num_gpus):
@@ -659,15 +666,25 @@ class Meta(object):
                         tmp_states = optimizer_states
                         one_gpu_end_losses = list()
                         one_gpu_start_losses = list()
+                        one_gpu_start_additional_metrics = dict()
+                        one_gpu_end_additional_metrics = dict()
+                        for add_metric in self._additional_metrics:
+                            one_gpu_start_additional_metrics[add_metric] = list()
+                            one_gpu_end_additional_metrics[add_metric] = list()
                         # print("(Meta._train_graph)pupil_grad_eval_inputs:", pupil_grad_eval_inputs)
                         for unr_idx in range(self._num_optimizer_unrollings):
                             with tf.name_scope('optimizer_unrolling_%s' % unr_idx):
-                                optimizer_ins, pupil_grad_eval_pupil_storage[gpu_idx], start_loss =\
-                                    self._eval_pupil_gradients_for_optimizer_training(
-                                        pupil_grad_eval_inputs[gpu_idx][unr_idx],
-                                        pupil_grad_eval_labels[gpu_idx][unr_idx],
-                                        pupil_trainable_variables[gpu_idx], pupil_grad_eval_pupil_storage[gpu_idx]
-                                    )
+                                optimizer_ins, pupil_grad_eval_pupil_storage[gpu_idx], start_loss, start_predictions,\
+                                    start_labels = \
+                                        self._eval_pupil_gradients_for_optimizer_training(
+                                            pupil_grad_eval_inputs[gpu_idx][unr_idx],
+                                            pupil_grad_eval_labels[gpu_idx][unr_idx],
+                                            pupil_trainable_variables[gpu_idx], pupil_grad_eval_pupil_storage[gpu_idx]
+                                        )
+                                start_additional_metrics = compute_metrics(
+                                    self._additional_metrics, start_predictions,
+                                    start_labels, start_loss, keep_first_dim=True)
+
                                 # print("(Meta._train_graph)pupil_trainable_variables[%s]:" % gpu_idx,
                                 #       pupil_trainable_variables[gpu_idx])
 
@@ -681,18 +698,30 @@ class Meta(object):
                                 new_pupil_trainable = self._filter_opt_flow_dict(
                                     optimizer_outs_mods_are_applied, ['matrix', 'bias'])
 
-                                end_loss, _, optimizer_grad_pupil_storage[gpu_idx] = self._pupil.loss_and_opt_ins(
-                                    optimizer_grad_inputs[gpu_idx][unr_idx], optimizer_grad_labels[gpu_idx][unr_idx],
-                                    optimizer_grad_pupil_storage[gpu_idx], opt_ins=new_pupil_trainable,
-                                    name_scope='pupil_loss_after_pupil_modification'
-                                )
-
+                                end_loss, _, optimizer_grad_pupil_storage[gpu_idx], end_predictions, end_labels = \
+                                    self._pupil.loss_and_opt_ins(
+                                        optimizer_grad_inputs[gpu_idx][unr_idx],
+                                        optimizer_grad_labels[gpu_idx][unr_idx],
+                                        optimizer_grad_pupil_storage[gpu_idx], opt_ins=new_pupil_trainable,
+                                        name_scope='pupil_loss_after_pupil_modification'
+                                    )
+                                end_additional_metrics = compute_metrics(
+                                    self._additional_metrics, end_predictions,
+                                    end_labels, end_loss, keep_first_dim=True)
                                 # print("(Meta._train_graph)new_pupil_trainable:",
                                 #       new_pupil_trainable)
 
                                 pupil_trainable_variables[gpu_idx] = new_pupil_trainable
                                 one_gpu_start_losses.append(start_loss)
                                 one_gpu_end_losses.append(end_loss)
+                                one_gpu_start_additional_metrics = append_to_nested(
+                                    one_gpu_start_additional_metrics,
+                                    start_additional_metrics
+                                )
+                                one_gpu_end_additional_metrics = append_to_nested(
+                                    one_gpu_end_additional_metrics,
+                                    end_additional_metrics
+                                )
                         one_gpu_start_losses = tf.stack(one_gpu_start_losses)
                         one_gpu_end_losses = tf.stack(one_gpu_end_losses)
 
@@ -708,8 +737,15 @@ class Meta(object):
                         #         message="(Meta._train_graph)end losses by unrollings on gpu %s: " % gpu_idx,
                         #         summarize=20)
 
-                        one_gpu_end_loss = tf.reduce_mean(one_gpu_end_losses) + self._l2_loss(self._regularization_rate)
+                        one_gpu_end_loss = tf.reduce_mean(one_gpu_end_losses)
+                        train_optimizer_loss = one_gpu_end_loss + self._l2_loss(self._regularization_rate)
                         one_gpu_start_loss = tf.reduce_mean(one_gpu_start_losses)
+
+                        one_gpu_start_additional_metrics = func_on_list_in_nested(
+                            one_gpu_start_additional_metrics, tf.reduce_mean)
+                        one_gpu_end_additional_metrics = func_on_list_in_nested(
+                            one_gpu_end_additional_metrics, tf.reduce_mean)
+
                         new_pupil_trainable = self._retrieve_and_unstack_trainable_variables(
                             self._num_exercises, new_pupil_trainable)
                         # print("(Meta._train_graph)pupil_grad_eval_pupil_storage (before unstacking):",
@@ -760,11 +796,21 @@ class Meta(object):
                         )
 
                         with tf.control_dependencies(save_ops):
-                            one_gpu_end_loss = tf.identity(one_gpu_end_loss, name='loss_on_gpu_%s' % gpu_idx)
+                            train_optimizer_loss = tf.identity(
+                                train_optimizer_loss, name='train_optimizer_loss_on_gpu_%s' % gpu_idx)
                             start_losses_by_gpu.append(one_gpu_start_loss)
                             end_losses_by_gpu.append(one_gpu_end_loss)
                             grads_and_vars = self._compute_optimizer_gradients(
-                                one_gpu_end_loss, name_scope='compute_opt_grads_on_gpu_%s' % gpu_idx)
+                                train_optimizer_loss, name_scope='compute_opt_grads_on_gpu_%s' % gpu_idx)
+
+                            start_additional_metrics_by_gpu = append_to_nested(
+                                start_additional_metrics_by_gpu,
+                                one_gpu_start_additional_metrics
+                            )
+                            end_additional_metrics_by_gpu = append_to_nested(
+                                end_additional_metrics_by_gpu,
+                                one_gpu_end_additional_metrics
+                            )
 
                             # new_grads_and_vars = list()
                             # with tf.device('/cpu:0'):
@@ -829,12 +875,22 @@ class Meta(object):
                     #         all_start_losses, [all_start_losses], message="all_start_losses: ")
                     self._hooks['start_loss'] = tf.reduce_mean(all_start_losses)
                     self._hooks['end_loss'] = tf.reduce_mean(all_end_losses)
+                    start_additional_metrics = func_on_list_in_nested(start_additional_metrics_by_gpu, tf.reduce_mean)
+                    end_additional_metrics = func_on_list_in_nested(end_additional_metrics_by_gpu, tf.reduce_mean)
+                    for add_metric in self._additional_metrics:
+                        self._hooks['start_' + add_metric] = start_additional_metrics[add_metric]
+                        self._hooks['end_' + add_metric] = end_additional_metrics[add_metric]
 
     def _inference_graph(self):
         with tf.name_scope('optimizer_inference_graph'):
             with tf.device('/gpu:0'):
                 optimizer_states = self._create_optimizer_states(1, 'inference_optimizer_states', 0)
-                optimizer_ins, pupil_save_ops, start_loss = self._eval_pupil_gradients_for_optimizer_inference()
+                optimizer_ins, pupil_save_ops, start_loss, predictions, labels = \
+                    self._eval_pupil_gradients_for_optimizer_inference()
+
+                additional_metrics = compute_metrics(
+                    self._additional_metrics, predictions,
+                    labels, start_loss, keep_first_dim=False)
 
                 # optimizer_ins = self._extend_with_permutations(optimizer_ins, 0)
                 # print('\n(Meta._inference_graph)optimizer_ins before permutations:')
@@ -871,4 +927,5 @@ class Meta(object):
                 self._hooks['train_with_meta_optimizer_op'] = train_op
                 self._hooks['loss'] = start_loss
 
-
+                for add_metric in self._additional_metrics:
+                    self._hooks[add_metric] = additional_metrics[add_metric]

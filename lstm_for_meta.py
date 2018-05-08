@@ -5,7 +5,9 @@ from useful_functions import (create_vocabulary, get_positions_in_vocabulary, ch
                               vec2char, vec2char_fast, char2id, id2char, flatten, get_available_gpus,
                               device_name_scope, average_gradients, get_num_gpus_and_bs_on_gpus, custom_matmul,
                               custom_add, InvalidArgumentError, compose_save_list, compose_reset_list,
-                              compose_randomize_list, construct_dict_without_none_entries)
+                              compose_randomize_list, construct_dict_without_none_entries, append_to_nested,
+                              get_average_with_weights_func, func_on_list_in_nested)
+from tensors import compute_metrics
 
 url = 'http://mattmahoney.net/dc/'
 
@@ -430,7 +432,8 @@ class Lstm(Model):
                 states=new_states
             )
             labels_shape = labels.get_shape().as_list()
-            logits = tf.reshape(logits, labels_shape)
+            logits = tf.reshape(logits, labels_shape),
+            predictions = tf.nn.softmax(logits)
             # print('(LstmForMeta.loss_and_opt_ins)labels_shape:', labels.get_shape().as_list())
             # print('(LstmForMeta.loss_and_opt_ins)logits_shape:', logits.get_shape().as_list())
             sce = tf.nn.softmax_cross_entropy_with_logits(
@@ -442,10 +445,10 @@ class Lstm(Model):
                 axis=[-1, -2]
             )
             optimizer_ins = self._acomplish_optimizer_ins(optimizer_ins, trainable)
-            return loss, optimizer_ins, new_storage
+            return loss, optimizer_ins, new_storage, predictions, labels
 
     def loss_and_opt_ins_for_inference(self):
-        loss, optimizer_ins, new_storage = self.loss_and_opt_ins(
+        loss, optimizer_ins, new_storage, predictions, labels = self.loss_and_opt_ins(
             self._train_inputs_and_labels_placeholders['inputs'],
             self._train_inputs_and_labels_placeholders['labels'],
             self._train_storage,
@@ -458,7 +461,7 @@ class Lstm(Model):
             name_scope='save_pupil_train_storage'
         )
         # print('(Lstm.loss_and_opt_ins_for_inference)storage_save_ops:', storage_save_ops)
-        return loss, optimizer_ins, storage_save_ops
+        return loss, optimizer_ins, storage_save_ops, predictions, labels
 
     def apply_mods(self, mods):
         assign_ops = list()
@@ -513,6 +516,11 @@ class Lstm(Model):
         preds = list()
         losses = list()
         reset_state_ops = list()
+
+        additional_metrics = dict()
+        for add_metric in self._additional_metrics:
+            additional_metrics[add_metric] = list()
+
         with tf.name_scope('train'):
             for gpu_batch_size, gpu_name, device_inputs, device_labels in zip(
                     self._batch_sizes_on_gpus, self._gpu_names, inputs_by_device, labels_by_device):
@@ -551,6 +559,12 @@ class Lstm(Model):
                             loss = tf.reduce_mean(
                                 tf.nn.softmax_cross_entropy_with_logits(labels=device_labels, logits=logits))
                             concat_pred = tf.nn.softmax(logits)
+
+                            add_metrics = compute_metrics(
+                                additional_metrics, predictions=concat_pred,
+                                labels=device_labels, loss=loss, keep_first_dim=False
+                            )
+
                             preds.append(tf.split(concat_pred, self._num_unrollings))
 
                             losses.append(loss)
@@ -560,6 +574,7 @@ class Lstm(Model):
                                 learning_rate=self._autonomous_train_specific_placeholders['learning_rate'])
                             grads_and_vars = optimizer.compute_gradients(loss + l2_loss)
                             tower_grads.append(grads_and_vars)
+                            additional_metrics = append_to_nested(additional_metrics, add_metrics)
 
                             # splitting concatenated results for different characters
             with tf.device(self._base_device):
@@ -585,11 +600,12 @@ class Lstm(Model):
                     self.predictions = tf.concat(preds_by_char, 0)
                     self._hooks['predictions'] = self.predictions
                     # print('self.predictions.get_shape().as_list():', self.predictions.get_shape().as_list())
-                    l = 0
-                    for loss, gpu_batch_size in zip(losses, self._batch_sizes_on_gpus):
-                        l += float(gpu_batch_size) / float(self._batch_size) * loss
-                    self.loss = l
+                    average_func = get_average_with_weights_func(self._batch_sizes_on_gpus)
+                    self.loss = average_func(losses)
+                    additional_metrics = func_on_list_in_nested(additional_metrics, average_func)
                     self._hooks['loss'] = self.loss
+                    for k, v in additional_metrics.items():
+                        self._hooks[k] = v
 
     def _validation_graph(self):
         trainable = self._applicable_trainable
@@ -642,7 +658,16 @@ class Lstm(Model):
 
                 with tf.control_dependencies(sample_save_ops):
                     self.sample_prediction = tf.nn.softmax(sample_logit)
+                    metrics = compute_metrics(
+                        self._additional_metrics + ['loss'],
+                        predictions=self.sample_prediction,
+                        labels=validation_labels_prepared,
+                        keep_first_dim=False
+                    )
+
                     self._hooks['validation_predictions'] = self.sample_prediction
+                    for k, v in metrics.items():
+                        self._hooks['validation_' + k] = v
 
     def _pack_trainable_to_optimizer_format(self, trainable):
         # print("(Lstm._pack_trainable_to_optimizer_format)trainable:", trainable)
@@ -847,6 +872,7 @@ class Lstm(Model):
                  init_parameter=3.,
                  num_gpus=1,
                  regularization_rate=.000006,
+                 additional_metrics=None,
                  regime='autonomous_training',
                  going_to_limit_memory=False):
         """4 regimes are possible: autonomous_training, inference, training_with_meta_optimizer, optimizer_training"""
@@ -855,6 +881,20 @@ class Lstm(Model):
             num_nodes = [112, 113]
         if num_output_nodes is None:
             num_output_nodes = list()
+        if additional_metrics is None:
+            additional_metrics = list()
+
+        self._batch_size = batch_size
+        self._num_layers = num_layers
+        self._num_nodes = num_nodes
+        self._vocabulary_size = vocabulary_size
+        self._embedding_size = embedding_size
+        self._num_output_layers = num_output_layers
+        self._num_output_nodes = num_output_nodes
+        self._num_unrollings = num_unrollings
+        self._init_parameter = init_parameter
+        self._regularization_rate = regularization_rate
+        self._additional_metrics = additional_metrics
 
         self._hooks = dict(
             inputs=None,
@@ -873,17 +913,9 @@ class Lstm(Model):
             randomize_sample_state=None,
             dropout=None,
             saver=None)
-
-        self._batch_size = batch_size
-        self._num_layers = num_layers
-        self._num_nodes = num_nodes
-        self._vocabulary_size = vocabulary_size
-        self._embedding_size = embedding_size
-        self._num_output_layers = num_output_layers
-        self._num_output_nodes = num_output_nodes
-        self._num_unrollings = num_unrollings
-        self._init_parameter = init_parameter
-        self._regularization_rate = regularization_rate
+        for add_metric in self._additional_metrics:
+            self._hooks[add_metric] = None
+            self._hooks['validation_' + add_metric] = None
 
         if not going_to_limit_memory:
             gpu_names = get_available_gpus()
