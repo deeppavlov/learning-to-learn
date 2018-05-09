@@ -537,17 +537,17 @@ class Meta(object):
 
                             # v['matrix_mods'] = tf.zeros(basic_mods.get_shape().as_list())
 
-                            with tf.device('/cpu:0'):
-                                if k == 'lstm_layer_0':
-                                    v['matrix_mods'] = tf.Print(
-                                        v['matrix_mods'], [rel_diff],
-                                        "(relative difference)%s = " % k, summarize=20)
-                                #     v['matrix_mods'] = tf.Print(
-                                #         v['matrix_mods'], [basic_mods],
-                                #         "(basic_mods)%s = " % k, summarize=20)
-                                # v['matrix_mods'] = tf.Print(
-                                #     v['matrix_mods'], [v['matrix_mods']],
-                                #     "(v['matrix_mods'])%s = " % k, summarize=20)
+                            # with tf.device('/cpu:0'):
+                            #     if k == 'lstm_layer_0':
+                            #         v['matrix_mods'] = tf.Print(
+                            #             v['matrix_mods'], [rel_diff],
+                            #             "(relative difference)%s = " % k, summarize=20)
+                            #         v['matrix_mods'] = tf.Print(
+                            #             v['matrix_mods'], [basic_mods],
+                            #             "(basic_mods)%s = " % k, summarize=20)
+                            #     v['matrix_mods'] = tf.Print(
+                            #         v['matrix_mods'], [v['matrix_mods']],
+                            #         "(v['matrix_mods'])%s = " % k, summarize=20)
                             mods.append(v['matrix_mods'])
 
                     if 'bias' in v:

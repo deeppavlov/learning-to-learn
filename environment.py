@@ -1802,10 +1802,6 @@ class Environment(object):
                     build_hyperparameters=None,
                     other_hyperparameters=None,
                     **kwargs):
-        if build_hyperparameters is None:
-            build_hyperparameters = dict()
-        if other_hyperparameters is None:
-            other_hyperparameters = dict()
         self._store_launch_parameters(
             'pupil',
             evaluation=evaluation,
@@ -1813,6 +1809,10 @@ class Environment(object):
             build_hyperparameters=build_hyperparameters,
             other_hyperparameters=other_hyperparameters,
             kwargs=kwargs)
+        if build_hyperparameters is None:
+            build_hyperparameters = dict()
+        if other_hyperparameters is None:
+            other_hyperparameters = dict()
         tmp_output = parse_train_method_arguments(self,
                                                   [],
                                                   kwargs,
@@ -1855,6 +1855,8 @@ class Environment(object):
                     shares.append(share)
                 build_kwargs = self._pupil_class.form_kwargs(construct(kwargs_for_building),
                                                              only_build_insertions)
+                # shared hyperparameters specified as build hps with share field. During build_hp postprocessing share
+                # is extracted. Share field applied later
                 parsed = configure_args_for_launches(self, args_for_launches, shares)
                 queue = mp.Queue()
                 # from some_useful_functions import nested2string
@@ -1878,6 +1880,152 @@ class Environment(object):
                     res = queue.get()
                     self._handler.process_results(hp_combination, res, regime='several_launches')
                 p.join()
+        else:
+            parsed = configure_args_for_launches(self, args_for_launches, list())
+            queue = mp.Queue()
+            # from some_useful_functions import nested2string
+            # print('build_kwargs:', nested2string(build_kwargs))
+            # print('parsed:', nested2string(parsed))
+            self.mp_debug_flag += 1
+            p = mp.Process(target=self._several_launches_without_rebuilding,
+                           args=(queue, kwargs_for_building, session_specs, parsed, evaluation))
+            p.start()
+            if len(other_hp_combs) > 0:
+                for idx, other_hp_comb in enumerate(other_hp_combs):
+                    hp_combination = OrderedDict()
+                    hp_combination.update(other_hp_comb)
+                    res = queue.get()
+                    # print('\nidx: %s\nres: %s' % (idx, res))
+                    # print('hp_combination:', hp_combination)
+                    # print('res:', res)
+                    self._handler.process_results(hp_combination, res, regime='several_launches')
+            else:
+                pass
+            p.join()
+
+        self._handler.log_finish_time()
+        self._handler.close()
+
+    def grid_search_for_meta(
+            self,
+            evaluation,
+            kwargs_for_pupil_building,
+            kwargs_for_optimizer_building,
+            build_pupil_hyperparameters=None,
+            build_optimizer_hyperparameters=None,
+            other_hyperparameters=None,
+            **kwargs
+    ):
+        self._store_launch_parameters(
+            'pupil',
+            evaluation=evaluation,
+            kwargs_for_pupil_building=kwargs_for_pupil_building,
+            kwargs_for_optimizer_building=kwargs_for_optimizer_building,
+            build_pupil_hyperparameters=build_pupil_hyperparameters,
+            build_optimizer_hyperparameters=build_optimizer_hyperparameters,
+            other_hyperparameters=other_hyperparameters,
+            kwargs=kwargs
+        )
+        if build_pupil_hyperparameters is None:
+            build_pupil_hyperparameters = dict()
+        if build_optimizer_hyperparameters is None:
+            build_optimizer_hyperparameters = dict()
+        if other_hyperparameters is None:
+            other_hyperparameters = dict()
+
+        tmp_output = parse_train_optimizer_method_arguments(
+            self,
+            [],
+            kwargs,
+            set_passed_parameters_as_default=False
+        )
+        session_specs = tmp_output['session_specs']
+
+        build_pupil_hp_combs, build_pupil_insertions = formalize_and_create_insertions_for_build_hps(
+            build_pupil_hyperparameters)
+        build_optimizer_hp_combs, build_optimizer_insertions = formalize_and_create_insertions_for_build_hps(
+            build_optimizer_hyperparameters)
+        other_hp_combs, other_insertions = formalize_and_create_insertions_for_other_hps(other_hyperparameters)
+        # print('Environment.grid_search')
+        # print('build_hp_combs:', build_hp_combs)
+        # print('build_insertions:', build_insertions)
+        # print('other_hp_combs:', other_hp_combs)
+        # print('other_insertions:', other_insertions)
+
+        args_for_launches = create_all_args_for_launches(kwargs, other_insertions)
+
+        hps = list()
+        if len(build_pupil_hp_combs) > 0:
+            hps.extend(list(build_pupil_hp_combs[0].keys()))
+        if len(build_optimizer_hp_combs) > 0:
+            hps.extend(list(build_optimizer_hp_combs[0].keys()))
+        if len(other_hp_combs) > 0:
+            hps.extend(list(other_hp_combs[0].keys()))
+        self._handler = Handler(self,
+                                self._hooks,
+                                'several_launches',
+                                evaluation['save_path'],
+                                evaluation['result_types'],
+                                eval_dataset_names=list(evaluation['datasets'].keys()),
+                                hyperparameters=hps)
+        self._handler.log_launch()
+        # print('build_insertions:', build_insertions)
+        # print('build_hp_combs:', build_hp_combs)
+        if len(build_pupil_hp_combs) > 0:
+            for pupil_one_set_of_insertions_and_shares, pupil_build_hp_comb in zip(build_pupil_insertions,
+                                                                             build_pupil_hp_combs):
+                # print('one_set_of_insertions_and_shares:', one_set_of_insertions_and_shares)
+                # print('build_hp_comb:', build_hp_comb)
+                pupil_build_only_insertions = list()
+                pupil_shares = list()
+                for insertion, share in pupil_one_set_of_insertions_and_shares:
+                    pupil_build_only_insertions.append(insertion)
+                    pupil_shares.append(share)
+                pupil_build_kwargs = self._pupil_class.form_kwargs(
+                    construct(kwargs_for_pupil_building),
+                    pupil_build_only_insertions
+                )
+                if len(build_optimizer_hp_combs) > 0:
+                    for optimizer_one_set_of_insertions_and_shares, optimizer_build_hp_comb in zip(
+                            build_optimizer_insertions,
+                            build_optimizer_hp_combs
+                    ):
+                        optimizer_build_only_insertions = list()
+                        optimizer_shares = list()
+                        for insertion, share in pupil_one_set_of_insertions_and_shares:
+                            optimizer_build_only_insertions.append(insertion)
+                            optimizer_shares.append(share)
+                        optimizer_build_kwargs = self._meta_optimizer_class.form_kwargs(
+                            construct(kwargs_for_optimizer_building),
+                            optimizer_build_only_insertions
+                        )
+                        # shared hyperparameters specified as build hps with share field.
+                        # During build_hp postprocessing share
+                        # is extracted. Share field applied later
+                        shares = pupil_shares + optimizer_shares
+                        parsed = configure_args_for_launches(self, args_for_launches, shares)
+                        queue = mp.Queue()
+                        # from some_useful_functions import nested2string
+                        # print('build_kwargs:', nested2string(build_kwargs))
+                        # print('parsed:', nested2string(parsed))
+                        self.mp_debug_flag += 1
+                        p = mp.Process(target=self._several_launches_without_rebuilding,
+                                       args=(queue, build_kwargs, session_specs, parsed, evaluation))
+                        p.start()
+                        if len(other_hp_combs) > 0:
+                            for idx, other_hp_comb in enumerate(other_hp_combs):
+                                hp_combination = construct(build_hp_comb)
+                                hp_combination.update(other_hp_comb)
+                                res = queue.get()
+                                # print('\nidx: %s\nres: %s' % (idx, res))
+                                # print('hp_combination:', hp_combination)
+                                # print('res:', res)
+                                self._handler.process_results(hp_combination, res, regime='several_launches')
+                        else:
+                            hp_combination = construct(build_hp_comb)
+                            res = queue.get()
+                            self._handler.process_results(hp_combination, res, regime='several_launches')
+                        p.join()
         else:
             parsed = configure_args_for_launches(self, args_for_launches, list())
             queue = mp.Queue()
