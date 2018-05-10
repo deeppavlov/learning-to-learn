@@ -536,6 +536,9 @@ class Environment(object):
             self._storage = dict()
         if train_init is not None:
             self._storage['train'] = construct(train_init)
+        # example of optimizer inference results during training
+        # self._storage[<pupil_name>][<regime>(train or validation)][<result type>][<optimizer step index>]
+        # [<pupil step index>]
         if opt_inf_init is not None and opt_inf_pupil_names is not None:
             for name in opt_inf_pupil_names:
                 self._storage[name] = construct(opt_inf_init)
@@ -1540,6 +1543,53 @@ class Environment(object):
         )
         return {'train_specs': new_train_specs, 'schedule': new_schedule}
 
+    def _launch_optimizer_inference(
+            self,
+            train_specs,
+            optimizer_inference,
+            schedule,
+            pupil_idx,
+            pupil_name,
+            pupil_path,
+            optimizer_training_step,
+            batch_generator_class,
+            storage=None
+    ):
+        # print('\nOptimizer inference on pupil "%s"' % pupil_name)
+        # print("(Environment._train_optimizer)optimizer_inference['opt_inf_train_datasets']:",
+        #       optimizer_inference['opt_inf_train_datasets'])
+        # print("(Environment._train_optimizer)optimizer_inference['opt_inf_validation_datasets']:",
+        #       optimizer_inference['opt_inf_validation_datasets'])
+        run_specs = self._create_train_method_run_specs_from_meta_optimizer_train_method_arguments(
+            train_specs,
+            optimizer_inference,
+            schedule,
+            optimizer_inference['opt_inf_train_datasets'][pupil_idx],
+            optimizer_inference['opt_inf_validation_datasets'][pupil_idx]
+        )
+        # print("(Environment._train_optimizer)self._hooks:", self._hooks)
+        self._session.run(self._hooks['reset_optimizer_inference_pupil_storage'])
+        self._session.run(self._hooks['reset_optimizer_inference_state'])
+        print('OPTIMIZER INFERENCE ON PUPIL %s\n' % pupil_name + '*' * 40)
+        self._restore_pupil(pupil_path)
+        self._handler.set_pupil_name(pupil_name)
+        self._handler.set_meta_optimizer_training_step(optimizer_training_step)
+        self._handler.set_meta_optimizer_inference_flags(True, False)
+        if storage is None:
+            storage = self._storage[pupil_name]
+        _ = self._train(
+            run_specs,
+            None,
+            batch_generator_class,
+            True,
+            init_step=0,
+            storage=storage
+        )
+        print('*' * 40)
+        self._handler.set_pupil_name(None)
+        self._handler.set_meta_optimizer_training_step(None)
+        self._handler.set_meta_optimizer_inference_flags(False, False)
+
     def _train_optimizer(
             self,
             run_specs,
@@ -1676,38 +1726,16 @@ class Environment(object):
             self._handler.process_results(step, train_res, regime='train_meta_optimizer')
             if it_is_time_for_opt_inf.get():
                 for idx, (pupil_name, path) in enumerate(optimizer_inference['opt_inf_pupil_restore_paths'].items()):
-                    # print('\nOptimizer inference on pupil "%s"' % pupil_name)
-                    # print("(Environment._train_optimizer)optimizer_inference['opt_inf_train_datasets']:",
-                    #       optimizer_inference['opt_inf_train_datasets'])
-                    # print("(Environment._train_optimizer)optimizer_inference['opt_inf_validation_datasets']:",
-                    #       optimizer_inference['opt_inf_validation_datasets'])
-                    run_specs = self._create_train_method_run_specs_from_meta_optimizer_train_method_arguments(
+                    self._launch_optimizer_inference(
                         train_specs,
                         optimizer_inference,
                         schedule,
-                        optimizer_inference['opt_inf_train_datasets'][idx],
-                        optimizer_inference['opt_inf_validation_datasets'][idx]
+                        idx,
+                        pupil_name,
+                        path,
+                        step,
+                        batch_generator_class
                     )
-                    # print("(Environment._train_optimizer)self._hooks:", self._hooks)
-                    self._session.run(self._hooks['reset_optimizer_inference_pupil_storage'])
-                    self._session.run(self._hooks['reset_optimizer_inference_state'])
-                    print('OPTIMIZER INFERENCE ON PUPIL %s\n' % pupil_name + '*' * 40)
-                    self._restore_pupil(path)
-                    self._handler.set_pupil_name(pupil_name)
-                    self._handler.set_meta_optimizer_training_step(step)
-                    self._handler.set_meta_optimizer_inference_flags(True, False)
-                    _ = self._train(
-                        run_specs,
-                        None,
-                        batch_generator_class,
-                        True,
-                        init_step=0,
-                        storage=self._storage[pupil_name]
-                    )
-                    print('*' * 40)
-                    self._handler.set_pupil_name(None)
-                    self._handler.set_meta_optimizer_training_step(None)
-                    self._handler.set_meta_optimizer_inference_flags(False, False)
 
             step += 1
             if it_is_time_to_reset_exercises.get():
@@ -1724,7 +1752,7 @@ class Environment(object):
         return step
 
     def _several_launches_without_rebuilding(self,
-                                             queue,
+                                             queue_,
                                              kwargs_for_building,
                                              session_specs,
                                              args_for_launches,
@@ -1737,7 +1765,7 @@ class Environment(object):
                             session_specs['gpu_memory'],
                             session_specs['allow_growth'],
                             session_specs['visible_device_list'])
-        datasets = dict(evaluation['datasets'].items())
+        datasets = dict(evaluation['datasets'])
         if 'train' in datasets:
             del datasets['train']
         if evaluation['batch_gen_class'] is None:
@@ -1773,7 +1801,41 @@ class Environment(object):
                                        print_results=False)
                 result[dataset_name] = means
             # print('result in process:', result)
-            queue.put(result)
+            queue_.put(result)
+
+    def _several_optimizer_launches_without_rebuilding(
+            self,
+            queue_,
+            pupil_build_kwargs,
+            optimizer_build_kwargs,
+            session_specs,
+            args_for_launches,
+            evaluation
+    ):
+        self._build_pupil(pupil_build_kwargs)
+        self.build_optimizer(**optimizer_build_kwargs)
+        self._start_session(session_specs['allow_soft_placement'],
+                            session_specs['log_device_placement'],
+                            session_specs['gpu_memory'],
+                            session_specs['allow_growth'],
+                            session_specs['visible_device_list'])
+        for start_specs, run_specs_set in args_for_launches:
+            self._train_optimizer_repeatedly(start_specs, run_specs_set)
+            result = dict()
+            for idx, (pupil_name, pupil_path) in enumerate(evaluation['opt_inf_pupil_restore_paths'].items()):
+                result[pupil_name] = dict()
+                self._launch_optimizer_inference(
+                    run_specs_set[0]['train_specs'],
+                    evaluation,
+                    run_specs_set[0]['schedule'],
+                    idx,
+                    pupil_name,
+                    pupil_path,
+                    0,
+                    start_specs['batch_generator_class'],
+                    storage=result[pupil_name]
+                )
+            queue_.put(result)
 
     @staticmethod
     def _check_hp_in_additional_feed_dict(additions, tensor_alias):
@@ -1858,31 +1920,31 @@ class Environment(object):
                 # shared hyperparameters specified as build hps with share field. During build_hp postprocessing share
                 # is extracted. Share field applied later
                 parsed = configure_args_for_launches(self, args_for_launches, shares)
-                queue = mp.Queue()
+                queue_ = mp.Queue()
                 # from some_useful_functions import nested2string
                 # print('build_kwargs:', nested2string(build_kwargs))
                 # print('parsed:', nested2string(parsed))
                 self.mp_debug_flag += 1
                 p = mp.Process(target=self._several_launches_without_rebuilding,
-                               args=(queue, build_kwargs, session_specs, parsed, evaluation))
+                               args=(queue_, build_kwargs, session_specs, parsed, evaluation))
                 p.start()
                 if len(other_hp_combs) > 0:
                     for idx, other_hp_comb in enumerate(other_hp_combs):
                         hp_combination = construct(build_hp_comb)
                         hp_combination.update(other_hp_comb)
-                        res = queue.get()
+                        res = queue_.get()
                         # print('\nidx: %s\nres: %s' % (idx, res))
                         # print('hp_combination:', hp_combination)
                         # print('res:', res)
                         self._handler.process_results(hp_combination, res, regime='several_launches')
                 else:
                     hp_combination = construct(build_hp_comb)
-                    res = queue.get()
+                    res = queue_.get()
                     self._handler.process_results(hp_combination, res, regime='several_launches')
                 p.join()
         else:
             parsed = configure_args_for_launches(self, args_for_launches, list())
-            queue = mp.Queue()
+            queue_ = mp.Queue()
             # from some_useful_functions import nested2string
             # print('build_kwargs:', nested2string(build_kwargs))
             # print('parsed:', nested2string(parsed))
@@ -1894,7 +1956,7 @@ class Environment(object):
                 for idx, other_hp_comb in enumerate(other_hp_combs):
                     hp_combination = OrderedDict()
                     hp_combination.update(other_hp_comb)
-                    res = queue.get()
+                    res = queue_.get()
                     # print('\nidx: %s\nres: %s' % (idx, res))
                     # print('hp_combination:', hp_combination)
                     # print('res:', res)
@@ -1905,6 +1967,52 @@ class Environment(object):
 
         self._handler.log_finish_time()
         self._handler.close()
+
+    def _spring_process_for_meta_grid_search(
+            self,
+            args_for_launches,
+            shares,
+            pupil_build_kwargs,
+            optimizer_build_kwargs,
+            session_specs,
+            evaluation,
+            other_hp_combs,
+            base_hp_comb
+    ):
+        parsed = configure_args_for_launches(self, args_for_launches, shares)
+        queue_ = mp.Queue()
+        # from some_useful_functions import nested2string
+        # print('build_kwargs:', nested2string(build_kwargs))
+        # print('parsed:', nested2string(parsed))
+        self.mp_debug_flag += 1
+        p = mp.Process(
+            target=self._several_optimizer_launches_without_rebuilding,
+            args=(
+                queue_,
+                pupil_build_kwargs,
+                optimizer_build_kwargs,
+                session_specs,
+                parsed,
+                evaluation
+            )
+        )
+        p.start()
+        if len(other_hp_combs) > 0:
+            for idx, other_hp_comb in enumerate(other_hp_combs):
+                hp_combination = construct(base_hp_comb)
+                hp_combination.update(other_hp_comb)
+                res = queue_.get()
+                # print('\nidx: %s\nres: %s' % (idx, res))
+                # print('hp_combination:', hp_combination)
+                # print('res:', res)
+                self._handler.process_results(
+                    hp_combination, res, regime='several_launches'
+                )
+        else:
+            hp_combination = construct(base_hp_comb)
+            res = queue_.get()
+            self._handler.process_results(hp_combination, res, regime='several_launches')
+        p.join()
 
     def grid_search_for_meta(
             self,
@@ -1992,7 +2100,7 @@ class Environment(object):
                     ):
                         optimizer_build_only_insertions = list()
                         optimizer_shares = list()
-                        for insertion, share in pupil_one_set_of_insertions_and_shares:
+                        for insertion, share in optimizer_one_set_of_insertions_and_shares:
                             optimizer_build_only_insertions.append(insertion)
                             optimizer_shares.append(share)
                         optimizer_build_kwargs = self._meta_optimizer_class.form_kwargs(
@@ -2003,52 +2111,70 @@ class Environment(object):
                         # During build_hp postprocessing share
                         # is extracted. Share field applied later
                         shares = pupil_shares + optimizer_shares
-                        parsed = configure_args_for_launches(self, args_for_launches, shares)
-                        queue = mp.Queue()
-                        # from some_useful_functions import nested2string
-                        # print('build_kwargs:', nested2string(build_kwargs))
-                        # print('parsed:', nested2string(parsed))
-                        self.mp_debug_flag += 1
-                        p = mp.Process(target=self._several_launches_without_rebuilding,
-                                       args=(queue, build_kwargs, session_specs, parsed, evaluation))
-                        p.start()
-                        if len(other_hp_combs) > 0:
-                            for idx, other_hp_comb in enumerate(other_hp_combs):
-                                hp_combination = construct(build_hp_comb)
-                                hp_combination.update(other_hp_comb)
-                                res = queue.get()
-                                # print('\nidx: %s\nres: %s' % (idx, res))
-                                # print('hp_combination:', hp_combination)
-                                # print('res:', res)
-                                self._handler.process_results(hp_combination, res, regime='several_launches')
-                        else:
-                            hp_combination = construct(build_hp_comb)
-                            res = queue.get()
-                            self._handler.process_results(hp_combination, res, regime='several_launches')
-                        p.join()
-        else:
-            parsed = configure_args_for_launches(self, args_for_launches, list())
-            queue = mp.Queue()
-            # from some_useful_functions import nested2string
-            # print('build_kwargs:', nested2string(build_kwargs))
-            # print('parsed:', nested2string(parsed))
-            self.mp_debug_flag += 1
-            p = mp.Process(target=self._several_launches_without_rebuilding,
-                           args=(queue, kwargs_for_building, session_specs, parsed, evaluation))
-            p.start()
-            if len(other_hp_combs) > 0:
-                for idx, other_hp_comb in enumerate(other_hp_combs):
-                    hp_combination = OrderedDict()
-                    hp_combination.update(other_hp_comb)
-                    res = queue.get()
-                    # print('\nidx: %s\nres: %s' % (idx, res))
-                    # print('hp_combination:', hp_combination)
-                    # print('res:', res)
-                    self._handler.process_results(hp_combination, res, regime='several_launches')
-            else:
-                pass
-            p.join()
+                        base_hp_comb = construct(pupil_build_hp_comb)
+                        base_hp_comb.update(optimizer_build_hp_comb)
 
+                        self._spring_process_for_meta_grid_search(
+                            args_for_launches,
+                            shares,
+                            pupil_build_kwargs,
+                            optimizer_build_kwargs,
+                            session_specs,
+                            evaluation,
+                            other_hp_combs,
+                            base_hp_comb
+                        )
+                else:
+                    self._spring_process_for_meta_grid_search(
+                        args_for_launches,
+                        pupil_shares,
+                        pupil_build_kwargs,
+                        kwargs_for_optimizer_building,
+                        session_specs,
+                        evaluation,
+                        other_hp_combs,
+                        construct(pupil_build_hp_comb)
+                    )
+        else:
+            if len(build_optimizer_hp_combs) > 0:
+                for optimizer_one_set_of_insertions_and_shares, optimizer_build_hp_comb in zip(
+                        build_optimizer_insertions,
+                        build_optimizer_hp_combs
+                ):
+                    optimizer_build_only_insertions = list()
+                    optimizer_shares = list()
+                    for insertion, share in optimizer_one_set_of_insertions_and_shares:
+                        optimizer_build_only_insertions.append(insertion)
+                        optimizer_shares.append(share)
+                    optimizer_build_kwargs = self._meta_optimizer_class.form_kwargs(
+                        construct(kwargs_for_optimizer_building),
+                        optimizer_build_only_insertions
+                    )
+                    # shared hyperparameters specified as build hps with share field.
+                    # During build_hp postprocessing share
+                    # is extracted. Share field applied late
+
+                    self._spring_process_for_meta_grid_search(
+                        args_for_launches,
+                        optimizer_shares,
+                        kwargs_for_pupil_building,
+                        optimizer_build_kwargs,
+                        session_specs,
+                        evaluation,
+                        other_hp_combs,
+                        optimizer_build_hp_comb
+                    )
+            else:
+                self._spring_process_for_meta_grid_search(
+                    args_for_launches,
+                    [],
+                    kwargs_for_pupil_building,
+                    kwargs_for_optimizer_building,
+                    session_specs,
+                    evaluation,
+                    other_hp_combs,
+                    dict()
+                )
         self._handler.log_finish_time()
         self._handler.close()
 

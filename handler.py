@@ -117,6 +117,7 @@ class Handler(object):
             vocabulary=None,
             # several_launches method specific
             eval_dataset_names=None,
+            eval_pupil_names=None,
             hyperparameters=None,
             # test method specific
             validation_dataset_names=None,
@@ -222,10 +223,7 @@ class Handler(object):
                 self._add_example_file_names(fuse_file_name=fuse_file_name, example_file_name=example_file_name)
 
         if self._processing_type == 'several_launches':
-            self._result_types = result_types
             self._eval_dataset_names = eval_dataset_names
-            self._save_path = save_path
-            self._environment_instance = environment_instance
             self._hyperparameters = hyperparameters
             self._order = list(self._result_types)
             if self._hyperparameters is not None:
@@ -243,6 +241,24 @@ class Handler(object):
                 with open(self._file_names[dataset_name], 'a') as fd:
                     fd.write(self._tmpl % tuple(result_names))
 
+            self._environment_instance.set_in_storage(launches=list())
+
+        if self._processing_type == 'several_meta_optimizer_launches':
+            self._eval_pupil_names = eval_pupil_names
+            self._hyperparameters = hyperparameters
+            self._order = list(self._hyperparameters)
+            result_names = list()
+            for result_type in self._order:
+                result_names.append(self._hyperparameter_name_string(result_type))
+            with open(self._save_path + '/' + 'hp_layout', 'w') as f:
+                layout_str = ''
+                for name in result_names[:-1]:
+                    layout_str += name + ' '
+                layout_str += result_names[-1]
+                f.write(layout_str)
+            self._experiment_counter = 0
+            self._tmpl = '%s/%s/%s_%s.txt'  # <experiment number>/<pupil_name>/<metric>_<regime>.txt
+            self._hp_values_str_tmpl = '%s '*(len(self._order) - 1) + '%s'
             self._environment_instance.set_in_storage(launches=list())
 
         if self._processing_type == 'train_meta_optimizer':
@@ -291,7 +307,7 @@ class Handler(object):
 
             self._environment_instance.init_meta_optimizer_training_storage(
                 train_init=train_init,
-                wipe_storage=True
+                wipe_storage=False
             )
 
             self._opt_inf_print_has_already_been_performed = False
@@ -753,7 +769,7 @@ class Handler(object):
     def _save_launch_results(self, results, hp):
         for dataset_name, res in results.items():
             values = list()
-            all_together = dict(hp.items())
+            all_together = dict(hp)
             #print('dataset_name:', dataset_name)
             #print('all_together:', all_together)
             all_together.update(res)
@@ -761,6 +777,26 @@ class Handler(object):
                 values.append(all_together[key])
             with open(self._file_names[dataset_name], 'a') as f:
                 f.write(self._tmpl % tuple(values))
+
+    def _save_optimizer_launch_results(self, results, hp):
+        hp = dict(hp)
+        hp_file_name = str(self._experiment_counter) + '.txt'
+        with open(hp_file_name, 'w') as f:
+            hp_values = list()
+            for key in self._order:
+                hp_values.append(hp[key])
+            f.write(self._hp_values_str_tmpl % tuple(hp_values))
+        for pupil_name, pupil_res in results.items():
+            for regime, regime_res in pupil_res.items():
+                res_types = list(regime_res.keys())
+                for res_type in res_types:
+                    if res_type != 'steps':
+                        file_name = self._tmpl % (self._experiment_counter, pupil_name, res_type, regime)
+                        create_path(file_name, file_name_is_in_path=True)
+                        with open(file_name, 'w') as f:
+                            for step, value in zip(regime_res['steps'][-1], regime_res[res_type][-1]):
+                                f.write('%s %s\n' % (step, value))
+        self._experiment_counter += 1
 
     def _save_several_data(self,
                            descriptors,
@@ -1168,10 +1204,14 @@ class Handler(object):
                     print_step_number=True,
                     indent=1)
 
-    def _several_launches_results_processing(self, hp, results):
+    def _process_several_launches_results(self, hp, results):
         self._environment_instance.append_to_storage(None, launches=(results, hp))
         self._save_launch_results(results, hp)
         self._print_launch_results(results, hp)
+
+    def _process_several_optimizer_launches_results(self, hp, results):
+        self._environment_instance.append_to_storage(None, launches=(results, hp))
+        self._save_optimizer_launch_results(results, hp)
 
     def process_results(self, *args, regime=None):
         # print('in Handler.process_results')
@@ -1196,7 +1236,11 @@ class Handler(object):
         if regime == 'several_launches':
             hp = args[0]
             res = args[1]
-            self._several_launches_results_processing(hp, res)
+            self._process_several_launches_results(hp, res)
+        if regime == 'several_meta_optimizer_launches':
+            hp = args[0]
+            res = args[1]
+            self._process_several_optimizer_launches_results(hp, res)
         if regime == 'validation_by_chars':
             step = args[0]
             res = args[1]
