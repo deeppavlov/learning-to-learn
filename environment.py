@@ -1070,6 +1070,7 @@ class Environment(object):
             if isinstance(batch_kwarg, Controller):
                 batch_kwargs_controllers.append(batch_kwarg)
         controllers.extend(batch_kwargs_controllers)
+        # print("(Environment._train)schedule:", schedule)
         self._handler.set_new_run_schedule(schedule,
                                            [dataset[1] for dataset in train_specs['validation_datasets']])
         self._handler.set_controllers(controllers)
@@ -1121,6 +1122,7 @@ class Environment(object):
             # here loss is given in bits per input (BPI)
 
             self._handler.process_results(step, train_res, regime='train')
+            # print("(Environment._train)train_specs['valid_batch_kwargs']:", train_specs['valid_batch_kwargs'])
             if it_is_time_for_validation.get():
                 if len(train_specs['validation_datasets']) > 0:
                     valid_add_feed_dict = self._form_validation_additional_feed_dict(train_feed_dict_additions,
@@ -1679,12 +1681,17 @@ class Environment(object):
 
         controllers_for_printing.extend(additional_controllers)
 
+        # print("(Environment._train_optimizer)optimizer_inference:", optimizer_inference)
+        if optimizer_inference['opt_inf_pupil_restore_paths'] is None:
+            opt_if_pupil_names = None
+        else:
+            opt_if_pupil_names = list(optimizer_inference['opt_inf_pupil_restore_paths'].keys())
         self._handler.set_optimizer_train_schedule(
             schedule,
-            list(optimizer_inference['opt_inf_pupil_restore_paths'].keys()),
-            optimizer_inference['opt_inf_to_be_collected_while_training'],
-            optimizer_inference['opt_inf_train_tensor_schedule'],
-            optimizer_inference['opt_inf_validation_tensor_schedule']
+            opt_inf_pupil_names=opt_if_pupil_names,
+            opt_inf_to_be_collected_while_training=optimizer_inference['opt_inf_to_be_collected_while_training'],
+            opt_inf_train_tensor_schedule=optimizer_inference['opt_inf_train_tensor_schedule'],
+            opt_inf_validation_tensor_schedule=optimizer_inference['opt_inf_validation_tensor_schedule']
         )
 
         self._handler.set_controllers(controllers_for_printing)
@@ -1821,6 +1828,11 @@ class Environment(object):
                             session_specs['visible_device_list'])
         for start_specs, run_specs_set in args_for_launches:
             self._train_optimizer_repeatedly(start_specs, run_specs_set)
+            self._handler.set_optimizer_train_schedule(
+                None,
+                opt_inf_pupil_names=list(evaluation['opt_inf_pupil_restore_paths'].keys()),
+                opt_inf_to_be_collected_while_training=evaluation['opt_inf_to_be_collected_while_training']
+            )
             result = dict()
             for idx, (pupil_name, pupil_path) in enumerate(evaluation['opt_inf_pupil_restore_paths'].items()):
                 result[pupil_name] = dict()
@@ -1979,7 +1991,7 @@ class Environment(object):
             other_hp_combs,
             base_hp_comb
     ):
-        parsed = configure_args_for_launches(self, args_for_launches, shares)
+        parsed = configure_args_for_launches(self, args_for_launches, shares, model='meta_optimizer')
         queue_ = mp.Queue()
         # from some_useful_functions import nested2string
         # print('build_kwargs:', nested2string(build_kwargs))
@@ -2006,12 +2018,12 @@ class Environment(object):
                 # print('hp_combination:', hp_combination)
                 # print('res:', res)
                 self._handler.process_results(
-                    hp_combination, res, regime='several_launches'
+                    hp_combination, res, regime='several_meta_optimizer_launches'
                 )
         else:
             hp_combination = construct(base_hp_comb)
             res = queue_.get()
-            self._handler.process_results(hp_combination, res, regime='several_launches')
+            self._handler.process_results(hp_combination, res, regime='several_meta_optimizer_launches')
         p.join()
 
     def grid_search_for_meta(
@@ -2034,6 +2046,20 @@ class Environment(object):
             other_hyperparameters=other_hyperparameters,
             kwargs=kwargs
         )
+
+        for_evaluation_parsing = construct(evaluation)
+        # for batch kwargs filling
+        if 'vocabulary' in kwargs:
+            for_evaluation_parsing['vocabulary'] = kwargs['vocabulary']
+        if 'num_unrollings' in kwargs:
+            for_evaluation_parsing['num_unrollings'] = kwargs['num_unrollings']
+        parsed_evaluation = parse_train_optimizer_method_arguments(
+            self, [], for_evaluation_parsing, set_passed_parameters_as_default=False
+        )
+        evaluation = construct(parsed_evaluation['run'][0]['optimizer_inference'])
+        evaluation_save_path = parsed_evaluation['start_specs']['save_path']
+        evaluation_result_types = parsed_evaluation['start_specs']['result_types']
+
         if build_pupil_hyperparameters is None:
             build_pupil_hyperparameters = dict()
         if build_optimizer_hyperparameters is None:
@@ -2062,6 +2088,7 @@ class Environment(object):
 
         args_for_launches = create_all_args_for_launches(kwargs, other_insertions)
 
+
         hps = list()
         if len(build_pupil_hp_combs) > 0:
             hps.extend(list(build_pupil_hp_combs[0].keys()))
@@ -2069,13 +2096,15 @@ class Environment(object):
             hps.extend(list(build_optimizer_hp_combs[0].keys()))
         if len(other_hp_combs) > 0:
             hps.extend(list(other_hp_combs[0].keys()))
-        self._handler = Handler(self,
-                                self._hooks,
-                                'several_launches',
-                                evaluation['save_path'],
-                                evaluation['result_types'],
-                                eval_dataset_names=list(evaluation['datasets'].keys()),
-                                hyperparameters=hps)
+        self._handler = Handler(
+            self,
+            self._hooks,
+            'several_meta_optimizer_launches',
+            evaluation_save_path,
+            evaluation_result_types,
+            eval_dataset_names=list(evaluation['opt_inf_pupil_restore_paths'].keys()),
+            hyperparameters=hps
+        )
         self._handler.log_launch()
         # print('build_insertions:', build_insertions)
         # print('build_hp_combs:', build_hp_combs)
@@ -2651,6 +2680,3 @@ class Environment(object):
             self.current_pupil_launch_parameters = kwargs
         elif model_type == 'optimizer':
             self.current_optimizer_launch_parameters = kwargs
-
-
-

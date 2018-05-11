@@ -385,33 +385,44 @@ class Handler(object):
                 self._add_validation_experiment_instruments(dataset_name)
 
     def set_optimizer_train_schedule(
-            self, schedule, opt_inf_pupil_names,
-            opt_inf_to_be_collected_while_training, opt_inf_train_tensor_schedule, opt_inf_validation_tensor_schedule):
+            self, schedule,
+            opt_inf_pupil_names=None,
+            opt_inf_to_be_collected_while_training=None,
+            opt_inf_train_tensor_schedule=None,
+            opt_inf_validation_tensor_schedule=None
+    ):
+        # print("(Handler.set_optimizer_train_schedule)self._opt_inf_pupil_names:", self._opt_inf_pupil_names)
         self._opt_inf_pupil_names = opt_inf_pupil_names
         if self._save_path is not None:
-            for pupil_name in self._opt_inf_pupil_names:
-                self._add_opt_inf_results_file_name_templates(
-                    prefix=pupil_name, key_path=[pupil_name, 'train'], postfix='train')
-                self._add_opt_inf_results_file_name_templates(
-                    prefix=pupil_name, key_path=[pupil_name, 'validation'], postfix='validation')
+            if self._opt_inf_pupil_names is not None:
+                for pupil_name in self._opt_inf_pupil_names:
+                    self._add_opt_inf_results_file_name_templates(
+                        prefix=pupil_name, key_path=[pupil_name, 'train'], postfix='train')
+                    self._add_opt_inf_results_file_name_templates(
+                        prefix=pupil_name, key_path=[pupil_name, 'validation'], postfix='validation')
 
-        self._opt_train_results_collect_interval = schedule['to_be_collected_while_training']['results_collect_interval']
-        # print("(Handler.set_optimizer_train_schedule)self._results_collect_interval:", self._results_collect_interval)
-        if self._opt_train_results_collect_interval is not None:
-            if self._result_types is not None:
-                self._save_to_file = True
-                self._save_to_storage = True
+        if schedule is not None:
+            self._opt_train_results_collect_interval = schedule['to_be_collected_while_training']['results_collect_interval']
+            # print("(Handler.set_optimizer_train_schedule)self._results_collect_interval:", self._results_collect_interval)
+            if self._opt_train_results_collect_interval is not None:
+                if self._result_types is not None:
+                    self._save_to_file = True
+                    self._save_to_storage = True
+                else:
+                    self._save_to_file = False
+                    self._save_to_storage = False
             else:
                 self._save_to_file = False
                 self._save_to_storage = False
-        else:
-            self._save_to_file = False
-            self._save_to_storage = False
-        self._opt_train_print_per_collected = schedule['to_be_collected_while_training']['print_per_collected']
+            self._opt_train_print_per_collected = schedule['to_be_collected_while_training']['print_per_collected']
 
-        self._train_tensor_schedule = schedule['train_tensor_schedule']
+            # print("(Handler.set_optimizer_train_schedule)schedule['train_tensor_schedule']:",
+            #       schedule['train_tensor_schedule'])
+            self._train_tensor_schedule = schedule['train_tensor_schedule']
 
-        self._printed_result_types = schedule['printed_result_types']
+            self._printed_result_types = schedule['printed_result_types']
+
+            self._printed_controllers = schedule['printed_controllers']
 
         if self._printed_result_types is not None:
             if len(self._printed_result_types) > 0:
@@ -438,12 +449,11 @@ class Handler(object):
             self._opt_inf_pupil_names,
             opt_inf_init=opt_inf_init
         )
-        self._opt_inf_results_collect_interval = opt_inf_to_be_collected_while_training[
-            'opt_inf_results_collect_interval']
-        self._opt_inf_print_per_collected = opt_inf_to_be_collected_while_training['opt_inf_print_per_collected']
-        self._opt_inf_example_per_print = opt_inf_to_be_collected_while_training['opt_inf_example_per_print']
-
-        self._printed_controllers = schedule['printed_controllers']
+        if opt_inf_to_be_collected_while_training is not None:
+            self._opt_inf_results_collect_interval = opt_inf_to_be_collected_while_training[
+                'opt_inf_results_collect_interval']
+            self._opt_inf_print_per_collected = opt_inf_to_be_collected_while_training['opt_inf_print_per_collected']
+            self._opt_inf_example_per_print = opt_inf_to_be_collected_while_training['opt_inf_example_per_print']
 
     def set_controllers(self, controllers):
         self._controllers = controllers
@@ -755,6 +765,7 @@ class Handler(object):
         return add_tensors, counter
 
     def _save_datum(self, descriptor, step, datum, processing_type, dataset_name):
+        # print("(Handler._save_datum)self._file_names:", self._file_names)
         if self._meta_optimizer_inference_is_performed:
             file_name = self._get_optimizer_inference_file_name(processing_type, descriptor)
         else:
@@ -786,6 +797,7 @@ class Handler(object):
             for key in self._order:
                 hp_values.append(hp[key])
             f.write(self._hp_values_str_tmpl % tuple(hp_values))
+        print("(Handler._save_optimizer_launch_results)results:", results)
         for pupil_name, pupil_res in results.items():
             for regime, regime_res in pupil_res.items():
                 res_types = list(regime_res.keys())
@@ -1109,6 +1121,7 @@ class Handler(object):
                                         step,
                                         tmp)
                 if self._meta_optimizer_inference_is_performed:
+                    print("(Handler._process_train_results)res_dict:", res_dict)
                     self._environment_instance.append_to_optimizer_inference_storage(
                         self._name_of_pupil_for_optimizer_inference, 'train', self._meta_optimizer_training_step,
                         steps=step,
@@ -1119,6 +1132,7 @@ class Handler(object):
                                                                  steps=step,
                                                                  **res_dict)
 
+        # print("(Handler._process_train_results)self._last_run_tensor_order:", self._last_run_tensor_order)
         print_borders = self._last_run_tensor_order['train_print_tensors']['borders']
         if print_borders[1] - print_borders[0] > 0:
             print_instructions = self._form_train_tensor_print_instructions(step,

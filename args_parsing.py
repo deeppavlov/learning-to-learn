@@ -95,6 +95,7 @@ def process_abbreviations(env_instance, set_of_kwargs, method_name):
 
 
 def process_batch_kwargs_shortcuts(set_of_kwargs, method_name):
+    # print("(args_parsing.process_batch_kwargs_shortcuts)set_of_kwargs['vocabulary']:", set_of_kwargs['vocabulary'])
     if method_name == 'train':
         if 'train_batch_kwargs' not in set_of_kwargs:
             set_of_kwargs['train_batch_kwargs'] = dict()
@@ -718,9 +719,9 @@ def sort(hps, index, key_length):
             sorted_groups.append(sort(group, index+1, key_length))
         # print('\nsort')
         # print('sorted_groups:', sorted_groups)
-        print('index=%s, hps:' % index, unite_dicts(sorted_groups))
+        # print('index=%s, hps:' % index, unite_dicts(sorted_groups))
         return unite_dicts(sorted_groups)
-    print('index=%s, hps:' % index, hps)
+    # print('index=%s, hps:' % index, hps)
     return hps
 
 
@@ -948,15 +949,23 @@ def apply_shares(kwargs, shares):
     return kwargs
 
 
-def configure_args_for_launches(env_instance, args_for_launches, shares):
+def configure_args_for_launches(env_instance, args_for_launches, shares, model='pupil'):
     args_for_launches_to_be_used = construct(args_for_launches)
     parsed = list()
     for to_be_used in args_for_launches_to_be_used:
         with_shares = apply_shares(to_be_used, shares)
-        one_parsed = parse_train_method_arguments(env_instance,
-                                                  [],
-                                                  with_shares,
-                                                  set_passed_parameters_as_default=False)
+        if model == 'pupil':
+            one_parsed = parse_train_method_arguments(env_instance,
+                                                      [],
+                                                      with_shares,
+                                                      set_passed_parameters_as_default=False)
+        else:
+            one_parsed = parse_train_optimizer_method_arguments(
+                env_instance,
+                [],
+                with_shares,
+                set_passed_parameters_as_default=False
+            )
         start_specs = one_parsed['start_specs']
         run_specs_set = one_parsed['run']
         del one_parsed['session_specs']
