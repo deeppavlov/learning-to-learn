@@ -1270,3 +1270,10 @@ def get_average_with_weights_func(weights):
             res += w * v
         return res
     return average_func
+
+
+def nth_element_of_sequence_of_sequences(s, n):
+    res = list()
+    for el in s:
+        res.append(el[n])
+    return res

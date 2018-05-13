@@ -38,7 +38,7 @@ evaluation = dict(
     opt_inf_is_performed=True,
     opt_inf_stop=10,
     opt_inf_pupil_restore_paths={
-        'prelearn4000': 'lstm/test_res_net_1000_emb150_nl1_nn100_bs32_nu10/checkpoints/4000'
+        ('prelearn4000', 'lstm/test_res_net_1000_emb150_nl1_nn100_bs32_nu10/checkpoints/4000')
     },
     opt_inf_additions_to_feed_dict=opt_inf_add_feed,
     opt_inf_validation_dataset_texts=[valid_text],

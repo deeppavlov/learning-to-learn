@@ -14,7 +14,8 @@ from tensorflow.python import debug as tf_debug
 from useful_functions import InvalidArgumentError
 from useful_functions import (construct, add_index_to_filename_if_needed, match_two_dicts, create_path,
                               check_if_key_in_nested_dict, add_missing_to_list, print_and_log,
-                              apply_temperature, sample, is_int, create_distribute_map)
+                              apply_temperature, sample, is_int, create_distribute_map,
+                              nth_element_of_sequence_of_sequences)
 from args_parsing import parse_1_set_of_kwargs, parse_train_method_arguments, \
     formalize_and_create_insertions_for_build_hps, formalize_and_create_insertions_for_other_hps, \
     create_all_args_for_launches, configure_args_for_launches, parse_train_optimizer_method_arguments
@@ -276,7 +277,7 @@ class Environment(object):
                     learning_rate=construct(default_learning_rate_control),
                     additions_to_feed_dict=list(),
                     stop={'type': 'limit_steps', 'limit': 10000, 'name': 'stop'},
-                    train_dataset=default_dataset,
+                    train_dataset=default_dataset,  # list of 2 elements. First is text string, the second is name
                     batch_size={'type': 'fixed', 'value': 64, 'name': 'batch_size'},
                     train_batch_kwargs=dict(),
                     checkpoint_steps=None,
@@ -418,6 +419,7 @@ class Environment(object):
         # BPI stands for bits per input. It is cross entropy computed using logarithm for base 2
         self._handler = None
         self._storage = {'step': None}
+        self._current_place_for_result_saving = self._storage
         self._collected_result = None
         self.current_pupil_build_parameters = None
         self.current_pupil_launch_parameters = None
@@ -525,52 +527,75 @@ class Environment(object):
         self._session = None
 
     def init_storage(self, dataset_name, **kwargs):
-        self._storage[dataset_name] = dict()
-        d = self._storage[dataset_name]
+        self._current_place_for_result_saving[dataset_name] = dict()
+        d = self._current_place_for_result_saving[dataset_name]
         for key, value in kwargs.items():
             d[key] = value
 
-    def init_meta_optimizer_training_storage(self, opt_inf_pupil_names=None, train_init=None,
-                                             opt_inf_init=None, wipe_storage=False):
-        if self._storage is None or wipe_storage:
-            self._storage = dict()
+    @staticmethod
+    def create_train_pupil_storage(stor, result_types, dataset_names):
+        for dataset_name in dataset_names:
+            stor[dataset_name] = dict()
+        for res_type in result_types + ['steps']:
+            for dataset_name in dataset_names:
+                stor[dataset_name][res_type] = list()
+        return stor
+
+    def init_meta_optimizer_training_storage(
+            self, opt_inf_pupil_names=None,
+            train_init=None,
+            # opt_inf_init=None,
+            wipe_storage=False
+    ):
+        if self._current_place_for_result_saving is None or wipe_storage:
+            self._current_place_for_result_saving = dict()
+        self._current_place_for_result_saving['step'] = 0
         if train_init is not None:
-            self._storage['train'] = construct(train_init)
+            self._current_place_for_result_saving['train'] = construct(train_init)
         # example of optimizer inference results during training
         # self._storage[<pupil_name>][<regime>(train or validation)][<result type>][<optimizer step index>]
         # [<pupil step index>]
-        if opt_inf_init is not None and opt_inf_pupil_names is not None:
+
+        # opt_inf_init is not None and
+        if opt_inf_pupil_names is not None:
             for name in opt_inf_pupil_names:
-                self._storage[name] = construct(opt_inf_init)
+                self._current_place_for_result_saving[name] = dict(
+                    steps=list(),
+                    results=list()   # list of train storages with results
+                )
 
     def append_to_storage(self, dataset_name, **kwargs):
         # print("(Environment.append_to_storage)self._storage:", self._storage)
+        print(
+            "(Environment.append_to_storage)self._current_place_for_result_saving:",
+            self._current_place_for_result_saving
+        )
         if dataset_name is not None:
-            d = self._storage[dataset_name]
+            d = self._current_place_for_result_saving[dataset_name]
         else:
-            d = self._storage
+            d = self._current_place_for_result_saving
         for key, value in kwargs.items():
             d[key].append(value)
 
-    def append_to_optimizer_inference_storage(self, pupil_name, regime, optimizer_training_step, **kwargs):
-        if optimizer_training_step in self._storage[pupil_name]['steps']:
-            index = self._storage[pupil_name]['steps'].index(optimizer_training_step)
-        else:
-            index = len(self._storage[pupil_name]['steps'])
-            for key, value in kwargs.items():
-                self._storage[pupil_name][regime][key].append(list())
-        for key, value in kwargs.items():
-            self._storage[pupil_name][regime][key][index].append(value)
+    # def append_to_optimizer_inference_storage(self, pupil_name, regime, optimizer_training_step, **kwargs):
+    #     if optimizer_training_step in self._current_place_for_result_saving[pupil_name]['steps']:
+    #         index = self._current_place_for_result_saving[pupil_name]['steps'].index(optimizer_training_step)
+    #     else:
+    #         index = len(self._current_place_for_result_saving[pupil_name]['steps'])
+    #         for key, value in kwargs.items():
+    #             self._current_place_for_result_saving[pupil_name][regime][key].append(list())
+    #     for key, value in kwargs.items():
+    #         self._current_place_for_result_saving[pupil_name][regime][key][index].append(value)
 
     def flush_storage(self):
-        self._storage = {'step': None}
+        self._current_place_for_result_saving = {'step': None}
 
     def set_in_storage(self, **kwargs):
         for key, value in kwargs.items():
-            self._storage[key] = value
+            self._current_place_for_result_saving[key] = value
 
     def check_if_key_in_storage(self, keys):
-        return check_if_key_in_nested_dict(self._storage, keys)
+        return check_if_key_in_nested_dict(self._current_place_for_result_saving, keys)
 
     def _create_checkpoint(self, step, checkpoints_path, model_type='pupil'):
         path = checkpoints_path + '/' + str(step)
@@ -781,6 +806,8 @@ class Environment(object):
         inputs, labels = valid_batches.next()
         step = 0
         self._handler.start_accumulation(validation_dataset[1], training_step=training_step)
+        print("(Environment._validate/before loop)self._current_place_for_result_saving:",
+              self._current_place_for_result_saving)
         while step < length:
             validation_operations = self._handler.get_tensors('validation', step)
             feed_dict = {self._hooks['validation_inputs']: inputs,
@@ -792,6 +819,8 @@ class Environment(object):
             step += 1
             inputs, labels = valid_batches.next()
 
+        print("(Environment._validate/after loop)self._current_place_for_result_saving:",
+              self._current_place_for_result_saving)
         means = self._handler.stop_accumulation(save_to_file=save_to_file,
                                                 save_to_storage=save_to_storage,
                                                 print_results=print_results)
@@ -963,7 +992,7 @@ class Environment(object):
             batch_generator_class,
             with_meta_optimizer,
             init_step=0,
-            storage=None,
+            # storage=None,
             meta_optimizer_training_is_performed=False
     ):
         """It is a method that does actual training and responsible for one training pass through dataset. It is called
@@ -976,8 +1005,7 @@ class Environment(object):
         schedule = construct(run_specs['schedule'])
         step = init_step
 
-        if storage is None:
-            storage = self._storage
+        storage = self._current_place_for_result_saving
         # creating batch generator
 
         # resetting step in control_storage
@@ -1071,8 +1099,16 @@ class Environment(object):
                 batch_kwargs_controllers.append(batch_kwarg)
         controllers.extend(batch_kwargs_controllers)
         # print("(Environment._train)schedule:", schedule)
+        print(
+            "(Environment._train/before new schedule)self._current_place_for_result_saving",
+            self._current_place_for_result_saving
+        )
         self._handler.set_new_run_schedule(schedule,
                                            [dataset[1] for dataset in train_specs['validation_datasets']])
+        print(
+            "(Environment._train/after new schedule)self._current_place_for_result_saving",
+            self._current_place_for_result_saving
+        )
         self._handler.set_controllers(controllers)
 
         batch_size = batch_size_controller.get()
@@ -1114,13 +1150,13 @@ class Environment(object):
             for addition, add_controller in zip(train_feed_dict_additions, additional_controllers):
                 feed_dict[self._hooks[addition['placeholder']]] = add_controller.get()
             # print('(Environment._train)self._hooks:', self._hooks)
+
             train_operations = self._handler.get_tensors('train', step, with_meta_optimizer=with_meta_optimizer)
             # print('train_operations:', train_operations)
             # print('feed_dict:', feed_dict)
 
             train_res = self._session.run(train_operations, feed_dict=feed_dict)
             # here loss is given in bits per input (BPI)
-
             self._handler.process_results(step, train_res, regime='train')
             # print("(Environment._train)train_specs['valid_batch_kwargs']:", train_specs['valid_batch_kwargs'])
             if it_is_time_for_validation.get():
@@ -1384,10 +1420,17 @@ class Environment(object):
             checkpoints_path = None
         init_step = 0
         for run_specs in run_specs_set:
+            # print("(Environment._train_optimizer_repeatedly)"
+            #       "run_specs['optimizer_inference']['opt_inf_train_datasets'][0][1]",
+            #       run_specs['optimizer_inference']['opt_inf_train_datasets'][0][1])
+            # print("(Environment._train_optimizer_repeatedly)"
+            #       "run_specs['optimizer_inference']['opt_inf_validation_datasets'][0][1]",
+            #       run_specs['optimizer_inference']['opt_inf_validation_datasets'][0][1])
             init_step = self._train_optimizer(
                 run_specs,
                 checkpoints_path,
                 start_specs['batch_generator_class'],
+                start_specs['result_types'],
                 init_step=init_step
             )
         if checkpoints_path is not None:
@@ -1555,6 +1598,7 @@ class Environment(object):
             pupil_path,
             optimizer_training_step,
             batch_generator_class,
+            result_types,
             storage=None
     ):
         # print('\nOptimizer inference on pupil "%s"' % pupil_name)
@@ -1562,12 +1606,21 @@ class Environment(object):
         #       optimizer_inference['opt_inf_train_datasets'])
         # print("(Environment._train_optimizer)optimizer_inference['opt_inf_validation_datasets']:",
         #       optimizer_inference['opt_inf_validation_datasets'])
+
+        # print("(Environment._launch_optimizer_inference)optimizer_inference['opt_inf_train_datasets'][pupil_idx][1]:",
+        #       optimizer_inference['opt_inf_train_datasets'][pupil_idx][1])
+        train_dataset = optimizer_inference['opt_inf_train_datasets'][pupil_idx]
+        validation_dataset = optimizer_inference['opt_inf_validation_datasets'][pupil_idx]
+        train_dataset[1] = 'train'
+        train_dataset_name = train_dataset[1]
+        validation_dataset[1] = 'validation'
+        validation_dataset_name = validation_dataset[1]
         run_specs = self._create_train_method_run_specs_from_meta_optimizer_train_method_arguments(
             train_specs,
             optimizer_inference,
             schedule,
-            optimizer_inference['opt_inf_train_datasets'][pupil_idx],
-            optimizer_inference['opt_inf_validation_datasets'][pupil_idx]
+            train_dataset,
+            validation_dataset
         )
         # print("(Environment._train_optimizer)self._hooks:", self._hooks)
         self._session.run(self._hooks['reset_optimizer_inference_pupil_storage'])
@@ -1577,26 +1630,37 @@ class Environment(object):
         self._handler.set_pupil_name(pupil_name)
         self._handler.set_meta_optimizer_training_step(optimizer_training_step)
         self._handler.set_meta_optimizer_inference_flags(True, False)
+
         if storage is None:
-            storage = self._storage[pupil_name]
+            storage = dict()
+            self._current_place_for_result_saving[pupil_name]['results'].append(storage)
+        old_place_for_saving = self._current_place_for_result_saving
+        dataset_names = [train_dataset_name, validation_dataset_name]
+        # print("(Environment._launch_optimizer_inference)dataset_names:", dataset_names)
+        self._current_place_for_result_saving = self.create_train_pupil_storage(
+            storage, result_types, dataset_names
+        )
+        print("(Environment._launch_optimizer_inference)self._current_place_for_result_saving:",
+              self._current_place_for_result_saving)
         _ = self._train(
             run_specs,
             None,
             batch_generator_class,
             True,
             init_step=0,
-            storage=storage
         )
         print('*' * 40)
         self._handler.set_pupil_name(None)
         self._handler.set_meta_optimizer_training_step(None)
         self._handler.set_meta_optimizer_inference_flags(False, False)
+        self._current_place_for_result_saving = old_place_for_saving
 
     def _train_optimizer(
             self,
             run_specs,
             checkpoints_path,
             batch_generator_class,
+            result_types,
             init_step=0
     ):
         """It is a method that does actual training and responsible for one training pass through dataset. It is called
@@ -1612,7 +1676,7 @@ class Environment(object):
 
         # resetting step in control_storage
         self.set_in_storage(step=step)
-        learning_rate_controller = Controller(self._storage,
+        learning_rate_controller = Controller(self._current_place_for_result_saving,
                                               train_specs['learning_rate'])
         train_feed_dict_additions = train_specs['additions_to_feed_dict']
 
@@ -1620,11 +1684,11 @@ class Environment(object):
         additional_controllers = list()
         for addition in train_feed_dict_additions:
             # print("(Environment._train_optimizer)addition:", addition)
-            additional_controllers.append(Controller(self._storage, addition['value']))
+            additional_controllers.append(Controller(self._current_place_for_result_saving, addition['value']))
         # print("(Environment._train_optimizer)additional_controllers:", [ac.name for ac in additional_controllers])
         if train_specs['stop']['type'] == 'limit_steps':
             train_specs['stop']['limit'] += init_step
-        should_continue = Controller(self._storage, train_specs['stop'])
+        should_continue = Controller(self._current_place_for_result_saving, train_specs['stop'])
 
         to_be_collected_while_training = schedule['to_be_collected_while_training']
         collect_interval = to_be_collected_while_training['results_collect_interval']
@@ -1633,32 +1697,33 @@ class Environment(object):
         if optimizer_inference['opt_inf_is_performed']:
             opt_inf_period = collect_interval * print_per_collected
             it_is_time_for_opt_inf = Controller(
-                self._storage,
+                self._current_place_for_result_saving,
                 {'type': 'periodic_truth',
                  'period': opt_inf_period})
 
         else:
             it_is_time_for_opt_inf = Controller(
-                self._storage,
+                self._current_place_for_result_saving,
                 {'type': 'always_false'}
             )
-        batch_size_controller = Controller(self._storage, train_specs['batch_size'])
+        batch_size_controller = Controller(self._current_place_for_result_saving, train_specs['batch_size'])
         if train_specs['checkpoint_steps'] is not None and checkpoints_path is not None:
             if train_specs['checkpoint_steps']['type'] == 'true_on_steps':
                 for idx in range(len(train_specs['checkpoint_steps']['steps'])):
                     train_specs['checkpoint_steps']['steps'][idx] += init_step
-            it_is_time_to_create_checkpoint = Controller(self._storage, train_specs['checkpoint_steps'])
+            it_is_time_to_create_checkpoint = Controller(
+                self._current_place_for_result_saving, train_specs['checkpoint_steps'])
         else:
-            it_is_time_to_create_checkpoint = Controller(self._storage,
+            it_is_time_to_create_checkpoint = Controller(self._current_place_for_result_saving,
                                                          {'type': 'always_false'})
 
         # print("(Environment._train_optimizer)train_specs['reset_period']:", train_specs['reset_period'])
-        it_is_time_to_reset_exercises = Controller(self._storage, train_specs['reset_period'])
+        it_is_time_to_reset_exercises = Controller(self._current_place_for_result_saving, train_specs['reset_period'])
 
         if train_specs['debug'] is not None:
-            should_start_debugging = Controller(self._storage, train_specs['debug'])
+            should_start_debugging = Controller(self._current_place_for_result_saving, train_specs['debug'])
         else:
-            should_start_debugging = Controller(self._storage,
+            should_start_debugging = Controller(self._current_place_for_result_saving,
                                                 {'type': 'true_on_steps',
                                                  'steps': []})
 
@@ -1667,7 +1732,7 @@ class Environment(object):
         for key, batch_arg in train_specs['train_batch_kwargs'].items():
             if isinstance(batch_arg, dict):
                 if 'type' in batch_arg:
-                    train_batch_kwargs[key] = Controller(self._storage, batch_arg)
+                    train_batch_kwargs[key] = Controller(self._current_place_for_result_saving, batch_arg)
                     train_batch_kwargs_controller_specs.append(batch_arg)
                 else:
                     train_batch_kwargs[key] = batch_arg
@@ -1685,7 +1750,10 @@ class Environment(object):
         if optimizer_inference['opt_inf_pupil_restore_paths'] is None:
             opt_if_pupil_names = None
         else:
-            opt_if_pupil_names = list(optimizer_inference['opt_inf_pupil_restore_paths'].keys())
+            opt_if_pupil_names = nth_element_of_sequence_of_sequences(
+                optimizer_inference['opt_inf_pupil_restore_paths'],
+                0
+            )
         self._handler.set_optimizer_train_schedule(
             schedule,
             opt_inf_pupil_names=opt_if_pupil_names,
@@ -1732,7 +1800,7 @@ class Environment(object):
 
             self._handler.process_results(step, train_res, regime='train_meta_optimizer')
             if it_is_time_for_opt_inf.get():
-                for idx, (pupil_name, path) in enumerate(optimizer_inference['opt_inf_pupil_restore_paths'].items()):
+                for idx, (pupil_name, path) in enumerate(optimizer_inference['opt_inf_pupil_restore_paths']):
                     self._launch_optimizer_inference(
                         train_specs,
                         optimizer_inference,
@@ -1741,7 +1809,8 @@ class Environment(object):
                         pupil_name,
                         path,
                         step,
-                        batch_generator_class
+                        batch_generator_class,
+                        result_types
                     )
 
             step += 1
@@ -1827,15 +1896,35 @@ class Environment(object):
                             session_specs['allow_growth'],
                             session_specs['visible_device_list'])
         for start_specs, run_specs_set in args_for_launches:
+            result_types = start_specs['result_types']
             self._train_optimizer_repeatedly(start_specs, run_specs_set)
+            pupil_names = nth_element_of_sequence_of_sequences(
+                evaluation['opt_inf_pupil_restore_paths'],
+                0
+            )
             self._handler.set_optimizer_train_schedule(
                 None,
-                opt_inf_pupil_names=list(evaluation['opt_inf_pupil_restore_paths'].keys()),
+                opt_inf_pupil_names=pupil_names,
                 opt_inf_to_be_collected_while_training=evaluation['opt_inf_to_be_collected_while_training']
             )
             result = dict()
-            for idx, (pupil_name, pupil_path) in enumerate(evaluation['opt_inf_pupil_restore_paths'].items()):
-                result[pupil_name] = dict()
+            # print("(Environment._several_optimizer_launches_without_rebuilding)pupil_names:", pupil_names)
+            for idx, name in enumerate(pupil_names):
+                train_dataset_name = evaluation['opt_inf_train_datasets'][idx][1]
+                if evaluation['opt_inf_validation_datasets'] is not None:
+                    validation_dataset_name = evaluation['opt_inf_validation_datasets'][idx][1]
+                else:
+                    validation_dataset_name = None
+                dataset_names = ['train']
+                if validation_dataset_name is not None:
+                    dataset_names.append(validation_dataset_name)
+                result[name] = self.create_train_pupil_storage(
+                    dict(), result_types, dataset_names
+                )
+
+            old_place_for_saving = self._current_place_for_result_saving
+            self._current_place_for_result_saving = result
+            for idx, (pupil_name, pupil_path) in enumerate(evaluation['opt_inf_pupil_restore_paths']):
                 self._launch_optimizer_inference(
                     run_specs_set[0]['train_specs'],
                     evaluation,
@@ -1845,8 +1934,10 @@ class Environment(object):
                     pupil_path,
                     0,
                     start_specs['batch_generator_class'],
+                    result_types,
                     storage=result[pupil_name]
                 )
+            self._current_place_for_result_saving = old_place_for_saving
             queue_.put(result)
 
     @staticmethod
@@ -2016,13 +2107,14 @@ class Environment(object):
                 res = queue_.get()
                 # print('\nidx: %s\nres: %s' % (idx, res))
                 # print('hp_combination:', hp_combination)
-                # print('res:', res)
+                print("(Environment._spring_process_for_meta_grid_search)res:", res)
                 self._handler.process_results(
                     hp_combination, res, regime='several_meta_optimizer_launches'
                 )
         else:
             hp_combination = construct(base_hp_comb)
             res = queue_.get()
+            print("(Environment._spring_process_for_meta_grid_search)res:", res)
             self._handler.process_results(hp_combination, res, regime='several_meta_optimizer_launches')
         p.join()
 
@@ -2102,7 +2194,7 @@ class Environment(object):
             'several_meta_optimizer_launches',
             evaluation_save_path,
             evaluation_result_types,
-            eval_dataset_names=list(evaluation['opt_inf_pupil_restore_paths'].keys()),
+            eval_pupil_names=nth_element_of_sequence_of_sequences(evaluation['opt_inf_pupil_restore_paths'], 0),
             hyperparameters=hps
         )
         self._handler.log_launch()

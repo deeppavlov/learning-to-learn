@@ -93,9 +93,9 @@ for idx in [50, 0, 1, 10, 20, 24, 28, 32, 36, 40, 50, 60, 80, 100, 120, 160, 200
         train_dataset_texts=[train_text],
         opt_inf_is_performed=True,
         opt_inf_stop=10,
-        opt_inf_pupil_restore_paths={
-            'prelearn%s' % step: 'lstm/test_res_net_1000_emb150_nl1_nn100_bs32_nu10/checkpoints/%s' % step
-        },
+        opt_inf_pupil_restore_paths=[
+            ('prelearn%s' % step, 'lstm/test_res_net_1000_emb150_nl1_nn100_bs32_nu10/checkpoints/%s' % step)
+        ],
         opt_inf_additions_to_feed_dict=opt_inf_add_feed,
         opt_inf_validation_dataset_texts=[valid_text],
         opt_inf_train_dataset_texts=[train_text],

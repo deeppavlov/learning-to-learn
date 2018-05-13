@@ -436,18 +436,9 @@ class Handler(object):
             meta_optimizer_print_result_types.append(end_res_type)
         self._printed_result_types.extend(meta_optimizer_print_result_types)
 
-        opt_inf_init = dict(
-            steps=list()
-        )
-        opt_inf_init['train'] = dict()
-        opt_inf_init['validation'] = dict()
-        for res_type in self._result_types + ['steps']:
-            opt_inf_init['train'][res_type] = list()
-            opt_inf_init['validation'][res_type] = list()
-
         self._environment_instance.init_meta_optimizer_training_storage(
             self._opt_inf_pupil_names,
-            opt_inf_init=opt_inf_init
+            # opt_inf_init=self._environment_instance.create_opt_inf_init(self._result_types)
         )
         if opt_inf_to_be_collected_while_training is not None:
             self._opt_inf_results_collect_interval = opt_inf_to_be_collected_while_training[
@@ -518,14 +509,14 @@ class Handler(object):
                                 raise
             means[key] = mean
         if save_to_storage:
-            if self._meta_optimizer_inference_is_performed:
-                self._environment_instance.append_to_optimizer_inference_storage(
-                    self._name_of_pupil_for_optimizer_inference, 'validation', self._meta_optimizer_training_step,
-                    **dict([(key, means[key]) for key in self._result_types])
-                )
-            else:
-                self._environment_instance.append_to_storage(self._name_of_dataset_on_which_accumulating,
-                    **dict([(key, means[key]) for key in self._result_types]))
+            # if self._meta_optimizer_inference_is_performed:
+            #     self._environment_instance.append_to_optimizer_inference_storage(
+            #         self._name_of_pupil_for_optimizer_inference, 'validation', self._meta_optimizer_training_step,
+            #         **dict([(key, means[key]) for key in self._result_types])
+            #     )
+            # else:
+            self._environment_instance.append_to_storage(self._name_of_dataset_on_which_accumulating,
+                **dict([(key, means[key]) for key in self._result_types]))
         if print_results:
             self._print_standard_report(
                 regime='validation',
@@ -806,7 +797,7 @@ class Handler(object):
                         file_name = self._tmpl % (self._experiment_counter, pupil_name, res_type, regime)
                         create_path(file_name, file_name_is_in_path=True)
                         with open(file_name, 'w') as f:
-                            for step, value in zip(regime_res['steps'][-1], regime_res[res_type][-1]):
+                            for step, value in zip(regime_res['steps'], regime_res[res_type]):
                                 f.write('%s %s\n' % (step, value))
         self._experiment_counter += 1
 
@@ -1120,17 +1111,17 @@ class Handler(object):
                 self._save_several_data(result_types,
                                         step,
                                         tmp)
-                if self._meta_optimizer_inference_is_performed:
-                    print("(Handler._process_train_results)res_dict:", res_dict)
-                    self._environment_instance.append_to_optimizer_inference_storage(
-                        self._name_of_pupil_for_optimizer_inference, 'train', self._meta_optimizer_training_step,
-                        steps=step,
-                        **res_dict
-                    )
-                else:
-                    self._environment_instance.append_to_storage('train',
-                                                                 steps=step,
-                                                                 **res_dict)
+                # if self._meta_optimizer_inference_is_performed:
+                #     # print("(Handler._process_train_results)res_dict:", res_dict)
+                #     self._environment_instance.append_to_optimizer_inference_storage(
+                #         self._name_of_pupil_for_optimizer_inference, 'train', self._meta_optimizer_training_step,
+                #         steps=step,
+                #         **res_dict
+                #     )
+                # else:
+                self._environment_instance.append_to_storage('train',
+                                                             steps=step,
+                                                             **res_dict)
 
         # print("(Handler._process_train_results)self._last_run_tensor_order:", self._last_run_tensor_order)
         print_borders = self._last_run_tensor_order['train_print_tensors']['borders']
@@ -1232,6 +1223,7 @@ class Handler(object):
         if regime == 'train':
             step = args[0]
             res = args[1]
+            print("(Handler.process_results/train)self._save_path:", self._save_path)
             self._process_train_results(
                 step, res, self._result_types, self._results_collect_interval, self._print_per_collected)
         if regime == 'validation':
@@ -1254,6 +1246,7 @@ class Handler(object):
         if regime == 'several_meta_optimizer_launches':
             hp = args[0]
             res = args[1]
+            print("(Handler.process_results/several_meta_optimizer_launches)self._save_path:", self._save_path)
             self._process_several_optimizer_launches_results(hp, res)
         if regime == 'validation_by_chars':
             step = args[0]
@@ -1263,6 +1256,7 @@ class Handler(object):
         if regime == 'train_meta_optimizer':
             step = args[0]
             res = args[1]
+            print("(Handler.process_results/train_optimizer)self._save_path:", self._save_path)
             # print("(Handler.process_results)self._results_collect_interval:", self._results_collect_interval)
             self._process_train_results(
                 step, res, self._meta_optimizer_train_result_types,
