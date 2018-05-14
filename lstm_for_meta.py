@@ -876,6 +876,7 @@ class Lstm(Model):
                  regime='autonomous_training',
                  going_to_limit_memory=False):
         """4 regimes are possible: autonomous_training, inference, training_with_meta_optimizer, optimizer_training"""
+        tf.set_random_seed(1)
 
         if num_nodes is None:
             num_nodes = [112, 113]
