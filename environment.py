@@ -566,10 +566,10 @@ class Environment(object):
 
     def append_to_storage(self, dataset_name, **kwargs):
         # print("(Environment.append_to_storage)self._storage:", self._storage)
-        print(
-            "(Environment.append_to_storage)self._current_place_for_result_saving:",
-            self._current_place_for_result_saving
-        )
+        # print(
+        #     "(Environment.append_to_storage)self._current_place_for_result_saving:",
+        #     self._current_place_for_result_saving
+        # )
         if dataset_name is not None:
             d = self._current_place_for_result_saving[dataset_name]
         else:
@@ -596,6 +596,9 @@ class Environment(object):
 
     def check_if_key_in_storage(self, keys):
         return check_if_key_in_nested_dict(self._current_place_for_result_saving, keys)
+
+    def dataset_in_storage(self, dataset_name):
+        return dataset_name in self._current_place_for_result_saving
 
     def _create_checkpoint(self, step, checkpoints_path, model_type='pupil'):
         path = checkpoints_path + '/' + str(step)
@@ -806,8 +809,8 @@ class Environment(object):
         inputs, labels = valid_batches.next()
         step = 0
         self._handler.start_accumulation(validation_dataset[1], training_step=training_step)
-        print("(Environment._validate/before loop)self._current_place_for_result_saving:",
-              self._current_place_for_result_saving)
+        # print("(Environment._validate/before loop)self._current_place_for_result_saving:",
+        #       self._current_place_for_result_saving)
         while step < length:
             validation_operations = self._handler.get_tensors('validation', step)
             feed_dict = {self._hooks['validation_inputs']: inputs,
@@ -819,8 +822,8 @@ class Environment(object):
             step += 1
             inputs, labels = valid_batches.next()
 
-        print("(Environment._validate/after loop)self._current_place_for_result_saving:",
-              self._current_place_for_result_saving)
+        # print("(Environment._validate/after loop)self._current_place_for_result_saving:",
+        #       self._current_place_for_result_saving)
         means = self._handler.stop_accumulation(save_to_file=save_to_file,
                                                 save_to_storage=save_to_storage,
                                                 print_results=print_results)
@@ -1099,16 +1102,16 @@ class Environment(object):
                 batch_kwargs_controllers.append(batch_kwarg)
         controllers.extend(batch_kwargs_controllers)
         # print("(Environment._train)schedule:", schedule)
-        print(
-            "(Environment._train/before new schedule)self._current_place_for_result_saving",
-            self._current_place_for_result_saving
-        )
+        # print(
+        #     "(Environment._train/before new schedule)self._current_place_for_result_saving",
+        #     self._current_place_for_result_saving
+        # )
         self._handler.set_new_run_schedule(schedule,
                                            [dataset[1] for dataset in train_specs['validation_datasets']])
-        print(
-            "(Environment._train/after new schedule)self._current_place_for_result_saving",
-            self._current_place_for_result_saving
-        )
+        # print(
+        #     "(Environment._train/after new schedule)self._current_place_for_result_saving",
+        #     self._current_place_for_result_saving
+        # )
         self._handler.set_controllers(controllers)
 
         batch_size = batch_size_controller.get()
@@ -1396,7 +1399,7 @@ class Environment(object):
         if close_session:
             self._close_session()
 
-    def _train_optimizer_repeatedly(self, start_specs, run_specs_set):
+    def _train_optimizer_repeatedly(self, start_specs, run_specs_set, log=True):
         # initializing model
         self.flush_storage()
         self._session.run(tf.global_variables_initializer())
@@ -1412,7 +1415,8 @@ class Environment(object):
                                 add_graph_to_summary=start_specs['add_graph_to_summary'],
                                 batch_generator_class=start_specs['batch_generator_class'],
                                 vocabulary=start_specs['vocabulary'])
-        self._handler.log_launch()
+        if log:
+            self._handler.log_launch()
         if start_specs['save_path'] is not None:
             checkpoints_path = start_specs['save_path'] + '/checkpoints'
             create_path(checkpoints_path)
@@ -1640,8 +1644,8 @@ class Environment(object):
         self._current_place_for_result_saving = self.create_train_pupil_storage(
             storage, result_types, dataset_names
         )
-        print("(Environment._launch_optimizer_inference)self._current_place_for_result_saving:",
-              self._current_place_for_result_saving)
+        # print("(Environment._launch_optimizer_inference)self._current_place_for_result_saving:",
+        #       self._current_place_for_result_saving)
         _ = self._train(
             run_specs,
             None,
@@ -1886,7 +1890,9 @@ class Environment(object):
             optimizer_build_kwargs,
             session_specs,
             args_for_launches,
-            evaluation
+            evaluation,
+            hp_combs,
+            order
     ):
         self._build_pupil(pupil_build_kwargs)
         self.build_optimizer(**optimizer_build_kwargs)
@@ -1895,9 +1901,11 @@ class Environment(object):
                             session_specs['gpu_memory'],
                             session_specs['allow_growth'],
                             session_specs['visible_device_list'])
-        for start_specs, run_specs_set in args_for_launches:
+        for hp_comb, (start_specs, run_specs_set) in zip(hp_combs, args_for_launches):
+            self._handler.print_hyper_parameters(hp_comb, order)
+
             result_types = start_specs['result_types']
-            self._train_optimizer_repeatedly(start_specs, run_specs_set)
+            self._train_optimizer_repeatedly(start_specs, run_specs_set, log=False)
             pupil_names = nth_element_of_sequence_of_sequences(
                 evaluation['opt_inf_pupil_restore_paths'],
                 0
@@ -1911,8 +1919,9 @@ class Environment(object):
             # print("(Environment._several_optimizer_launches_without_rebuilding)pupil_names:", pupil_names)
             for idx, name in enumerate(pupil_names):
                 train_dataset_name = evaluation['opt_inf_train_datasets'][idx][1]
+                # duplicates validation storage setting in Handler.set_new_run_schedule
                 if evaluation['opt_inf_validation_datasets'] is not None:
-                    validation_dataset_name = evaluation['opt_inf_validation_datasets'][idx][1]
+                    validation_dataset_name = 'validation'
                 else:
                     validation_dataset_name = None
                 dataset_names = ['train']
@@ -2088,6 +2097,17 @@ class Environment(object):
         # print('build_kwargs:', nested2string(build_kwargs))
         # print('parsed:', nested2string(parsed))
         self.mp_debug_flag += 1
+
+        hp_combs = list()
+        if len(other_hp_combs) > 0:
+            for idx, other_hp_comb in enumerate(other_hp_combs):
+                hp_combination = construct(base_hp_comb)
+                hp_combination.update(other_hp_comb)
+                hp_combs.append(hp_combination)
+        else:
+            hp_combination = construct(base_hp_comb)
+            hp_combs.append(hp_combination)
+        order = self._handler.order
         p = mp.Process(
             target=self._several_optimizer_launches_without_rebuilding,
             args=(
@@ -2096,26 +2116,36 @@ class Environment(object):
                 optimizer_build_kwargs,
                 session_specs,
                 parsed,
-                evaluation
+                evaluation,
+                hp_combs,
+                order
             )
         )
         p.start()
-        if len(other_hp_combs) > 0:
-            for idx, other_hp_comb in enumerate(other_hp_combs):
-                hp_combination = construct(base_hp_comb)
-                hp_combination.update(other_hp_comb)
-                res = queue_.get()
-                # print('\nidx: %s\nres: %s' % (idx, res))
-                # print('hp_combination:', hp_combination)
-                print("(Environment._spring_process_for_meta_grid_search)res:", res)
-                self._handler.process_results(
-                    hp_combination, res, regime='several_meta_optimizer_launches'
-                )
-        else:
-            hp_combination = construct(base_hp_comb)
+        for hp_comb in hp_combs:
             res = queue_.get()
-            print("(Environment._spring_process_for_meta_grid_search)res:", res)
-            self._handler.process_results(hp_combination, res, regime='several_meta_optimizer_launches')
+            # print('\nidx: %s\nres: %s' % (idx, res))
+            # print('hp_combination:', hp_combination)
+            # print("(Environment._spring_process_for_meta_grid_search)res:", res)
+            self._handler.process_results(
+                hp_comb, res, regime='several_meta_optimizer_launches'
+            )
+        # if len(other_hp_combs) > 0:
+        #     for idx, other_hp_comb in enumerate(other_hp_combs):
+        #         hp_combination = construct(base_hp_comb)
+        #         hp_combination.update(other_hp_comb)
+        #         res = queue_.get()
+        #         # print('\nidx: %s\nres: %s' % (idx, res))
+        #         # print('hp_combination:', hp_combination)
+        #         # print("(Environment._spring_process_for_meta_grid_search)res:", res)
+        #         self._handler.process_results(
+        #             hp_combination, res, regime='several_meta_optimizer_launches'
+        #         )
+        # else:
+        #     hp_combination = construct(base_hp_comb)
+        #     res = queue_.get()
+        #     # print("(Environment._spring_process_for_meta_grid_search)res:", res)
+        #     self._handler.process_results(hp_combination, res, regime='several_meta_optimizer_launches')
         p.join()
 
     def grid_search_for_meta(
@@ -2129,7 +2159,7 @@ class Environment(object):
             **kwargs
     ):
         self._store_launch_parameters(
-            'pupil',
+            'optimizer',
             evaluation=evaluation,
             kwargs_for_pupil_building=kwargs_for_pupil_building,
             kwargs_for_optimizer_building=kwargs_for_optimizer_building,

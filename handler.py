@@ -292,11 +292,11 @@ class Handler(object):
                             self._meta_optimizer_train_result_types.append(end_res_type)
                         if end_res_type not in self._print_order:
                             print_order_additions.append(end_res_type)
-
-            self._add_results_file_name_set(
-                self._meta_optimizer_train_result_types,
-                key_path=['train']
-            )
+            if self._save_path is not None:
+                self._add_results_file_name_set(
+                    self._meta_optimizer_train_result_types,
+                    key_path=['train']
+                )
             self._print_order.extend(print_order_additions)
 
             train_init = dict(
@@ -316,6 +316,10 @@ class Handler(object):
         # It is a list. Each element is either tensor alias or a tuple if corresponding hook is pointing to a list of
         # tensors. Such tuple contains tensor alias, and sizes of nested lists
 
+    @property
+    def order(self):
+        return construct(self._order)
+
     def set_pupil_name(self, pupil_name):
         self._name_of_pupil_for_optimizer_inference = pupil_name
 
@@ -327,12 +331,14 @@ class Handler(object):
         self._opt_inf_print_has_already_been_performed = oiphabp
 
     def _add_validation_experiment_instruments(self, dataset_name):
-        self._add_results_file_name_set(self._result_types, key_path=[dataset_name], postfix=dataset_name)
+        if self._save_path is not None:
+            self._add_results_file_name_set(self._result_types, key_path=[dataset_name], postfix=dataset_name)
         init_dict = dict()
         for key in self._result_types:
             if not self._environment_instance.check_if_key_in_storage([dataset_name, key]):
                 init_dict[key] = list()
-        self._environment_instance.init_storage(dataset_name, **init_dict)
+        if not self._environment_instance.dataset_in_storage(dataset_name):
+            self._environment_instance.init_storage(dataset_name, **init_dict)
 
     def set_new_run_schedule(self, schedule, validation_dataset_names, save_direction='main'):
         self._results_collect_interval = schedule['to_be_collected_while_training']['results_collect_interval']
@@ -396,13 +402,15 @@ class Handler(object):
         if self._save_path is not None:
             if self._opt_inf_pupil_names is not None:
                 for pupil_name in self._opt_inf_pupil_names:
-                    self._add_opt_inf_results_file_name_templates(
-                        prefix=pupil_name, key_path=[pupil_name, 'train'], postfix='train')
-                    self._add_opt_inf_results_file_name_templates(
-                        prefix=pupil_name, key_path=[pupil_name, 'validation'], postfix='validation')
+                    if self._save_path is not None:
+                        self._add_opt_inf_results_file_name_templates(
+                            prefix=pupil_name, key_path=[pupil_name, 'train'], postfix='train')
+                        self._add_opt_inf_results_file_name_templates(
+                            prefix=pupil_name, key_path=[pupil_name, 'validation'], postfix='validation')
 
         if schedule is not None:
-            self._opt_train_results_collect_interval = schedule['to_be_collected_while_training']['results_collect_interval']
+            self._opt_train_results_collect_interval = \
+                schedule['to_be_collected_while_training']['results_collect_interval']
             # print("(Handler.set_optimizer_train_schedule)self._results_collect_interval:", self._results_collect_interval)
             if self._opt_train_results_collect_interval is not None:
                 if self._result_types is not None:
@@ -515,8 +523,10 @@ class Handler(object):
             #         **dict([(key, means[key]) for key in self._result_types])
             #     )
             # else:
+            for_storage = construct(means)
+            for_storage['steps'] = self._training_step
             self._environment_instance.append_to_storage(self._name_of_dataset_on_which_accumulating,
-                **dict([(key, means[key]) for key in self._result_types]))
+                **dict([(key, for_storage[key]) for key in self._result_types + ['steps']]))
         if print_results:
             self._print_standard_report(
                 regime='validation',
@@ -772,8 +782,8 @@ class Handler(object):
         for dataset_name, res in results.items():
             values = list()
             all_together = dict(hp)
-            #print('dataset_name:', dataset_name)
-            #print('all_together:', all_together)
+            # print('dataset_name:', dataset_name)
+            # print('all_together:', all_together)
             all_together.update(res)
             for key in self._order:
                 values.append(all_together[key])
@@ -781,24 +791,31 @@ class Handler(object):
                 f.write(self._tmpl % tuple(values))
 
     def _save_optimizer_launch_results(self, results, hp):
-        hp = dict(hp)
-        hp_file_name = str(self._experiment_counter) + '.txt'
-        with open(hp_file_name, 'w') as f:
-            hp_values = list()
-            for key in self._order:
-                hp_values.append(hp[key])
-            f.write(self._hp_values_str_tmpl % tuple(hp_values))
-        print("(Handler._save_optimizer_launch_results)results:", results)
-        for pupil_name, pupil_res in results.items():
-            for regime, regime_res in pupil_res.items():
-                res_types = list(regime_res.keys())
-                for res_type in res_types:
-                    if res_type != 'steps':
-                        file_name = self._tmpl % (self._experiment_counter, pupil_name, res_type, regime)
-                        create_path(file_name, file_name_is_in_path=True)
-                        with open(file_name, 'w') as f:
-                            for step, value in zip(regime_res['steps'], regime_res[res_type]):
-                                f.write('%s %s\n' % (step, value))
+        if self._save_path is not None:
+            if len(self._save_path) == 0:
+                prefix = ''
+            else:
+                prefix = self._save_path + '/'
+            hp = dict(hp)
+            hp_file_name = prefix + str(self._experiment_counter) + '.txt'
+            with open(hp_file_name, 'w') as f:
+                hp_values = list()
+                for key in self._order:
+                    hp_values.append(hp[key])
+                f.write(self._hp_values_str_tmpl % tuple(hp_values))
+            # print("(Handler._save_optimizer_launch_results)results:", results)
+            for pupil_name, pupil_res in results.items():
+                for regime, regime_res in pupil_res.items():
+                    if regime != 'step':
+                        res_types = list(regime_res.keys())
+                        for res_type in res_types:
+                            if res_type != 'steps':
+                                file_name = prefix + \
+                                            self._tmpl % (self._experiment_counter, pupil_name, res_type, regime)
+                                create_path(file_name, file_name_is_in_path=True)
+                                with open(file_name, 'w') as f:
+                                    for step, value in zip(regime_res['steps'], regime_res[res_type]):
+                                        f.write('%s %s\n' % (step, value))
         self._experiment_counter += 1
 
     def _save_several_data(self,
@@ -957,12 +974,16 @@ class Handler(object):
             string += '/' + name[3]
         return string
 
-    def _print_launch_results(self, results, hp, idx=None, indent=2):
+    def print_hyper_parameters(self, hp, order, indent=2):
+        # print("(Handler.print_hyper_parameters)self._processing_type:", self._processing_type)
         if indent != 0:
             print('\n' * (indent - 1))
-        for key in self._order:
+        for key in order:
             if key in hp:
                 print('%s: %s' % (self._hyperparameter_name_string(key), hp[key]))
+
+    def _print_launch_results(self, results, hp, idx=None, indent=2):
+        self.print_hyper_parameters(hp, self._order, indent=indent)
         for dataset_name, res in results.items():
             print('results on %s dataset:' % dataset_name)
             for key in self._order:
@@ -1108,9 +1129,10 @@ class Handler(object):
                     )
         if results_collect_interval is not None:
             if step % results_collect_interval == 0:
-                self._save_several_data(result_types,
-                                        step,
-                                        tmp)
+                if self._save_path is not None:
+                    self._save_several_data(result_types,
+                                            step,
+                                            tmp)
                 # if self._meta_optimizer_inference_is_performed:
                 #     # print("(Handler._process_train_results)res_dict:", res_dict)
                 #     self._environment_instance.append_to_optimizer_inference_storage(
@@ -1223,7 +1245,7 @@ class Handler(object):
         if regime == 'train':
             step = args[0]
             res = args[1]
-            print("(Handler.process_results/train)self._save_path:", self._save_path)
+            # print("(Handler.process_results/train)self._save_path:", self._save_path)
             self._process_train_results(
                 step, res, self._result_types, self._results_collect_interval, self._print_per_collected)
         if regime == 'validation':
@@ -1246,7 +1268,7 @@ class Handler(object):
         if regime == 'several_meta_optimizer_launches':
             hp = args[0]
             res = args[1]
-            print("(Handler.process_results/several_meta_optimizer_launches)self._save_path:", self._save_path)
+            # print("(Handler.process_results/several_meta_optimizer_launches)self._save_path:", self._save_path)
             self._process_several_optimizer_launches_results(hp, res)
         if regime == 'validation_by_chars':
             step = args[0]
@@ -1256,7 +1278,7 @@ class Handler(object):
         if regime == 'train_meta_optimizer':
             step = args[0]
             res = args[1]
-            print("(Handler.process_results/train_optimizer)self._save_path:", self._save_path)
+            # print("(Handler.process_results/train_optimizer)self._save_path:", self._save_path)
             # print("(Handler.process_results)self._results_collect_interval:", self._results_collect_interval)
             self._process_train_results(
                 step, res, self._meta_optimizer_train_result_types,
@@ -1298,6 +1320,25 @@ class Handler(object):
                     f.write('optimizer build parameters:\n')
                     f.write(nested2string(
                         self._environment_instance.current_optimizer_build_parameters) + '\n' * 2)
+                elif self._processing_type == 'train_meta_optimizer':
+                    f.write('pupil build parameters:\n')
+                    f.write(nested2string(self._environment_instance.current_pupil_build_parameters) + '\n' * 2)
+                    f.write('optimizer launch parameters:\n')
+                    f.write(nested2string(self._environment_instance.current_pupil_launch_parameters) + '\n' * 2)
+                    f.write('default launch parameters:\n')
+                    f.write(nested2string(
+                        self._environment_instance.get_default_method_parameters('train_optimizer')) + '\n' * 2)
+                    f.write('optimizer build parameters:\n')
+                    f.write(nested2string(
+                        self._environment_instance.current_optimizer_build_parameters) + '\n' * 2)
+                elif self._processing_type == 'several_meta_optimizer_launches':
+                    f.write('all_parameters:\n')
+                    f.write(nested2string(self._environment_instance.current_optimizer_launch_parameters) + '\n' * 2)
+                    f.write('train method default parameters:\n')
+                    f.write(
+                        nested2string(
+                            self._environment_instance.get_default_method_parameters('train_optimizer')) + '\n' * 2
+                    )
 
     def log_finish_time(self):
         if self._current_log_path is not None:

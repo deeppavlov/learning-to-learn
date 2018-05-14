@@ -86,7 +86,7 @@ other_hyperparameters = dict(
 )
 
 launch_kwargs = dict(
-    save_path='debug_grid_search',
+    # save_path='debug_grid_search',
     result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
     additions_to_feed_dict=train_opt_add_feed,
     pupil_restore_paths=['lstm/test_res_net_1000_emb150_nl1_nn100_bs32_nu10/checkpoints/2000'],
