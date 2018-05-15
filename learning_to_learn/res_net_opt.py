@@ -130,19 +130,18 @@ class ResNet4Lstm(Meta):
         remainder = rnn_size % num_res_layers
         return [rnn_nodes_for_layer for _ in range(num_res_layers-1)] + [rnn_nodes_for_layer + remainder]
 
-    @staticmethod
-    def _res_core_vars(left, target, right, rnn_part_size, res_size, var_scope):
+    def _res_core_vars(self, left, target, right, rnn_part_size, res_size, var_scope):
         with tf.variable_scope(var_scope):
             matrices, biases = list(), list()
             in_ndims = sum(flatten(left)) + sum(flatten(target)) + sum(flatten(right)) + rnn_part_size
             out_ndims = sum(flatten(target)) + rnn_part_size
-            out_stddev = .01 / (res_size + rnn_part_size)**.5
+            out_stddev = self._optimizer_init_parameter / (res_size + rnn_part_size)**.5
             out_init = tf.concat(
                 [tf.zeros([res_size, sum(flatten(target))]),
                  tf.truncated_normal([res_size, rnn_part_size], stddev=out_stddev)],
                 -1
             )
-            in_stddev = .01 / (in_ndims + res_size)**.5
+            in_stddev = self._optimizer_init_parameter / (in_ndims + res_size)**.5
             with tf.variable_scope('in_core'):
                 matrices.append(
                     tf.get_variable(
@@ -292,6 +291,12 @@ class ResNet4Lstm(Meta):
     # @staticmethod
     # def _apply_res_core(vars, opt_ins, rnn_part, target, scope, target_dims):
     def _apply_res_core(self, vars, opt_ins, rnn_part, target, scope, target_dims):
+        if self._res_core_activation_func == 'relu':
+            a_func = tf.nn.relu
+        elif self._res_core_activation_func == 'tanh':
+            a_func = tf.tanh
+        else:
+            a_func = None
         with tf.name_scope(scope):
             # print("\n(ResNet4Lstm._apply_res_core)rnn_part:", rnn_part)
             # print('(ResNet4Lstm._apply_res_core)opt_ins:', opt_ins)
@@ -324,7 +329,7 @@ class ResNet4Lstm(Meta):
                 matmul_res = custom_matmul(hs, m)
                 if idx == 0:
                     self._debug_tensors.append(matmul_res)
-                hs = tf.nn.relu(custom_add(matmul_res, b))
+                hs = a_func(custom_add(matmul_res, b))
                 # hs = tf.tanh(custom_add(matmul_res, b))
 
                 # with tf.device('/cpu:0'):
@@ -530,9 +535,11 @@ class ResNet4Lstm(Meta):
             perm_period=None,
             num_res_layers=4,
             res_size=1000,
+            res_core_activation_func='relu',
             num_gpus=1,
             regularization_rate=6e-6,
             clip_norm=1e+5,
+            optimizer_init_parameter=.1,
             permute=True,
             share_train_data=False,
             regime='train',
@@ -552,6 +559,7 @@ class ResNet4Lstm(Meta):
         self._perm_period = perm_period
         self._num_res_layers = num_res_layers
         self._res_size = res_size
+        self._res_core_activation_func = res_core_activation_func
         self._num_gpus = num_gpus
         if self._num_gpus == 1:
             self._base_device = '/gpu:0'
@@ -559,6 +567,7 @@ class ResNet4Lstm(Meta):
             self._base_device = '/cpu:0'
         self._regularization_rate = regularization_rate
         self._clip_norm = clip_norm
+        self._optimizer_init_parameter = optimizer_init_parameter
         self._permute = permute
         self._share_train_data = share_train_data
         self._regime = regime

@@ -333,6 +333,7 @@ class Environment(object):
                     pupil_restore_paths=None,
                     num_exercises=10,
                     reset_period=None,
+                    batch_gen_init_is_random=True,
 
                     restore_paths_datasets_map=None,
 
@@ -983,7 +984,6 @@ class Environment(object):
                                               train_feed_dict_additions,
                                               additional_controllers,
                                               validation_additional_feed_dict):
-
         valid_add_feed_dict = dict()
         for addition, add_controller in zip(train_feed_dict_additions, additional_controllers):
             valid_add_feed_dict[self._hooks[addition['placeholder']]] = add_controller.get()
@@ -1484,6 +1484,7 @@ class Environment(object):
             datasets,
             batch_generator_class,
             batch_size_controller,
+            batch_gen_init_is_random,
             train_batch_kwargs,
             restore_paths_datasets_map,
             random_=True
@@ -1527,14 +1528,14 @@ class Environment(object):
                     datasets[restore_paths_datasets_map[idx]][0],
                     batch_size,
                     **tb_kwargs,
-                    random_batch_initiation=True
+                    random_batch_initiation=batch_gen_init_is_random
                 )
             )
             optimizer_grad_batch_gens.append(batch_generator_class(
                     datasets[restore_paths_datasets_map[idx]][0],
                     batch_size,
                     **tb_kwargs,
-                    random_batch_initiation=True
+                    random_batch_initiation=batch_gen_init_is_random
                 )
             )
 
@@ -1777,6 +1778,7 @@ class Environment(object):
             train_specs['train_datasets'],
             batch_generator_class,
             batch_size_controller,
+            train_specs['batch_gen_init_is_random'],
             train_batch_kwargs,
             train_specs['restore_paths_datasets_map'],
             random_=False
@@ -1828,6 +1830,7 @@ class Environment(object):
                     train_specs['train_datasets'],
                     batch_generator_class,
                     batch_size_controller,
+                    train_specs['batch_gen_init_is_random'],
                     train_batch_kwargs,
                     train_specs['restore_paths_datasets_map']
                 )

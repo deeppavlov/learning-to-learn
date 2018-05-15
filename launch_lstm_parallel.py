@@ -63,10 +63,12 @@ env.train(
     allow_growth=True,
     save_path='lstm/test_res_net_1000_emb150_nl1_nn100_bs32_nu10',
     # restore_path='lstm_sample_test/scipop3_1000_bs256_11.12/checkpoints/2000',
-    learning_rate={'type': 'exponential_decay',
-                   'init': 4.,
-                   'decay': .1,
-                   'period': 13000},
+    learning_rate=dict(
+        type='exponential_decay',
+        init=4.,
+        decay=.1,
+        period=13000
+    ),
     batch_size=32,
     num_unrollings=10,
     vocabulary=vocabulary,

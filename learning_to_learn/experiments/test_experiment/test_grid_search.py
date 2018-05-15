@@ -133,10 +133,12 @@ launch_kwargs = dict(
     vocabulary=vocabulary,
     batch_size=32,
     num_unrollings=4,
-    learning_rate={'type': 'exponential_decay',
-                   'init': .002,
-                   'decay': .5,
-                   'period': 400},
+    learning_rate=dict(
+        type='exponential_decay',
+        init=4.,
+        decay=.1,
+        period=13000
+    ),
     results_collect_interval=10,
     opt_inf_results_collect_interval=1,
     permute=False,

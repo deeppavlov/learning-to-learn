@@ -105,6 +105,7 @@ for idx in [50, 0, 1, 10, 20, 24, 28, 32, 36, 40, 50, 60, 80, 100, 120, 160, 200
         validation_additions_to_feed_dict=valid_add_feed,
         vocabulary=vocabulary,
         batch_size=32,
+        batch_gen_init_is_random=False,
         num_unrollings=4,
         learning_rate={'type': 'exponential_decay',
                        'init': .002,
