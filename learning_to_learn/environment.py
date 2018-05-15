@@ -1,28 +1,28 @@
-import random
-import time
-import numpy as np
-import re
-import queue
 import csv
-import sys
-import select
 import multiprocessing as mp
+import queue
+import random
+import re
+import select
+import sys
+import time
 from collections import OrderedDict
 
+import numpy as np
 import tensorflow as tf
-from tensorflow.python import debug as tf_debug
-from useful_functions import InvalidArgumentError
-from useful_functions import (construct, add_index_to_filename_if_needed, match_two_dicts, create_path,
-                              check_if_key_in_nested_dict, add_missing_to_list, print_and_log,
-                              apply_temperature, sample, is_int, create_distribute_map,
-                              nth_element_of_sequence_of_sequences)
-from args_parsing import parse_1_set_of_kwargs, parse_train_method_arguments, \
+from learning_to_learn.args_parsing import parse_1_set_of_kwargs, parse_train_method_arguments, \
     formalize_and_create_insertions_for_build_hps, formalize_and_create_insertions_for_other_hps, \
     create_all_args_for_launches, configure_args_for_launches, parse_train_optimizer_method_arguments
-from handler import Handler
+from learning_to_learn.bpe import prepare_for_bpe, bpe_post_processing
+from tensorflow.python import debug as tf_debug
+from learning_to_learn.tensors import identity_tensor
+from learning_to_learn.useful_functions import InvalidArgumentError
+from learning_to_learn.useful_functions import construct, add_index_to_filename_if_needed, match_two_dicts, \
+    create_path, check_if_key_in_nested_dict, add_missing_to_list, print_and_log, apply_temperature, sample, is_int, \
+    create_distribute_map, nth_element_of_sequence_of_sequences
+
+from learning_to_learn.handler import Handler
 from subword_nmt.apply_bpe import BPE
-from bpe import prepare_for_bpe, bpe_post_processing
-from tensors import perplexity_tensor, loss_tensor, accuracy_tensor, bpc_tensor, identity_tensor
 
 
 class Controller(object):

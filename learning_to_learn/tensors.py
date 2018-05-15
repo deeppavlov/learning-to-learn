@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
-from useful_functions import InvalidArgumentError
+
+from learning_to_learn.useful_functions import InvalidArgumentError
 
 
 def perplexity_tensor(probabilities=None, keep_first_dim=False):

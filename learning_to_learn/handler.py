@@ -1,8 +1,9 @@
-import tensorflow as tf
-import numpy as np
 import datetime as dt
-# import os
-from useful_functions import create_path, add_index_to_filename_if_needed, construct, nested2string, \
+
+import numpy as np
+import tensorflow as tf
+
+from learning_to_learn.useful_functions import create_path, add_index_to_filename_if_needed, construct, nested2string, \
     WrongMethodCallError, extend_dictionary
 
 
@@ -334,7 +335,7 @@ class Handler(object):
         if self._save_path is not None:
             self._add_results_file_name_set(self._result_types, key_path=[dataset_name], postfix=dataset_name)
         init_dict = dict()
-        for key in self._result_types:
+        for key in self._result_types + ['steps']:
             if not self._environment_instance.check_if_key_in_storage([dataset_name, key]):
                 init_dict[key] = list()
         if not self._environment_instance.dataset_in_storage(dataset_name):

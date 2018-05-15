@@ -1,7 +1,7 @@
 from subword_nmt.apply_bpe import BPE
 import numpy as np
-from useful_functions import (char2vec, pred2vec, vec2char, get_positions_in_vocabulary,
-                              char2id, id2char, pred2vec_fast, vec2char_fast)
+from learning_to_learn.useful_functions import char2vec, pred2vec, vec2char, get_positions_in_vocabulary, char2id, \
+    id2char, pred2vec_fast, vec2char_fast
 import re
 
 MAX_NUM_PUNCTUATION_MARKS = 6

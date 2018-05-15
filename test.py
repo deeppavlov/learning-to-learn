@@ -1,11 +1,9 @@
 import re
-import tensorflow as tf
+
 from environment import Environment
-# from gru_par import Gru, BatchGenerator
-# from lstm_sample_par import Lstm, LstmBatchGenerator
 from lstm_par import Lstm, LstmBatchGenerator
-# from lstm_par import Lstm, LstmFastBatchGenerator
-from useful_functions import create_vocabulary, get_positions_in_vocabulary, construct
+
+from learning_to_learn.useful_functions import create_vocabulary, get_positions_in_vocabulary
 
 # f = open('datasets/scipop_v3.0/scipop_train.txt', 'r', encoding='utf-8')
 # text = f.read()

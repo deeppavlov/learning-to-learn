@@ -1,13 +1,14 @@
 import random
+
 import numpy as np
 import tensorflow as tf
-from useful_functions import (create_vocabulary, get_positions_in_vocabulary, char2vec, pred2vec, pred2vec_fast,
-                              vec2char, vec2char_fast, char2id, id2char, flatten, get_available_gpus,
-                              device_name_scope, average_gradients, get_num_gpus_and_bs_on_gpus, custom_matmul,
-                              custom_add, InvalidArgumentError, compose_save_list, compose_reset_list,
-                              compose_randomize_list, construct_dict_without_none_entries, append_to_nested,
-                              get_average_with_weights_func, func_on_list_in_nested)
-from tensors import compute_metrics
+from learning_to_learn.useful_functions import create_vocabulary, get_positions_in_vocabulary, char2vec, pred2vec, \
+    pred2vec_fast, vec2char, vec2char_fast, char2id, id2char, get_available_gpus, device_name_scope, \
+    average_gradients, get_num_gpus_and_bs_on_gpus, custom_matmul, custom_add, InvalidArgumentError, \
+    compose_save_list, compose_reset_list, compose_randomize_list, construct_dict_without_none_entries, \
+    append_to_nested, get_average_with_weights_func, func_on_list_in_nested
+
+from learning_to_learn.tensors import compute_metrics
 
 url = 'http://mattmahoney.net/dc/'
 

@@ -1,14 +1,37 @@
 import re
 import tensorflow as tf
-from environment import Environment
-from lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
-from res_net_opt import ResNet4Lstm
-from useful_functions import create_vocabulary, get_positions_in_vocabulary
 
-with open('../../datasets/scipop_v3.0/scipop_train.txt', 'r') as f:
+import sys
+from pathlib import Path # if you haven't already done so
+file = Path(__file__).resolve()
+# print("(test_grid_search)file:", file)
+parent, root = file.parent, file.parents[3]
+# print("(test_grid_search)root:", root)
+# print("(test_grid_search)parent:", parent)
+# print("(test_grid_search)sys.path:", sys.path)
+sys.path.append(str(root))
+
+# Additionally remove the current file's directory from sys.path
+try:
+    sys.path.remove(str(parent))
+except ValueError: # Already removed
+    pass
+# print("(test_grid_search)sys.path:", sys.path)
+from learning_to_learn.environment import Environment
+from learning_to_learn.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
+from learning_to_learn.useful_functions import create_vocabulary
+
+from learning_to_learn.res_net_opt import ResNet4Lstm
+
+import os
+
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
+with open('../../../datasets/scipop_v3.0/scipop_train.txt', 'r') as f:
     train_text = re.sub('<[^>]*>', '', f.read( ))
 
-with open('../../datasets/scipop_v3.0/scipop_valid.txt', 'r') as f:
+with open('../../../datasets/scipop_v3.0/scipop_valid.txt', 'r') as f:
     valid_text = re.sub('<[^>]*>', '', ''.join(f.readlines()[:10]))
 
 vocabulary = create_vocabulary(train_text + valid_text)
@@ -39,7 +62,7 @@ evaluation = dict(
     opt_inf_is_performed=True,
     opt_inf_stop=10,
     opt_inf_pupil_restore_paths={
-        ('prelearn4000', '../../lstm/test_res_net_1000_emb150_nl1_nn100_bs32_nu10/checkpoints/4000')
+        ('prelearn4000', '../../../lstm/test_res_net_1000_emb150_nl1_nn100_bs32_nu10/checkpoints/4000')
     },
     opt_inf_additions_to_feed_dict=opt_inf_add_feed,
     opt_inf_validation_dataset_texts=[valid_text],
@@ -91,7 +114,7 @@ launch_kwargs = dict(
     # save_path='debug_grid_search',
     result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
     additions_to_feed_dict=train_opt_add_feed,
-    pupil_restore_paths=['../../lstm/test_res_net_1000_emb150_nl1_nn100_bs32_nu10/checkpoints/2000'],
+    pupil_restore_paths=['../../../lstm/test_res_net_1000_emb150_nl1_nn100_bs32_nu10/checkpoints/2000'],
     # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
     reset_period=1,
     stop=41,

@@ -1,12 +1,11 @@
 import tensorflow as tf
-from useful_functions import (construct, get_keys_from_nested, get_obj_elem_by_path, device_name_scope,
-                              write_elem_in_obj_by_path, stop_gradient_in_nested, compose_save_list, average_gradients,
-                              retrieve_from_inner_dicts, distribute_into_inner_dicts, print_optimizer_ins,
-                              custom_matmul, values_from_nested, apply_to_nested, l2_loss_per_elem, tf_print_nested,
-                              sort_lists_of_ints_and_str, sort_lists_map, global_l2_loss, filter_none_gradients,
-                              go_through_nested_with_name_scopes_to_perform_func_and_distribute_results, global_norm,
-                              func_on_list_in_nested, append_to_nested)
-from tensors import perplexity_tensor, loss_tensor, accuracy_tensor, bpc_tensor, compute_metrics
+from learning_to_learn.useful_functions import construct, get_keys_from_nested, get_obj_elem_by_path, \
+    device_name_scope, write_elem_in_obj_by_path, stop_gradient_in_nested, compose_save_list, average_gradients, \
+    retrieve_from_inner_dicts, distribute_into_inner_dicts, custom_matmul, values_from_nested, sort_lists_map, \
+    global_l2_loss, filter_none_gradients, go_through_nested_with_name_scopes_to_perform_func_and_distribute_results, \
+    global_norm, func_on_list_in_nested, append_to_nested
+
+from learning_to_learn.tensors import compute_metrics
 
 LEARNING_RATE_FOR_EMPTY_CORE = 1.
 CLIP_NORM = 1e+5

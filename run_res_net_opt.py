@@ -1,8 +1,9 @@
 import re
-from environment import Environment
-from lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
-from res_net_opt import ResNet4Lstm
-from useful_functions import create_vocabulary, get_positions_in_vocabulary
+from learning_to_learn.environment import Environment
+from learning_to_learn.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
+from learning_to_learn.useful_functions import create_vocabulary
+
+from learning_to_learn.res_net_opt import ResNet4Lstm
 
 with open('datasets/scipop_v3.0/scipop_train.txt', 'r') as f:
     train_text = re.sub('<[^>]*>', '', f.read( ))

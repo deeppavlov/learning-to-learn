@@ -1,6 +1,6 @@
 from collections import OrderedDict
-from useful_functions import InvalidArgumentError, search_in_nested_dictionary,\
-                                  construct, paste_into_nested_structure, unite_dicts, remove_keys_from_dictionary
+from learning_to_learn.useful_functions import InvalidArgumentError, search_in_nested_dictionary,\
+    construct, paste_into_nested_structure, unite_dicts, remove_keys_from_dictionary
 
 
 # general args parsing. Used for test and train methods
