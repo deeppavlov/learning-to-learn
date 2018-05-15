@@ -513,12 +513,15 @@ class Environment(object):
             self._session.close()
         # print('(_start_session)gpu_memory:', gpu_memory)
         # print('(_start_session)allow_growth:', allow_growth)
-        config = tf.ConfigProto(allow_soft_placement=allow_soft_placement,
-                                gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=gpu_memory,
-                                                          allow_growth=allow_growth,
-                                                          visible_device_list=visible_device_list),
-                                log_device_placement=log_device_placement
-                                )
+        config = tf.ConfigProto(
+            allow_soft_placement=allow_soft_placement,
+            gpu_options=tf.GPUOptions(
+                per_process_gpu_memory_fraction=gpu_memory,
+                allow_growth=allow_growth,
+                visible_device_list=visible_device_list
+            ),
+            log_device_placement=log_device_placement
+        )
         # config.gpu_options.per_process_gpu_memory_fraction = gpu_memory
         self._session = tf.Session(config=config)
 

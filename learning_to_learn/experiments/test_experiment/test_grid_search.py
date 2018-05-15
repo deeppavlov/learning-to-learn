@@ -83,7 +83,8 @@ kwargs_for_pupil_building = dict(
     init_parameter=3.,
     num_gpus=1,
     regime='training_with_meta_optimizer',
-    additional_metrics=add_metrics
+    additional_metrics=add_metrics,
+    going_to_limit_memory=True
 )
 
 kwargs_for_optimizer_building = dict(
@@ -111,6 +112,7 @@ other_hyperparameters = dict(
 )
 
 launch_kwargs = dict(
+    allow_growth=True,
     # save_path='debug_grid_search',
     result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
     additions_to_feed_dict=train_opt_add_feed,

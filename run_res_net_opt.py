@@ -34,7 +34,8 @@ env.build_pupil(
     init_parameter=3.,
     num_gpus=1,
     regime='training_with_meta_optimizer',
-    additional_metrics=add_metrics
+    additional_metrics=add_metrics,
+    going_to_limit_memory=True
 )
 
 env.build_optimizer(
@@ -84,6 +85,7 @@ valid_add_feed = [
 for idx in [50, 0, 1, 10, 20, 24, 28, 32, 36, 40, 50, 60, 80, 100, 120, 160, 200]:
     step = idx * 200
     env.train_optimizer(
+        allow_growth=True,
         save_path='res_net_relu/from_%s' % step,
         result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
         additions_to_feed_dict=train_opt_add_feed,

@@ -53,27 +53,32 @@ env.build_pupil(
     init_parameter=3.,
     # character_positions_in_vocabulary=cpiv,
     num_gpus=1,
-    additional_metrics=add_metrics
+    additional_metrics=add_metrics,
+    going_to_limit_memory=True
 )
 
 print('building is finished')
-env.train(save_path='lstm/test_res_net_1000_emb150_nl1_nn100_bs32_nu10',
-          # restore_path='lstm_sample_test/scipop3_1000_bs256_11.12/checkpoints/2000',
-          learning_rate={'type': 'exponential_decay',
-                         'init': 4.,
-                         'decay': .1,
-                         'period': 13000},
-          batch_size=32,
-          num_unrollings=10,
-          vocabulary=vocabulary,
-          checkpoint_steps=200,
-          result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
-          printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
-          stop=40000,
-          train_dataset_text=train_text,
-          # train_dataset_text='abc',
-          validation_dataset_texts=[valid_text],
-          results_collect_interval=100,
-          additions_to_feed_dict=add_feed,
-          validation_additions_to_feed_dict=valid_add_feed)
+env.train(
+    # gpu_memory=.3,
+    allow_growth=True,
+    save_path='lstm/test_res_net_1000_emb150_nl1_nn100_bs32_nu10',
+    # restore_path='lstm_sample_test/scipop3_1000_bs256_11.12/checkpoints/2000',
+    learning_rate={'type': 'exponential_decay',
+                   'init': 4.,
+                   'decay': .1,
+                   'period': 13000},
+    batch_size=32,
+    num_unrollings=10,
+    vocabulary=vocabulary,
+    checkpoint_steps=200,
+    result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
+    printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
+    stop=40000,
+    train_dataset_text=train_text,
+    # train_dataset_text='abc',
+    validation_dataset_texts=[valid_text],
+    results_collect_interval=100,
+    additions_to_feed_dict=add_feed,
+    validation_additions_to_feed_dict=valid_add_feed
+)
           #log_device_placement=True)
