@@ -1,4 +1,5 @@
 import re
+import tensorflow as tf
 
 from learning_to_learn.environment import Environment
 from learning_to_learn.useful_functions import create_vocabulary, get_positions_in_vocabulary
@@ -37,6 +38,8 @@ valid_add_feed = [# {'placeholder': 'sampling_prob', 'value': 1.},
                   {'placeholder': 'dropout', 'value': 1.}]
 
 add_metrics = ['bpc', 'perplexity', 'accuracy']
+
+tf.set_random_seed(1)
 
 env.build_pupil(
     batch_size=32,
