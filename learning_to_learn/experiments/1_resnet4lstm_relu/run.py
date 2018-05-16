@@ -57,7 +57,7 @@ valid_add_feed = [
     {'placeholder': 'optimizer_dropout_keep_prob', 'value': 1.}
 ]
 
-the_only_pupil_restore_path = '../../../lstm/enwik8_pretrain/checkpoints/%s' % pretrain_step
+the_only_pupil_restore_path = '../../../lstm/text8_pretrain/checkpoints/%s' % pretrain_step
 evaluation = dict(
     save_path=save_path,
     opt_inf_is_performed=True,
