@@ -6,7 +6,7 @@ from learning_to_learn.useful_functions import create_vocabulary, get_positions_
 
 from learning_to_learn.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
 
-with open('datasets/razvedopros.txt', 'r') as f:
+with open('datasets/text8.txt', 'r') as f:
     text = f.read()
 
 valid_size = 10000
