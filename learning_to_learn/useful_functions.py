@@ -1283,7 +1283,7 @@ def nth_element_of_sequence_of_sequences(s, n):
 def convert(value, type_):
     try:
         # Check if it's a builtin type
-        module = importlib.import_module('__builtin__')
+        module = importlib.import_module('builtins')
         cls = getattr(module, type_)
     except AttributeError:
         # if not, separate module and class

@@ -27,7 +27,7 @@ save_path = parameter_set_file_name.split('.')[0] + '/evaluation'
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
-with open('../../../text8.txt', 'r') as f:
+with open('../../../datasets/text8.txt', 'r') as f:
     text = f.read()
 
 valid_size = 500
