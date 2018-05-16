@@ -6,14 +6,12 @@ from learning_to_learn.useful_functions import create_vocabulary, get_positions_
 
 from learning_to_learn.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
 
-f = open('datasets/scipop_v3.0/scipop_train.txt', 'r', encoding='utf-8')
-train_text = re.sub('<[^>]*>', '', f.read( ))
-f.close()
+with open('datasets/enwik8.txt', 'r', encoding='utf-8') as f:
+    text = f.read()
 
-f = open('datasets/scipop_v3.0/scipop_valid.txt', 'r', encoding='utf-8')
-valid_text = re.sub('<[^>]*>', '', ''.join(f.readlines()[:10]))
-f.close()
-
+valid_size = 10000
+valid_text = text[:valid_size]
+train_text = text[valid_size:]
 
 vocabulary = create_vocabulary(train_text + valid_text)
 vocabulary_size = len(vocabulary)
@@ -61,7 +59,7 @@ print('building is finished')
 env.train(
     # gpu_memory=.3,
     allow_growth=True,
-    save_path='lstm/test_res_net_1000_emb150_nl1_nn100_bs32_nu10',
+    save_path='lstm/enwik8_pretrain',
     # restore_path='lstm_sample_test/scipop3_1000_bs256_11.12/checkpoints/2000',
     learning_rate=dict(
         type='exponential_decay',
@@ -83,4 +81,4 @@ env.train(
     additions_to_feed_dict=add_feed,
     validation_additions_to_feed_dict=valid_add_feed
 )
-          #log_device_placement=True)
+# log_device_placement=True)
