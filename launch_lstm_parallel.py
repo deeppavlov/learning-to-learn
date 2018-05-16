@@ -6,7 +6,7 @@ from learning_to_learn.useful_functions import create_vocabulary, get_positions_
 
 from learning_to_learn.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
 
-with open('datasets/enwik8.txt', 'r', encoding='utf-8') as f:
+with open('datasets/text8.txt', 'r') as f:
     text = f.read()
 
 valid_size = 10000
@@ -79,6 +79,7 @@ env.train(
     validation_dataset_texts=[valid_text],
     results_collect_interval=100,
     additions_to_feed_dict=add_feed,
-    validation_additions_to_feed_dict=valid_add_feed
+    validation_additions_to_feed_dict=valid_add_feed,
+    no_validation=True
 )
 # log_device_placement=True)

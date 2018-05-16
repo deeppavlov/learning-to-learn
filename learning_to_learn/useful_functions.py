@@ -1,4 +1,5 @@
 import itertools
+import importlib
 import numpy as np
 import inspect
 import os
@@ -1276,4 +1277,28 @@ def nth_element_of_sequence_of_sequences(s, n):
     res = list()
     for el in s:
         res.append(el[n])
+    return res
+
+
+def convert(value, type_):
+    try:
+        # Check if it's a builtin type
+        module = importlib.import_module('__builtin__')
+        cls = getattr(module, type_)
+    except AttributeError:
+        # if not, separate module and class
+        module, type_ = type_.rsplit(".", 1)
+        module = importlib.import_module(module)
+        cls = getattr(module, type_)
+    return cls(value)
+
+
+def get_hps(file_name):
+    res = dict()
+    with open(file_name, 'r') as f:
+        lines = f.read().split('\n')
+        hp_names = lines[0].split()
+        hp_types = lines[1].split()
+        for hp_name, hp_type, line in zip(hp_names, hp_types, lines[2:]):
+            res[hp_name] = [convert(v, hp_type) for v in line.split()]
     return res
