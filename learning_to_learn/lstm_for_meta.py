@@ -61,7 +61,7 @@ class LstmBatchGenerator(object):
     def _start_batch(self):
         batch = np.zeros(shape=(self._batch_size, self._vocabulary_size), dtype=np.float)
         for b in range(self._batch_size):
-            batch[b, char2id('\n', self.character_positions_in_vocabulary)] = 1.0
+            batch[b, 0] = 1.0
         return batch
 
     def _zero_batch(self):
@@ -141,7 +141,7 @@ class LstmFastBatchGenerator(object):
         return self._vocabulary_size
 
     def _start_batch(self):
-        return np.array([[char2id('\n', self.character_positions_in_vocabulary)] for _ in range(self._batch_size)])
+        return np.array([[0] for _ in range(self._batch_size)])
 
     def _zero_batch(self):
         return -np.ones(shape=(self._batch_size), dtype=np.float)
