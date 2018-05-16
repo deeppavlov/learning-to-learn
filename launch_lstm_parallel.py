@@ -59,7 +59,7 @@ print('building is finished')
 env.train(
     # gpu_memory=.3,
     allow_growth=True,
-    save_path='lstm/enwik8_pretrain',
+    save_path='lstm/text8_pretrain',
     # restore_path='lstm_sample_test/scipop3_1000_bs256_11.12/checkpoints/2000',
     learning_rate=dict(
         type='exponential_decay',
