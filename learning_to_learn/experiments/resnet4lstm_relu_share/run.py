@@ -1,34 +1,39 @@
-import re
 import tensorflow as tf
 
 import sys
-from pathlib import Path  # if you haven't already done so
+from pathlib import Path
 file = Path(__file__).resolve()
 parent, root = file.parent, file.parents[3]
 sys.path.append(str(root))
 try:
     sys.path.remove(str(parent))
-except ValueError:  # Already removed
+except ValueError: # Already removed
     pass
 
 from learning_to_learn.environment import Environment
 from learning_to_learn.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
-from learning_to_learn.useful_functions import create_vocabulary
+from learning_to_learn.useful_functions import create_vocabulary, get_hps
 
 from learning_to_learn.res_net_opt import ResNet4Lstm
 
 import os
 
+pretrain_step = sys.argv[1]
+parameter_set_file_name = sys.argv[2]
+hps = get_hps(parameter_set_file_name)
+save_path = parameter_set_file_name.split('.')[0] + '/evaluation'
+
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
-with open('../../../datasets/scipop_v3.0/scipop_train.txt', 'r') as f:
-    train_text = re.sub('<[^>]*>', '', f.read( ))
+with open('../../../datasets/text8.txt', 'r') as f:
+    text = f.read()
 
-with open('../../../datasets/scipop_v3.0/scipop_valid.txt', 'r') as f:
-    valid_text = re.sub('<[^>]*>', '', ''.join(f.readlines()[:10]))
+valid_size = 500
+valid_text = text[:valid_size]
+train_text = text[valid_size:]
 
-vocabulary = create_vocabulary(train_text + valid_text)
+vocabulary = create_vocabulary(text)
 vocabulary_size = len(vocabulary)
 
 env = Environment(
@@ -51,12 +56,13 @@ valid_add_feed = [
     {'placeholder': 'optimizer_dropout_keep_prob', 'value': 1.}
 ]
 
+the_only_pupil_restore_path = '../../../lstm/text8_pretrain/checkpoints/%s' % pretrain_step
 evaluation = dict(
-    save_path='debug_grid_search/evaluation',
+    save_path=save_path,
     opt_inf_is_performed=True,
-    opt_inf_stop=10,
+    opt_inf_stop=20,
     opt_inf_pupil_restore_paths={
-        ('prelearn4000', '../../../lstm/test_res_net_1000_emb150_nl1_nn100_bs32_nu10/checkpoints/4000')
+        ('pretrain%s' % pretrain_step, the_only_pupil_restore_path)
     },
     opt_inf_additions_to_feed_dict=opt_inf_add_feed,
     opt_inf_validation_dataset_texts=[valid_text],
@@ -85,24 +91,34 @@ kwargs_for_optimizer_building = dict(
     regime='train',
     # regime='inference',
     num_optimizer_unrollings=10,
-    num_exercises=5,
+    num_exercises=10,
     res_size=2000,
     permute=False,
-    share_train_data=False,
+    share_train_data=True,
     optimizer_for_opt_type='adam',
     additional_metrics=add_metrics
 )
 
 build_pupil_hyperparameters = dict(
-    init_parameter=[.5, 1., 1.5, 2., 2.7, 4.]
 )
 build_optimizer_hyperparameters = dict(
-    num_optimizer_unrollings=[10, 7, 5]
+    optimizer_init_parameter=hps['optimizer_init_parameter'],
+    clip_norm=hps['clip_norm']
 )
 
 # other_hyperparameters={'dropout': [.3, .5, .7, .8, .9, .95]},
 other_hyperparameters = dict(
-    dropout=[.3, .5, .7, .8, .9, .95]
+    learning_rate=dict(
+        varying=dict(
+            init=hps['learning_rate']
+        ),
+        fixed=dict(
+            decay=.1,
+            period=1e+4
+        ),
+        hp_type='built-in',
+        type='exponential_decay'
+    )
 )
 
 launch_kwargs = dict(
@@ -110,10 +126,10 @@ launch_kwargs = dict(
     # save_path='debug_grid_search',
     result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
     additions_to_feed_dict=train_opt_add_feed,
-    pupil_restore_paths=['../../../lstm/test_res_net_1000_emb150_nl1_nn100_bs32_nu10/checkpoints/2000'],
+    pupil_restore_paths=[the_only_pupil_restore_path],
     # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
     reset_period=1,
-    stop=41,
+    stop=1000,
     train_dataset_texts=[train_text],
     opt_inf_is_performed=False,
     # opt_inf_stop=10,
@@ -127,14 +143,8 @@ launch_kwargs = dict(
     vocabulary=vocabulary,
     batch_size=32,
     num_unrollings=4,
-    learning_rate=dict(
-        type='exponential_decay',
-        init=4.,
-        decay=.1,
-        period=13000
-    ),
-    results_collect_interval=10,
-    opt_inf_results_collect_interval=1,
+    results_collect_interval=200,
+    # opt_inf_results_collect_interval=1,
     permute=False,
     summary=True,
     add_graph_to_summary=True

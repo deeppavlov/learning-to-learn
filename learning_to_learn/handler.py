@@ -251,7 +251,7 @@ class Handler(object):
             result_names = list()
             for result_type in self._order:
                 result_names.append(self._hyperparameter_name_string(result_type))
-            with open(self._save_path + '/' + 'hp_layout', 'w') as f:
+            with open(self._save_path + '/' + 'hp_layout.txt', 'w') as f:
                 layout_str = ''
                 for name in result_names[:-1]:
                     layout_str += name + ' '
@@ -801,9 +801,13 @@ class Handler(object):
             hp_file_name = prefix + str(self._experiment_counter) + '.txt'
             with open(hp_file_name, 'w') as f:
                 hp_values = list()
+                hp_types = list()
                 for key in self._order:
                     hp_values.append(hp[key])
+                    hp_types.append(hp[key].__class__.__name__)
                 f.write(self._hp_values_str_tmpl % tuple(hp_values))
+                f.write('\n')
+                f.write(self._hp_values_str_tmpl % tuple(hp_types))
             # print("(Handler._save_optimizer_launch_results)results:", results)
             for pupil_name, pupil_res in results.items():
                 for regime, regime_res in pupil_res.items():

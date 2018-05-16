@@ -1167,7 +1167,8 @@ def sort_lists_map(lists):
                 values[idx].append(v)
     new_values = list()
     for v in values:
-        both_str_and_ints = not (cum_and([isinstance(elem, str) for elem in v]) or cum_and([isinstance(elem, int) for elem in v]))
+        both_str_and_ints = not (cum_and([isinstance(elem, str) for elem in v]) or
+                                 cum_and([isinstance(elem, int) for elem in v]))
         if both_str_and_ints:
             new_values.append(sorted(v, key=lambda elem: str(elem) if isinstance(elem, int) else elem))
         else:
@@ -1301,4 +1302,32 @@ def get_hps(file_name):
         hp_types = lines[1].split()
         for hp_name, hp_type, line in zip(hp_names, hp_types, lines[2:]):
             res[hp_name] = [convert(v, hp_type) for v in line.split()]
+    return res
+
+
+def apply_func_to_nested(nested, func, obj_types):
+    if isinstance(nested, obj_types):
+        if isinstance(nested, dict):
+            for k, v in nested.items():
+                nested[k] = apply_func_to_nested(v, func, obj_types)
+        else:
+            for idx, v in enumerate(nested):
+                nested[idx] = apply_func_to_nested(v, func, obj_types)
+        return nested
+    else:
+        return func(nested)
+
+
+def synchronous_sort(seqs, leader_idx, lambda_func=lambda x: x):
+    new_seqs = list()
+    for s in zip(*sorted(zip(*seqs), key=lambda elem: lambda_func(elem[leader_idx]))):
+        new_seqs.append(list(s))
+    return new_seqs
+
+
+def remove_empty_strings_from_list(l):
+    res = list()
+    for e in l:
+        if len(e) > 0:
+            res.append(e)
     return res
