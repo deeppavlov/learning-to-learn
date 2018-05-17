@@ -120,6 +120,7 @@ class Handler(object):
             eval_dataset_names=None,
             eval_pupil_names=None,
             hyperparameters=None,
+            initial_experiment_counter_value=0,
             # test method specific
             validation_dataset_names=None,
             validation_tensor_schedule=None,
@@ -257,7 +258,7 @@ class Handler(object):
                     layout_str += name + ' '
                 layout_str += result_names[-1]
                 f.write(layout_str)
-            self._experiment_counter = 0
+            self._experiment_counter = initial_experiment_counter_value
             self._tmpl = '%s/%s/%s_%s.txt'  # <experiment number>/<pupil_name>/<metric>_<regime>.txt
             self._hp_values_str_tmpl = '%s '*(len(self._order) - 1) + '%s'
             self._environment_instance.set_in_storage(launches=list())

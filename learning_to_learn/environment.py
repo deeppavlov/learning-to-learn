@@ -2162,6 +2162,7 @@ class Environment(object):
             build_pupil_hyperparameters=None,
             build_optimizer_hyperparameters=None,
             other_hyperparameters=None,
+            initial_experiment_counter_value=0,
             **kwargs
     ):
         self._store_launch_parameters(
@@ -2231,7 +2232,8 @@ class Environment(object):
             evaluation_save_path,
             evaluation_result_types,
             eval_pupil_names=nth_element_of_sequence_of_sequences(evaluation['opt_inf_pupil_restore_paths'], 0),
-            hyperparameters=hps
+            hyperparameters=hps,
+            initial_experiment_counter_value=initial_experiment_counter_value
         )
         self._handler.log_launch()
         # print('build_insertions:', build_insertions)

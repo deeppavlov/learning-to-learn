@@ -20,6 +20,10 @@ import os
 
 pretrain_step = sys.argv[1]
 parameter_set_file_name = sys.argv[2]
+if len(sys.argv) > 3:
+    initial_experiment_counter_value = int(sys.argv[3])
+else:
+    initial_experiment_counter_value = 0
 hps = get_hps(parameter_set_file_name)
 save_path = parameter_set_file_name.split('.')[0] + '/evaluation'
 
@@ -158,5 +162,6 @@ env.grid_search_for_meta(
     build_pupil_hyperparameters=build_pupil_hyperparameters,
     build_optimizer_hyperparameters=build_optimizer_hyperparameters,
     other_hyperparameters=other_hyperparameters,
+    initial_experiment_counter_value=initial_experiment_counter_value,
     **launch_kwargs
 )

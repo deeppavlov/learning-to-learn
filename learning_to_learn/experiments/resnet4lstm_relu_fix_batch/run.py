@@ -21,6 +21,10 @@ import os
 
 pretrain_step = sys.argv[1]
 parameter_set_file_name = sys.argv[2]
+if len(sys.argv) > 3:
+    initial_experiment_counter_value = int(sys.argv[3])
+else:
+    initial_experiment_counter_value = 0
 hps = get_hps(parameter_set_file_name)
 save_path = parameter_set_file_name.split('.')[0] + '/evaluation'
 
@@ -130,7 +134,7 @@ launch_kwargs = dict(
     pupil_restore_paths=[the_only_pupil_restore_path],
     # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
     reset_period=1,
-    stop=1000,
+    stop=10,
     train_dataset_texts=[train_text],
     opt_inf_is_performed=False,
     batch_gen_init_is_random=False,
@@ -160,5 +164,6 @@ env.grid_search_for_meta(
     build_pupil_hyperparameters=build_pupil_hyperparameters,
     build_optimizer_hyperparameters=build_optimizer_hyperparameters,
     other_hyperparameters=other_hyperparameters,
+    initial_experiment_counter_value=initial_experiment_counter_value,
     **launch_kwargs
 )
