@@ -6,14 +6,16 @@ from learning_to_learn.useful_functions import create_vocabulary
 
 from learning_to_learn.res_net_opt import ResNet4Lstm
 
-with open('datasets/scipop_v3.0/scipop_train.txt', 'r') as f:
-    train_text = re.sub('<[^>]*>', '', f.read( ))
+with open('datasets/text8.txt', 'r') as f:
+    text = re.sub('<[^>]*>', '', f.read( ))
 
-with open('datasets/scipop_v3.0/scipop_valid.txt', 'r') as f:
-    valid_text = re.sub('<[^>]*>', '', ''.join(f.readlines()[:10]))
-
-vocabulary = create_vocabulary(train_text + valid_text)
+vocabulary = create_vocabulary(text)
 vocabulary_size = len(vocabulary)
+# print("(debug_meta_grid_search)vocabulary_size:", vocabulary_size)
+
+valid_size = 500
+valid_text = text[:valid_size]
+train_text = text[valid_size:]
 
 env = Environment(
     pupil_class=Lstm,
@@ -35,12 +37,13 @@ valid_add_feed = [
     {'placeholder': 'optimizer_dropout_keep_prob', 'value': 1.}
 ]
 
+NUM_EXERCISES = 11
 evaluation = dict(
-    save_path='debug_grid_search/evaluation',
+    save_path='debug_grid_search/15ex/evaluation',
     opt_inf_is_performed=True,
     opt_inf_stop=10,
     opt_inf_pupil_restore_paths={
-        ('prelearn4000', 'lstm/test_res_net_1000_emb150_nl1_nn100_bs32_nu10/checkpoints/4000')
+        ('prelearn4000', 'lstm/text8_pretrain/checkpoints/200')
     },
     opt_inf_additions_to_feed_dict=opt_inf_add_feed,
     opt_inf_validation_dataset_texts=[valid_text],
@@ -68,7 +71,7 @@ kwargs_for_optimizer_building = dict(
     regime='train',
     # regime='inference',
     num_optimizer_unrollings=10,
-    num_exercises=5,
+    num_exercises=NUM_EXERCISES,
     res_size=2000,
     permute=False,
     share_train_data=False,
@@ -93,12 +96,13 @@ launch_kwargs = dict(
     # save_path='debug_grid_search',
     result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
     additions_to_feed_dict=train_opt_add_feed,
-    pupil_restore_paths=['lstm/test_res_net_1000_emb150_nl1_nn100_bs32_nu10/checkpoints/2000'],
+    pupil_restore_paths=['lstm/text8_pretrain/checkpoints/200'],
     # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
     reset_period=1,
     stop=41,
     train_dataset_texts=[train_text],
     opt_inf_is_performed=False,
+    num_exercises=NUM_EXERCISES,
     # opt_inf_stop=10,
     # opt_inf_pupil_restore_paths={
     #     'prelearn2000': 'lstm/test_res_net_1000_emb150_nl1_nn100_bs32_nu10/checkpoints/2000'

@@ -1492,6 +1492,8 @@ class Environment(object):
         # print("EXERCISES RESET!")
         # print('(Environment._reset_exercises)restore_paths_datasets_map:', restore_paths_datasets_map)
         num_paths = len(pupil_restore_paths)
+        # print("(Environment._reset_exercises)num_paths:", num_paths)
+        # print("(Environment._reset_exercises)num_exercises:", num_exercises)
         if random_:
             if num_paths > num_exercises:
                 paths = random.sample(list(enumerate(pupil_restore_paths)), num_exercises)
@@ -1538,7 +1540,12 @@ class Environment(object):
                     random_batch_initiation=batch_gen_init_is_random
                 )
             )
-
+        # print("(Environment._reset_exercises)len(pupil_grad_eval_batch_gens):", len(pupil_grad_eval_batch_gens))
+        # print(
+        #     "(Environment._reset_exercises)len(self._hooks['pupil_trainable_initializers']):",
+        #     len(self._hooks['pupil_trainable_initializers'])
+        # )
+        # print("(Environment._reset_exercises)len(self._hooks['pupil_savers']):", len(self._hooks['pupil_savers']))
         self._session.run(self._hooks['reset_permutation_matrices'])
         self._session.run(self._hooks['reset_optimizer_train_state'])
         self._session.run(self._hooks['reset_pupil_grad_eval_pupil_storage'])
@@ -1772,6 +1779,7 @@ class Environment(object):
 
         self._handler.set_controllers(controllers_for_printing)
         # print("(Environment._train_optimizer)train_specs['train_datasets']:", train_specs['train_datasets'])
+        # print("(Environment._train_optimizer)train_specs['num_exercises']:", train_specs['num_exercises'])
         pupil_grad_eval_batch_gens, optimizer_grad_batch_gens = self._reset_exercises(
             train_specs['num_exercises'],
             train_specs['pupil_restore_paths'],

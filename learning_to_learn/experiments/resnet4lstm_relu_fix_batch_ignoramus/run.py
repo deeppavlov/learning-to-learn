@@ -61,6 +61,7 @@ valid_add_feed = [
     {'placeholder': 'optimizer_dropout_keep_prob', 'value': 1.}
 ]
 
+NUM_EXERCISES = 10
 the_only_pupil_restore_path = '../../../lstm/text8_pretrain/checkpoints/%s' % pretrain_step
 evaluation = dict(
     save_path=save_path,
@@ -96,7 +97,7 @@ kwargs_for_optimizer_building = dict(
     regime='train',
     # regime='inference',
     num_optimizer_unrollings=10,
-    num_exercises=10,
+    num_exercises=NUM_EXERCISES,
     res_size=2000,
     permute=False,
     share_train_data=False,
@@ -134,6 +135,7 @@ launch_kwargs = dict(
     pupil_restore_paths=[the_only_pupil_restore_path],
     # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
     reset_period=1,
+    num_exercises=NUM_EXERCISES,
     stop=10,
     train_dataset_texts=[train_text],
     opt_inf_is_performed=False,
