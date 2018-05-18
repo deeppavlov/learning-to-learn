@@ -1,0 +1,10 @@
+model: ResNet4Lstm
+permute: False
+activation function: ReLU
+second core layer initiation: zeros
+pupil restore checkpoints: only 1 and fixed (ignoramus)
+batch generation: random
+share pupil gradients and optimizer gradients data: False
+data: one dataset
+train and validation data: no intersections, one dataset
+task: hyper parameters search (learning rate, optimizer_init_parameter, clip_norm)
