@@ -6,7 +6,7 @@ from learning_to_learn.useful_functions import create_vocabulary
 from learning_to_learn.res_net_opt import ResNet4Lstm
 
 with open('datasets/scipop_v3.0/scipop_train.txt', 'r') as f:
-    train_text = re.sub('<[^>]*>', '', f.read( ))
+    train_text = re.sub('<[^>]*>', '', f.read())
 
 with open('datasets/scipop_v3.0/scipop_valid.txt', 'r') as f:
     valid_text = re.sub('<[^>]*>', '', ''.join(f.readlines()[:10]))

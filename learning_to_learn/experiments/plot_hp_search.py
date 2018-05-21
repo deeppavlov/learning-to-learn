@@ -194,10 +194,11 @@ for pupil_name in pupil_names:
                 for format in FORMATS:
                     if format == 'pdf':
                         fig_path = os.path.join(path, str(counter) + '.pdf')
-                        plt.savefig(fig_path)
+                        r = plt.savefig(fig_path)
                     if format == 'png':
                         fig_path = os.path.join(path, str(counter) + '.png')
-                        plt.savefig(fig_path, dpi=DPI)
+                        r = plt.savefig(fig_path, dpi=DPI)
+                    # print("%s %s %s %s:" % (pupil_name, res_type, regime, format), r)
                 fixed_hps_file = os.path.join(path, str(counter) + '.txt')
                 with open(fixed_hps_file, 'w') as f:
                     f.write(tmpl[:-1] % fixed_hps_tuple)

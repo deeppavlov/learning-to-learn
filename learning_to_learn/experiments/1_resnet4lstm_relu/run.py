@@ -1,4 +1,3 @@
-import re
 import tensorflow as tf
 
 import sys

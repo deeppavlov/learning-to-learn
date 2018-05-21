@@ -1523,6 +1523,7 @@ class Environment(object):
             if path is None:
                 self._session.run(pupil_trainable_initializer)
             else:
+                # print("(Environmet._reset_exercises)path:", path)
                 saver.restore(self._session, path)
             # print("(Environment._reset_exercises)restore_paths_datasets_map:", restore_paths_datasets_map)
             # print("(Environment._reset_exercises)idx:", idx)
