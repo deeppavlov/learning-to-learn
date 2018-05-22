@@ -34,9 +34,9 @@ os.chdir(dname)
 with open('../../../datasets/text8.txt', 'r') as f:
     text = f.read()
 
-valid_size = 480
+valid_size = 500
 valid_text = text[:valid_size]
-train_text = text
+train_text = text[valid_size:]
 
 vocabulary = create_vocabulary(text)
 vocabulary_size = len(vocabulary)
@@ -134,9 +134,9 @@ launch_kwargs = dict(
     additions_to_feed_dict=train_opt_add_feed,
     pupil_restore_paths=[the_only_pupil_restore_path],
     # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
-    reset_period=12,
+    reset_period=1,
     num_exercises=NUM_EXERCISES,
-    stop=1000,
+    stop=10,
     train_dataset_texts=[train_text],
     opt_inf_is_performed=False,
     batch_gen_init_is_random=False,
