@@ -1305,6 +1305,17 @@ def get_hps(file_name):
     return res
 
 
+def get_grids(file_name):
+    res = list()
+    with open(file_name, 'r') as f:
+        lines = f.read().split('\n')
+        hp_names = lines[0].split()
+        hp_types = lines[1].split()
+        for hp_name, hp_type, line in zip(hp_names, hp_types, lines[2:]):
+            res[hp_name] = [convert(v, hp_type) for v in line.split()]
+    return res
+
+
 def apply_func_to_nested(nested, func, obj_types):
     if isinstance(nested, obj_types):
         if isinstance(nested, dict):
