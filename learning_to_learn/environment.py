@@ -1991,6 +1991,22 @@ class Environment(object):
                     build_hyperparameters=None,
                     other_hyperparameters=None,
                     **kwargs):
+        """build_hyperparameters and other_hyperparameters are provided in the following format
+        build_hyperparameters and other_hyperparameters are a dictionaries with keys:
+            hp_type (build_hyperparameters['hp_type'] = 'build_hp') (can be omitted)
+            list_indices
+                a list of indices of hp values if hp is a list (e.g. number of nodes by layers)
+                it can be an int if only 1 index is used
+                default is None
+            share
+                some parameter are shared between graph building and train methods (e. g. num_unrollings)
+                this is entry is used in pupil build hps for specifying where to put hp in train method kwargs if
+                such procedure is needed
+            controller
+                train kwargs specify parameters such as learning rate which may change during training.
+                controller entry is boolean and shows if controller is used
+        """
+
         self._store_launch_parameters(
             'pupil',
             evaluation=evaluation,

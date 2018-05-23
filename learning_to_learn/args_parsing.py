@@ -460,13 +460,22 @@ def parse_hp_name(hp_name):
 
 def process_build_hp_text_abbreviation(hp_name, hp_values):
     name, list_indices = parse_hp_name(hp_name)
-    return {name: {'hp_type': 'build_hp',
-                   'type': None,
-                   'fixed': None,
-                   'varying': hp_values,
-                   'list_indices': list_indices,
-                   'share': None,
-                   'controller': False}}
+    return dict(
+        [
+            (
+                name,
+                OrderedDict(
+                    hp_type='build_hp',
+                    type=None,
+                    fixed=None,
+                    varying=hp_values,
+                    list_indices=list_indices,
+                    share=None,
+                    controller=False
+                )
+            )
+        ]
+    )
 
 
 def spot_direction(hp_name):
@@ -591,7 +600,10 @@ def create_controller_template(hp_name, hp_specs_and_values):
 
 
 def create_insert_instructions(hps):
-    insert_instructions = dict()
+    """hyper parameter values are to be inserted into build and launch kwargs which have complex structure
+    This function processes abbreviations and creates insert instructions in appropriate format
+    insert_instructions is a dictionary which keys are first 3 entries of formalized name of hyperparameter"""
+    insert_instructions = OrderedDict()
     for hp_name, hp_specs_and_values in hps.items():
         hp_insert_instructions = dict()
         if hp_specs_and_values['controller']:
@@ -639,9 +651,16 @@ def extract_and_sort_values(formalized_name, hp_specs_and_values):
 
 
 def separate_hps(hp_name, hp_specs_and_values):
-    # print('\nseparate_hps')
-    # print('hp_name:', hp_name)
-    # print('hp_specs_and_values:', hp_specs_and_values)
+    """hp_name may contain several varying entries. This function separates them and formalizes their names
+    formalized name is (hp_type, hp_name, list_index, varying_key) where
+        hp_type can take values 'built-in', 'additional_placeholder', 'build_hp', 'batch_kwarg'
+        hp_name is name of hp in method call kwargs
+        list_index if is not None contains index of varying value in hp if it is a list
+            (e. g. number of nodes by layers)
+        varying_key Some hps have multiple specs, e. g. learning_rate (init_value, decay, period)
+    formalized_name if all entries are not None is applied as follows:
+        kwargs...[formalized_name[1]][formalized_name[2]][formalized_name[3]]
+    """
     hp_type = hp_specs_and_values['hp_type']
     list_indices = hp_specs_and_values['list_indices']
     if list_indices is None:
@@ -852,7 +871,8 @@ def formalize_and_create_insertions(hps):
     # print('insert_instructions:', insert_instructions)
     hps = separate_all_hps(hps)
     # print('hps:', hps)
-    hps_by_groups = split_to_groups_by_hp_type(hps)
+
+    hps_by_groups = split_to_groups_by_hp_type(hps)  # it is done for further sorting
     # print('hps_by_groups:', hps_by_groups)
     hps = OrderedDict()
     for hp_group in hps_by_groups:
