@@ -1992,21 +1992,47 @@ class Environment(object):
                     other_hyperparameters=None,
                     **kwargs):
         """build_hyperparameters and other_hyperparameters are provided in the following format
-        build_hyperparameters and other_hyperparameters are a dictionaries with keys:
+        build_hyperparameters and other_hyperparameters are a dictionaries which keys are kwargs for build or train
+        Environment methods for corresponding hyper parameters and values are dictionaries of following format:
             hp_type ('build_hp', 'built-in', 'additional_placeholder', 'batch_kwarg')
-                (can be omitted for build_hyperparameters)
+                can be omitted for build_hyperparameters and if omitted in other_hyperparameters it is set to
+                additional_placeholder
             list_indices
                 a list of indices of hp values if hp is a list (e.g. number of nodes by layers)
                 it can be an int if only 1 index is used
                 default is None
-            share
-                some parameter are shared between graph building and train methods (e. g. num_unrollings)
-                this is entry is used in pupil build hps for specifying where to put hp in train method kwargs if
-                such procedure is needed
             controller
                 train kwargs specify parameters such as learning rate which may change during training.
                 controller entry is boolean and shows if controller is used
-
+            share
+                some parameters are shared between graph building and train methods (e. g. num_unrollings)
+                this entry is used in pupil build hps for specifying where to put hp in train method kwargs if
+                such procedure is needed. For other_hyperparameters it is set to None.
+                share is a dict with 2 entries: 'direction' and 'controller'.
+                    'direction' can take values 'built-in', 'additional_placeholder', 'batch_kwarg'
+                    'controller' is boolean
+            type
+                in case when controller is True type is Controller type. If controller is true and type is omitted
+                type is set to 'fixed
+            fixed
+                if parameter is inside dictionary it is likely that dictionary will have another entries. In such case
+                fixed is to be used for passing them to model. fixed is a dictionary which entries are entries of
+                hp dictionary entries. default is None
+            varying
+                is an entry for hyper parameter values to be tested.
+                varying can be a dictionary which keys are names of specs to be tested and values are list of tested hp
+                values. This format is used in cases when hp is a dictionary and and one of dictionary specs is varied,
+                e. g. learning_rate
+                    {'init': [1., 2., 3.]}
+                if hyper parameter is not a dictionary varying is a list of values to be tested
+                Note that if list_indices is not None varying contains not list but list of lists where each inner list
+                corresponds to list index
+        Abbreviations of this format are possible.
+            1. you may omit list_indices, hp_type, controller, type, share
+            2. for build_hyperparameters you can use following formats
+                {'build_hyper_param' = values_to_be_tested}
+                {'build_hyper_param[idx1,idx2,idx3]' = [values_list1, values_list2, values_list3]}
+                where idx1 and so on are list_indices
         """
 
         self._store_launch_parameters(
