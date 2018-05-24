@@ -1993,7 +1993,8 @@ class Environment(object):
                     **kwargs):
         """build_hyperparameters and other_hyperparameters are provided in the following format
         build_hyperparameters and other_hyperparameters are a dictionaries with keys:
-            hp_type (build_hyperparameters['hp_type'] = 'build_hp') (can be omitted)
+            hp_type ('build_hp', 'built-in', 'additional_placeholder', 'batch_kwarg')
+                (can be omitted for build_hyperparameters)
             list_indices
                 a list of indices of hp values if hp is a list (e.g. number of nodes by layers)
                 it can be an int if only 1 index is used
@@ -2005,6 +2006,7 @@ class Environment(object):
             controller
                 train kwargs specify parameters such as learning rate which may change during training.
                 controller entry is boolean and shows if controller is used
+
         """
 
         self._store_launch_parameters(
