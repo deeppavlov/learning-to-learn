@@ -1305,15 +1305,51 @@ def get_hps(file_name):
     return res
 
 
-def get_grids(file_name):
+def get_combs_and_num_exps(eval_dir):
+    contents = os.listdir(eval_dir)
+    exp_description_files = list()
+    for entry in contents:
+        if entry[-4:] == '.txt' and is_int(entry[:-4]):
+            exp_description_files.append(entry)
+    hp_sets = list()
+    for file_name in exp_description_files:
+        with open(os.path.join(eval_dir, file_name), 'r') as f:
+            lines = f.read().split('\n')
+            types = lines[1].split()
+            hp_set = tuple([convert(v, t) for v, t in zip(lines[0].split(), types)])
+            if hp_set not in hp_sets:
+                hp_sets.append(hp_set)
+    return hp_sets, len(exp_description_files)
+
+
+def remove_repeats_from_list(l):
     res = list()
+    for v in l:
+        if v not in res:
+            res.append(v)
+    return res
+
+
+def make_initial_grid(file_name):
+    init_conf = OrderedDict()
+    init_grid_values = list()
     with open(file_name, 'r') as f:
         lines = f.read().split('\n')
-        hp_names = lines[0].split()
-        hp_types = lines[1].split()
-        for hp_name, hp_type, line in zip(hp_names, hp_types, lines[2:]):
-            res[hp_name] = [convert(v, hp_type) for v in line.split()]
-    return res
+    hp_names = lines[0].split()
+    hp_types = lines[1].split()
+    for hp_name, hp_type, line in zip(hp_names, hp_types, lines[2:]):
+        param_values = remove_repeats_from_list([convert(v, hp_type) for v in line.split()])
+        init_conf[hp_name] = param_values
+        init_grid_values.append(param_values)
+    eval_dir = '.'.join(file_name.split('.')[:-1])
+    used_combs, num_exps = get_combs_and_num_exps(eval_dir)
+    grid = np.zeros(tuple([len(v) for v in init_conf.values()]))
+    for used_comb in used_combs:
+        indices = list()
+        for p_idx, v in enumerate(used_comb):
+            indices.append(init_grid_values[p_idx].index(v))
+        grid[tuple(indices)] = 1.
+    return grid, init_conf
 
 
 def apply_func_to_nested(nested, func, obj_types):
