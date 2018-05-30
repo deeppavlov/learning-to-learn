@@ -1,8 +1,9 @@
 import itertools
 import importlib
 import numpy as np
-import inspect
+from functools import reduce
 import os
+import shutil
 import ast
 from collections import OrderedDict
 import tensorflow as tf
@@ -1306,20 +1307,53 @@ def get_hps(file_name):
 
 
 def get_combs_and_num_exps(eval_dir):
-    contents = os.listdir(eval_dir)
-    exp_description_files = list()
-    for entry in contents:
-        if entry[-4:] == '.txt' and is_int(entry[:-4]):
-            exp_description_files.append(entry)
     hp_sets = list()
-    for file_name in exp_description_files:
-        with open(os.path.join(eval_dir, file_name), 'r') as f:
-            lines = f.read().split('\n')
-            types = lines[1].split()
-            hp_set = tuple([convert(v, t) for v, t in zip(lines[0].split(), types)])
-            if hp_set not in hp_sets:
-                hp_sets.append(hp_set)
-    return hp_sets, len(exp_description_files)
+    if os.path.exists(eval_dir):
+        contents = os.listdir(eval_dir)
+        exp_description_files = list()
+        for entry in contents:
+            if entry[-4:] == '.txt' and is_int(entry[:-4]):
+                exp_description_files.append(entry)
+        exp_description_files = sorted(exp_description_files, key=lambda elem: int(elem[:-4]))
+        # print("(useful_functions.get_combs_and_num_exps)len(exp_description_files):", len(exp_description_files))
+        for file_name in exp_description_files:
+            with open(os.path.join(eval_dir, file_name), 'r') as f:
+                lines = f.read().split('\n')
+                types = lines[1].split()
+                hp_set = tuple([convert(v, t) for v, t in zip(lines[0].split(), types)])
+                if hp_set not in hp_sets:
+                    hp_sets.append(hp_set)
+        if len(exp_description_files) > 0:
+            last_file_name = exp_description_files[-1]
+        else:
+            last_file_name = None
+        return hp_sets, len(exp_description_files), last_file_name
+    else:
+        return [], 0, None
+
+
+def get_num_exps_and_res_files(eval_dir):
+    pairs = list()
+    if os.path.exists(eval_dir):
+        contents = os.listdir(eval_dir)
+        exp_description_files = list()
+        for entry in contents:
+            if entry[-4:] == '.txt' and is_int(entry[:-4]):
+                exp_description_files.append(entry)
+        exp_description_files = sorted(exp_description_files, key=lambda elem: int(elem[:-4]))
+        biggest_idx = 0
+        for file_name in exp_description_files:
+            if int(file_name[:-4]) > biggest_idx:
+                biggest_idx = int(file_name[:-4])
+            if file_name[:-4] in contents:
+                pairs.append(
+                    (os.path.join(eval_dir, file_name), os.path.join(eval_dir, file_name[:-4]))
+                )
+            else:
+                print("WARNING: missing results directory for experiment %s" % file_name)
+        return len(pairs), biggest_idx, pairs
+    else:
+        return 0, None, []
 
 
 def remove_repeats_from_list(l):
@@ -1330,7 +1364,12 @@ def remove_repeats_from_list(l):
     return res
 
 
-def make_initial_grid(file_name):
+def compose_hp_confs(file_name, eval_dir, chop_last_experiment=False):
+    grid, init_conf, num_exps = make_initial_grid(file_name, eval_dir, chop_last_experiment=chop_last_experiment)
+    return form_confs(grid, init_conf), num_exps
+
+
+def make_initial_grid(file_name, eval_dir, chop_last_experiment=False):
     init_conf = OrderedDict()
     init_grid_values = list()
     with open(file_name, 'r') as f:
@@ -1341,15 +1380,189 @@ def make_initial_grid(file_name):
         param_values = remove_repeats_from_list([convert(v, hp_type) for v in line.split()])
         init_conf[hp_name] = param_values
         init_grid_values.append(param_values)
-    eval_dir = '.'.join(file_name.split('.')[:-1])
-    used_combs, num_exps = get_combs_and_num_exps(eval_dir)
+    tested_combs, num_exps, last_exp_file_name = get_combs_and_num_exps(eval_dir)
+    if num_exps > 0 and chop_last_experiment:
+        os.remove(os.path.join(eval_dir, last_exp_file_name))
+        shutil.rmtree(os.path.join(eval_dir, last_exp_file_name[:-4]))
+        tested_combs = tested_combs[:-1]
+        num_exps -= 1
     grid = np.zeros(tuple([len(v) for v in init_conf.values()]))
-    for used_comb in used_combs:
+    for tested_comb in tested_combs:
         indices = list()
-        for p_idx, v in enumerate(used_comb):
+        for p_idx, v in enumerate(tested_comb):
             indices.append(init_grid_values[p_idx].index(v))
         grid[tuple(indices)] = 1.
-    return grid, init_conf
+    return grid, init_conf, num_exps
+
+
+def one_dim_idx_2_multidim_indices(idx, shape):
+    indices = list()
+    quotient = idx
+    for dim in shape[::-1]:
+        indices.append(quotient % dim)
+        quotient = idx // dim
+    indices.reverse()
+    return indices
+
+
+def get_missing_entries(grid):
+    missing = list()
+    sh = grid.shape
+    # print("(useful_functions.get_missing_entries)sh:", sh)
+    if len(sh) == 0:
+        return []
+    num_entries = reduce(lambda x, y: x*y, sh)
+    for entry_num in range(num_entries):
+        indices = one_dim_idx_2_multidim_indices(entry_num, sh)
+        if grid[tuple(indices)] == 0:
+            missing.append(indices)
+    return missing
+
+
+def get_missing_hp_sets(conf_file, eval_dir):
+    missing_hp_sets = list()
+    grid, conf, _ = make_initial_grid(conf_file, eval_dir)
+    missing_indices = get_missing_entries(grid)
+    for indices in missing_indices:
+        missing_hp_sets.append(
+            get_hp_set_from_ordered_dict_by_indices(conf, indices)
+        )
+    return missing_hp_sets
+
+
+def get_all_permutations(list_to_permute):
+    """returns all permutations of list with no similar elements"""
+    perms = list()
+    if len(list_to_permute) > 0:
+        for v in list_to_permute:
+            base = [v]
+            l_to_permute = list(list_to_permute)
+            l_to_permute.remove(v)
+            ps = get_all_permutations(l_to_permute)
+            for p in ps:
+                perms.append(base + p)
+        return perms
+    else:
+        return [[]]
+
+
+def get_elements(init_sequence, indices):
+    if isinstance(init_sequence, (list, tuple)):
+        res = list()
+        for idx in indices:
+            res.append(init_sequence[idx])
+        if isinstance(init_sequence, tuple):
+            res = tuple(res)
+    elif isinstance(init_sequence, str):
+        res = ''
+        for idx in indices:
+            res += init_sequence[idx]
+    elif isinstance(init_sequence, OrderedDict):
+        dict_contents = list()
+        for idx, pair in enumerate(init_sequence.items()):
+            dict_contents.append(pair)
+        dict_init = OrderedDict()
+        for idx in indices:
+            dict_init.append(dict_contents[idx])
+        res = OrderedDict(dict_init)
+    return res
+
+
+def get_hp_set_from_ordered_dict_by_indices(conf, indices):
+    t = list(conf.items())
+    hp_set = OrderedDict()
+    if len(t) != len(indices):
+        raise InvalidArgumentError(
+            "Number of hyper parameter has to be equal to number of indices",
+            (len(conf), len(indices)),
+            "'conf' and 'indices'",
+            "len(conf) == len(indices)"
+        )
+    for idx, hp_name_and_values in zip(indices, t):
+        hp_set[hp_name_and_values[0]] = hp_name_and_values[1][idx]
+    return hp_set
+
+
+def form_confs_from_partially_tested_params(grid, conf, all_partially_tested_param_indices, par_num):
+    partially_tested_param_indices = all_partially_tested_param_indices[par_num]
+    res = list()
+    partially_tested_grid = grid[tuple([slice(None)]*par_num + [partially_tested_param_indices])]
+    # print("(form_confs_from_partially_tested_params)partially_tested_grid:", partially_tested_grid)
+    partially_tested_conf = construct(conf)
+    key, value = list(partially_tested_conf.items())[par_num]
+    partially_tested_conf[key] = get_elements(value, partially_tested_param_indices)
+    # print("(form_confs_from_partially_tested_params)key:", key)
+    # print("(form_confs_from_partially_tested_params)partially_tested_conf:", partially_tested_conf)
+    for v_idx, v in enumerate(partially_tested_conf[key]):
+        new_conf_tmpl = construct(partially_tested_conf)
+        for k in new_conf_tmpl.keys():
+            if k != key:
+                new_conf_tmpl[k] = None
+            else:
+                new_conf_tmpl[k] = [v]
+        rec_conf = construct(partially_tested_conf)
+        del rec_conf[key]
+        rec_grid = partially_tested_grid[tuple([slice(None)] * par_num + [v_idx])]
+        # print("(form_confs_from_partially_tested_params)rec_conf:", rec_conf)
+        # print("(form_confs_from_partially_tested_params)rec_grid:", rec_grid)
+        rconfs = form_confs(rec_grid, rec_conf)
+        for rconf in rconfs:
+            new_conf = construct(new_conf_tmpl)
+            for hp_name, hp_values in rconf.items():
+                new_conf[hp_name] = hp_values
+            res.append(new_conf)
+    return res
+
+
+def form_confs(grid, conf):
+    # print("(form_confs)grid:", grid)
+    # print("(form_confs)conf:", conf)
+    res = list()
+    num_param = len(conf)
+    all_tested_param_indices = list()
+    all_not_tested_param_indices = list()
+    all_partially_tested_param_indices = list()
+    there_is_partially_tested_param_values = False
+    num_not_tested_combs = list()
+    for par_num, (hp_name, hp_values) in enumerate(conf.items()):
+        reduce_dims = tuple([i for i in range(num_param) if i != par_num])
+        full_slice_sum = np.sum(grid, reduce_dims)
+        if grid.ndim > 1:
+            max_num_times_tested = reduce(lambda x, y: x*y, [grid.shape[i] for i in range(num_param) if i != par_num])
+        else:
+            max_num_times_tested = 1
+        tested_param_indices = list()
+        not_tested_param_indices = list()
+        partially_tested_param_indices = list()
+        # print("(form_confs)full_slice_sum:", full_slice_sum)
+        for value_idx, ntimes_value_tested in enumerate(np.nditer(full_slice_sum)):
+            if ntimes_value_tested == max_num_times_tested:
+                tested_param_indices.append(value_idx)
+            elif ntimes_value_tested == 0:
+                not_tested_param_indices.append(value_idx)
+            else:
+                partially_tested_param_indices.append(value_idx)
+                there_is_partially_tested_param_values = True
+        all_tested_param_indices.append(tested_param_indices)
+        all_not_tested_param_indices.append(not_tested_param_indices)
+        all_partially_tested_param_indices.append(partially_tested_param_indices)
+        num_not_tested_combs.append(len(not_tested_param_indices) * max_num_times_tested)
+    # print("(form_confs)num_not_tested_combs:", num_not_tested_combs)
+    max_num_not_tested_combs = max(num_not_tested_combs)
+    if max_num_not_tested_combs == 0:
+        if there_is_partially_tested_param_values:
+            res.extend(form_confs_from_partially_tested_params(grid, conf, all_partially_tested_param_indices, 0))
+    else:
+        par_num = num_not_tested_combs.index(max_num_not_tested_combs)
+        whole_conf = OrderedDict(conf)
+        key, value = list(whole_conf.items())[par_num]
+        whole_conf[key] = get_elements(value, all_not_tested_param_indices[par_num])
+        # print("(form_confs)key:", key)
+        # print("(form_confs)whole_conf:", whole_conf)
+        res.append(whole_conf)
+        if there_is_partially_tested_param_values:
+            res.extend(form_confs_from_partially_tested_params(grid, conf, all_partially_tested_param_indices, par_num))
+    return res
 
 
 def apply_func_to_nested(nested, func, obj_types):
