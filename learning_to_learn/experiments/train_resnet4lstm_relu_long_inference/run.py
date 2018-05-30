@@ -14,7 +14,7 @@ from learning_to_learn.useful_functions import create_vocabulary
 from learning_to_learn.res_net_opt import ResNet4Lstm
 
 conf_file = sys.argv[1]
-save_path = conf_file.split('.')[0] + '/results'
+save_path = os.path.join(conf_file.split('.')[0], 'results')
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -35,6 +35,7 @@ train_text = text[valid_size:]
 
 vocabulary = create_vocabulary(text)
 vocabulary_size = len(vocabulary)
+print(vocabulary_size)
 
 env = Environment(
     pupil_class=Lstm,
@@ -109,10 +110,10 @@ env.train_optimizer(
     # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
     reset_period=1,
     num_exercises=NUM_EXERCISES,
-    stop=1000,
+    stop=4000,
     train_dataset_texts=[train_text],
     opt_inf_is_performed=True,
-    opt_inf_stop=20,
+    opt_inf_stop=500,
     opt_inf_pupil_restore_paths=OPT_INF_RESTORE_PUPIL_PATHS,
     opt_inf_additions_to_feed_dict=opt_inf_add_feed,
     opt_inf_validation_dataset_texts=[valid_text],
@@ -124,8 +125,8 @@ env.train_optimizer(
     num_unrollings=NUM_UNROLLINGS,
     learning_rate={'type': 'exponential_decay',
                    'init': .001,
-                   'decay': .5,
-                   'period': 400},
+                   'decay': .1,
+                   'period': 3500},
     results_collect_interval=100,
     opt_inf_results_collect_interval=1,
     permute=False,
