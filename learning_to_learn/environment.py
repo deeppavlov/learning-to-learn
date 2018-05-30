@@ -2341,7 +2341,7 @@ class Environment(object):
                         args_for_launches,
                         pupil_shares,
                         pupil_build_kwargs,
-                        kwargs_for_optimizer_building,
+                        construct(kwargs_for_optimizer_building),
                         session_specs,
                         evaluation,
                         other_hp_combs,
@@ -2369,7 +2369,7 @@ class Environment(object):
                     self._spring_process_for_meta_grid_search(
                         args_for_launches,
                         optimizer_shares,
-                        kwargs_for_pupil_building,
+                        construct(kwargs_for_pupil_building),
                         optimizer_build_kwargs,
                         session_specs,
                         evaluation,
@@ -2380,8 +2380,8 @@ class Environment(object):
                 self._spring_process_for_meta_grid_search(
                     args_for_launches,
                     [],
-                    kwargs_for_pupil_building,
-                    kwargs_for_optimizer_building,
+                    construct(kwargs_for_pupil_building),
+                    construct(kwargs_for_optimizer_building),
                     session_specs,
                     evaluation,
                     other_hp_combs,

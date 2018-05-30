@@ -460,19 +460,19 @@ def parse_hp_name(hp_name):
 
 def process_build_hp_text_abbreviation(hp_name, hp_values):
     name, list_indices = parse_hp_name(hp_name)
+    d = OrderedDict()
+    d['hp_type'] = 'build_hp'
+    d['type'] = None
+    d['fixed'] = None
+    d['varying'] = hp_values
+    d['list_indices'] = list_indices
+    d['share'] = None
+    d['controller'] = False
     return dict(
         [
             (
                 name,
-                OrderedDict(
-                    hp_type='build_hp',
-                    type=None,
-                    fixed=None,
-                    varying=hp_values,
-                    list_indices=list_indices,
-                    share=None,
-                    controller=False
-                )
+                d
             )
         ]
     )
@@ -727,7 +727,10 @@ def split_to_groups_on_index(hps, index):
 def sort(hps, index, key_length):
     # print('\nsort')
     # print('hps:', hps)
-    hps = OrderedDict(sorted(hps.items(), key=lambda item: item[0][index]))
+    nhps = OrderedDict()
+    for k, v in sorted(hps.items(), key=lambda item: item[0][index]):
+        nhps[k] = v
+    hps = nhps
     if index < key_length - 1:
         groups = split_to_groups_on_index(hps, index)
         # print('\nsort')
@@ -742,7 +745,7 @@ def sort(hps, index, key_length):
         return unite_dicts(sorted_groups)
     # print('index=%s, hps:' % index, hps)
     return hps
-
+sort
 
 def sort_hps(hps):
     """alphabetically, than by index, and finally by controller specification key"""
