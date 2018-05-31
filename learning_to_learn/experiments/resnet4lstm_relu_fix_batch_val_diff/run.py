@@ -100,7 +100,6 @@ kwargs_for_optimizer_building = dict(
     num_exercises=NUM_EXERCISES,
     res_size=2000,
     permute=False,
-    share_train_data=False,
     optimizer_for_opt_type='adam',
     additional_metrics=add_metrics
 )

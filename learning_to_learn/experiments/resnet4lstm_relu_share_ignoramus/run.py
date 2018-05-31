@@ -61,6 +61,9 @@ valid_add_feed = [
 ]
 
 NUM_EXERCISES = 10
+NUM_UNROLLINGS = 4
+BATCH_SIZE = 32
+SHARE_TRAIN_DATA = True
 the_only_pupil_restore_path = '../../../lstm/text8_pretrain/checkpoints/%s' % pretrain_step
 evaluation = dict(
     save_path=save_path,
@@ -99,7 +102,6 @@ kwargs_for_optimizer_building = dict(
     num_exercises=NUM_EXERCISES,
     res_size=2000,
     permute=False,
-    share_train_data=True,
     optimizer_for_opt_type='adam',
     additional_metrics=add_metrics
 )
@@ -138,14 +140,7 @@ launch_kwargs = dict(
     stop=1000,
     train_dataset_texts=[train_text],
     opt_inf_is_performed=False,
-    # opt_inf_stop=10,
-    # opt_inf_pupil_restore_paths={
-    #     'prelearn2000': 'lstm/test_res_net_1000_emb150_nl1_nn100_bs32_nu10/checkpoints/2000'
-    # },
-    # opt_inf_additions_to_feed_dict=opt_inf_add_feed,
-    # opt_inf_validation_dataset_texts=[valid_text],
-    # opt_inf_train_dataset_texts=[train_text],
-    # validation_additions_to_feed_dict=valid_add_feed,
+    share_train_data=SHARE_TRAIN_DATA,
     vocabulary=vocabulary,
     batch_size=32,
     num_unrollings=4,

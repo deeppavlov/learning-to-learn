@@ -203,46 +203,30 @@ class Meta(object):
                 optimizer_grad_inputs.append(list())
                 optimizer_grad_labels.append(list())
             with tf.name_scope('exercise_%s' % ex_idx):
-                if self._share_train_data:
-                    with tf.name_scope('placeholders'):
-                        if num_unrollings is not None:
-                            for i in range(num_unrollings):
-                                placeholders = pupil.make_inputs_and_labels_placeholders(
-                                    '/gpu:%s' % gpu_map[ex_idx], 'unrolling_%s' % i)
-                                pupil_grad_eval_inputs[ex_idx].append(placeholders['inputs'])
-                                pupil_grad_eval_labels[ex_idx].append(placeholders['labels'])
-                        else:
+                with tf.name_scope('pupil_grad_eval_placeholders'):
+                    if num_unrollings is not None:
+                        for i in range(num_unrollings):
                             placeholders = pupil.make_inputs_and_labels_placeholders(
-                                '/gpu:%s' % gpu_map[ex_idx], None)
-                            pupil_grad_eval_inputs.append(placeholders['inputs'])
-                            pupil_grad_eval_labels.append(placeholders['labels'])
-                    optimizer_grad_inputs = pupil_grad_eval_inputs
-                    optimizer_grad_labels = pupil_grad_eval_labels
-                else:
-                    with tf.name_scope('pupil_grad_eval_placeholders'):
-                        if num_unrollings is not None:
-                            for i in range(num_unrollings):
-                                placeholders = pupil.make_inputs_and_labels_placeholders(
-                                    '/gpu:%s' % gpu_map[ex_idx], 'unrolling_%s' % i)
-                                pupil_grad_eval_inputs[ex_idx].append(placeholders['inputs'])
-                                pupil_grad_eval_labels[ex_idx].append(placeholders['labels'])
-                        else:
+                                '/gpu:%s' % gpu_map[ex_idx], 'unrolling_%s' % i)
+                            pupil_grad_eval_inputs[ex_idx].append(placeholders['inputs'])
+                            pupil_grad_eval_labels[ex_idx].append(placeholders['labels'])
+                    else:
+                        placeholders = pupil.make_inputs_and_labels_placeholders(
+                            '/gpu:%s' % gpu_map[ex_idx], None)
+                        pupil_grad_eval_inputs.append(placeholders['inputs'])
+                        pupil_grad_eval_labels.append(placeholders['labels'])
+                with tf.name_scope('optimizer_grad_placeholders'):
+                    if num_unrollings is not None:
+                        for i in range(num_unrollings):
                             placeholders = pupil.make_inputs_and_labels_placeholders(
-                                '/gpu:%s' % gpu_map[ex_idx], None)
-                            pupil_grad_eval_inputs.append(placeholders['inputs'])
-                            pupil_grad_eval_labels.append(placeholders['labels'])
-                    with tf.name_scope('optimizer_grad_placeholders'):
-                        if num_unrollings is not None:
-                            for i in range(num_unrollings):
-                                placeholders = pupil.make_inputs_and_labels_placeholders(
-                                    '/gpu:%s' % gpu_map[ex_idx], 'unrolling_%s' % i)
-                                optimizer_grad_inputs[ex_idx].append(placeholders['inputs'])
-                                optimizer_grad_labels[ex_idx].append(placeholders['labels'])
-                        else:
-                            placeholders = pupil.make_inputs_and_labels_placeholders(
-                                '/gpu:%s' % gpu_map[ex_idx], None)
-                            optimizer_grad_inputs.append(placeholders['inputs'])
-                            optimizer_grad_inputs.append(placeholders['labels'])
+                                '/gpu:%s' % gpu_map[ex_idx], 'unrolling_%s' % i)
+                            optimizer_grad_inputs[ex_idx].append(placeholders['inputs'])
+                            optimizer_grad_labels[ex_idx].append(placeholders['labels'])
+                    else:
+                        placeholders = pupil.make_inputs_and_labels_placeholders(
+                            '/gpu:%s' % gpu_map[ex_idx], None)
+                        optimizer_grad_inputs.append(placeholders['inputs'])
+                        optimizer_grad_inputs.append(placeholders['labels'])
         return pupil_grad_eval_inputs, pupil_grad_eval_labels, optimizer_grad_inputs, optimizer_grad_labels
 
     @staticmethod

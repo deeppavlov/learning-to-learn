@@ -334,6 +334,7 @@ class Environment(object):
                     num_exercises=10,
                     reset_period=None,
                     batch_gen_init_is_random=True,
+                    share_train_data=False,
 
                     restore_paths_datasets_map=None,
 
@@ -1446,35 +1447,67 @@ class Environment(object):
         self._handler.close()
 
     def _fill_train_meta_optimizer_feed_dict_with_inputs_and_labels(
-            self, feed_dict, pupil_grad_eval_batch_gens, optimizer_grad_batch_gens):
-        for inp_placeholder, lbl_placeholder, b_gen in zip(
-                self._hooks['pupil_grad_eval_inputs'],
-                self._hooks['pupil_grad_eval_labels'],
-                pupil_grad_eval_batch_gens
-        ):
-            if isinstance(inp_placeholder, list):
-                for inp_plhld, lbl_plhld in zip(inp_placeholder, lbl_placeholder):
+            self,
+            feed_dict,
+            pupil_grad_eval_batch_gens,
+            optimizer_grad_batch_gens,
+            share_train_data
+    ):
+        if share_train_data:
+            for pup_inp_plh, pup_lbl_plh, opt_inp_plh, opt_lbl_plh, b_gen in zip(
+                    self._hooks['pupil_grad_eval_inputs'],
+                    self._hooks['pupil_grad_eval_labels'],
+                    self._hooks['optimizer_grad_inputs'],
+                    self._hooks['optimizer_grad_labels'],
+                    pupil_grad_eval_batch_gens
+            ):
+                if isinstance(pup_inp_plh, list):
+                    for pup_inp_plhld, pup_lbl_plhld, opt_inp_plhld, opt_lbl_plhld in zip(
+                            pup_inp_plh,
+                            pup_lbl_plh,
+                            opt_inp_plh,
+                            opt_lbl_plh
+                    ):
+                        inp, lbl = b_gen.next()
+                        feed_dict[pup_inp_plhld] = inp
+                        feed_dict[pup_lbl_plhld] = lbl
+                        feed_dict[opt_inp_plhld] = inp
+                        feed_dict[opt_lbl_plhld] = lbl
+                else:
                     inp, lbl = b_gen.next()
-                    feed_dict[inp_plhld] = inp
-                    feed_dict[lbl_plhld] = lbl
-            else:
-                inp, lbl = b_gen.next()
-                feed_dict[inp_placeholder] = inp
-                feed_dict[lbl_placeholder] = lbl
-        for inp_placeholder, lbl_placeholder, b_gen in zip(
-                self._hooks['optimizer_grad_inputs'],
-                self._hooks['optimizer_grad_labels'],
-                optimizer_grad_batch_gens
-        ):
-            if isinstance(inp_placeholder, list):
-                for inp_plhld, lbl_plhld in zip(inp_placeholder, lbl_placeholder):
+                    feed_dict[pup_inp_plh] = inp
+                    feed_dict[pup_lbl_plh] = lbl
+                    feed_dict[opt_inp_plh] = inp
+                    feed_dict[opt_lbl_plh] = lbl
+        else:
+            for inp_placeholder, lbl_placeholder, b_gen in zip(
+                    self._hooks['pupil_grad_eval_inputs'],
+                    self._hooks['pupil_grad_eval_labels'],
+                    pupil_grad_eval_batch_gens
+            ):
+                if isinstance(inp_placeholder, list):
+                    for inp_plhld, lbl_plhld in zip(inp_placeholder, lbl_placeholder):
+                        inp, lbl = b_gen.next()
+                        feed_dict[inp_plhld] = inp
+                        feed_dict[lbl_plhld] = lbl
+                else:
                     inp, lbl = b_gen.next()
-                    feed_dict[inp_plhld] = inp
-                    feed_dict[lbl_plhld] = lbl
-            else:
-                inp, lbl = b_gen.next()
-                feed_dict[inp_placeholder] = inp
-                feed_dict[lbl_placeholder] = lbl
+                    feed_dict[inp_placeholder] = inp
+                    feed_dict[lbl_placeholder] = lbl
+            for inp_placeholder, lbl_placeholder, b_gen in zip(
+                    self._hooks['optimizer_grad_inputs'],
+                    self._hooks['optimizer_grad_labels'],
+                    optimizer_grad_batch_gens
+            ):
+                if isinstance(inp_placeholder, list):
+                    for inp_plhld, lbl_plhld in zip(inp_placeholder, lbl_placeholder):
+                        inp, lbl = b_gen.next()
+                        feed_dict[inp_plhld] = inp
+                        feed_dict[lbl_plhld] = lbl
+                else:
+                    inp, lbl = b_gen.next()
+                    feed_dict[inp_placeholder] = inp
+                    feed_dict[lbl_placeholder] = lbl
         return feed_dict
 
     def _reset_exercises(
@@ -1487,6 +1520,7 @@ class Environment(object):
             batch_gen_init_is_random,
             train_batch_kwargs,
             restore_paths_datasets_map,
+            share_train_data,
             random_=True
     ):
         # print("EXERCISES RESET!")
@@ -1512,7 +1546,10 @@ class Environment(object):
             if restore_paths_datasets_map is None:
                 restore_paths_datasets_map = create_distribute_map(len(datasets), len(paths))
         pupil_grad_eval_batch_gens = list()
-        optimizer_grad_batch_gens = list()
+        if not share_train_data:
+            optimizer_grad_batch_gens = list()
+        else:
+            optimizer_grad_batch_gens = None
         batch_size = batch_size_controller.get()
         tb_kwargs = self._build_batch_kwargs(train_batch_kwargs)
         # print("(Environment._reset_exercises)tb_kwargs:", tb_kwargs)
@@ -1534,13 +1571,14 @@ class Environment(object):
                     random_batch_initiation=batch_gen_init_is_random
                 )
             )
-            optimizer_grad_batch_gens.append(batch_generator_class(
-                    datasets[restore_paths_datasets_map[idx]][0],
-                    batch_size,
-                    **tb_kwargs,
-                    random_batch_initiation=batch_gen_init_is_random
+            if not share_train_data:
+                optimizer_grad_batch_gens.append(batch_generator_class(
+                        datasets[restore_paths_datasets_map[idx]][0],
+                        batch_size,
+                        **tb_kwargs,
+                        random_batch_initiation=batch_gen_init_is_random
+                    )
                 )
-            )
         # print("(Environment._reset_exercises)len(pupil_grad_eval_batch_gens):", len(pupil_grad_eval_batch_gens))
         # print(
         #     "(Environment._reset_exercises)len(self._hooks['pupil_trainable_initializers']):",
@@ -1790,6 +1828,7 @@ class Environment(object):
             train_specs['batch_gen_init_is_random'],
             train_batch_kwargs,
             train_specs['restore_paths_datasets_map'],
+            train_specs['share_train_data'],
             random_=False
         )
         feed_dict = dict()
@@ -1802,7 +1841,7 @@ class Environment(object):
                 self._create_checkpoint(step, checkpoints_path)
 
             feed_dict = self._fill_train_meta_optimizer_feed_dict_with_inputs_and_labels(
-                feed_dict, pupil_grad_eval_batch_gens, optimizer_grad_batch_gens)
+                feed_dict, pupil_grad_eval_batch_gens, optimizer_grad_batch_gens, train_specs['share_train_data'])
 
             learning_rate = learning_rate_controller.get()
             feed_dict[self._hooks['learning_rate_for_optimizer_training']] = learning_rate
@@ -1841,7 +1880,8 @@ class Environment(object):
                     batch_size_controller,
                     train_specs['batch_gen_init_is_random'],
                     train_batch_kwargs,
-                    train_specs['restore_paths_datasets_map']
+                    train_specs['restore_paths_datasets_map'],
+                    train_specs['share_train_data']
                 )
             self.set_in_storage(step=step)
         return step

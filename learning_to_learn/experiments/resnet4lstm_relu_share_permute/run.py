@@ -65,6 +65,9 @@ valid_add_feed = [
 
 the_only_pupil_restore_path = '../../../lstm/text8_pretrain/checkpoints/%s' % pretrain_step
 NUM_EXERCISES = 10
+NUM_UNROLLINGS = 4
+BATCH_SIZE = 32
+SHARE_TRAIN_DATA = True
 evaluation = dict(
     save_path=save_path,
     opt_inf_is_performed=True,
@@ -80,19 +83,29 @@ evaluation = dict(
 )
 
 kwargs_for_pupil_building = dict(
-    batch_size=32,
+    batch_size=BATCH_SIZE,
     num_layers=1,
     num_nodes=[100],
     num_output_layers=1,
     num_output_nodes=[],
     vocabulary_size=vocabulary_size,
     embedding_size=150,
-    num_unrollings=4,
+    num_unrollings=NUM_UNROLLINGS,
     init_parameter=3.,
     num_gpus=1,
     regime='training_with_meta_optimizer',
     additional_metrics=add_metrics,
     going_to_limit_memory=True
+)
+kwargs_for_optimizer_building = dict(
+    regime='train',
+    # regime='inference',
+    num_optimizer_unrollings=10,
+    num_exercises=NUM_EXERCISES,
+    res_size=2000,
+    permute=True,
+    optimizer_for_opt_type='adam',
+    additional_metrics=add_metrics
 )
 launch_kwargs = dict(
     allow_growth=True,
@@ -106,17 +119,11 @@ launch_kwargs = dict(
     train_dataset_texts=[train_text],
     opt_inf_is_performed=False,
     num_exercises=NUM_EXERCISES,
-    # opt_inf_stop=10,
-    # opt_inf_pupil_restore_paths={
-    #     'prelearn2000': 'lstm/test_res_net_1000_emb150_nl1_nn100_bs32_nu10/checkpoints/2000'
-    # },
-    # opt_inf_additions_to_feed_dict=opt_inf_add_feed,
-    # opt_inf_validation_dataset_texts=[valid_text],
-    # opt_inf_train_dataset_texts=[train_text],
-    # validation_additions_to_feed_dict=valid_add_feed,
+    share_train_data=SHARE_TRAIN_DATA,
     vocabulary=vocabulary,
-    batch_size=32,
-    num_unrollings=4,
+    batch_size=BATCH_SIZE,
+    num_unrollings=NUM_UNROLLINGS,
+    batch_gen_init_is_random=True,
     results_collect_interval=200,
     # opt_inf_results_collect_interval=1,
     permute=False,
@@ -124,18 +131,8 @@ launch_kwargs = dict(
     add_graph_to_summary=True
 )
 
+
 for conf in confs:
-    kwargs_for_optimizer_building = dict(
-        regime='train',
-        # regime='inference',
-        num_optimizer_unrollings=10,
-        num_exercises=NUM_EXERCISES,
-        res_size=2000,
-        permute=True,
-        share_train_data=True,
-        optimizer_for_opt_type='adam',
-        additional_metrics=add_metrics
-    )
 
     build_pupil_hyperparameters = dict(
     )

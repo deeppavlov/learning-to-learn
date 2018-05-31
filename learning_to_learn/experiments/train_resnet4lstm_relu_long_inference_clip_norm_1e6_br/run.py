@@ -120,7 +120,7 @@ env.train_optimizer(
     validation_additions_to_feed_dict=valid_add_feed,
     vocabulary=vocabulary,
     batch_size=32,
-    batch_gen_init_is_random=False,
+    batch_gen_init_is_random=True,
     num_unrollings=NUM_UNROLLINGS,
     learning_rate={'type': 'exponential_decay',
                    'init': 3e-4,

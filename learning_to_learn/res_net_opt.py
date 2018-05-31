@@ -541,7 +541,6 @@ class ResNet4Lstm(Meta):
             clip_norm=1e+5,
             optimizer_init_parameter=.1,
             permute=True,
-            share_train_data=False,
             regime='train',
             optimizer_for_opt_type='adam',
             additional_metrics=None
@@ -569,7 +568,6 @@ class ResNet4Lstm(Meta):
         self._clip_norm = clip_norm
         self._optimizer_init_parameter = optimizer_init_parameter
         self._permute = permute
-        self._share_train_data = share_train_data
         self._regime = regime
 
         self._optimizer_for_opt_type = optimizer_for_opt_type
