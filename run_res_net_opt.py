@@ -45,7 +45,6 @@ env.build_optimizer(
     num_exercises=5,
     res_size=2000,
     permute=False,
-    share_train_data=False,
     optimizer_for_opt_type='adam',
     additional_metrics=add_metrics
 )

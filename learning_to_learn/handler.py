@@ -185,9 +185,8 @@ class Handler(object):
             self._name_of_dataset_on_which_accumulating = None
             self._validation_tensor_schedule = validation_tensor_schedule
             self._validation_dataset_names = validation_dataset_names
-            if self._save_path is not None:
-                for dataset_name in self._validation_dataset_names:
-                    self._add_results_file_name_set(self._result_types, postfix=dataset_name, key_path=[dataset_name])
+            for dataset_name in self._validation_dataset_names:
+                self._add_validation_experiment_instruments(dataset_name)
             self._printed_result_types = printed_result_types
             self._accumulated_tensors = dict(
                 valid_print_tensors=dict(),

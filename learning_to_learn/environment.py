@@ -822,6 +822,8 @@ class Environment(object):
                          self._hooks['validation_labels']: labels}
             if isinstance(additional_feed_dict, dict):
                 feed_dict.update(additional_feed_dict)
+            # print("(Environment._validate)validation_operations:", validation_operations)
+            # print("(Environment._validate)feed_dict:", feed_dict)
             valid_res = self._session.run(validation_operations, feed_dict=feed_dict)
             self._handler.process_results(training_step, valid_res, regime='validation')
             step += 1

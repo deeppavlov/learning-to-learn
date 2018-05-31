@@ -1,4 +1,3 @@
-import re
 import tensorflow as tf
 
 from learning_to_learn.environment import Environment
@@ -18,13 +17,7 @@ vocabulary_size = len(vocabulary)
 
 env = Environment(Lstm, BatchGenerator, vocabulary=vocabulary)
 
-# env = Environment(Gru, BatchGenerator)
 cpiv = get_positions_in_vocabulary(vocabulary)
-
-connection_interval = 8
-connection_visibility = 5
-subsequence_length_in_intervals = 10
-
 
 add_feed = [{'placeholder': 'dropout', 'value': 0.9} #,
             # {'placeholder': 'sampling_prob',

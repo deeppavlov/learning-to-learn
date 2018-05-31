@@ -56,7 +56,7 @@ def process_abbreviation_in_1_entry(key, value, method_name):
             }
         set_controller_name_in_specs(new_value, 'optimizer_inference_num_steps')
 
-    if method_name == 'train' or 'train_optimizer':
+    if method_name == 'train' or method_name == 'train_optimizer':
         if key == 'additions_to_feed_dict' or key == 'opt_inf_additions_to_feed_dict':
             # print('inside additions_to_feed_dict shortcuts processing')
             if new_value is not None:
