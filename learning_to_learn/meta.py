@@ -278,6 +278,9 @@ class Meta(object):
     def _eval_pupil_gradients_for_optimizer_training(
             self, pupil_grad_eval_inputs, pupil_grad_eval_labels,
             pupil_trainable_variables, pupil_grad_eval_pupil_storage):
+        """optimizer_ins is nested dictionary. its first level keys are layer names and second level keys are names
+        of tensors related to specific layer. E. g. 'o', 's', 'sigma', 'matrix', 'bias'. optimizer_outs have similar
+        altough they also contain 'psi' and 'phi' tensors. In train mode first dim of tensors is exercise dim"""
         with tf.name_scope('eval_pupil_gradients_for_optimizer_training'):
             # print("(Meta._eval_pupil_gradients_for_optimizer_training)pupil_grad_eval_inputs:", pupil_grad_eval_inputs)
             loss, optimizer_ins, new_storage, predictions, labels = self._pupil.loss_and_opt_ins(
@@ -328,6 +331,29 @@ class Meta(object):
             for ov in opt_ins.values():
                 for ik in inner_keys:
                     ov[ik + '_spl'] = tf.split(ov[ik], num_splits, axis=-2)
+        return opt_ins
+
+    @staticmethod
+    def _substitute_opt_ins(opt_ins, substitution_way):
+        if substitution_way == 'random':
+            for ov in opt_ins.values():
+                for ik, iv in ov.items():
+                    if ik in ['s', 'o', 'sigma']:
+                        ov[ik] = tf.random_uniform(
+                            ik.get_shape().as_list(),
+                            minval=.01,
+                            maxval=.01
+                        )
+        elif substitution_way == 'zeros':
+            for ov in opt_ins.values():
+                for ik, iv in ov.items():
+                    if ik in ['s', 'o', 'sigma']:
+                        ov[ik] = tf.zeros(ik.get_shape().as_list())
+        elif substitution_way == 'constant':
+            for ov in opt_ins.values():
+                for ik, iv in ov.items():
+                    if ik in ['s', 'o', 'sigma']:
+                        ov[ik] = tf.constant(.01, shape=ik.get_shape().as_list())
         return opt_ins
 
     @staticmethod
@@ -673,6 +699,8 @@ class Meta(object):
 
                                 # print("(Meta._train_graph)BEFORE OPTIMIZER CORE:")
                                 # print_optimizer_ins(optimizer_ins)
+                                if self._substitute_opt_ins is not None:
+                                    optimizer_ins = self._substitute_opt_ins(optimizer_ins, self._substitute_opt_ins)
                                 optimizer_outs, tmp_states = self._optimizer_core(
                                     optimizer_ins, tmp_states, gpu_idx, permute=self._permute)
                                 optimizer_outs = self._compose_phi_and_psi(optimizer_outs)
