@@ -16,7 +16,6 @@ from learning_to_learn.useful_functions import convert, apply_func_to_nested, sy
 
 AVERAGING_NUMBER = 3
 COLORS = ['r', 'g', 'b', 'k', 'c', 'magenta', 'brown', 'darkviolet', 'pink', 'yellow', 'gray', 'orange', 'olive']
-LABELS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p']
 DPI = 900
 FORMATS = ['pdf', 'png']
 

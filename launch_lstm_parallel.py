@@ -8,7 +8,7 @@ from learning_to_learn.lstm_for_meta import Lstm, LstmFastBatchGenerator as Batc
 with open('datasets/text8.txt', 'r') as f:
     text = f.read()
 
-valid_size = 10000
+valid_size = 500
 valid_text = text[:valid_size]
 train_text = text[valid_size:]
 
@@ -52,7 +52,7 @@ print('building is finished')
 env.train(
     # gpu_memory=.3,
     allow_growth=True,
-    save_path='lstm/text8_start_adam',
+    save_path='lstm/text8_adam4000',
     # restore_path='lstm_sample_test/scipop3_1000_bs256_11.12/checkpoints/2000',
     learning_rate=dict(
         type='exponential_decay',
@@ -66,7 +66,7 @@ env.train(
     checkpoint_steps=200,
     result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
     printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
-    stop=40000,
+    stop=4000,
     train_dataset_text=train_text,
     # train_dataset_text='abc',
     validation_dataset_texts=[valid_text],
