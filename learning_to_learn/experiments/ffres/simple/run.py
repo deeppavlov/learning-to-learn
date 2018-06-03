@@ -102,41 +102,33 @@ kwargs_for_optimizer_building = dict(
     # regime='inference',
     num_optimizer_unrollings=10,
     num_exercises=NUM_EXERCISES,
-    num_res_layers=4,
     res_size=2000,
-    permute=True,
+    permute=False,
     optimizer_for_opt_type='adam',
     additional_metrics=add_metrics
 )
+
 launch_kwargs = dict(
-    allow_growth=True,
-    # save_path='debug_grid_search',
-    result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
-    additions_to_feed_dict=train_opt_add_feed,
-    pupil_restore_paths=[the_only_pupil_restore_path],
-    # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
-    reset_period=1,
-    stop=1000,
-    train_dataset_texts=[train_text],
-    opt_inf_is_performed=False,
-    num_exercises=NUM_EXERCISES,
-    # opt_inf_stop=10,
-    # opt_inf_pupil_restore_paths={
-    #     'prelearn2000': 'lstm/test_res_net_1000_emb150_nl1_nn100_bs32_nu10/checkpoints/2000'
-    # },
-    # opt_inf_additions_to_feed_dict=opt_inf_add_feed,
-    # opt_inf_validation_dataset_texts=[valid_text],
-    # opt_inf_train_dataset_texts=[train_text],
-    # validation_additions_to_feed_dict=valid_add_feed,
-    vocabulary=vocabulary,
-    batch_size=32,
-    num_unrollings=4,
-    results_collect_interval=200,
-    # opt_inf_results_collect_interval=1,
-    permute=False,
-    summary=True,
-    add_graph_to_summary=True
-)
+        allow_growth=True,
+        # save_path='debug_grid_search',
+        result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
+        additions_to_feed_dict=train_opt_add_feed,
+        pupil_restore_paths=[the_only_pupil_restore_path],
+        # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
+        reset_period=1,
+        stop=1000,
+        train_dataset_texts=[train_text],
+        opt_inf_is_performed=False,
+        num_exercises=NUM_EXERCISES,
+        vocabulary=vocabulary,
+        batch_size=32,
+        num_unrollings=4,
+        results_collect_interval=200,
+        # opt_inf_results_collect_interval=1,
+        permute=False,
+        summary=True,
+        add_graph_to_summary=True
+    )
 
 for conf in confs:
     build_pupil_hyperparameters = dict(
@@ -160,6 +152,7 @@ for conf in confs:
             type='exponential_decay'
         )
     )
+
 
     tf.set_random_seed(1)
     _, biggest_idx, _ = get_num_exps_and_res_files(save_path)

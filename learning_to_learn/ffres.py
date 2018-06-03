@@ -22,32 +22,13 @@ class FfResOpt(Meta):
     def check_kwargs(**kwargs):
         pass
 
-    def _create_optimizer_states(self, num_exercises, var_scope, gpu_idx):
-        with tf.variable_scope(var_scope):
-            with tf.variable_scope('gpu_%s' % gpu_idx):
-                states = [
-                    tf.get_variable(
-                        'h',
-                        shape=[num_exercises, self._num_lstm_nodes],
-                        initializer=tf.zeros_initializer(),
-                        trainable=False),
-                    tf.get_variable(
-                        'c',
-                        shape=[num_exercises, self._num_lstm_nodes],
-                        initializer=tf.zeros_initializer(),
-                        trainable=False)
-                ]
-                return states
+    @staticmethod
+    def _create_optimizer_states(*args):
+        return list()
 
     @staticmethod
     def _reset_optimizer_states(var_scope, gpu_idx):
-        with tf.variable_scope(var_scope, reuse=True):
-            with tf.variable_scope('gpu_%s' % gpu_idx):
-                h = tf.get_variable('h')
-                c = tf.get_variable('c')
-                # print("(ResNet4Lstm._reset_optimizer_states)h:", h)
-                # print("(ResNet4Lstm._reset_optimizer_states)c:", c)
-                return [tf.variables_initializer([h, c], name='reset_optimizer_states_initializer_on_gpu_%s' % gpu_idx)]
+        return list()
 
     @staticmethod
     def _create_permutation_matrix(size, num_exercises):
@@ -158,7 +139,7 @@ class FfResOpt(Meta):
                 matrices.append(
                     tf.get_variable(
                         'matrix',
-                        # shape=[res_size, out_ndims],
+                        shape=[res_size, out_ndims],
                         # initializer=tf.truncated_normal_initializer(stddev=in_stddev)
                         initializer=tf.zeros_initializer()
                         # trainable=False
@@ -486,19 +467,15 @@ class FfResOpt(Meta):
             self._train_graph()
             self._inference_graph()
             # print([self._reset_optimizer_states('train', gpu_idx) for gpu_idx in range(self._num_gpus)])
-            self._hooks['reset_optimizer_train_state'] = tf.group(
-                *chain(
-                    *[self._reset_optimizer_states('train_optimizer_states', gpu_idx)
-                      for gpu_idx in range(self._num_gpus)]))
-            self._hooks['reset_optimizer_inference_state'] = self._reset_optimizer_states(
-                'inference_optimizer_states', 0)[0]
+            self._empty_op = tf.constant(0)
+            self._hooks['reset_optimizer_train_state'] = self._empty_op
+            self._hooks['reset_optimizer_inference_state'] = self._empty_op
 
             self._hooks['reset_permutation_matrices'] = tf.group(
                 *self._reset_all_permutation_matrices())
         elif self._regime == 'inference':
             self._inference_graph()
-            self._hooks['reset_optimizer_inference_state'] = self._reset_optimizer_states(
-                'inference_optimizer_states', 0)
+            self._hooks['reset_optimizer_inference_state'] = self._empty_op
 
     def get_default_hooks(self):
         return construct_dict_without_none_entries(self._hooks)

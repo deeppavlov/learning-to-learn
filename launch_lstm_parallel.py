@@ -52,11 +52,11 @@ print('building is finished')
 env.train(
     # gpu_memory=.3,
     allow_growth=True,
-    save_path='lstm/text8_adam4000',
+    save_path='lstm/text8_pretrain',
     # restore_path='lstm_sample_test/scipop3_1000_bs256_11.12/checkpoints/2000',
     learning_rate=dict(
         type='exponential_decay',
-        init=.002,
+        init=4.,
         decay=.1,
         period=13000
     ),
@@ -70,7 +70,7 @@ env.train(
     train_dataset_text=train_text,
     # train_dataset_text='abc',
     validation_dataset_texts=[valid_text],
-    results_collect_interval=1,
+    results_collect_interval=100,
     additions_to_feed_dict=add_feed,
     validation_additions_to_feed_dict=valid_add_feed,
     no_validation=False
