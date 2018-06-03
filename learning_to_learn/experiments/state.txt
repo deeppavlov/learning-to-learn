@@ -1,0 +1,7 @@
+3.06.18 13:26
+resnet4lstm_relu::run2 run3 ign1 ign2 ign3::finished copied filtered plotted
+resnet4lstm_relu::run1::168 left
+resnet4lstm_relu_share_2::run1 run2 run3 ign1 ign2 ign3::170 left
+resnet4lstm_relu_permute::run1 run2 run3 ign1 ign2 ign3::finished copied filtered plotted
+resnet4lstm_relu_share_permute::run1 run2 ign1 ign2 ign3::finished copied filtered plotted
+resnet4lstm_relu_share_permute::run3::190 left

@@ -544,7 +544,7 @@ class ResNet4Lstm(Meta):
             regime='train',
             optimizer_for_opt_type='adam',
             additional_metrics=None,
-            substitute_opt_ins=None
+            opt_ins_substitution=None
     ):
         if additional_metrics is None:
             additional_metrics = list()
@@ -575,7 +575,7 @@ class ResNet4Lstm(Meta):
 
         self._additional_metrics = additional_metrics
 
-        self._substitute_opt_ins = substitute_opt_ins
+        self._opt_ins_substitution = opt_ins_substitution
 
         self._hooks = dict(
             pupil_grad_eval_inputs=None,

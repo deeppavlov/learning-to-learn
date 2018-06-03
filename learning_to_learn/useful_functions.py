@@ -1591,3 +1591,23 @@ def remove_empty_strings_from_list(l):
         if len(e) > 0:
             res.append(e)
     return res
+
+
+def get_substitution_tensor(tensor, substitution_way, **kwargs):
+    shape = tensor.get_shape().as_list()
+    if substitution_way == 'random':
+        s = tf.random_uniform(
+            shape,
+            minval=kwargs['minval'],
+            maxval=kwargs['maxval']
+        )
+    elif substitution_way == 'zeros':
+        s = tf.zeros(
+            shape
+        )
+    elif substitution_way == 'constant':
+        s = tf.constant(kwargs['value'], shape=shape)
+    else:
+        print("WARNING: unknown substitution way. No substitution is performed")
+        s = tensor
+    return s

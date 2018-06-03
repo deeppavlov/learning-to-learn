@@ -3,7 +3,7 @@ from learning_to_learn.useful_functions import construct, get_keys_from_nested, 
     device_name_scope, write_elem_in_obj_by_path, stop_gradient_in_nested, compose_save_list, average_gradients, \
     retrieve_from_inner_dicts, distribute_into_inner_dicts, custom_matmul, values_from_nested, sort_lists_map, \
     global_l2_loss, filter_none_gradients, go_through_nested_with_name_scopes_to_perform_func_and_distribute_results, \
-    global_norm, func_on_list_in_nested, append_to_nested
+    global_norm, func_on_list_in_nested, append_to_nested, get_substitution_tensor
 
 from learning_to_learn.tensors import compute_metrics
 
@@ -335,25 +335,21 @@ class Meta(object):
 
     @staticmethod
     def _substitute_opt_ins(opt_ins, substitution_way):
-        if substitution_way == 'random':
-            for ov in opt_ins.values():
-                for ik, iv in ov.items():
-                    if ik in ['s', 'o', 'sigma']:
-                        ov[ik] = tf.random_uniform(
-                            ik.get_shape().as_list(),
-                            minval=.01,
-                            maxval=.01
-                        )
-        elif substitution_way == 'zeros':
-            for ov in opt_ins.values():
-                for ik, iv in ov.items():
-                    if ik in ['s', 'o', 'sigma']:
-                        ov[ik] = tf.zeros(ik.get_shape().as_list())
-        elif substitution_way == 'constant':
-            for ov in opt_ins.values():
-                for ik, iv in ov.items():
-                    if ik in ['s', 'o', 'sigma']:
-                        ov[ik] = tf.constant(.01, shape=ik.get_shape().as_list())
+        with tf.name_scope('opt_ins_substitution'):
+            for ok, ov in opt_ins.items():
+                with tf.name_scope(ok):
+                    for ik, iv in ov.items():
+                        if ik in ['s', 'o', 'sigma']:
+                            with tf.name_scope(ik):
+                                if isinstance(iv, list):
+                                    ov[ik] = [
+                                        get_substitution_tensor(
+                                            t, substitution_way, minval=-.0001, maxval=.0001, value=.0001)
+                                        for t in iv
+                                    ]
+                                else:
+                                    ov[ik] = get_substitution_tensor(
+                                        iv, substitution_way, minval=-.0001, maxval=.0001, value=.0001)
         return opt_ins
 
     @staticmethod
@@ -699,8 +695,8 @@ class Meta(object):
 
                                 # print("(Meta._train_graph)BEFORE OPTIMIZER CORE:")
                                 # print_optimizer_ins(optimizer_ins)
-                                if self._substitute_opt_ins is not None:
-                                    optimizer_ins = self._substitute_opt_ins(optimizer_ins, self._substitute_opt_ins)
+                                if self._opt_ins_substitution is not None:
+                                    optimizer_ins = self._substitute_opt_ins(optimizer_ins, self._opt_ins_substitution)
                                 optimizer_outs, tmp_states = self._optimizer_core(
                                     optimizer_ins, tmp_states, gpu_idx, permute=self._permute)
                                 optimizer_outs = self._compose_phi_and_psi(optimizer_outs)
