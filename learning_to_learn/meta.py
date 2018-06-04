@@ -3,7 +3,8 @@ from learning_to_learn.useful_functions import construct, get_keys_from_nested, 
     device_name_scope, write_elem_in_obj_by_path, stop_gradient_in_nested, compose_save_list, average_gradients, \
     retrieve_from_inner_dicts, distribute_into_inner_dicts, custom_matmul, values_from_nested, sort_lists_map, \
     global_l2_loss, filter_none_gradients, go_through_nested_with_name_scopes_to_perform_func_and_distribute_results, \
-    global_norm, func_on_list_in_nested, append_to_nested, get_substitution_tensor, variable_summaries
+    global_norm, func_on_list_in_nested, append_to_nested, get_substitution_tensor, variable_summaries, \
+    apply_to_nested
 
 from learning_to_learn.tensors import compute_metrics
 
@@ -295,6 +296,8 @@ class Meta(object):
             optimizer_ins = distribute_into_inner_dicts(optimizer_ins, 'sigma', sigma_vectors, map_)
 
             optimizer_ins = self._stop_gradients_in_opt_ins(optimizer_ins, ['o', 's', 'sigma'])
+            if self._normalizing is not None:
+                optimizer_ins = self._normalize(optimizer_ins, self._normalizing)
             # print('(Meta._eval_pupil_gradients_for_optimizer_training)AFTER GRADIENT STOPPING')
             # print_optimizer_ins(optimizer_ins)
 
@@ -326,8 +329,43 @@ class Meta(object):
         # print('(Meta._eval_pupil_gradients_for_optimizer_inference)map_:', map_)
         sigma_vectors = tf.gradients(loss, s_vectors)
         optimizer_ins = distribute_into_inner_dicts(optimizer_ins, 'sigma', sigma_vectors, map_)
+        if self._normalizing is not None:
+            optimizer_ins = self._normalize(optimizer_ins, self._normalizing)
         # print('(Meta._eval_pupil_gradients_for_optimizer_inference)optimizer_ins:', optimizer_ins)
         return optimizer_ins, storage_save_ops, loss, predictions, labels
+
+    @staticmethod
+    def _multiply_by_factor(opt_flow, factors):
+        for ok, ov in opt_flow.items():
+            with tf.name_scope(ok):
+                for ik, iv in ov.items():
+                    if ik in factors:
+                        with tf.name_scope(ik):
+                            ov[ik] = apply_to_nested(iv, lambda x: x*factors[ik])
+        return opt_flow
+
+    def _normalize(self, opt_flow, normalizing):
+        with tf.name_scope('normalizing'):
+            if normalizing['type'] == 'factor':
+                opt_flow = self._multiply_by_factor(opt_flow, normalizing['factors'])
+        return opt_flow
+
+    def _denormalize(self, opt_flow, normalizing):
+        with tf.name_scope('denormalizing'):
+            if normalizing['type'] == 'factor':
+                backward_factor_1 = 1.
+                if 'sigma' in normalizing['factors']:
+                    backward_factor_1 *= 1 / normalizing['factors']['sigma']
+                if 'o' in normalizing['factors']:
+                    backward_factor_2 = backward_factor_1 * 1 / normalizing['factors']['o']
+                else:
+                    backward_factor_2 = backward_factor_1
+                opt_flow = self._multiply_by_factor(
+                    opt_flow,
+                    {'matrix_mods': backward_factor_2,
+                     'bias_mods': backward_factor_1}
+                )
+        return opt_flow
 
     @staticmethod
     def _concat_opt_ins(opt_ins, inner_keys):
@@ -585,6 +623,11 @@ class Meta(object):
                             # with tf.device('/cpu:0'):
                             #     v['bias_mods'] = tf.Print(
                             #         v['bias_mods'], [v['bias_mods']], message='\n' + k + '\nbias:\n')
+                if self._normalizing is not None:
+                    optimizer_outs = self._denormalize(
+                        optimizer_outs,
+                        self._normalizing
+                    )
             with tf.name_scope('clip_gradients'):
                 glob_norm = global_norm(mods)
                 factor = tf.divide(
