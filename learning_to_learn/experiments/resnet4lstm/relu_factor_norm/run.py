@@ -105,7 +105,13 @@ kwargs_for_optimizer_building = dict(
     res_size=2000,
     permute=False,
     optimizer_for_opt_type='adam',
-    additional_metrics=add_metrics
+    additional_metrics=add_metrics,
+    normalizing=dict(
+        type='factor',
+        factors=dict(
+            sigma=1000
+        )
+    )
 )
 
 launch_kwargs = dict(
