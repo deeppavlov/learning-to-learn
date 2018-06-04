@@ -1,10 +1,10 @@
-import re
 import tensorflow as tf
 
+ROOT_HEIGHT = 4
 import sys
 from pathlib import Path
 file = Path(__file__).resolve()
-parent, root = file.parent, file.parents[3]
+parent, root = file.parent, file.parents[ROOT_HEIGHT]
 sys.path.append(str(root))
 try:
     sys.path.remove(str(parent))
@@ -26,17 +26,18 @@ if len(sys.argv) > 3:
 else:
     initial_experiment_counter_value = 0
 hps = get_hps(parameter_set_file_name)
-save_path = parameter_set_file_name.split('.')[0] + '/evaluation'
+save_path = os.path.join(parameter_set_file_name.split('.')[0], 'evaluation')
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
-with open('../../../datasets/text8.txt', 'r') as f:
+dataset_path = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'text8.txt']))
+with open(dataset_path, 'r') as f:
     text = f.read()
 
-valid_size = 500
+valid_size = 480
 valid_text = text[:valid_size]
-train_text = text[valid_size:]
+train_text = text
 
 vocabulary = create_vocabulary(text)
 vocabulary_size = len(vocabulary)
@@ -62,7 +63,8 @@ valid_add_feed = [
 ]
 
 NUM_EXERCISES=10
-the_only_pupil_restore_path = '../../../lstm/text8_pretrain/checkpoints/%s' % pretrain_step
+checkpoints_path = os.path.join(*(['..']*ROOT_HEIGHT + ['lstm', 'text8_pretrain', 'checkpoints']))
+the_only_pupil_restore_path = os.path.join(checkpoints_path, '%s') % pretrain_step
 evaluation = dict(
     save_path=save_path,
     opt_inf_is_performed=True,
@@ -133,9 +135,9 @@ launch_kwargs = dict(
     additions_to_feed_dict=train_opt_add_feed,
     pupil_restore_paths=[the_only_pupil_restore_path],
     # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
-    reset_period=1,
+    reset_period=12,
     num_exercises=NUM_EXERCISES,
-    stop=10,
+    stop=1000,
     train_dataset_texts=[train_text],
     opt_inf_is_performed=False,
     batch_gen_init_is_random=False,
