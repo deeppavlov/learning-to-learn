@@ -1,17 +1,21 @@
+ROOT_HEIGHT = 4
 import sys
-import os
 from pathlib import Path
 file = Path(__file__).resolve()
-parent, root = file.parent, file.parents[3]
+parent, root = file.parent, file.parents[ROOT_HEIGHT]
 sys.path.append(str(root))
 try:
     sys.path.remove(str(parent))
-except ValueError:  # Already removed
+except ValueError: # Already removed
     pass
+
 from learning_to_learn.environment import Environment
 from learning_to_learn.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
-from learning_to_learn.useful_functions import create_vocabulary
+from learning_to_learn.useful_functions import create_vocabulary, compose_hp_confs, get_num_exps_and_res_files
+
 from learning_to_learn.res_net_opt import ResNet4Lstm
+
+import os
 
 conf_file = sys.argv[1]
 save_path = os.path.join(conf_file.split('.')[0], 'results')
@@ -25,8 +29,10 @@ with open(conf_file, 'r') as f:
 restore_path = lines[0]
 pretrain_step = int(lines[1])
 
-with open('../../../datasets/text8.txt', 'r') as f:
+dataset_path = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'text8.txt']))
+with open(dataset_path, 'r') as f:
     text = f.read()
+
 
 valid_size = 500
 
@@ -46,7 +52,7 @@ env = Environment(
 add_metrics = ['bpc', 'perplexity', 'accuracy']
 NUM_EXERCISES = 10
 NUM_UNROLLINGS = 4
-tmpl = '../../../' + restore_path + '/checkpoints/%s'
+tmpl = os.path.join(*['..']*ROOT_HEIGHT + [restore_path, 'checkpoints', '%s'])
 RESTORE_PUPIL_PATHS = [
     tmpl % 0
 ]
@@ -83,7 +89,7 @@ env.build_optimizer(
     optimizer_for_opt_type='adam',
     additional_metrics=add_metrics,
     clip_norm=1000000.,
-    optimizer_init_parameter=.001
+    optimizer_init_parameter=.01
 )
 
 
@@ -123,7 +129,7 @@ env.train_optimizer(
     batch_gen_init_is_random=True,
     num_unrollings=NUM_UNROLLINGS,
     learning_rate={'type': 'exponential_decay',
-                   'init': 1e-4,
+                   'init': 3e-4,
                    'decay': .1,
                    'period': 3500},
     results_collect_interval=100,

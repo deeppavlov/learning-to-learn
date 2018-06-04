@@ -24,7 +24,7 @@ if len(sys.argv) > 3:
     chop_last_experiment = bool(sys.argv[3])
 else:
     chop_last_experiment = False
-save_path = parameter_set_file_name.split('.')[0] + '/evaluation'
+save_path = os.path.join(parameter_set_file_name.split('.')[0], 'evaluation')
 confs, _ = compose_hp_confs(parameter_set_file_name, save_path, chop_last_experiment=chop_last_experiment)
 confs.reverse()  # start with small configs
 print("confs:", confs)
