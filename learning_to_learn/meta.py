@@ -764,7 +764,7 @@ class Meta(object):
                                         )
                                     )
                                 if 'opt_ins_substitution' in self._flags:
-                                    optimizer_ins = self._substitute_opt_ins(optimizer_ins, self._opt_ins_substitution)
+                                    optimizer_ins = self._substitute_opt_ins(optimizer_ins, 'constant')
                                 optimizer_outs, tmp_states = self._optimizer_core(
                                     optimizer_ins, tmp_states, gpu_idx, permute=self._permute)
                                 optimizer_outs = self._compose_phi_and_psi(optimizer_outs)
