@@ -1,5 +1,3 @@
-import tensorflow as tf
-
 ROOT_HEIGHT = 4
 import sys
 from pathlib import Path
@@ -13,7 +11,7 @@ except ValueError: # Already removed
 
 from learning_to_learn.environment import Environment
 from learning_to_learn.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
-from learning_to_learn.useful_functions import create_vocabulary, get_hps
+from learning_to_learn.useful_functions import create_vocabulary, compose_hp_confs, get_num_exps_and_res_files
 
 from learning_to_learn.res_net_opt import ResNet4Lstm
 
@@ -35,6 +33,7 @@ dataset_path = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'text8.txt']))
 with open(dataset_path, 'r') as f:
     text = f.read()
 
+
 valid_size = 500
 
 valid_text = text[:valid_size]
@@ -53,7 +52,7 @@ env = Environment(
 add_metrics = ['bpc', 'perplexity', 'accuracy']
 NUM_EXERCISES = 10
 NUM_UNROLLINGS = 4
-tmpl = os.path.join(*(['..']*ROOT_HEIGHT + [restore_path, 'checkpoints', '%s']))
+tmpl = os.path.join(*['..']*ROOT_HEIGHT + [restore_path, 'checkpoints', '%s'])
 RESTORE_PUPIL_PATHS = [
     tmpl % 0
 ]
@@ -90,8 +89,8 @@ env.build_optimizer(
     optimizer_for_opt_type='adam',
     additional_metrics=add_metrics,
     clip_norm=1000000.,
-    optimizer_init_parameter=.01,
-    flags=['opt_ins_substitution']
+    flags=['summarize_opt_ins'],
+    optimizer_init_parameter=.01
 )
 
 
@@ -119,7 +118,7 @@ env.train_optimizer(
     num_exercises=NUM_EXERCISES,
     stop=4000,
     train_dataset_texts=[train_text],
-    opt_inf_is_performed=True,
+    opt_inf_is_performed=False,
     opt_inf_stop=10,
     opt_inf_pupil_restore_paths=OPT_INF_RESTORE_PUPIL_PATHS,
     opt_inf_additions_to_feed_dict=opt_inf_add_feed,
@@ -138,7 +137,12 @@ env.train_optimizer(
     opt_inf_results_collect_interval=1,
     permute=False,
     summary=True,
-    add_graph_to_summary=True
+    add_graph_to_summary=False,
+    train_tensor_schedule=dict(
+        train_summary_tensors=dict(
+            train_optimizer_summary=[
+                0, 1, 2, 3, 4, 5, 7, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 100, 120, 150, 170, 200, 220, 250, 270, 300
+            ]
+        )
+    )
 )
-
-"""'o' and 'sigma' are substituted by uniform random tensors with diapason [-.0001, .0001]"""

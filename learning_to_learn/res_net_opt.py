@@ -544,10 +544,12 @@ class ResNet4Lstm(Meta):
             regime='train',
             optimizer_for_opt_type='adam',
             additional_metrics=None,
-            opt_ins_substitution=None
+            flags=None
     ):
         if additional_metrics is None:
             additional_metrics = list()
+        if flags is None:
+            flags = list()
 
         self._pupil = pupil
         self._pupil_net_size = self._pupil.get_net_size()
@@ -575,7 +577,7 @@ class ResNet4Lstm(Meta):
 
         self._additional_metrics = additional_metrics
 
-        self._opt_ins_substitution = opt_ins_substitution
+        self._flags = flags
 
         self._hooks = dict(
             pupil_grad_eval_inputs=None,
@@ -597,7 +599,8 @@ class ResNet4Lstm(Meta):
             start_loss=None,
             end_loss=None,
             optimizer_dropout_keep_prob=None,
-            pupil_trainable_initializers=None
+            pupil_trainable_initializers=None,
+            train_optimizer_summary=None
         )
         for add_metric in self._additional_metrics:
             self._hooks['start_' + add_metric] = None

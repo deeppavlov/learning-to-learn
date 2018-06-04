@@ -207,10 +207,13 @@ class Environment(object):
 
         self._build_functions = {'identity': identity_tensor}
 
-        tensor_schedule = {'train_print_tensors': dict(),
-                           'train_save_tensors': dict(),
-                           'train_print_text_tensors': dict(),
-                           'train_save_text_tensors': dict()}
+        tensor_schedule = dict(
+            train_print_tensors=dict(),
+            train_save_tensors=dict(),
+            train_print_text_tensors=dict(),
+            train_save_text_tensors=dict(),
+            train_summary_tensors=dict()
+        )
 
         valid_tensor_schedule = {'valid_print_tensors': dict(),
                                  'valid_save_text_tensors': dict()}

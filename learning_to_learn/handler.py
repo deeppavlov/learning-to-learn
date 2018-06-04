@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 from learning_to_learn.useful_functions import create_path, add_index_to_filename_if_needed, construct, nested2string, \
-    WrongMethodCallError, extend_dictionary
+    WrongMethodCallError, extend_dictionary, flatten
 
 
 class Handler(object):
@@ -749,21 +749,25 @@ class Handler(object):
 
     def _cope_with_tensor_alias(self,
                                 alias):
+        # print("(Handler._cope_with_tensor_alias)alias:", alias)
+        # print("(Handler._cope_with_tensor_alias)self._hooks[alias]:", self._hooks[alias])
         if not isinstance(self._hooks[alias], list):
             return [self._hooks[alias]], 1
         add_tensors = list()
         order = [alias, len(self._hooks[alias])]
         counter = 0
-        if isinstance(self._hooks[alias][0], list):
-            order.append(len(self._hooks[alias][0]))
-            for elem in self._hooks[alias]:
-                for tensor in elem:
-                    add_tensors.append(tensor)
-                    counter += 1
-        else:
+        if len(self._hooks[alias]) > 0:
+            if isinstance(self._hooks[alias][0], list):
+                order.append(len(self._hooks[alias][0]))
+                for elem in self._hooks[alias]:
+                    for tensor in elem:
+                        add_tensors.append(tensor)
+                        counter += 1
             for tensor in self._hooks[alias]:
                 add_tensors.append(tensor)
                 counter += 1
+        # print("(Handler._cope_with_tensor_alias)add_tensors:", add_tensors)
+        # print("(Handler._cope_with_tensor_alias)counter:", counter)
         return add_tensors, counter
 
     def _save_datum(self, descriptor, step, datum, processing_type, dataset_name):
@@ -907,6 +911,7 @@ class Handler(object):
                 pointer += 1
             self._last_run_tensor_order['basic']['borders'] = [start, pointer]
             if self._train_tensor_schedule is not None:
+                # print("(Handler.get_tensors)self._train_tensor_schedule:", self._train_tensor_schedule)
                 additional_tensors = self._get_additional_tensors(self._train_tensor_schedule, step, pointer)
                 tensors.extend(additional_tensors)
         # print(tensors)
@@ -916,11 +921,12 @@ class Handler(object):
                                 schedule,
                                 step,
                                 start_pointer):
-        #print('_get_additional_tensors method. schedule:', schedule)
+        # print('_get_additional_tensors method. schedule:', schedule)
         additional_tensors = list()
         pointer = start_pointer
         for tensors_use, tensors_schedule in schedule.items():
-            #print('tensor_schedule:', tensors_schedule)
+            # print('(Handler._get_additional_tensors)tensors_use:', tensors_use)
+            # print('(Handler._get_additional_tensors)tensor_schedule:', tensors_schedule)
             self._last_run_tensor_order[tensors_use] = dict()
             self._last_run_tensor_order[tensors_use]['tensors'] = dict()
             start = pointer
@@ -1019,7 +1025,7 @@ class Handler(object):
                 #             print(c.name)
                 #         else:
                 #             print(c)
-                #print('controller._specifications:', controller._specifications)
+                # print('controller._specifications:', controller._specifications)
                 if controller.name in self._printed_controllers:
                     print('%s:' % controller.name, controller.get())
 
@@ -1072,14 +1078,21 @@ class Handler(object):
                 extracted[alias] = res[borders[0]]
             elif isinstance(structure, list):
                 if len(structure) == 1:
-                    extracted[alias] = res[borders[0], borders[1]]
+                    extracted[alias] = res[borders[0]:borders[1]]
                 else:
                     structured = list()
                     pointer = borders[0]
                     for length in structure[1:]:
-                        structured.append(res[pointer, pointer+length])
+                        structured.append(res[pointer:pointer+length])
                     extracted[alias] = structured
         return extracted
+
+    def _add_summaries(self, extracted, step):
+        # print('\n(Handler._add_summaries)step:', step)
+        for ok, ov in extracted.items():
+            for v in flatten(ov):
+                # print('\n(Handler._add_summaries)%s:' % ok, flatten(ov))
+                self._writer.add_summary(v, step)
 
     def _form_train_tensor_print_instructions(self, step, train_res, last_order):
         instructions = dict()
@@ -1151,19 +1164,30 @@ class Handler(object):
                                                              **res_dict)
 
         # print("(Handler._process_train_results)self._last_run_tensor_order:", self._last_run_tensor_order)
-        print_borders = self._last_run_tensor_order['train_print_tensors']['borders']
-        if print_borders[1] - print_borders[0] > 0:
-            print_instructions = self._form_train_tensor_print_instructions(step,
-                                                                            train_res,
-                                                                            self._last_run_tensor_order)
-            other_stuff_is_printed = (step % (results_collect_interval * print_per_collected) == 0)
-            if other_stuff_is_printed:
-                indent = 0
-            else:
-                indent = 1
-            self._print_tensors(print_instructions,
-                                print_step_number=not other_stuff_is_printed,
-                                indent=indent)
+        if 'train_print_tensors' in self._last_run_tensor_order:
+            print_borders = self._last_run_tensor_order['train_print_tensors']['borders']
+            if print_borders[1] - print_borders[0] > 0:
+                print_instructions = self._form_train_tensor_print_instructions(step,
+                                                                                train_res,
+                                                                                self._last_run_tensor_order)
+                other_stuff_is_printed = (step % (results_collect_interval * print_per_collected) == 0)
+                if other_stuff_is_printed:
+                    indent = 0
+                else:
+                    indent = 1
+                self._print_tensors(print_instructions,
+                                    print_step_number=not other_stuff_is_printed,
+                                    indent=indent)
+        if 'train_summary_tensors' in self._last_run_tensor_order:
+            summary_borders = self._last_run_tensor_order['train_summary_tensors']['borders']
+            # print("(Handler._process_train_results)summary_borders:", summary_borders)
+            if summary_borders[1] - summary_borders[0] > 0:
+                extracted_for_summary = self._extract_results(
+                    self._last_run_tensor_order,
+                    'train_summary_tensors',
+                    train_res
+                )
+                self._add_summaries(extracted_for_summary, step)
 
     @staticmethod
     def _form_string_char(char):

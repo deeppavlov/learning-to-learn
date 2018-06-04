@@ -3,7 +3,7 @@ from learning_to_learn.useful_functions import construct, get_keys_from_nested, 
     device_name_scope, write_elem_in_obj_by_path, stop_gradient_in_nested, compose_save_list, average_gradients, \
     retrieve_from_inner_dicts, distribute_into_inner_dicts, custom_matmul, values_from_nested, sort_lists_map, \
     global_l2_loss, filter_none_gradients, go_through_nested_with_name_scopes_to_perform_func_and_distribute_results, \
-    global_norm, func_on_list_in_nested, append_to_nested, get_substitution_tensor
+    global_norm, func_on_list_in_nested, append_to_nested, get_substitution_tensor, variable_summaries
 
 from learning_to_learn.tensors import compute_metrics
 
@@ -303,6 +303,21 @@ class Meta(object):
             with tf.name_scope('stop_gradients_in_pupil_storage_subsequent_pupil_launches'):
                 new_storage = stop_gradient_in_nested(new_storage)
         return optimizer_ins, new_storage, loss, predictions, labels
+
+    @staticmethod
+    def _summarize_opt_flow(opt_flow, keys, summary_types, name_scope):
+        res = list()
+        with tf.name_scope(name_scope):
+            for ok, ov in opt_flow.items():
+                with tf.name_scope(ok):
+                    for ik, iv in ov.items():
+                        if ik in keys:
+                            with tf.name_scope(ik):
+                                sum_ops = variable_summaries(iv, summary_types, None)
+                                with tf.device('/cpu:0'):
+                                    res.append(tf.summary.merge(sum_ops))
+        with tf.device('/cpu:0'):
+            return tf.summary.merge(res)
 
     def _eval_pupil_gradients_for_optimizer_inference(self):
         loss, optimizer_ins, storage_save_ops, predictions, labels = self._pupil.loss_and_opt_ins_for_inference()
@@ -655,6 +670,7 @@ class Meta(object):
             for add_metric in self._additional_metrics:
                 start_additional_metrics_by_gpu[add_metric] = list()
                 end_additional_metrics_by_gpu[add_metric] = list()
+            summaries = list()
 
             tower_grads = list()
 
@@ -695,7 +711,16 @@ class Meta(object):
 
                                 # print("(Meta._train_graph)BEFORE OPTIMIZER CORE:")
                                 # print_optimizer_ins(optimizer_ins)
-                                if self._opt_ins_substitution is not None:
+                                if 'summarize_opt_ins' in self._flags:
+                                    summaries.append(
+                                        self._summarize_opt_flow(
+                                            optimizer_ins,
+                                            ['o', 's', 'sigma'],
+                                            ['mean', 'stddev', 'min', 'max', 'histogram'],
+                                            'opt_ins'
+                                        )
+                                    )
+                                if 'opt_ins_substitution' in self._flags:
                                     optimizer_ins = self._substitute_opt_ins(optimizer_ins, self._opt_ins_substitution)
                                 optimizer_outs, tmp_states = self._optimizer_core(
                                     optimizer_ins, tmp_states, gpu_idx, permute=self._permute)
@@ -887,6 +912,10 @@ class Meta(object):
                     for add_metric in self._additional_metrics:
                         self._hooks['start_' + add_metric] = start_additional_metrics[add_metric]
                         self._hooks['end_' + add_metric] = end_additional_metrics[add_metric]
+                    if self._hooks['train_optimizer_summary'] is None:
+                        self._hooks['train_optimizer_summary'] = summaries
+                    elif len(summaries) > 0:
+                        self._hooks['train_optimizer_summary'].extend(summaries)
 
     def _inference_graph(self):
         with tf.name_scope('optimizer_inference_graph'):

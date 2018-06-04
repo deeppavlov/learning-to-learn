@@ -1611,3 +1611,41 @@ def get_substitution_tensor(tensor, substitution_way, **kwargs):
         print("WARNING: unknown substitution way. No substitution is performed")
         s = tensor
     return s
+
+
+def vsum(var, summary_types):
+    res = list()
+    if 'mean' in summary_types:
+        mean = tf.reduce_mean(var)
+        with tf.device('/cpu:0'):
+            res.append(tf.summary.scalar('mean', mean))
+    else:
+        mean = None
+    if 'stddev' in summary_types:
+        if mean is None:
+            mean = tf.reduce_mean(var)
+        with tf.name_scope('stddev'):
+            stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
+        with tf.device('/cpu:0'):
+            res.append(tf.summary.scalar('stddev', stddev))
+    if 'max' in summary_types:
+        max = tf.reduce_max(var)
+        with tf.device('/cpu:0'):
+            res.append(tf.summary.scalar('max', max))
+    if 'min' in summary_types:
+        min = tf.reduce_min(var)
+        with tf.device('/cpu:0'):
+            res.append(tf.summary.scalar('min', min))
+    if 'histogram' in summary_types:
+        with tf.device('/cpu:0'):
+            res.append(tf.summary.histogram('histogram', var))
+    return res
+
+
+def variable_summaries(var, summary_types, name_scope):
+    """Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
+    if name_scope is None:
+        return vsum(var, summary_types)
+    else:
+        with tf.name_scope(name_scope):
+            return vsum(var, summary_types)
