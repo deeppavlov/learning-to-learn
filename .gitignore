@@ -1,6 +1,5 @@
-*/run1/*
-*/run2/*
-*/run3/*
-*/ign1/*
-*/ign2/*
-*/ign3/*
+**/run[0-9]/
+**/ign[0-9]/
+**/run[0-9]_incomplete/
+**/ign[0-9]_incomplete/
+**/experiments/*/*/test/
