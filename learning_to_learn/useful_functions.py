@@ -1316,6 +1316,8 @@ def get_combs_and_num_exps(eval_dir):
                 exp_description_files.append(entry)
         exp_description_files = sorted(exp_description_files, key=lambda elem: int(elem[:-4]))
         # print("(useful_functions.get_combs_and_num_exps)len(exp_description_files):", len(exp_description_files))
+        # print("(useful_functions.get_combs_and_num_exps)exp_description_files:", exp_description_files)
+
         for file_name in exp_description_files:
             with open(os.path.join(eval_dir, file_name), 'r') as f:
                 lines = f.read().split('\n')
@@ -1323,6 +1325,8 @@ def get_combs_and_num_exps(eval_dir):
                 hp_set = tuple([convert(v, t) for v, t in zip(lines[0].split(), types)])
                 if hp_set not in hp_sets:
                     hp_sets.append(hp_set)
+        # print("(useful_functions.get_combs_and_num_exps)hp_sets:", hp_sets)
+
         if len(exp_description_files) > 0:
             last_file_name = exp_description_files[-1]
         else:
@@ -1386,12 +1390,14 @@ def make_initial_grid(file_name, eval_dir, chop_last_experiment=False):
         shutil.rmtree(os.path.join(eval_dir, last_exp_file_name[:-4]))
         tested_combs = tested_combs[:-1]
         num_exps -= 1
+    # print("(useful_functions.make_initial_grid)tested_combs:", tested_combs)
     grid = np.zeros(tuple([len(v) for v in init_conf.values()]))
     for tested_comb in tested_combs:
         indices = list()
         for p_idx, v in enumerate(tested_comb):
             indices.append(init_grid_values[p_idx].index(v))
         grid[tuple(indices)] = 1.
+    # print("(useful_functions.make_initial_grid)grid:", grid)
     return grid, init_conf, num_exps
 
 
@@ -1400,22 +1406,32 @@ def one_dim_idx_2_multidim_indices(idx, shape):
     quotient = idx
     for dim in shape[::-1]:
         indices.append(quotient % dim)
-        quotient = idx // dim
+        quotient = quotient // dim
     indices.reverse()
     return indices
 
 
 def get_missing_entries(grid):
+    # print("(useful_functions.get_missing_entries)grid:", grid)
     missing = list()
     sh = grid.shape
+    # print("(useful_functions.get_missing_entries)sh:", sh)
     # print("(useful_functions.get_missing_entries)sh:", sh)
     if len(sh) == 0:
         return []
     num_entries = reduce(lambda x, y: x*y, sh)
     for entry_num in range(num_entries):
         indices = one_dim_idx_2_multidim_indices(entry_num, sh)
+        # if entry_num in [191, 192, 193, 194]:
+        #     print("(useful_functions.get_missing_entries)indices on entry_num %s:" % entry_num, indices) 
         if grid[tuple(indices)] == 0:
             missing.append(indices)
+        # else:
+        #     print("(useful_functions.get_missing_entries)present indices:", indices)
+    # print("(useful_functions.get_missing_entries)grid[(0, 12, 11)]:", grid[(0, 12, 11)])
+    # print("(useful_functions.get_missing_entries)grid[(0, 12, 12)]:", grid[(0, 12, 12)])
+    # print("(useful_functions.get_missing_entries)grid[(0, 12, 13)]:", grid[(0, 12, 13)])
+    # print("(useful_functions.get_missing_entries)grid[(0, 12, 14)]:", grid[(0, 12, 14)])
     return missing
 
 
