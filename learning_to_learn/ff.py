@@ -7,7 +7,7 @@ from learning_to_learn.useful_functions import block_diagonal, custom_matmul, cu
 from learning_to_learn.meta import Meta
 
 
-class FfResOpt(Meta):
+class Ff(Meta):
 
     @staticmethod
     def form_kwargs(kwargs_for_building, insertions):
@@ -105,85 +105,50 @@ class FfResOpt(Meta):
             optimizer_ins['output_layer_%s' % (layer_idx+1)]['out_perm'] = output_layers[layer_idx+1]
         return optimizer_ins
 
-    def _res_core_vars(self, target, res_size, var_scope):
+    def _core_vars(self, target, var_scope):
         with tf.variable_scope(var_scope):
-            matrices, biases = list(), list()
-            in_ndims = sum(flatten(target))
-            out_ndims = sum(flatten(target))
-            in_stddev = self._optimizer_init_parameter / (in_ndims + res_size)**.5
-            with tf.variable_scope('in_core'):
-                matrices.append(
-                    tf.get_variable(
-                        'matrix',
-                        shape=[in_ndims, res_size],
-                        initializer=tf.truncated_normal_initializer(stddev=in_stddev),
-                        # initializer=tf.zeros_initializer(),
-                        # trainable=False
-                    )
-                )
-                biases.append(
-                    tf.get_variable(
-                        'bias',
-                        shape=[res_size],
-                        initializer=tf.zeros_initializer(),
-                        # trainable=False
-                    )
-                )
-            with tf.variable_scope('out_core'):
-                matrices.append(
-                    tf.get_variable(
-                        'matrix',
-                        shape=[res_size, out_ndims],
-                        # initializer=tf.truncated_normal_initializer(stddev=in_stddev)
-                        initializer=tf.zeros_initializer()
-                        # trainable=False
-                    )
-                )
-                biases.append(
-                    tf.get_variable(
-                        'bias',
-                        shape=[out_ndims],
-                        # initializer=tf.zeros_initializer(),
-                        initializer=tf.constant_initializer(1e-15),  # because otherwise neurons will be dead
-                        # initializer=tf.truncated_normal_initializer(stddev=in_stddev)
-                        # trainable=False
-                    )
-                )
-            for m in matrices:
-                tf.add_to_collection(tf.GraphKeys.WEIGHTS, m)
-        return matrices, biases
+            ndims = sum(flatten(target))
+            stddev = self._optimizer_init_parameter / (2 * ndims)**.5
+            matrix = tf.get_variable(
+                'matrix',
+                shape=[ndims, ndims],
+                initializer=tf.truncated_normal_initializer(stddev=stddev),
+            )
+            bias = tf.get_variable(
+                'bias',
+                shape=[ndims],
+                initializer=tf.zeros_initializer(),
+                # trainable=False
+            )
+            tf.add_to_collection(tf.GraphKeys.WEIGHTS, matrix)
+        return matrix, bias
 
     def _create_optimizer_trainable_vars(self):
         if self._emb_layer_is_present:
             embedding_layer = self._pupil_dims['embedding_layer']
         lstm_layers = self._pupil_dims['lstm_layers']
         output_layers = self._pupil_dims['output_layers']
-        vars = dict()
+        vars = list()
         with tf.variable_scope('optimizer_trainable_variables'):
-            with tf.variable_scope('res_layers'):
-                vars['res_layers'] = list()
-                for res_idx in range(self._num_res_layers):
-                    with tf.variable_scope('layer_%s' % res_idx):
-                        res_layer_params = dict()
-                        if self._emb_layer_is_present:
-                            res_layer_params['embedding_layer'] = self._res_core_vars(
-                                [embedding_layer],
-                                self._res_size,
-                                'embedding_layer_core'
-                            )
-                        for layer_idx, layer_dims in enumerate(lstm_layers):
-                            res_layer_params['lstm_layer_%s' % layer_idx] = self._res_core_vars(
-                                [layer_dims],
-                                self._res_size,
-                                'lstm_layer_%s_core' % layer_idx
-                            )
-                        for layer_idx, layer_dims in enumerate(output_layers):
-                            res_layer_params['output_layer_%s' % layer_idx] = self._res_core_vars(
-                                [layer_dims],
-                                self._res_size,
-                                'output_layer_%s_core' % layer_idx
-                            )
-                        vars['res_layers'].append(res_layer_params)
+            for layer_idx in range(self._num_layers):
+                with tf.variable_scope('layer_%s' % layer_idx):
+                    layer_params = dict()
+                    if self._emb_layer_is_present:
+                        layer_params['embedding_layer'] = self._core_vars(
+                            [embedding_layer],
+                            'embedding_layer_core'
+                        )
+                    for layer_idx, layer_dims in enumerate(lstm_layers):
+                        layer_params['lstm_layer_%s' % layer_idx] = self._core_vars(
+                            [layer_dims],
+                            'lstm_layer_%s_core' % layer_idx
+                        )
+                    for layer_idx, layer_dims in enumerate(output_layers):
+                        layer_params['output_layer_%s' % layer_idx] = self._core_vars(
+                            [layer_dims],
+                            'output_layer_%s_core' % layer_idx
+                        )
+                    vars.append(layer_params)
         return vars
 
     # def _optimizer_core(self, optimizer_ins, num_exercises, states, gpu_idx):
@@ -191,67 +156,25 @@ class FfResOpt(Meta):
     #     # optimizer_ins = self._forward_permute(optimizer_ins)
     #     return self._empty_core(optimizer_ins)
 
-
-    # @staticmethod
-    # def _apply_res_core(vars, opt_ins, rnn_part, target, scope, target_dims):
-    def _apply_res_core(self, vars, opt_ins, scope, target_dims):
-        if self._res_core_activation_func == 'relu':
+    def _apply_core(self, vars, opt_ins, scope, target_dims):
+        if self._activation_func == 'relu':
             a_func = tf.nn.relu
-        elif self._res_core_activation_func == 'tanh':
+        elif self._activation_func == 'tanh':
             a_func = tf.tanh
         else:
             a_func = None
         with tf.name_scope(scope):
-            # print("\n(ResNet4Lstm._apply_res_core)rnn_part:", rnn_part)
-            # print('(ResNet4Lstm._apply_res_core)opt_ins:', opt_ins)
             opt_ins_united = tf.concat(opt_ins, -1, name='opt_ins_united')
-            # print("(ResNet4Lstm._apply_res_core)rnn_part:", rnn_part)
             hs = opt_ins_united
-            matrices = vars[0]
-            biases = vars[1]
-            for idx, (m, b) in enumerate(zip(matrices, biases)):
-                # print('\n(ResNet4Lstm._apply_res_core)hs:', hs)
-                # print('(ResNet4Lstm._apply_res_core)m:', m)
-                # with tf.device('/cpu:0'):
-                #     hs = tf.Print(
-                #         hs, [l2_loss_per_elem(hs)],
-                #         message="(ResNetOpt._apply_res_core)(%s)(%s)hs before: " % (scope, idx), summarize=20)
-
-                # if scope == 'lstm_layer_0':
-                #     with tf.device('/cpu:0'):
-                #         m = tf.Print(
-                #             m, [tf.sqrt(l2_loss_per_elem(m))],
-                #             message="(ResNet4Lstm._apply_res_core)matrix_%s_%s: " % (scope, idx)
-                #         )
-                #         hs = tf.Print(
-                #             hs, [tf.sqrt(l2_loss_per_elem(hs))],
-                #             message="(ResNet4Lstm._apply_res_core)hs_%s_%s: " % (scope, idx)
-                #         )
-
-                matmul_res = custom_matmul(hs, m)
-                if idx == 0:
-                    self._debug_tensors.append(matmul_res)
-                hs = a_func(custom_add(matmul_res, b))
-                # hs = tf.tanh(custom_add(matmul_res, b))
-
-                # with tf.device('/cpu:0'):
-                #     hs = tf.Print(
-                #         hs, [l2_loss_per_elem(matmul_res)],
-                #         message="(ResNetOpt._apply_res_core)(%s)(%s)matmul_res: " % (scope, idx), summarize=20)
-            hs = tf.add(
-                hs,
-                tf.concat(opt_ins, -1, name='res_tensor'),
-                name='after_res_conn'
-            )
+            matrix = vars[0]
+            bias = vars[1]
+            matmul_res = custom_matmul(hs, matrix)
+            self._debug_tensors.append(matmul_res)
+            hs = a_func(custom_add(matmul_res, bias))
             o, sigma = tf.split(hs, list(target_dims), axis=-1, name='o_sigma')
-            # print("(ResNet4Lstm._apply_res_core)rnn_part:", rnn_part)
-            # with tf.device('/cpu:0'):
-            #     o = tf.Print(o, [o], message='(ResNetOpt._apply_res_core)(scope=%s)o: ' % scope, summarize=10)
-            #     sigma = tf.Print(
-            #         sigma, [sigma], message='(ResNetOpt._apply_res_core)(scope=%s)sigma: ' % scope, summarize=10)
             return o, sigma
 
-    def _apply_res_layer(self, ins, res_vars, scope):
+    def _apply_layer(self, ins, vars, scope):
         with tf.name_scope(scope):
             outs = construct(ins)
             if self._emb_layer_is_present:
@@ -259,10 +182,8 @@ class FfResOpt(Meta):
                     ins['embedding_layer']['o_c'],
                     ins['embedding_layer']['sigma_c']
                 ]
-                # print('(ResNet4Lstm._apply_res_layer)core_inps:', core_inps)
-                # print('(ResNet4Lstm._apply_res_layer)res_vars:', res_vars)
-                o, sigma = self._apply_res_core(
-                    res_vars['embedding_layer'], target,
+                o, sigma = self._apply_core(
+                    vars['embedding_layer'], target,
                     'embedding_layer', self._pupil_dims['embedding_layer'])
                 outs['embedding_layer']['o_c'] = o
                 outs['embedding_layer']['sigma_c'] = sigma
@@ -273,8 +194,8 @@ class FfResOpt(Meta):
                     ins[layer_name]['o_c'],
                     ins[layer_name]['sigma_c']
                 ]
-                o, sigma = self._apply_res_core(
-                    res_vars[layer_name], target,
+                o, sigma = self._apply_core(
+                    vars[layer_name], target,
                     layer_name, self._pupil_dims['lstm_layers'][layer_idx])
                 outs[layer_name]['o_c'] = o
                 outs[layer_name]['sigma_c'] = sigma
@@ -285,43 +206,23 @@ class FfResOpt(Meta):
                     ins['output_layer_%s' % layer_idx]['sigma_c']
                 ]
                 layer_name = 'output_layer_%s' % layer_idx
-                # print("(ResNet4Lstm._apply_res_layer)layer_idx:", layer_idx)
-                # print("(ResNet4Lstm._apply_res_layer)core_inps:", core_inps)
-                # print("(ResNet4Lstm._apply_res_layer)rnn_part:", rnn_part)
-                o, sigma = self._apply_res_core(
-                    res_vars[layer_name], target,
+                o, sigma = self._apply_core(
+                    vars[layer_name], target,
                     layer_name, self._pupil_dims['output_layers'][layer_idx])
                 layer_name = 'output_layer_%s' % layer_idx
                 outs[layer_name]['o_c'] = o
                 outs[layer_name]['sigma_c'] = sigma
-            # print("(ResNet4Lstm._apply_res_layer)emb_rnn_part:", emb_rnn_part)
-            # print("(ResNet4Lstm._apply_res_layer)lstm_rnn_parts:", lstm_rnn_parts)
-            # print("(ResNet4Lstm._apply_res_layer)output_rnn_parts:", output_rnn_parts)
             return outs
 
     def _optimizer_core(self, optimizer_ins, state, gpu_idx, permute=True):
         if permute:
             optimizer_ins = self._extend_with_permutations(optimizer_ins, gpu_idx)
-        # print('(ResNet4Lstm._optimizer_core)optimizer_ins\nBEFORE DIMS EXPANSION:')
-        # print_optimizer_ins(optimizer_ins)
-        # ndims = self._get_optimizer_ins_ndims(optimizer_ins)
-        # if ndims == 2:
-        #     optimizer_ins = self._expand_num_ex_dim_in_opt_ins(optimizer_ins, ['o', 'sigma'])
-
-        # print('(ResNet4Lstm._optimizer_core)optimizer_ins\nBEFORE PERMUTATION:')
-        # print_optimizer_ins(optimizer_ins)
         if permute:
             optimizer_ins = self._forward_permute(optimizer_ins, ['o'], ['sigma'])
-        # print('(ResNet4Lstm._optimizer_core)optimizer_ins\nBEFORE CONCATENATION:')
-        # print_optimizer_ins(optimizer_ins)
         optimizer_ins, num_concatenated = self._concat_opt_ins(optimizer_ins, ['o', 'sigma'])
-        # print('(ResNet4Lstm._optimizer_core)optimizer_ins\nAFTER CONCATENATION:')
-        # print_optimizer_ins(optimizer_ins)
-        # print("(ResNet4Lstm._optimizer_core)self._opt_trainable['res_layers']:", self._opt_trainable['res_layers'])
-        # print('(ResNet4Lstm._optimizer_core)rnn_output_by_res_layers:', rnn_output_by_res_layers)
-        for res_idx, res_vars in enumerate(self._opt_trainable['res_layers']):
-            optimizer_ins = self._apply_res_layer(
-                optimizer_ins, res_vars, 'res_layer_%s' % res_idx)
+        for idx, vars in enumerate(self._opt_trainable):
+            optimizer_ins = self._apply_layer(
+                optimizer_ins, vars, 'layer_%s' % idx)
 
         optimizer_ins = self._split_opt_ins(optimizer_ins, ['o_c', 'sigma_c'], num_concatenated)
         optimizer_outs = self._mv_tensors(optimizer_ins, ['o_c_spl', 'sigma_c_spl'], ['o_pr', 'sigma_pr'])
@@ -335,9 +236,8 @@ class FfResOpt(Meta):
             num_exercises=10,
             num_optimizer_unrollings=10,
             perm_period=None,
-            num_res_layers=4,
-            res_size=1000,
-            res_core_activation_func='relu',
+            num_layers=4,
+            activation_func='relu',
             num_gpus=1,
             regularization_rate=6e-6,
             clip_norm=1e+5,
@@ -361,9 +261,8 @@ class FfResOpt(Meta):
         self._num_exercises = num_exercises
         self._num_optimizer_unrollings = num_optimizer_unrollings
         self._perm_period = perm_period
-        self._num_res_layers = num_res_layers
-        self._res_size = res_size
-        self._res_core_activation_func = res_core_activation_func
+        self._num_layers = num_layers
+        self._activation_func = activation_func
         self._num_gpus = num_gpus
         if self._num_gpus == 1:
             self._base_device = '/gpu:0'
@@ -431,7 +330,6 @@ class FfResOpt(Meta):
             self._pupil_trainable_variables, self._pupil_grad_eval_pupil_storage, self._optimizer_grad_pupil_storage, \
                 self._pupil_savers, self._pupil_trainable_initializers = self._create_pupil_variables_and_savers(
                     self._pupil, self._num_exercises, self._exercise_gpu_map)
-            # print("(ResNet4Lstm.__init__)self._pupil_grad_eval_pupil_storage:", self._pupil_grad_eval_pupil_storage)
             self._hooks['pupil_savers'] = self._pupil_savers
             self._hooks['pupil_trainable_initializers'] = self._pupil_trainable_initializers
             self._hooks['reset_pupil_grad_eval_pupil_storage'] = tf.group(
@@ -452,8 +350,6 @@ class FfResOpt(Meta):
         with tf.device(self._base_device):
             self._opt_trainable = self._create_optimizer_trainable_vars()
 
-        # self._create_permutation_matrices(1, 0)
-
         if self._regime == 'train':
             self._learning_rate_for_optimizer_training = tf.placeholder(
                 tf.float32, name='learning_rate_for_optimizer_training')
@@ -466,7 +362,6 @@ class FfResOpt(Meta):
                     learning_rate=self._learning_rate_for_optimizer_training)
             self._train_graph()
             self._inference_graph()
-            # print([self._reset_optimizer_states('train', gpu_idx) for gpu_idx in range(self._num_gpus)])
             self._empty_op = tf.constant(0)
             self._hooks['reset_optimizer_train_state'] = self._empty_op
             self._hooks['reset_optimizer_inference_state'] = self._empty_op
