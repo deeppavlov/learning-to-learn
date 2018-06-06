@@ -15,7 +15,7 @@ from learning_to_learn.environment import Environment
 from learning_to_learn.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
 from learning_to_learn.useful_functions import create_vocabulary, compose_hp_confs, get_num_exps_and_res_files
 
-from learning_to_learn.res_net_opt import ResNet4Lstm
+from learning_to_learn.stackallrnn import StackAllRnn
 
 import os
 
@@ -37,7 +37,6 @@ dataset_path = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'text8.txt']))
 with open(dataset_path, 'r') as f:
     text = f.read()
 
-
 valid_size = 500
 valid_text = text[:valid_size]
 train_text = text[valid_size:]
@@ -47,7 +46,7 @@ vocabulary_size = len(vocabulary)
 
 env = Environment(
     pupil_class=Lstm,
-    meta_optimizer_class=ResNet4Lstm,
+    meta_optimizer_class=StackAllRnn,
     batch_generator_classes=BatchGenerator,
     vocabulary=vocabulary)
 
@@ -104,7 +103,6 @@ kwargs_for_optimizer_building = dict(
     # regime='inference',
     num_optimizer_unrollings=10,
     num_exercises=NUM_EXERCISES,
-    res_size=2000,
     permute=False,
     optimizer_for_opt_type='adam',
     additional_metrics=add_metrics

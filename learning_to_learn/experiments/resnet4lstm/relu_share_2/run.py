@@ -1,9 +1,10 @@
 import tensorflow as tf
 
+ROOT_HEIGHT = 4
 import sys
 from pathlib import Path
 file = Path(__file__).resolve()
-parent, root = file.parent, file.parents[3]
+parent, root = file.parent, file.parents[ROOT_HEIGHT]
 sys.path.append(str(root))
 try:
     sys.path.remove(str(parent))
@@ -24,7 +25,7 @@ if len(sys.argv) > 3:
     chop_last_experiment = bool(sys.argv[3])
 else:
     chop_last_experiment = False
-save_path = parameter_set_file_name.split('.')[0] + '/evaluation'
+save_path = os.path.join(parameter_set_file_name.split('.')[0], 'evaluation')
 confs, _ = compose_hp_confs(parameter_set_file_name, save_path, chop_last_experiment=chop_last_experiment)
 confs.reverse()  # start with small configs
 print("confs:", confs)
@@ -32,8 +33,10 @@ print("confs:", confs)
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
-with open('../../../datasets/text8.txt', 'r') as f:
+dataset_path = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'text8.txt']))
+with open(dataset_path, 'r') as f:
     text = f.read()
+
 
 valid_size = 500
 valid_text = text[:valid_size]
@@ -62,7 +65,9 @@ valid_add_feed = [
     {'placeholder': 'optimizer_dropout_keep_prob', 'value': 1.}
 ]
 
-the_only_pupil_restore_path = '../../../lstm/text8_pretrain/checkpoints/%s' % pretrain_step
+SHARE_TRAIN_DATA = True
+checkpoints_path = os.path.join(*(['..']*ROOT_HEIGHT + ['lstm', 'text8_pretrain', 'checkpoints']))
+the_only_pupil_restore_path = os.path.join(checkpoints_path, '%s') % pretrain_step
 NUM_EXERCISES = 10
 NUM_UNROLLINGS = 4
 BATCH_SIZE = 32

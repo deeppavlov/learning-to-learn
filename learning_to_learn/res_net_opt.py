@@ -488,8 +488,6 @@ class ResNet4Lstm(Meta):
         return new_hidden_state, new_cell_state
 
     def _optimizer_core(self, optimizer_ins, state, gpu_idx, permute=True):
-        if permute:
-            optimizer_ins = self._extend_with_permutations(optimizer_ins, gpu_idx)
         # print('(ResNet4Lstm._optimizer_core)optimizer_ins\nBEFORE DIMS EXPANSION:')
         # print_optimizer_ins(optimizer_ins)
         # ndims = self._get_optimizer_ins_ndims(optimizer_ins)
@@ -499,6 +497,7 @@ class ResNet4Lstm(Meta):
         # print('(ResNet4Lstm._optimizer_core)optimizer_ins\nBEFORE PERMUTATION:')
         # print_optimizer_ins(optimizer_ins)
         if permute:
+            optimizer_ins = self._extend_with_permutations(optimizer_ins, gpu_idx)
             optimizer_ins = self._forward_permute(optimizer_ins, ['o'], ['sigma'])
         # print('(ResNet4Lstm._optimizer_core)optimizer_ins\nBEFORE CONCATENATION:')
         # print_optimizer_ins(optimizer_ins)
