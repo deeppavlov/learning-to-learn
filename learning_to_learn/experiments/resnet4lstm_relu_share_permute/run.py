@@ -126,7 +126,6 @@ launch_kwargs = dict(
     batch_gen_init_is_random=True,
     results_collect_interval=200,
     # opt_inf_results_collect_interval=1,
-    permute=False,
     summary=True,
     add_graph_to_summary=True
 )

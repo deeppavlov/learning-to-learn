@@ -2009,6 +2009,74 @@ class Environment(object):
             self._current_place_for_result_saving = old_place_for_saving
             queue_.put(result)
 
+    def _one_optimizer_launch(
+            self,
+            queue_,
+            pupil_build_kwargs,
+            optimizer_build_kwargs,
+            session_specs,
+            start_specs,
+            run_specs_set,
+            evaluation,
+            hp_comb,
+            order
+    ):
+        self._build_pupil(pupil_build_kwargs)
+        self.build_optimizer(**optimizer_build_kwargs)
+        self._start_session(session_specs['allow_soft_placement'],
+                            session_specs['log_device_placement'],
+                            session_specs['gpu_memory'],
+                            session_specs['allow_growth'],
+                            session_specs['visible_device_list'])
+
+        self._handler.print_hyper_parameters(hp_comb, order)
+
+        result_types = start_specs['result_types']
+        self._train_optimizer_repeatedly(start_specs, run_specs_set, log=False)
+        pupil_names = nth_element_of_sequence_of_sequences(
+            evaluation['opt_inf_pupil_restore_paths'],
+            0
+        )
+        self._handler.set_optimizer_train_schedule(
+            None,
+            opt_inf_pupil_names=pupil_names,
+            opt_inf_to_be_collected_while_training=evaluation['opt_inf_to_be_collected_while_training']
+        )
+        result = dict()
+        # print("(Environment._several_optimizer_launches_without_rebuilding)pupil_names:", pupil_names)
+        for idx, name in enumerate(pupil_names):
+            train_dataset_name = evaluation['opt_inf_train_datasets'][idx][1]
+            # duplicates validation storage setting in Handler.set_new_run_schedule
+            if evaluation['opt_inf_validation_datasets'] is not None:
+                validation_dataset_name = 'validation'
+            else:
+                validation_dataset_name = None
+            dataset_names = ['train']
+            if validation_dataset_name is not None:
+                dataset_names.append(validation_dataset_name)
+            result[name] = self.create_train_pupil_storage(
+                dict(), result_types, dataset_names
+            )
+
+        old_place_for_saving = self._current_place_for_result_saving
+        self._current_place_for_result_saving = result
+        for idx, (pupil_name, pupil_path) in enumerate(evaluation['opt_inf_pupil_restore_paths']):
+            self._launch_optimizer_inference(
+                run_specs_set[0]['train_specs'],
+                evaluation,
+                run_specs_set[0]['schedule'],
+                idx,
+                pupil_name,
+                pupil_path,
+                0,
+                start_specs['batch_generator_class'],
+                result_types,
+                storage=result[pupil_name]
+            )
+        self._current_place_for_result_saving = old_place_for_saving
+        queue_.put(result)
+
+
     @staticmethod
     def _check_hp_in_additional_feed_dict(additions, tensor_alias):
         for addition_idx, addition in enumerate(additions):
@@ -2193,7 +2261,8 @@ class Environment(object):
             session_specs,
             evaluation,
             other_hp_combs,
-            base_hp_comb
+            base_hp_comb,
+            rebuild_every_time=True
     ):
         parsed = configure_args_for_launches(self, args_for_launches, shares, model='meta_optimizer')
         queue_ = mp.Queue()
@@ -2212,45 +2281,71 @@ class Environment(object):
             hp_combination = construct(base_hp_comb)
             hp_combs.append(hp_combination)
         order = self._handler.order
-        p = mp.Process(
-            target=self._several_optimizer_launches_without_rebuilding,
-            args=(
-                queue_,
-                pupil_build_kwargs,
-                optimizer_build_kwargs,
-                session_specs,
-                parsed,
-                evaluation,
-                hp_combs,
-                order
+        if rebuild_every_time:
+            for hp_comb, (start_specs, run_specs_set) in zip(hp_combs, parsed):
+                p = mp.Process(
+                    target=self._one_optimizer_launch,
+                    args=(
+                        queue_,
+                        pupil_build_kwargs,
+                        optimizer_build_kwargs,
+                        session_specs,
+                        start_specs,
+                        run_specs_set,
+                        evaluation,
+                        hp_comb,
+                        order
+                    )
+                )
+                p.start()
+                res = queue_.get()
+                # print('\nidx: %s\nres: %s' % (idx, res))
+                # print('hp_combination:', hp_combination)
+                # print("(Environment._spring_process_for_meta_grid_search)res:", res)
+                self._handler.process_results(
+                    hp_comb, res, regime='several_meta_optimizer_launches'
+                )
+                p.join()
+        else:
+            p = mp.Process(
+                target=self._several_optimizer_launches_without_rebuilding,
+                args=(
+                    queue_,
+                    pupil_build_kwargs,
+                    optimizer_build_kwargs,
+                    session_specs,
+                    parsed,
+                    evaluation,
+                    hp_combs,
+                    order
+                )
             )
-        )
-        p.start()
-        for hp_comb in hp_combs:
-            res = queue_.get()
-            # print('\nidx: %s\nres: %s' % (idx, res))
-            # print('hp_combination:', hp_combination)
-            # print("(Environment._spring_process_for_meta_grid_search)res:", res)
-            self._handler.process_results(
-                hp_comb, res, regime='several_meta_optimizer_launches'
-            )
-        # if len(other_hp_combs) > 0:
-        #     for idx, other_hp_comb in enumerate(other_hp_combs):
-        #         hp_combination = construct(base_hp_comb)
-        #         hp_combination.update(other_hp_comb)
-        #         res = queue_.get()
-        #         # print('\nidx: %s\nres: %s' % (idx, res))
-        #         # print('hp_combination:', hp_combination)
-        #         # print("(Environment._spring_process_for_meta_grid_search)res:", res)
-        #         self._handler.process_results(
-        #             hp_combination, res, regime='several_meta_optimizer_launches'
-        #         )
-        # else:
-        #     hp_combination = construct(base_hp_comb)
-        #     res = queue_.get()
-        #     # print("(Environment._spring_process_for_meta_grid_search)res:", res)
-        #     self._handler.process_results(hp_combination, res, regime='several_meta_optimizer_launches')
-        p.join()
+            p.start()
+            for hp_comb in hp_combs:
+                res = queue_.get()
+                # print('\nidx: %s\nres: %s' % (idx, res))
+                # print('hp_combination:', hp_combination)
+                # print("(Environment._spring_process_for_meta_grid_search)res:", res)
+                self._handler.process_results(
+                    hp_comb, res, regime='several_meta_optimizer_launches'
+                )
+            # if len(other_hp_combs) > 0:
+            #     for idx, other_hp_comb in enumerate(other_hp_combs):
+            #         hp_combination = construct(base_hp_comb)
+            #         hp_combination.update(other_hp_comb)
+            #         res = queue_.get()
+            #         # print('\nidx: %s\nres: %s' % (idx, res))
+            #         # print('hp_combination:', hp_combination)
+            #         # print("(Environment._spring_process_for_meta_grid_search)res:", res)
+            #         self._handler.process_results(
+            #             hp_combination, res, regime='several_meta_optimizer_launches'
+            #         )
+            # else:
+            #     hp_combination = construct(base_hp_comb)
+            #     res = queue_.get()
+            #     # print("(Environment._spring_process_for_meta_grid_search)res:", res)
+            #     self._handler.process_results(hp_combination, res, regime='several_meta_optimizer_launches')
+            p.join()
 
     def grid_search_for_meta(
             self,
@@ -2261,6 +2356,7 @@ class Environment(object):
             build_optimizer_hyperparameters=None,
             other_hyperparameters=None,
             initial_experiment_counter_value=0,
+            rebuild_every_time=True,
             **kwargs
     ):
         self._store_launch_parameters(
@@ -2379,7 +2475,8 @@ class Environment(object):
                             session_specs,
                             evaluation,
                             other_hp_combs,
-                            base_hp_comb
+                            base_hp_comb,
+                            rebuild_every_time=rebuild_every_time
                         )
                 else:
                     self._spring_process_for_meta_grid_search(
@@ -2390,7 +2487,8 @@ class Environment(object):
                         session_specs,
                         evaluation,
                         other_hp_combs,
-                        construct(pupil_build_hp_comb)
+                        construct(pupil_build_hp_comb),
+                        rebuild_every_time=rebuild_every_time
                     )
         else:
             if len(build_optimizer_hp_combs) > 0:
@@ -2419,7 +2517,8 @@ class Environment(object):
                         session_specs,
                         evaluation,
                         other_hp_combs,
-                        optimizer_build_hp_comb
+                        optimizer_build_hp_comb,
+                        rebuild_every_time=rebuild_every_time
                     )
             else:
                 self._spring_process_for_meta_grid_search(
@@ -2430,7 +2529,8 @@ class Environment(object):
                     session_specs,
                     evaluation,
                     other_hp_combs,
-                    dict()
+                    dict(),
+                    rebuild_every_time=rebuild_every_time
                 )
         self._handler.log_finish_time()
         self._handler.close()
