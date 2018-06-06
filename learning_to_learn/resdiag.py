@@ -7,7 +7,7 @@ from learning_to_learn.useful_functions import block_diagonal, custom_matmul, cu
 from learning_to_learn.meta import Meta
 
 
-class FfResOpt(Meta):
+class ResDiag(Meta):
 
     @staticmethod
     def form_kwargs(kwargs_for_building, insertions):
@@ -105,10 +105,10 @@ class FfResOpt(Meta):
             optimizer_ins['output_layer_%s' % (layer_idx+1)]['out_perm'] = output_layers[layer_idx+1]
         return optimizer_ins
 
-    def _res_core_vars(self, target, res_size, var_scope):
+    def _res_core_vars(self, left, target, right, res_size, var_scope):
         with tf.variable_scope(var_scope):
             matrices, biases = list(), list()
-            in_ndims = sum(flatten(target))
+            in_ndims = sum(flatten(left)) + sum(flatten(target)) + sum(flatten(right))
             out_ndims = sum(flatten(target))
             in_stddev = self._optimizer_init_parameter / (in_ndims + res_size)**.5
             with tf.variable_scope('in_core'):
@@ -158,6 +158,8 @@ class FfResOpt(Meta):
             embedding_layer = self._pupil_dims['embedding_layer']
         lstm_layers = self._pupil_dims['lstm_layers']
         output_layers = self._pupil_dims['output_layers']
+        num_layers = self._pupil_net_size['num_layers']
+        num_output_layers = self._pupil_net_size['num_output_layers']
         vars = dict()
         with tf.variable_scope('optimizer_trainable_variables'):
             with tf.variable_scope('res_layers'):
@@ -167,19 +169,45 @@ class FfResOpt(Meta):
                         res_layer_params = dict()
                         if self._emb_layer_is_present:
                             res_layer_params['embedding_layer'] = self._res_core_vars(
+                                [()],
                                 [embedding_layer],
+                                [lstm_layers[0]],
                                 self._res_size,
                                 'embedding_layer_core'
                             )
                         for layer_idx, layer_dims in enumerate(lstm_layers):
+                            if layer_idx == 0:
+                                if self._emb_layer_is_present:
+                                    pupil_previous_layer_dims = embedding_layer
+                                else:
+                                    pupil_previous_layer_dims = ()
+                            else:
+                                pupil_previous_layer_dims = lstm_layers[layer_idx-1]
+                            if layer_idx == num_layers - 1:
+                                pupil_next_layer_dims = output_layers[0]
+                            else:
+                                pupil_next_layer_dims = lstm_layers[layer_idx+1]
                             res_layer_params['lstm_layer_%s' % layer_idx] = self._res_core_vars(
+                                [pupil_previous_layer_dims,
+                                 layer_dims],
                                 [layer_dims],
+                                [pupil_next_layer_dims, layer_dims],
                                 self._res_size,
                                 'lstm_layer_%s_core' % layer_idx
                             )
                         for layer_idx, layer_dims in enumerate(output_layers):
+                            if layer_idx == 0:
+                                pupil_previous_layer_dims = lstm_layers[-1]
+                            else:
+                                pupil_previous_layer_dims = output_layers[layer_idx-1]
+                            if layer_idx == num_output_layers - 1:
+                                pupil_next_layer_dims = ()
+                            else:
+                                pupil_next_layer_dims = output_layers[layer_idx+1]
                             res_layer_params['output_layer_%s' % layer_idx] = self._res_core_vars(
+                                [pupil_previous_layer_dims],
                                 [layer_dims],
+                                [pupil_next_layer_dims],
                                 self._res_size,
                                 'output_layer_%s_core' % layer_idx
                             )
@@ -191,7 +219,28 @@ class FfResOpt(Meta):
     #     # optimizer_ins = self._forward_permute(optimizer_ins)
     #     return self._empty_core(optimizer_ins)
 
-    def _apply_res_core(self, vars, opt_ins, scope, target_dims):
+    def _pad(self, tensor, direction):
+        """if direction < 0 |direction| most recent pupil unrollings are cut and  paddings are added after oldest
+        unrollings. If direction > 0 all is done the opposite way."""
+        pupil_batch_size = self._pupil_net_size['batch_size']
+        tensor_shape = tensor.get_shape().as_list()
+        padded_size = pupil_batch_size * abs(direction)
+        kept_size = tensor_shape[-2] - pupil_batch_size * abs(direction)
+        if direction < 0:
+            split_sizes = [kept_size, padded_size]
+            kept_idx = 0
+        else:
+            split_sizes = [padded_size, kept_size]
+            kept_idx = 1
+        kept = tf.split(tensor, split_sizes, axis=-2)[kept_idx]
+        paddings = tf.zeros(tensor_shape[:-2] + [padded_size] + tensor_shape[-1:])
+        if direction < 0:
+            padded = tf.concat([paddings, kept], -2)
+        else:
+            padded = tf.concat([kept, paddings], -2)
+        return padded
+
+    def _apply_res_core(self, vars, opt_ins, target, scope, target_dims):
         if self._res_core_activation_func == 'relu':
             a_func = tf.nn.relu
         elif self._res_core_activation_func == 'tanh':
@@ -210,7 +259,7 @@ class FfResOpt(Meta):
                 hs = a_func(custom_add(matmul_res, b))
             hs = tf.add(
                 hs,
-                tf.concat(opt_ins, -1, name='res_tensor'),
+                tf.concat(target, -1, name='res_tensor'),
                 name='after_res_conn'
             )
             o, sigma = tf.split(hs, list(target_dims), axis=-1, name='o_sigma')
@@ -220,36 +269,98 @@ class FfResOpt(Meta):
         with tf.name_scope(scope):
             outs = construct(ins)
             if self._emb_layer_is_present:
+                core_inps = [
+                    ins['embedding_layer']['o_c'],
+                    ins['embedding_layer']['sigma_c'],
+                    ins['lstm_layer_0']['o_c'],
+                    ins['lstm_layer_0']['sigma_c']
+                ]
                 target = [
                     ins['embedding_layer']['o_c'],
                     ins['embedding_layer']['sigma_c']
                 ]
                 o, sigma = self._apply_res_core(
-                    res_vars['embedding_layer'], target,
+                    res_vars['embedding_layer'], core_inps, target,
                     'embedding_layer', self._pupil_dims['embedding_layer'])
                 outs['embedding_layer']['o_c'] = o
                 outs['embedding_layer']['sigma_c'] = sigma
 
             for layer_idx in range(self._pupil_net_size['num_layers']):
+                if layer_idx == 0:
+                    if self._emb_layer_is_present:
+                        previous_layer_tensors = [
+                            ins['embedding_layer']['o_c'],
+                            ins['embedding_layer']['sigma_c']
+                        ]
+                    else:
+                        previous_layer_tensors = []
+                else:
+                    previous_layer_tensors = [
+                        ins['lstm_layer_%s' % (layer_idx - 1)]['o_c'],
+                        ins['lstm_layer_%s' % (layer_idx - 1)]['sigma_c']
+                    ]
+                if layer_idx == self._pupil_net_size['num_layers'] - 1:
+                    next_layer_tensors = [
+                        ins['output_layer_0']['o_c'],
+                        ins['output_layer_0']['sigma_c']
+                    ]
+                else:
+                    next_layer_tensors = [
+                        ins['lstm_layer_%s' % (layer_idx + 1)]['o_c'],
+                        ins['lstm_layer_%s' % (layer_idx + 1)]['sigma_c']
+                    ]
                 layer_name = 'lstm_layer_%s' % layer_idx
+                core_inps = [
+                    *previous_layer_tensors,
+                    ins[layer_name]['o_c'],
+                    ins[layer_name]['sigma_c'],
+                    self._pad(ins[layer_name]['o_c'], -1),
+                    self._pad(ins[layer_name]['sigma_c'], -1),
+                    self._pad(ins[layer_name]['o_c'], 1),
+                    self._pad(ins[layer_name]['sigma_c'], 1),
+                    *next_layer_tensors
+                ]
                 target = [
                     ins[layer_name]['o_c'],
                     ins[layer_name]['sigma_c']
                 ]
                 o, sigma = self._apply_res_core(
-                    res_vars[layer_name], target,
+                    res_vars[layer_name], core_inps, target,
                     layer_name, self._pupil_dims['lstm_layers'][layer_idx])
                 outs[layer_name]['o_c'] = o
                 outs[layer_name]['sigma_c'] = sigma
 
             for layer_idx in range(self._pupil_net_size['num_output_layers']):
+                if layer_idx == 0:
+                    previous_layer_tensors = [
+                        ins['lstm_layer_%s' % (self._pupil_net_size['num_layers'] - 1)]['o_c'],
+                        ins['lstm_layer_%s' % (self._pupil_net_size['num_layers'] - 1)]['sigma_c']
+                    ]
+                else:
+                    previous_layer_tensors = [
+                        ins['output_layer_%s' % (layer_idx - 1)]['o_c'],
+                        ins['output_layer_%s' % (layer_idx - 1)]['sigma_c']
+                    ]
+                if layer_idx == self._pupil_net_size['num_output_layers'] - 1:
+                    next_layer_tensors = []
+                else:
+                    next_layer_tensors = [
+                        ins['output_layer_%s' % (layer_idx + 1)]['o_c'],
+                        ins['output_layer_%s' % (layer_idx + 1)]['sigma_c']
+                    ]
+                core_inps = [
+                    *previous_layer_tensors,
+                    ins['output_layer_%s' % layer_idx]['o_c'],
+                    ins['output_layer_%s' % layer_idx]['sigma_c'],
+                    *next_layer_tensors
+                ]
                 target = [
                     ins['output_layer_%s' % layer_idx]['o_c'],
                     ins['output_layer_%s' % layer_idx]['sigma_c']
                 ]
                 layer_name = 'output_layer_%s' % layer_idx
                 o, sigma = self._apply_res_core(
-                    res_vars[layer_name], target,
+                    res_vars[layer_name], core_inps, target,
                     layer_name, self._pupil_dims['output_layers'][layer_idx])
                 layer_name = 'output_layer_%s' % layer_idx
                 outs[layer_name]['o_c'] = o
@@ -270,6 +381,7 @@ class FfResOpt(Meta):
         optimizer_outs = self._mv_tensors(optimizer_ins, ['o_c_spl', 'sigma_c_spl'], ['o_pr', 'sigma_pr'])
         if permute:
             optimizer_outs = self._backward_permute(optimizer_outs, ['o_pr'], ['sigma_pr'])
+
         return optimizer_outs, state
 
     def __init__(
@@ -406,6 +518,7 @@ class FfResOpt(Meta):
                     learning_rate=self._learning_rate_for_optimizer_training)
             self._train_graph()
             self._inference_graph()
+            # print([self._reset_optimizer_states('train', gpu_idx) for gpu_idx in range(self._num_gpus)])
             self._empty_op = tf.constant(0)
             self._hooks['reset_optimizer_train_state'] = self._empty_op
             self._hooks['reset_optimizer_inference_state'] = self._empty_op
@@ -414,7 +527,8 @@ class FfResOpt(Meta):
                 *self._reset_all_permutation_matrices())
         elif self._regime == 'inference':
             self._inference_graph()
-            self._hooks['reset_optimizer_inference_state'] = self._empty_op
+            self._hooks['reset_optimizer_inference_state'] = self._reset_optimizer_states(
+                'inference_optimizer_states', 0)
 
     def get_default_hooks(self):
         return construct_dict_without_none_entries(self._hooks)
