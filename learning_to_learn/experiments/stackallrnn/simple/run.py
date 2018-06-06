@@ -68,6 +68,7 @@ SHARE_TRAIN_DATA = True
 checkpoints_path = os.path.join(*(['..']*ROOT_HEIGHT + ['lstm', 'text8_pretrain', 'checkpoints']))
 the_only_pupil_restore_path = os.path.join(checkpoints_path, '%s') % pretrain_step
 NUM_EXERCISES = 10
+BATCH_SIZE = 16
 evaluation = dict(
     save_path=save_path,
     opt_inf_is_performed=True,
@@ -83,7 +84,7 @@ evaluation = dict(
 )
 
 kwargs_for_pupil_building = dict(
-    batch_size=32,
+    batch_size=BATCH_SIZE,
     num_layers=1,
     num_nodes=[100],
     num_output_layers=1,
@@ -121,7 +122,7 @@ launch_kwargs = dict(
         opt_inf_is_performed=False,
         num_exercises=NUM_EXERCISES,
         vocabulary=vocabulary,
-        batch_size=32,
+        batch_size=BATCH_SIZE,
         num_unrollings=4,
         results_collect_interval=200,
         # opt_inf_results_collect_interval=1,
