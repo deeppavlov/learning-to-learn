@@ -101,7 +101,7 @@ kwargs_for_optimizer_building = dict(
     # regime='inference',
     num_optimizer_unrollings=10,
     num_exercises=NUM_EXERCISES,
-    permute=False,
+    permute=True,
     optimizer_for_opt_type='adam',
     additional_metrics=add_metrics
 )
@@ -123,7 +123,6 @@ launch_kwargs = dict(
         num_unrollings=4,
         results_collect_interval=200,
         # opt_inf_results_collect_interval=1,
-        permute=True,
         summary=False,
         add_graph_to_summary=False
     )

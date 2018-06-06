@@ -622,14 +622,15 @@ class Meta(object):
                                 o = tf.concat(v['o'], -2, name='o')
                                 sigma = tf.concat(v['sigma'], -2, name='sigma')
                                 o_shape = o.get_shape().as_list()
+                                sigma_shape = sigma.get_shape().as_list()
                                 o_ndims = len(o_shape)
 
                                 if ndims > o_ndims:
                                     o = tf.reshape(o, [1] + o_shape)
-                                    sigma = tf.reshape(sigma, [1] + o_shape)
+                                    sigma = tf.reshape(sigma, [1] + sigma_shape)
                                 elif ndims < o_ndims:
                                     o = tf.reshape(o, [-1] + o_shape[2:])
-                                    sigma = tf.reshape(sigma, [-1] + o_shape[2:])
+                                    sigma = tf.reshape(sigma, [-1] + sigma_shape[2:])
                                 basic_mods = tf.einsum(eq, o, sigma)
                                 
                             with tf.name_scope('relative_difference_computation'):

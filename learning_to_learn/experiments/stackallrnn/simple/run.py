@@ -126,7 +126,6 @@ launch_kwargs = dict(
         num_unrollings=4,
         results_collect_interval=200,
         # opt_inf_results_collect_interval=1,
-        permute=False,
         summary=True,
         add_graph_to_summary=True
     )
