@@ -283,12 +283,17 @@ def read_data(filename):
 
 
 def flatten(nested):
-    if not isinstance(nested, (tuple, list)):
-        return [nested]
     output = list()
-    for inner_object in nested:
-        flattened = flatten(inner_object)
-        output.extend(flattened)
+    if isinstance(nested, (tuple, list)):
+        for inner_object in nested:
+            flattened = flatten(inner_object)
+            output.extend(flattened)
+    elif isinstance(nested, (dict, OrderedDict)):
+        for inner_object in nested.values():
+            flattened = flatten(inner_object)
+            output.extend(flattened)
+    else:
+        output.append(nested)
     return output
 
 
@@ -757,6 +762,30 @@ def unite_dicts(list_of_dicts):
     for d in list_of_dicts:
         new_dict.update(d)
     return new_dict
+
+
+def unite_nested_dicts(list_of_nested, depth):
+    if isinstance(list_of_nested[0], dict):
+        res = dict()
+    elif isinstance(list_of_nested[0], OrderedDict):
+        res = OrderedDict()
+    else:
+        raise InvalidArgumentError(
+            "list_of_nested has to be list of dicts o list of OrderedDicts",
+            list_of_nested,
+            'list_of_nested',
+            "list of dict or OrderedDicts"
+        )
+    if depth < 1:
+        for d in list_of_nested:
+            res.update(d)
+    else:
+        for k in list_of_nested[0].keys():
+            res[k] = unite_nested_dicts(
+                [l[k] for l in list_of_nested],
+                depth-1
+            )
+    return res
 
 
 def is_int(s):

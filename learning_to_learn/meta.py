@@ -1,10 +1,11 @@
+from collections import OrderedDict
 import tensorflow as tf
 from learning_to_learn.useful_functions import construct, get_keys_from_nested, get_obj_elem_by_path, \
     device_name_scope, write_elem_in_obj_by_path, stop_gradient_in_nested, compose_save_list, average_gradients, \
     retrieve_from_inner_dicts, distribute_into_inner_dicts, custom_matmul, values_from_nested, sort_lists_map, \
     global_l2_loss, filter_none_gradients, go_through_nested_with_name_scopes_to_perform_func_and_distribute_results, \
     global_norm, func_on_list_in_nested, append_to_nested, get_substitution_tensor, variable_summaries, \
-    apply_to_nested
+    apply_to_nested, flatten
 
 from learning_to_learn.tensors import compute_metrics
 
@@ -387,6 +388,45 @@ class Meta(object):
         return opt_ins
 
     @staticmethod
+    def _all_ins_2_1_vec(opt_ins, keys_2_unite):
+        map_ = OrderedDict()
+        vecs = list()
+        with tf.name_scope('all_ins_2_1_vec'):
+            for ok, ov in opt_ins.items():
+                ok_map = OrderedDict()
+                for ik in keys_2_unite:
+                    if ik in ov:
+                        if isinstance(ov[ik], list):
+                            vecs.extend(ov[ik])
+                            ok_map[ik] = [ov[ik][0].get_shape().as_list()[-1]] * len(ov[ik])
+                        else:
+                            vecs.append(ov[ik])
+                            ok_map[ik] = ov[ik].get_shape().as_list()[-1]
+                map_[ok] = ok_map
+            return tf.concat(vecs, -1, name='all_ins_in_1_vec'), map_
+
+    @staticmethod
+    def _unpack_all_ins_from_1_vec(vec, map_):
+        with tf.name_scope('unpack_all_ins_from_1_vec'):
+            map_ = construct(map_)
+            res = dict()
+            flattened = flatten(map_)
+            splitted = tf.split(vec, flattened, axis=-1)
+            pointer = 0
+            for ok, ok_map in map_.items():
+                res[ok] = dict()
+                for ik, split_dims in ok_map.items():
+                    if isinstance(split_dims, list):
+                        num_splits = len(split_dims)
+                        res[ok][ik] = splitted[pointer:pointer+num_splits]
+                        pointer += num_splits
+                    else:
+                        res[ok][ik] = splitted[pointer]
+                        pointer += 1
+
+            return res
+
+    @staticmethod
     def _substitute_opt_ins(opt_ins, substitution_way):
         with tf.name_scope('opt_ins_substitution'):
             for ok, ov in opt_ins.items():
@@ -581,9 +621,15 @@ class Meta(object):
                             with tf.name_scope('basic_matrix_mods_computation'):
                                 o = tf.concat(v['o'], -2, name='o')
                                 sigma = tf.concat(v['sigma'], -2, name='sigma')
-                                if ndims == 2:
-                                    o = tf.reshape(o, o.get_shape().as_list()[1:])
-                                    sigma = tf.reshape(sigma, sigma.get_shape().as_list()[1:])
+                                o_shape = o.get_shape().as_list()
+                                o_ndims = len(o_shape)
+
+                                if ndims > o_ndims:
+                                    o = tf.reshape(o, [1] + o_shape)
+                                    sigma = tf.reshape(sigma, [1] + o_shape)
+                                elif ndims < o_ndims:
+                                    o = tf.reshape(o, [-1] + o_shape[2:])
+                                    sigma = tf.reshape(sigma, [-1] + o_shape[2:])
                                 basic_mods = tf.einsum(eq, o, sigma)
                                 
                             with tf.name_scope('relative_difference_computation'):

@@ -997,7 +997,8 @@ class Lstm(Model):
             num_output_nodes=self._num_output_nodes + [self._vocabulary_size],
             num_layers=self._num_layers,
             num_output_layers=self._num_output_layers,
-            batch_size=self._batch_size
+            batch_size=self._batch_size,
+            num_unrollings=self._num_unrollings
         )
 
     def get_layer_dims(self):
