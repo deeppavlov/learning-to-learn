@@ -45,28 +45,38 @@ env.build_pupil(
     # character_positions_in_vocabulary=cpiv,
     num_gpus=1,
     additional_metrics=add_metrics,
-    going_to_limit_memory=True
+    going_to_limit_memory=True,
+    optimizer='sgd'
 )
 
 print('building is finished')
+stop_specs = dict(
+    type='while_progress',
+    max_no_progress_points=10,
+    changing_parameter_name='learning_rate',
+    path_to_target_metric_storage=('default_1', 'loss')
+)
+learning_rate = dict(
+    type='adaptive_change',
+    max_no_progress_points=10,
+    decay=.5,
+    init_value=4.,
+    path_to_target_metric_storage=('default_1', 'loss')
+)
 env.train(
     # gpu_memory=.3,
     allow_growth=True,
-    save_path='lstm/text8_pretrain',
+    save_path='debug_early_stop',
     # restore_path='lstm_sample_test/scipop3_1000_bs256_11.12/checkpoints/2000',
-    learning_rate=dict(
-        type='exponential_decay',
-        init=4.,
-        decay=.1,
-        period=13000
-    ),
+    learning_rate=learning_rate,
     batch_size=32,
     num_unrollings=10,
     vocabulary=vocabulary,
-    checkpoint_steps=200,
+    checkpoint_steps=None,
     result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
     printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
-    stop=4000,
+    stop=stop_specs,
+    # stop=4000,
     train_dataset_text=train_text,
     # train_dataset_text='abc',
     validation_dataset_texts=[valid_text],

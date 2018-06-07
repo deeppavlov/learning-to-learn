@@ -19,7 +19,7 @@ from learning_to_learn.tensors import identity_tensor
 from learning_to_learn.useful_functions import InvalidArgumentError
 from learning_to_learn.useful_functions import construct, add_index_to_filename_if_needed, match_two_dicts, \
     create_path, check_if_key_in_nested_dict, add_missing_to_list, print_and_log, apply_temperature, sample, is_int, \
-    create_distribute_map, nth_element_of_sequence_of_sequences
+    create_distribute_map, nth_element_of_sequence_of_sequences, get_elem_from_nested
 
 from learning_to_learn.handler import Handler
 from subword_nmt.apply_bpe import BPE
@@ -76,6 +76,46 @@ class Controller(object):
 
         elif self._specifications['type'] == 'linear':
             self.get = self._linear
+        elif self._specifications['type'] == 'adaptive_change':
+            self.get = self._adaptive_change
+            self._specifications = dict(self._specifications)
+            self._specifications['num_points_since_best_res'] = 0
+            self._specifications['value'] = self._specifications['init_value']
+            self._specifications['last_fire_line_length'] = -1
+            self._init_ops_for_adaptive_controller()
+        elif self._specifications['type'] == 'fire_at_best':
+            self.get = self._fire_at_best
+            self._specifications['last_fire_line_length'] = -1
+            self._init_ops_for_adaptive_controller()
+        elif self._specifications['type'] == 'while_progress':
+            self.get = self._while_progress
+            self._specifications = dict(self._specifications)
+            self._specifications['num_points_since_best_res'] = 0
+            self._specifications['cur_made_prog'] = False
+            self._specifications['prev_made_prog'] = True
+            self._init_ops_for_adaptive_controller()
+            self._specifications['current_value'] = self._specifications['changing_parameter_controller'].get()
+            
+    def _init_ops_for_adaptive_controller(self):
+        if 'direction' not in self._specifications:
+            self._specifications['direction'] = 'down'
+        if self._specifications['direction'] == 'down':
+            self._specifications['comp_func'] = self._comp_func_gen(min)
+        else:
+            self._specifications['comp_func'] = self._comp_func_gen(max)
+        self._specifications['line'] = get_elem_from_nested(
+            self._storage,
+            self._specifications['path_to_target_metric_storage']
+        )
+
+    @staticmethod
+    def _comp_func_gen(comp):
+        def f(line):
+            if len(line) == 0:
+                return True
+            else:
+                return comp(line) == line[-1]
+        return f
 
     def _changes_detector(self):
         something_changed = False
@@ -120,6 +160,57 @@ class Controller(object):
             return True
         else:
             return False
+
+    def _adaptive_change(self):
+        specs = self._specifications
+        if specs['comp_func'](specs['line']):
+            specs['num_points_since_best_res'] = 0
+            return specs['value']
+        else:
+            if specs['last_fire_line_length'] < len(specs['line']):
+                specs['num_points_since_best_res'] += 1
+                specs['last_fire_line_length'] = len(specs['line'])
+                if specs['num_points_since_best_res'] > specs['max_no_progress_points']:
+                    specs['value'] *= specs['decay']
+                    specs['num_points_since_best_res'] = 0
+            return specs['value']
+
+    def _fire_at_best(self):
+        specs = self._specifications
+        # print("(Controller._fire_at_best)specs['comp_func'](specs['line']):", specs['comp_func'](specs['line']))
+        # print("(Controller._fire_at_best)specs['line'][-1]:", specs['line'][-1])
+        # print("(Controller._fire_at_best)specs['last_fire_line_length']:", specs['last_fire_line_length'])
+        # print("(Controller._fire_at_best)len(specs['line']):", len(specs['line']))
+        if specs['comp_func'](specs['line']) and specs['last_fire_line_length'] < len(specs['line']):
+            specs['last_fire_line_length'] = len(specs['line'])
+            return True
+        else:
+            return False
+
+    def _while_progress(self):  # for example if learning does not bring improvement return False
+        specs = self._specifications
+        value = specs['changing_parameter_controller'].get()
+        if specs['current_value'] == value:
+            if specs['comp_func'](specs['line']):
+                specs['num_points_since_best_res'] = 0
+                specs['cur_made_prog'] = True
+                return True
+            else:
+                if not specs['prev_made_prog'] and \
+                                specs['num_points_since_best_res'] > \
+                                specs['max_no_progress_points']:
+                    return False
+                else:
+                    return True
+        else:
+            if not specs['cur_made_prog'] and not specs['prev_made_prog']:
+                return False
+            else:
+                specs['prev_made_prog'] = specs['cur_made_prog']
+                specs['cur_made_prog'] = False
+                specs['num_points_since_best_res'] = 0
+                specs['current_value'] = value
+                return True
 
     @staticmethod
     def _always_false():
@@ -1005,7 +1096,6 @@ class Environment(object):
             with_meta_optimizer,
             init_step=0,
             # storage=None,
-            meta_optimizer_training_is_performed=False
     ):
         """It is a method that does actual training and responsible for one training pass through dataset. It is called
         from train method (maybe several times)
@@ -1023,21 +1113,15 @@ class Environment(object):
         # resetting step in control_storage
         storage['step'] = step
         # self.set_in_storage(step=step)
-        if not with_meta_optimizer:
-            learning_rate_controller = Controller(storage,
-                                                  train_specs['learning_rate'])
         train_feed_dict_additions = train_specs['additions_to_feed_dict']
         validation_additional_feed_dict = train_specs['validation_additions_to_feed_dict']
+        stop_specs = construct(train_specs['stop'])
 
         # print('train_feed_dict_additions:', train_feed_dict_additions)
         additional_controllers = list()
         for addition in train_feed_dict_additions:
             # print("(Environment._train)addition:", addition)
             additional_controllers.append(Controller(storage, addition['value']))
-
-        if train_specs['stop']['type'] == 'limit_steps':
-            train_specs['stop']['limit'] += init_step
-        should_continue = Controller(storage, train_specs['stop'])
 
         to_be_collected_while_training = schedule['to_be_collected_while_training']
         collect_interval = to_be_collected_while_training['results_collect_interval']
@@ -1062,15 +1146,6 @@ class Environment(object):
                 it_is_time_for_example = Controller(storage,
                                                     {'type': 'periodic_truth',
                                                      'period': example_period})
-
-        if train_specs['checkpoint_steps'] is not None and checkpoints_path is not None:
-            if train_specs['checkpoint_steps']['type'] == 'true_on_steps':
-                for idx in range(len(train_specs['checkpoint_steps']['steps'])):
-                    train_specs['checkpoint_steps']['steps'][idx] += init_step
-            it_is_time_to_create_checkpoint = Controller(storage, train_specs['checkpoint_steps'])
-        else:
-            it_is_time_to_create_checkpoint = Controller(storage,
-                                                         {'type': 'always_false'})
 
         batch_size_controller = Controller(storage, train_specs['batch_size'])
         batch_size_change_tracker_specs = Controller.create_change_tracking_specifications(train_specs['batch_size'])
@@ -1098,7 +1173,64 @@ class Environment(object):
             train_batch_kwargs_controller_specs)
         batch_generator_specs_should_change = Controller(storage, change_tracker_specs)
 
+        # print("(Environment._train)schedule:", schedule)
+        # print(
+        #     "(Environment._train/before new schedule)self._current_place_for_result_saving",
+        #     self._current_place_for_result_saving
+        # )
+        self._handler.set_new_run_schedule(schedule,
+                                           [dataset[1] for dataset in train_specs['validation_datasets']])
+
+        if checkpoints_path is not None:
+            if train_specs['checkpoint_steps'] is not None:
+                if train_specs['checkpoint_steps']['type'] == 'true_on_steps':
+                    for idx in range(len(train_specs['checkpoint_steps']['steps'])):
+                        train_specs['checkpoint_steps']['steps'][idx] += init_step
+                it_is_time_to_create_checkpoint = Controller(storage, train_specs['checkpoint_steps'])
+            else:
+                it_is_time_to_create_checkpoint = Controller(
+                    storage,
+                    {'type': 'always_false'}
+                )
+            storage_keys = list(storage.keys())
+            if stop_specs['type'] == 'while_progress' or len(storage_keys) > 2:
+                if stop_specs['type'] == 'while_progress':
+                    path_to_target_metric_storage = stop_specs['path_to_target_metric_storage']
+                else:
+                    storage_keys.remove('train')
+                    storage_keys.remove('step')
+                    path_to_target_metric_storage = (storage_keys[0], 'loss')
+                best_checkpoint_controller_specs = dict(
+                    type='fire_at_best',
+                    path_to_target_metric_storage=path_to_target_metric_storage
+                )
+                # print("(Environment._train)storage:", storage)
+                # print("(Environment._train)best_checkpoint_controller_specs:", best_checkpoint_controller_specs)
+                it_is_time_to_create_best_checkpoint = Controller(
+                    storage,
+                    best_checkpoint_controller_specs
+                )
+            else:
+                it_is_time_to_create_best_checkpoint = Controller(
+                    storage,
+                    {'type': 'always_false'}
+                )
+        else:
+            it_is_time_to_create_checkpoint = Controller(
+                storage,
+                {'type': 'always_false'}
+            )
+            it_is_time_to_create_best_checkpoint = Controller(
+                storage,
+                {'type': 'always_false'}
+            )
+        # print(
+        #     "(Environment._train/after new schedule)self._current_place_for_result_saving",
+        #     self._current_place_for_result_saving
+        # )
         if not with_meta_optimizer:
+            learning_rate_controller = Controller(storage,
+                                                  train_specs['learning_rate'])
             controllers = [learning_rate_controller]
         else:
             controllers = list()
@@ -1110,17 +1242,6 @@ class Environment(object):
             if isinstance(batch_kwarg, Controller):
                 batch_kwargs_controllers.append(batch_kwarg)
         controllers.extend(batch_kwargs_controllers)
-        # print("(Environment._train)schedule:", schedule)
-        # print(
-        #     "(Environment._train/before new schedule)self._current_place_for_result_saving",
-        #     self._current_place_for_result_saving
-        # )
-        self._handler.set_new_run_schedule(schedule,
-                                           [dataset[1] for dataset in train_specs['validation_datasets']])
-        # print(
-        #     "(Environment._train/after new schedule)self._current_place_for_result_saving",
-        #     self._current_place_for_result_saving
-        # )
         self._handler.set_controllers(controllers)
 
         batch_size = batch_size_controller.get()
@@ -1128,6 +1249,14 @@ class Environment(object):
         # print("(Environment._train)tb_kwargs:", tb_kwargs)
         train_batches = batch_generator_class(train_specs['train_dataset'][0], batch_size, **tb_kwargs)
         feed_dict = dict()
+
+        if stop_specs['type'] == 'limit_steps':
+            stop_specs['limit'] += init_step
+        elif stop_specs['type'] == 'while_progress':
+            # print("(Environment._train)stop_specs['changing_parameter_name']:", stop_specs['changing_parameter_name'])
+            if stop_specs['changing_parameter_name'] == 'learning_rate':
+                stop_specs['changing_parameter_controller'] = learning_rate_controller             
+        should_continue = Controller(storage, stop_specs)
         while should_continue.get():
             if should_start_debugging.get():
                 self._session = tf_debug.LocalCLIDebugWrapperSession(self._session)
@@ -1206,6 +1335,8 @@ class Environment(object):
                             train_specs['valid_batch_kwargs'],
                             training_step=step,
                             additional_feed_dict=valid_add_feed_dict)
+            if it_is_time_to_create_best_checkpoint.get():
+                self._create_checkpoint('best', checkpoints_path)
             step += 1
             storage['step'] = step
         return step

@@ -1694,3 +1694,10 @@ def variable_summaries(var, summary_types, name_scope):
     else:
         with tf.name_scope(name_scope):
             return vsum(var, summary_types)
+
+
+def get_elem_from_nested(nested, keys):
+    if len(keys) > 0:
+        return get_elem_from_nested(nested[keys[0]], keys[1:])
+    else:
+        return nested
