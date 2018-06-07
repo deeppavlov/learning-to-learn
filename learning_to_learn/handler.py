@@ -135,7 +135,6 @@ class Handler(object):
         self._verbose = verbose
         if printed_result_types is None:
             printed_result_types = ['loss']
-        continuous_chit_chat = ['simple_fontain']
         # print('Initializing Handler! pid = %s' % os.getpid())
         self._processing_type = processing_type
         self._environment_instance = environment_instance

@@ -522,6 +522,12 @@ class Lstm(Model):
         for add_metric in self._additional_metrics:
             additional_metrics[add_metric] = list()
 
+        if self._optimizer == 'adam':
+            opt = tf.train.AdamOptimizer(
+                learning_rate=self._autonomous_train_specific_placeholders['learning_rate'])
+        else:
+            opt = tf.train.GradientDescentOptimizer(
+                self._autonomous_train_specific_placeholders['learning_rate'])
         with tf.name_scope('train'):
             for gpu_batch_size, gpu_name, device_inputs, device_labels in zip(
                     self._batch_sizes_on_gpus, self._gpu_names, inputs_by_device, labels_by_device):
@@ -569,26 +575,19 @@ class Lstm(Model):
                             preds.append(tf.split(concat_pred, self._num_unrollings))
 
                             losses.append(loss)
-                            # optimizer = tf.train.GradientDescentOptimizer(
-                            #     self._autonomous_train_specific_placeholders['learning_rate'])
-                            optimizer = tf.train.AdamOptimizer(
-                                learning_rate=self._autonomous_train_specific_placeholders['learning_rate'])
-                            grads_and_vars = optimizer.compute_gradients(loss + l2_loss)
+
+                            grads_and_vars = opt.compute_gradients(loss + l2_loss)
                             tower_grads.append(grads_and_vars)
                             additional_metrics = append_to_nested(additional_metrics, add_metrics)
 
                             # splitting concatenated results for different characters
             with tf.device(self._base_device):
                 with tf.name_scope(device_name_scope(self._base_device) + '_gradients'):
-                    optimizer = tf.train.GradientDescentOptimizer(
-                        self._autonomous_train_specific_placeholders['learning_rate'])
-                    # optimizer = tf.train.AdamOptimizer(
-                    #     learning_rate=self._autonomous_train_specific_placeholders['learning_rate'])
                     # print('(Lstm._train_graph)tower_grads:', tower_grads)
                     grads_and_vars = average_gradients(tower_grads)
                     grads, v = zip(*grads_and_vars)
                     # grads, _ = tf.clip_by_global_norm(grads, 1.)
-                    self.train_op = optimizer.apply_gradients(zip(grads, v))
+                    self.train_op = opt.apply_gradients(zip(grads, v))
                     self._hooks['train_op'] = self.train_op
                     self._hooks['reset_pupil_train_state'] = tf.group(*reset_state_ops)
                     # composing predictions
@@ -861,21 +860,24 @@ class Lstm(Model):
                                name='labels_on_dev_%s' % dev_idx))
             return inputs_by_device, labels_by_device
 
-    def __init__(self,
-                 batch_size=64,
-                 num_layers=2,
-                 num_nodes=None,
-                 num_output_layers=1,
-                 num_output_nodes=None,
-                 vocabulary_size=None,
-                 embedding_size=128,
-                 num_unrollings=10,
-                 init_parameter=3.,
-                 num_gpus=1,
-                 regularization_rate=.000006,
-                 additional_metrics=None,
-                 regime='autonomous_training',
-                 going_to_limit_memory=False):
+    def __init__(
+            self,
+            batch_size=64,
+            num_layers=2,
+            num_nodes=None,
+            num_output_layers=1,
+            num_output_nodes=None,
+            vocabulary_size=None,
+            embedding_size=128,
+            num_unrollings=10,
+            init_parameter=3.,
+            num_gpus=1,
+            regularization_rate=.000006,
+            additional_metrics=None,
+            regime='autonomous_training',
+            going_to_limit_memory=False,
+            optimizer='adam'
+    ):
         """4 regimes are possible: autonomous_training, inference, training_with_meta_optimizer, optimizer_training"""
 
         if num_nodes is None:
@@ -896,6 +898,7 @@ class Lstm(Model):
         self._init_parameter = init_parameter
         self._regularization_rate = regularization_rate
         self._additional_metrics = additional_metrics
+        self._optimizer = optimizer
 
         self._hooks = dict(
             inputs=None,
