@@ -34,9 +34,9 @@ dataset_path = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'text8.txt']))
 with open(dataset_path, 'r') as f:
     text = f.read()
 
-valid_size = 40
+valid_size = 1000
 valid_text = text[:valid_size]
-train_text = text
+train_text = text[valid_size:]
 
 vocabulary = create_vocabulary(text)
 vocabulary_size = len(vocabulary)
@@ -82,20 +82,27 @@ kwargs_for_building = dict(
     optimizer='adam'
 )
 
+stop_specs = dict(
+    type='while_progress',
+    max_no_progress_points=10,
+    changing_parameter_name='learning_rate',
+    path_to_target_metric_storage=('valid', 'loss')
+)
 launch_kwargs = dict(
     allow_growth=True,
     # save_path='debug_grid_search',
     result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
     additions_to_feed_dict=train_add_feed,
     # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
-    stop=1000,
+    stop=stop_specs,
     vocabulary=vocabulary,
     num_unrollings=10,
-    results_collect_interval=200,
+    results_collect_interval=500,
     # opt_inf_results_collect_interval=1,
     summary=False,
     add_graph_to_summary=False,
     train_dataset_text=train_text,
+    validation_datasets=dict(valid=valid_text),
     batch_size=BATCH_SIZE
 )
 
@@ -111,10 +118,11 @@ for conf in confs:
             ),
             fixed=dict(
                 decay=.1,
-                period=1e+4
+                max_no_progress_points=10,
+                path_to_target_metric_storage=('valid', 'loss')
             ),
             hp_type='built-in',
-            type='exponential_decay'
+            type='adaptive_change'
         )
     )
 

@@ -80,7 +80,7 @@ class Controller(object):
             self.get = self._adaptive_change
             self._specifications = dict(self._specifications)
             self._specifications['num_points_since_best_res'] = 0
-            self._specifications['value'] = self._specifications['init_value']
+            self._specifications['value'] = self._specifications['init']
             self._specifications['last_fire_line_length'] = -1
             self._init_ops_for_adaptive_controller()
         elif self._specifications['type'] == 'fire_at_best':
@@ -1178,8 +1178,13 @@ class Environment(object):
         #     "(Environment._train/before new schedule)self._current_place_for_result_saving",
         #     self._current_place_for_result_saving
         # )
-        self._handler.set_new_run_schedule(schedule,
-                                           [dataset[1] for dataset in train_specs['validation_datasets']])
+        print("(Environment._train)[dataset[1] for dataset in train_specs['validation_datasets']:",
+              [dataset[1] for dataset in train_specs['validation_datasets']])
+        print("(Environment._train)train_specs['validation_datasets']:", train_specs['validation_datasets'])
+        self._handler.set_new_run_schedule(
+            schedule,
+            [dataset[1] for dataset in train_specs['validation_datasets']]
+        )
 
         if checkpoints_path is not None:
             if train_specs['checkpoint_steps'] is not None:
@@ -1229,6 +1234,7 @@ class Environment(object):
         #     self._current_place_for_result_saving
         # )
         if not with_meta_optimizer:
+            # print("(Environment._train)storage:", storage)
             learning_rate_controller = Controller(storage,
                                                   train_specs['learning_rate'])
             controllers = [learning_rate_controller]

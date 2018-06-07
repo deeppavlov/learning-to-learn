@@ -60,7 +60,7 @@ learning_rate = dict(
     type='adaptive_change',
     max_no_progress_points=10,
     decay=.5,
-    init_value=4.,
+    init=4.,
     path_to_target_metric_storage=('default_1', 'loss')
 )
 env.train(

@@ -335,12 +335,13 @@ class Handler(object):
             self._add_results_file_name_set(self._result_types, key_path=[dataset_name], postfix=dataset_name)
         init_dict = dict()
         for key in self._result_types + ['steps']:
-            if not self._environment_instance.check_if_key_in_storage([dataset_name, key]):
-                init_dict[key] = list()
+            init_dict[key] = list()
+        print("(Handler._add_validation_experiment_instruments)dataset_name:", dataset_name)
         if not self._environment_instance.dataset_in_storage(dataset_name):
             self._environment_instance.init_storage(dataset_name, **init_dict)
 
     def set_new_run_schedule(self, schedule, validation_dataset_names, save_direction='main'):
+        print("(Handler.set_new_run_schedule)validation_dataset_names:", validation_dataset_names)
         self._results_collect_interval = schedule['to_be_collected_while_training']['results_collect_interval']
         if self._results_collect_interval is not None:
             if self._result_types is not None:
@@ -386,9 +387,8 @@ class Handler(object):
             if len(self._printed_result_types) > 0:
                 self._print_results = True
         self._printed_controllers = schedule['printed_controllers']
-        if self._save_path is not None:
-            for dataset_name in validation_dataset_names:
-                self._add_validation_experiment_instruments(dataset_name)
+        for dataset_name in validation_dataset_names:
+            self._add_validation_experiment_instruments(dataset_name)
 
     def set_optimizer_train_schedule(
             self, schedule,

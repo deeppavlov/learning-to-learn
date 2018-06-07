@@ -178,8 +178,10 @@ def process_validation_datasets_shortcuts(env_instance,
                                           taken_names):
     validation_datasets = list()
     if 'validation_datasets' in set_of_kwargs:
-        taken_names.extend(set_of_kwargs['validation_datasets'].keys())
-        validation_datasets.extend(set_of_kwargs['validation_datasets'])
+        taken_names.extend(list(set_of_kwargs['validation_datasets'].keys()))
+        in_new_format = [(v, k) for k, v in set_of_kwargs['validation_datasets'].items()]
+        # validation_datasets.extend(set_of_kwargs['validation_datasets'])
+        validation_datasets.extend(in_new_format)
     if 'validation_dataset_names' in set_of_kwargs:
         for name in set_of_kwargs['validation_dataset_names']:
             if name not in env_instance.datasets.keys():
