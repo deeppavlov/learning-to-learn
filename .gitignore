@@ -3,3 +3,13 @@
 **/run[0-9]_incomplete/
 **/ign[0-9]_incomplete/
 **/experiments/*/*/test/
+datasets/
+.idea/
+datasets.zip
+debug_empty_meta_optimizer/
+debug_grid_search/
+learning_to_learn/__pycache__/
+lstm/
+reports/
+res_net_relu/
+subword_nmt/
