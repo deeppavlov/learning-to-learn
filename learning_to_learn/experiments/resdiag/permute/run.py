@@ -1,21 +1,21 @@
 import tensorflow as tf
 
+ROOT_HEIGHT = 4
 import sys
 from pathlib import Path
 file = Path(__file__).resolve()
-parent, root = file.parent, file.parents[3]
+parent, root = file.parent, file.parents[ROOT_HEIGHT]
 sys.path.append(str(root))
 try:
     sys.path.remove(str(parent))
-except ValueError: # Already removed
+except ValueError:  # Already removed
     pass
 
 from learning_to_learn.environment import Environment
 from learning_to_learn.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
 from learning_to_learn.useful_functions import create_vocabulary, compose_hp_confs, get_num_exps_and_res_files
 
-from learning_to_learn.res_net_opt import ResNet4Lstm
-
+from learning_to_learn.ff import Ff
 import os
 
 pretrain_step = sys.argv[1]
@@ -32,7 +32,8 @@ print("confs:", confs)
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
-with open('../../../datasets/text8.txt', 'r') as f:
+dataset_path = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'text8.txt']))
+with open(dataset_path, 'r') as f:
     text = f.read()
 
 valid_size = 500
@@ -44,7 +45,7 @@ vocabulary_size = len(vocabulary)
 
 env = Environment(
     pupil_class=Lstm,
-    meta_optimizer_class=ResNet4Lstm,
+    meta_optimizer_class=Ff,
     batch_generator_classes=BatchGenerator,
     vocabulary=vocabulary)
 
@@ -62,11 +63,9 @@ valid_add_feed = [
     {'placeholder': 'optimizer_dropout_keep_prob', 'value': 1.}
 ]
 
-the_only_pupil_restore_path = '../../../lstm/text8_pretrain/checkpoints/%s' % pretrain_step
+checkpoints_path = os.path.join(*(['..']*ROOT_HEIGHT + ['lstm', 'text8_pretrain', 'checkpoints']))
+the_only_pupil_restore_path = os.path.join(checkpoints_path, '%s') % pretrain_step
 NUM_EXERCISES = 10
-NUM_UNROLLINGS = 4
-BATCH_SIZE = 32
-SHARE_TRAIN_DATA = True
 evaluation = dict(
     save_path=save_path,
     opt_inf_is_performed=True,
@@ -82,60 +81,59 @@ evaluation = dict(
 )
 
 kwargs_for_pupil_building = dict(
-    batch_size=BATCH_SIZE,
+    batch_size=32,
     num_layers=1,
     num_nodes=[100],
     num_output_layers=1,
     num_output_nodes=[],
     vocabulary_size=vocabulary_size,
     embedding_size=150,
-    num_unrollings=NUM_UNROLLINGS,
+    num_unrollings=4,
     init_parameter=3.,
     num_gpus=1,
     regime='training_with_meta_optimizer',
     additional_metrics=add_metrics,
     going_to_limit_memory=True
 )
+
 kwargs_for_optimizer_building = dict(
     regime='train',
     # regime='inference',
     num_optimizer_unrollings=10,
     num_exercises=NUM_EXERCISES,
-    res_size=2000,
     permute=True,
     optimizer_for_opt_type='adam',
-    additional_metrics=add_metrics
-)
-launch_kwargs = dict(
-    allow_growth=True,
-    # save_path='debug_grid_search',
-    result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
-    additions_to_feed_dict=train_opt_add_feed,
-    pupil_restore_paths=[the_only_pupil_restore_path],
-    # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
-    reset_period=1,
-    stop=1000,
-    train_dataset_texts=[train_text],
-    opt_inf_is_performed=False,
-    num_exercises=NUM_EXERCISES,
-    share_train_data=SHARE_TRAIN_DATA,
-    vocabulary=vocabulary,
-    batch_size=BATCH_SIZE,
-    num_unrollings=NUM_UNROLLINGS,
-    batch_gen_init_is_random=True,
-    results_collect_interval=200,
-    # opt_inf_results_collect_interval=1,
-    summary=True,
-    add_graph_to_summary=True
+    additional_metrics=add_metrics,
+    clip_norm=1e+6
 )
 
+launch_kwargs = dict(
+        allow_growth=True,
+        # save_path='debug_grid_search',
+        result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
+        additions_to_feed_dict=train_opt_add_feed,
+        pupil_restore_paths=[the_only_pupil_restore_path],
+        # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
+        reset_period=1,
+        stop=1000,
+        train_dataset_texts=[train_text],
+        opt_inf_is_performed=False,
+        num_exercises=NUM_EXERCISES,
+        vocabulary=vocabulary,
+        batch_size=32,
+        num_unrollings=4,
+        results_collect_interval=200,
+        # opt_inf_results_collect_interval=1,
+        permute=False,
+        summary=True,
+        add_graph_to_summary=True
+    )
 
 for conf in confs:
-
     build_pupil_hyperparameters = dict(
     )
     build_optimizer_hyperparameters = dict(
-        optimizer_init_parameter=conf['optimizer_init_parameter'],
+        num_layers=conf['num_layers'],
         clip_norm=conf['clip_norm']
     )
 
@@ -153,6 +151,7 @@ for conf in confs:
             type='exponential_decay'
         )
     )
+
 
     tf.set_random_seed(1)
     _, biggest_idx, _ = get_num_exps_and_res_files(save_path)
