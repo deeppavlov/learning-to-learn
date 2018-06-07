@@ -15,7 +15,7 @@ from learning_to_learn.environment import Environment
 from learning_to_learn.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
 from learning_to_learn.useful_functions import create_vocabulary, get_hps
 
-from learning_to_learn.res_net_opt import ResNet4Lstm
+from learning_to_learn.optimizers.res_net_opt import ResNet4Lstm
 
 import os
 

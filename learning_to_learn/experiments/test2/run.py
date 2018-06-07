@@ -1,8 +1,7 @@
-import argparse
-import tensorflow as tf
-
 import sys
 from pathlib import Path
+
+import tensorflow as tf
 file = Path(__file__).resolve()
 parent, root = file.parent, file.parents[3]
 sys.path.append(str(root))
@@ -15,7 +14,7 @@ from learning_to_learn.environment import Environment
 from learning_to_learn.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
 from learning_to_learn.useful_functions import create_vocabulary, compose_hp_confs, get_combs_and_num_exps
 
-from learning_to_learn.res_net_opt import ResNet4Lstm
+from learning_to_learn.optimizers.res_net_opt import ResNet4Lstm
 
 import os
 
