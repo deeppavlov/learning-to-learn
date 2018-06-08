@@ -1,8 +1,8 @@
 import re
 
 from learning_to_learn.environment import Environment
-from learning_to_learn.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
 from learning_to_learn.optimizers.res_net_opt import ResNet4Lstm
+from learning_to_learn.pupils.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
 from learning_to_learn.useful_functions import create_vocabulary
 
 with open('datasets/scipop_v3.0/scipop_train.txt', 'r') as f:

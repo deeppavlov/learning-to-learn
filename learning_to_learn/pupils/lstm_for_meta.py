@@ -10,8 +10,6 @@ from learning_to_learn.useful_functions import create_vocabulary, get_positions_
 
 from learning_to_learn.tensors import compute_metrics
 
-url = 'http://mattmahoney.net/dc/'
-
 
 class LstmBatchGenerator(object):
     @staticmethod

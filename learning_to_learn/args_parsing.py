@@ -280,7 +280,7 @@ def process_single_dataset_shortcut(
     if key == 'train_dataset':
         if 'train_dataset' in set_of_kwargs:
             taken_names.extend(list(set_of_kwargs['train_dataset'].keys()))
-            ret = set_of_kwargs['train_dataset']
+            ret = [(v, k) for k, v in set_of_kwargs['train_dataset'].items()][0]
         elif 'train_dataset_name' in set_of_kwargs:
             if set_of_kwargs['train_dataset_name'] not in env_instance.datasets.keys():
                 raise InvalidArgumentError("Wrong value '%s' of variable '%s'\nAllowed values: '%s'" %
