@@ -79,7 +79,7 @@ kwargs_for_building = dict(
     regime='autonomous_training',
     additional_metrics=add_metrics,
     going_to_limit_memory=True,
-    optimizer='adam'
+    optimizer='adagrad'
 )
 
 stop_specs = dict(

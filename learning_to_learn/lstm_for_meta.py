@@ -525,7 +525,28 @@ class Lstm(Model):
         if self._optimizer == 'adam':
             opt = tf.train.AdamOptimizer(
                 learning_rate=self._autonomous_train_specific_placeholders['learning_rate'])
+        elif self._optimizer == 'rmsprop':
+            opt = tf.train.RMSPropOptimizer(
+                learning_rate=self._autonomous_train_specific_placeholders['learning_rate'])
+        elif self._optimizer == 'adagrad':
+            opt = tf.train.AdagradOptimizer(
+                learning_rate=self._autonomous_train_specific_placeholders['learning_rate'])
+        elif self._optimizer == 'adadelta':
+            opt = tf.train.AdadeltaOptimizer(
+                learning_rate=self._autonomous_train_specific_placeholders['learning_rate'])
+        elif self._optimizer == 'momentum':
+            opt = tf.train.MomentumOptimizer(
+                learning_rate=self._autonomous_train_specific_placeholders['learning_rate'],
+                momentum=self._autonomous_train_specific_placeholders['momentum']
+            )
+        elif self._optimizer == 'nesterov':
+            opt = tf.train.MomentumOptimizer(
+                learning_rate=self._autonomous_train_specific_placeholders['learning_rate'],
+                momentum=self._autonomous_train_specific_placeholders['momentum'],
+                use_nesterov=True
+            )
         else:
+            print('using sgd optimizer')
             opt = tf.train.GradientDescentOptimizer(
                 self._autonomous_train_specific_placeholders['learning_rate'])
         with tf.name_scope('train'):
@@ -813,6 +834,10 @@ class Lstm(Model):
             self._autonomous_train_specific_placeholders['learning_rate'] = tf.placeholder(
                 tf.float32, name='learning_rate')
             self._hooks['learning_rate'] = self._autonomous_train_specific_placeholders['learning_rate']
+            if self._optimizer in ['momentum', 'nesterov']:
+                self._autonomous_train_specific_placeholders['momentum'] = tf.placeholder(
+                    tf.float32, name='momentum')
+                self._hooks['momentum'] = self._autonomous_train_specific_placeholders['momentum']
 
     def _prepare_inputs_and_labels(self, inputs, labels):
         with tf.device(self._base_device):
@@ -906,6 +931,7 @@ class Lstm(Model):
             labels_prepared=None,
             train_op=None,
             learning_rate=None,
+            momentum=None,
             loss=None,
             predictions=None,
             validation_inputs=None,

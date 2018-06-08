@@ -104,7 +104,7 @@ kwargs_for_optimizer_building = dict(
     permute=True,
     optimizer_for_opt_type='adam',
     additional_metrics=add_metrics,
-    clip_norm=1e+6
+    optimizer_init_parameter=1e-3
 )
 
 launch_kwargs = dict(

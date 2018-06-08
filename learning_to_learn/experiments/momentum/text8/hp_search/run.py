@@ -79,7 +79,7 @@ kwargs_for_building = dict(
     regime='autonomous_training',
     additional_metrics=add_metrics,
     going_to_limit_memory=True,
-    optimizer='adam'
+    optimizer='momentum'
 )
 
 stop_specs = dict(
@@ -123,6 +123,15 @@ for conf in confs:
             ),
             hp_type='built-in',
             type='adaptive_change'
+        ),
+        momentum=dict(
+            hp_type='additional_placeholder',
+            type='fixed',
+            fixed=dict(),
+            varying=conf['momentum'],
+            list_indices=None,
+            share=None,
+            controller=True
         )
     )
 
