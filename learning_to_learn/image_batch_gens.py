@@ -1,7 +1,8 @@
 from tensorflow.examples.tutorials.mnist import input_data
+import learning_to_learn.cifar_helpers as cifar_helpers
 
 
-class MnistBatchGenerator():
+class MnistBatchGenerator:
     def __init__(self, dataset_type, batch_size, data_dir=None):
         self._dataset_type = dataset_type
         self._batch_size = batch_size
@@ -22,3 +23,9 @@ class MnistBatchGenerator():
             return 1
         else:
             return self._mnist.train.num_examples
+
+
+class CifarBatchGenerator:
+    def __init__(self, dataset_type, batch_size):
+        self._dataset_type = dataset_type
+        self._batch_size = batch_size
