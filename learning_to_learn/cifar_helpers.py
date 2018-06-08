@@ -67,23 +67,26 @@ def reshape_data(data_dict):
     data_dict['images_test'] = im_te
     return data_dict
 
-#def generate_random_batch(images, labels, batch_size):
-    # Generate batch
-    #indices = np.random.choice(images.shape[0], batch_size)
-    #images_batch = images[indices]
-    #labels_batch = labels[indices]
-    #return images_batch, labels_batch
+
+# def generate_random_batch(images, labels, batch_size):
+    # # Generate batch
+    # indices = np.random.choice(images.shape[0], batch_size)
+    # images_batch = images[indices]
+    # labels_batch = labels[indices]
+    # return images_batch, labels_batch
 
 
-def gen_batch(data, batch_size, num_iter):
+def gen_batch(data, batch_size):
     data = np.array(data)
     index = len(data)
-    for i in range(num_iter):
+    i = 0
+    while True:
         index += batch_size
-        if (index + batch_size > len(data)):
+        if index + batch_size > len(data):
             index = 0
             shuffled_indices = np.random.permutation(np.arange(len(data)))
             data = data[shuffled_indices]
+        i += 1
         yield data[index:index + batch_size]
 
 
