@@ -79,14 +79,12 @@ def reshape_data(data_dict):
 def gen_batch(data, batch_size):
     data = np.array(data)
     index = len(data)
-    i = 0
     while True:
         index += batch_size
         if index + batch_size > len(data):
             index = 0
             shuffled_indices = np.random.permutation(np.arange(len(data)))
             data = data[shuffled_indices]
-        i += 1
         yield data[index:index + batch_size]
 
 
