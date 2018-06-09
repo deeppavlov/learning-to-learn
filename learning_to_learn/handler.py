@@ -240,6 +240,8 @@ class Handler(object):
                     result_names.append(result_type)
                 else:
                     result_names.append(self._hyperparameter_name_string(result_type))
+            # print("(Handler.__init__)result_names:", result_names)
+            # print("(Handler.__init__)self._tmpl:", self._tmpl)
             for dataset_name in eval_dataset_names:
                 self._file_names[dataset_name] = os.path.join(self._save_path, dataset_name + '.txt')
                 if not os.path.exists(self._file_names[dataset_name]):
