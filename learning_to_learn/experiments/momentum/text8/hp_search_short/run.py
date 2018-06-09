@@ -13,7 +13,7 @@ except ValueError: # Already removed
 
 from learning_to_learn.environment import Environment
 from learning_to_learn.pupils.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
-from learning_to_learn.useful_functions import create_vocabulary, compose_hp_confs, get_num_exps_and_res_files
+from learning_to_learn.useful_functions import create_vocabulary, compose_hp_confs
 
 import os
 
@@ -136,16 +136,10 @@ for conf in confs:
     )
 
     tf.set_random_seed(1)
-    _, biggest_idx, _ = get_num_exps_and_res_files(save_path)
-    if biggest_idx is None:
-        initial_experiment_counter_value = 0
-    else:
-        initial_experiment_counter_value = biggest_idx + 1
     env.grid_search(
         evaluation,
         kwargs_for_building,
         build_hyperparameters=build_hyperparameters,
         other_hyperparameters=other_hyperparameters,
-        initial_experiment_counter_value=initial_experiment_counter_value,
         **launch_kwargs
     )

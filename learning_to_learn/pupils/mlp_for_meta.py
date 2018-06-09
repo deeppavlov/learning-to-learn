@@ -4,9 +4,10 @@ import tensorflow as tf
 from learning_to_learn.tensors import compute_metrics
 from learning_to_learn.useful_functions import InvalidArgumentError, custom_matmul, custom_add, cumulative_mul, \
     construct_dict_without_none_entries
+from learning_to_learn.pupils.pupil import Pupil
 
 
-class MlpForMeta(object):
+class MlpForMeta(Pupil):
     _name = 'mlp'
 
     @classmethod

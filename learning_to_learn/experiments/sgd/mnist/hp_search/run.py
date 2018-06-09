@@ -8,12 +8,13 @@ parent, root = file.parent, file.parents[ROOT_HEIGHT]
 sys.path.append(str(root))
 try:
     sys.path.remove(str(parent))
-except ValueError: # Already removed
+except ValueError:  # Already removed
     pass
 
 from learning_to_learn.environment import Environment
-from learning_to_learn.pupils.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
-from learning_to_learn.useful_functions import create_vocabulary, compose_hp_confs
+from learning_to_learn.pupils.mlp_for_meta import MlpForMeta as Mlp
+from learning_to_learn.image_batch_gens import MnistBatchGenerator
+from learning_to_learn.useful_functions import compose_hp_confs
 
 import os
 
@@ -35,21 +36,9 @@ print("confs:", confs)
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
-dataset_path = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'text8.txt']))
-with open(dataset_path, 'r') as f:
-    text = f.read()
+data_dir = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'mnist']))
 
-valid_size = 1000
-valid_text = text[:valid_size]
-train_text = text[valid_size:]
-
-vocabulary = create_vocabulary(text)
-vocabulary_size = len(vocabulary)
-
-env = Environment(
-    pupil_class=Lstm,
-    batch_generator_classes=BatchGenerator,
-    vocabulary=vocabulary)
+env = Environment(Mlp, MnistBatchGenerator)
 
 add_metrics = ['bpc', 'perplexity', 'accuracy']
 train_add_feed = [
@@ -63,28 +52,27 @@ dataset_name = 'valid'
 evaluation = dict(
     save_path=save_path,
     result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
-    datasets=[(valid_text, dataset_name)],
-    batch_gen_class=BatchGenerator,
-    batch_kwargs={'vocabulary': vocabulary},
-    batch_size=1,
-    additional_feed_dict=[{'placeholder': 'dropout', 'value': 1.}]
+    datasets=[
+        ('validation', 'valid')
+    ],
+    batch_gen_class=MnistBatchGenerator,
+    batch_kwargs=dict(
+        data_dir=data_dir
+    ),
+    batch_size=None,
+    additional_feed_dict=valid_add_feed,
 )
 
 BATCH_SIZE = 32
 kwargs_for_building = dict(
     batch_size=BATCH_SIZE,
-    num_layers=1,
-    num_nodes=[100],
-    num_output_layers=1,
-    num_output_nodes=[],
-    vocabulary_size=vocabulary_size,
-    embedding_size=150,
-    num_unrollings=10,
-    num_gpus=1,
-    regime='autonomous_training',
+    num_layers=2,
+    num_hidden_nodes=[1000],
+    input_shape=[784],
+    num_classes=10,
+    init_parameter=3.,
     additional_metrics=add_metrics,
-    going_to_limit_memory=True,
-    optimizer='rmsprop'
+    optimizer='sgd'
 )
 
 # stop_specs = dict(
@@ -93,6 +81,7 @@ kwargs_for_building = dict(
 #     changing_parameter_name='learning_rate',
 #     path_to_target_metric_storage=('valid', 'loss')
 # )
+
 launch_kwargs = dict(
     allow_growth=True,
     # save_path='debug_grid_search',
@@ -101,14 +90,22 @@ launch_kwargs = dict(
     # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
     # stop=stop_specs,
     stop=1000,
-    vocabulary=vocabulary,
-    num_unrollings=10,
     results_collect_interval=500,
-    # opt_inf_results_collect_interval=1,
     summary=False,
     add_graph_to_summary=False,
-    train_dataset_text=train_text,
-    validation_datasets=dict(valid=valid_text),
+    train_dataset=dict(
+        train='train'
+    ),
+    train_batch_kwargs=dict(
+        data_dir=data_dir
+    ),
+    valid_batch_kwargs=dict(
+        data_dir=data_dir
+    ),
+    # train_dataset_text='abc',
+    validation_datasets=dict(
+        valid='validation'
+    ),
     batch_size=BATCH_SIZE
 )
 

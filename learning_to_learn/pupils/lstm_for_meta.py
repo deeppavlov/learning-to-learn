@@ -7,6 +7,7 @@ from learning_to_learn.useful_functions import create_vocabulary, get_positions_
     average_gradients, get_num_gpus_and_bs_on_gpus, custom_matmul, custom_add, InvalidArgumentError, \
     compose_save_list, compose_reset_list, compose_randomize_list, construct_dict_without_none_entries, \
     append_to_nested, get_average_with_weights_func, func_on_list_in_nested
+from learning_to_learn.pupils.pupil import Pupil
 
 from learning_to_learn.tensors import compute_metrics
 
@@ -183,13 +184,7 @@ def batches2string(batches, vocabulary):
     return s
 
 
-class Model(object):
-    @classmethod
-    def get_name(cls):
-        return cls.name
-
-
-class Lstm(Model):
+class Lstm(Pupil):
     _name = 'lstm'
 
     @classmethod
@@ -197,21 +192,8 @@ class Lstm(Model):
                      **kwargs):
         pass
 
-    @classmethod
-    def get_name(cls):
-        return cls._name
-
     def get_special_args(self):
         return dict()
-
-    @staticmethod
-    def form_kwargs(kwargs_for_building, insertions):
-        for insertion in insertions:
-            if insertion['list_index'] is None:
-                kwargs_for_building[insertion['hp_name']] = insertion['paste']
-            else:
-                kwargs_for_building[insertion['hp_name']][insertion['list_index']] = insertion['paste']
-        return kwargs_for_building
 
     def _lstm_layer(self, inp, state, layer_idx, matr, bias):
         with tf.name_scope('lstm_layer_%s' % layer_idx):

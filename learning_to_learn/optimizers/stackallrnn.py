@@ -1,10 +1,9 @@
 from itertools import chain
 
 import tensorflow as tf
-from learning_to_learn.useful_functions import flatten, construct_dict_without_none_entries, construct,\
-    unite_nested_dicts, block_diagonal, custom_matmul, custom_add
 
-from learning_to_learn.meta import Meta
+from learning_to_learn.optimizers.meta import Meta
+from learning_to_learn.useful_functions import flatten, construct_dict_without_none_entries, unite_nested_dicts, block_diagonal, custom_matmul, custom_add
 
 
 class StackAllRnn(Meta):

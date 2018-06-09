@@ -1,10 +1,10 @@
 from itertools import chain
 
 import tensorflow as tf
+
+from learning_to_learn.optimizers.meta import Meta
 from learning_to_learn.useful_functions import block_diagonal, custom_matmul, custom_add, flatten, \
     construct_dict_without_none_entries, construct
-
-from learning_to_learn.meta import Meta
 
 
 class ResNet4Lstm(Meta):
