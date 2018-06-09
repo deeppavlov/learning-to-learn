@@ -4,14 +4,21 @@ import tensorflow as tf
 from learning_to_learn.useful_functions import InvalidArgumentError
 
 
+def choose_biggest(a, b, name_scope):
+    with tf.name_scope(name_scope):
+        mask = tf.to_float(a > b)
+        return mask * a + (1. - mask) * b
+
+
 def perplexity_tensor(probabilities=None, keep_first_dim=False):
     with tf.name_scope('computing_perplexity'):
         ln2 = np.log(2, dtype=np.float32)
-        shape = probabilities.get_shape().as_list()
-        probabilities = tf.where(probabilities > 1e-10,
-                                 probabilities,
-                                 np.full(tuple(shape), 1e-10),
-                                 name='to_small_values_in_probs_are_filtered')
+        # shape = probabilities.get_shape().as_list()
+        probabilities = choose_biggest(probabilities, 1e-10, 'to_small_values_in_probs_are_filtered')
+        # probabilities = tf.where(probabilities > 1e-10,
+        #                          probabilities,
+        #                          np.full(tuple(shape), 1e-10),
+        #                          name='to_small_values_in_probs_are_filtered')
         log_probabilities = tf.divide(tf.log(probabilities), ln2, name='log2_probs')
         entropy = tf.reduce_sum(- probabilities * log_probabilities, axis=-1, name='entropy_not_mean')
         perplexity = tf.exp(ln2 * entropy, name='perplexity_not_aver')
@@ -25,11 +32,12 @@ def perplexity_tensor(probabilities=None, keep_first_dim=False):
 
 def loss_tensor(predictions=None, labels=None, keep_first_dim=False):
     with tf.name_scope('computing_loss'):
-        shape = predictions.get_shape().as_list()
-        predictions = tf.where(predictions > 1e-12,
-                               predictions,
-                               np.full(tuple(shape), 1e-12),
-                               name='to_small_values_in_probs_are_filtered')
+        # shape = predictions.get_shape().as_list()
+        predictions = choose_biggest(predictions, 1e-10, 'to_small_values_in_probs_are_filtered')
+        # predictions = tf.where(predictions > 1e-12,
+        #                        predictions,
+        #                        tf.constant(1e-12),
+        #                        name='to_small_values_in_probs_are_filtered')
         log_predictions = tf.log(predictions, name='log_pred')
 
         loss_on_characters = tf.reduce_sum(-labels * log_predictions, axis=-1, name='loss_not_mean')

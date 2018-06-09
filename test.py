@@ -1,9 +1,8 @@
 import tensorflow as tf
 
 from learning_to_learn.environment import Environment
+from learning_to_learn.pupils.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
 from learning_to_learn.useful_functions import create_vocabulary, get_positions_in_vocabulary
-
-from learning_to_learn.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
 
 with open('datasets/text8.txt', 'r') as f:
     text = f.read()

@@ -841,7 +841,7 @@ def write_equation(a_ndims, b_ndims, base_ndims):
     return a_str + ',' + b_str + '->' + out_str
 
 
-def custom_matmul(a, b, base_ndims=None, eq=None, name='custom_matmul'):
+def custom_matmul(a, b, base_ndims=None, eq=None, name_scope='custom_matmul'):
     """Special matmul for several exercises simultaneous processing.
     Matrix multiplication is performed across 2 last dimensions of a and b. Either mapping or broadcasting is performed
     across all dimensions except for last 2. Specifically if (a_ndims > base_ndims[0] and b_ndims > base_ndims[1])
@@ -852,7 +852,7 @@ def custom_matmul(a, b, base_ndims=None, eq=None, name='custom_matmul'):
     this means outer product. a dimensions are put in front of b dimensions. Examples:
         base_ndims = [3,3]    eq = 'ijkmn,ijlno->ijklmo'
         base_ndims = [3,4]    eq = 'ijkno,ijlmop->ijklmnp'"""
-    with tf.name_scope('custom_matmul'):
+    with tf.name_scope(name_scope):
         if eq is not None:
             res = tf.einsum(eq, a, b)
         else:
@@ -1709,3 +1709,10 @@ def get_elem_from_nested(nested, keys):
         return get_elem_from_nested(nested[keys[0]], keys[1:])
     else:
         return nested
+
+
+def cumulative_mul(sequence, init):
+    res = construct(init)
+    for a in sequence:
+        res *= a
+    return a

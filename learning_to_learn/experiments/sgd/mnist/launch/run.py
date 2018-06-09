@@ -1,22 +1,23 @@
 import tensorflow as tf
 
+ROOT_HEIGHT = 5
+import sys
+import os
+from pathlib import Path
+file = Path(__file__).resolve()
+parent, root = file.parent, file.parents[ROOT_HEIGHT]
+sys.path.append(str(root))
+try:
+    sys.path.remove(str(parent))
+except ValueError: # Already removed
+    pass
 from learning_to_learn.environment import Environment
-from learning_to_learn.pupils.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
-from learning_to_learn.useful_functions import create_vocabulary, get_positions_in_vocabulary
+from learning_to_learn.pupils.mlp_for_meta import MlpForMeta as Mlp
+from learning_to_learn.image_batch_gens import MnistBatchGenerator
 
-with open('datasets/text8.txt', 'r') as f:
-    text = f.read()
+data_dir = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'mnist']))
 
-valid_size = 500
-valid_text = text[:valid_size]
-train_text = text[valid_size:]
-
-vocabulary = create_vocabulary(train_text + valid_text)
-vocabulary_size = len(vocabulary)
-
-env = Environment(Lstm, BatchGenerator, vocabulary=vocabulary)
-
-cpiv = get_positions_in_vocabulary(vocabulary)
+env = Environment(Mlp, MnistBatchGenerator)
 
 add_feed = [{'placeholder': 'dropout', 'value': 0.9} #,
             # {'placeholder': 'sampling_prob',
@@ -31,20 +32,15 @@ add_metrics = ['bpc', 'perplexity', 'accuracy']
 
 tf.set_random_seed(1)
 
+BATCH_SIZE = 32
 env.build_pupil(
-    batch_size=32,
+    batch_size=BATCH_SIZE,
     num_layers=1,
-    num_nodes=[100],
-    num_output_layers=1,
-    num_output_nodes=[],
-    vocabulary_size=vocabulary_size,
-    embedding_size=150,
-    num_unrollings=10,
+    num_hidden_nodes=[],
+    input_shape=[784],
+    num_classes=10,
     init_parameter=3.,
-    # character_positions_in_vocabulary=cpiv,
-    num_gpus=1,
     additional_metrics=add_metrics,
-    going_to_limit_memory=True,
     optimizer='sgd'
 )
 
@@ -53,14 +49,14 @@ stop_specs = dict(
     type='while_progress',
     max_no_progress_points=10,
     changing_parameter_name='learning_rate',
-    path_to_target_metric_storage=('default_1', 'loss')
+    path_to_target_metric_storage=('valid', 'loss')
 )
 learning_rate = dict(
     type='adaptive_change',
     max_no_progress_points=10,
     decay=.5,
     init=4.,
-    path_to_target_metric_storage=('default_1', 'loss')
+    path_to_target_metric_storage=('valid', 'loss')
 )
 env.train(
     # gpu_memory=.3,
@@ -69,16 +65,24 @@ env.train(
     # restore_path='lstm_sample_test/scipop3_1000_bs256_11.12/checkpoints/2000',
     learning_rate=learning_rate,
     batch_size=32,
-    num_unrollings=10,
-    vocabulary=vocabulary,
     checkpoint_steps=None,
     result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
     printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
     stop=stop_specs,
     # stop=4000,
-    train_dataset_text=train_text,
+    train_dataset=dict(
+        train='train'
+    ),
+    train_batch_kwargs=dict(
+        data_dir=data_dir
+    ),
+    valid_batch_kwargs=dict(
+        data_dir=data_dir
+    ),
     # train_dataset_text='abc',
-    validation_dataset_texts=[valid_text],
+    validation_datasets=dict(
+        valid='validation'
+    ),
     results_collect_interval=100,
     additions_to_feed_dict=add_feed,
     validation_additions_to_feed_dict=valid_add_feed,
