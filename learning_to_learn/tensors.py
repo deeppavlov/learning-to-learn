@@ -82,9 +82,9 @@ def identity_tensor(**kwargs):
 
 
 def compute_metrics(metrics, predictions=None, labels=None, loss=None, keep_first_dim=False):
-    print("(tensors.compute_metrics)predictions.shape:", predictions.get_shape().as_list())
-    print("(tensors.compute_metrics)labels.shape:", labels.get_shape().as_list())
-    print("(tensors.compute_metrics)loss.shape:", loss.get_shape().as_list())
+    # print("(tensors.compute_metrics)predictions.shape:", predictions.get_shape().as_list())
+    # print("(tensors.compute_metrics)labels.shape:", labels.get_shape().as_list())
+    # print("(tensors.compute_metrics)loss.shape:", loss.get_shape().as_list())
     with tf.name_scope('compute_metrics'):
         res = dict()
         if 'loss' in metrics:

@@ -296,7 +296,7 @@ class Lstm(Model):
                         o = tf.split(hs, num_split, axis=concat_dim, name='split_o_for_optimizer')
                     hs = tf.concat(o, concat_dim, name='united_o')
                     s = custom_matmul(
-                            hs, matr, name='first_s')
+                            hs, matr, name_scope='first_s')
                     s = tf.split(s, num_split, axis=concat_dim, name='split_s_for_optimizer')
                     optimizer_ins['output_layer_%s' % layer_idx] = dict(
                         o=o,

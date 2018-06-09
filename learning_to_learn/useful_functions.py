@@ -1405,7 +1405,7 @@ def extract_hp_set(line, hp_names):
     hp_set = dict()
     hp_values = line.split()[-len(hp_names):]
     for hp_name, hp_value in zip(hp_names, hp_values):
-        if '.' in hp_value:
+        if '.' in hp_value or 'e' in hp_value:
             value_type = 'float'
         else:
             value_type = 'int'

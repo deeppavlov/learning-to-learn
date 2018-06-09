@@ -1179,9 +1179,9 @@ class Environment(object):
         #     "(Environment._train/before new schedule)self._current_place_for_result_saving",
         #     self._current_place_for_result_saving
         # )
-        print("(Environment._train)[dataset[1] for dataset in train_specs['validation_datasets']:",
-              [dataset[1] for dataset in train_specs['validation_datasets']])
-        print("(Environment._train)train_specs['validation_datasets']:", train_specs['validation_datasets'])
+        # print("(Environment._train)[dataset[1] for dataset in train_specs['validation_datasets']:",
+        #       [dataset[1] for dataset in train_specs['validation_datasets']])
+        # print("(Environment._train)train_specs['validation_datasets']:", train_specs['validation_datasets'])
         self._handler.set_new_run_schedule(
             schedule,
             [dataset[1] for dataset in train_specs['validation_datasets']]

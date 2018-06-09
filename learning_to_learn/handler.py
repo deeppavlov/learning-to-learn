@@ -93,9 +93,9 @@ class Handler(object):
         self._printed_result_types = None
         self._printed_controllers = None
 
-        print("(Handler._create_train_fields)self._summary:", self._summary)
-        print("(Handler._create_train_fields)self._save_path:", self._save_path)
-        print("(Handler._create_train_fields)self._add_graph_to_summary:", self._add_graph_to_summary)
+        # print("(Handler._create_train_fields)self._summary:", self._summary)
+        # print("(Handler._create_train_fields)self._save_path:", self._save_path)
+        # print("(Handler._create_train_fields)self._add_graph_to_summary:", self._add_graph_to_summary)
         if self._summary and self._save_path is not None:
             self._writer = tf.summary.FileWriter(self._save_path + '/' + 'summary')
             if self._add_graph_to_summary:
@@ -242,11 +242,11 @@ class Handler(object):
                     result_names.append(self._hyperparameter_name_string(result_type))
             for dataset_name in eval_dataset_names:
                 self._file_names[dataset_name] = os.path.join(self._save_path, dataset_name + '.txt')
-                header_is_needed = True
                 if not os.path.exists(self._file_names[dataset_name]):
-                    with open(self._file_names[dataset_name], 'r') as fd:
+                    create_path(self._file_names[dataset_name], file_name_is_in_path=True)
+                    with open(self._file_names[dataset_name], 'w') as fd:
                         fd.write(self._tmpl % tuple(result_names))
-                elif os.stat("file").st_size == 0:
+                elif os.stat(self._file_names[dataset_name]).st_size == 0:
                     with open(self._file_names[dataset_name], 'a') as fd:
                         fd.write(self._tmpl % tuple(result_names))
                 else:
