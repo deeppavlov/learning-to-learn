@@ -1346,14 +1346,22 @@ def get_combs_and_num_exps(eval_dir):
         exp_description_files = sorted(exp_description_files, key=lambda elem: int(elem[:-4]))
         # print("(useful_functions.get_combs_and_num_exps)len(exp_description_files):", len(exp_description_files))
         # print("(useful_functions.get_combs_and_num_exps)exp_description_files:", exp_description_files)
-
+        file_is_broken = False
         for file_name in exp_description_files:
-            with open(os.path.join(eval_dir, file_name), 'r') as f:
+            file_path = os.path.join(eval_dir, file_name)
+            with open(file_path, 'r') as f:
                 lines = f.read().split('\n')
-                types = lines[1].split()
-                hp_set = tuple([convert(v, t) for v, t in zip(lines[0].split(), types)])
-                if hp_set not in hp_sets:
-                    hp_sets.append(hp_set)
+                if len(lines) >= 2:
+                    types = lines[1].split()
+                    hp_set = tuple([convert(v, t) for v, t in zip(lines[0].split(), types)])
+                    if hp_set not in hp_sets:
+                        hp_sets.append(hp_set)
+                else:
+                    file_is_broken = True
+            if file_is_broken:
+                file_is_broken = False
+                print("WARNING: file %s is broken and is going to be removed" % file_path)
+                os.remove(file_path)
         # print("(useful_functions.get_combs_and_num_exps)hp_sets:", hp_sets)
 
         if len(exp_description_files) > 0:
