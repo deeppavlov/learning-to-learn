@@ -1,7 +1,6 @@
 import numpy as np
 import pickle
-import matplotlib.pyplot as plt
-from PIL import Image
+# import matplotlib.pyplot as plt
 import sys
 import os
 
@@ -108,11 +107,11 @@ def main():
     print(data_sets['labels_test'].shape)
 
 
-def draw(arr):
-    # single_img_reshaped = arr.reshape(32, 32, 3)
-    single_img_reshaped = np.transpose(np.reshape(arr, (3, 32, 32)), (1, 2, 0))
-    plt.imshow(single_img_reshaped)
-    plt.show()
+# def draw(arr):
+#     # single_img_reshaped = arr.reshape(32, 32, 3)
+#     single_img_reshaped = np.transpose(np.reshape(arr, (3, 32, 32)), (1, 2, 0))
+#     plt.imshow(single_img_reshaped)
+#     plt.show()
 
 
 if __name__ == '__main__':
