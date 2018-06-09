@@ -4,7 +4,7 @@ import pickle
 import sys
 import os
 
-
+ROOT_HEIGHT = 1
 
 def load_CIFAR10_batch(filename):
     '''load data from single CIFAR-10 file'''
@@ -25,11 +25,17 @@ def load_data(valid_size):
     '''load all CIFAR-10 data and merge training batches'''
     classes = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse',
         'ship', 'truck']
-    CIFAR_DIR = os.path.join('/home/anton/learning-to-learn', 'datasets', 'cifar-10-batches-py')
+
+    CIFAR_DIR = os.path.join(*['..']*ROOT_HEIGHT + ['datasets'] + ['cifar-10-batches-py'])
     xs = []
     ys = []
     for i in range(1, 6):
+        old_dir = os.getcwd()
+        abspath = os.path.abspath(__file__)
+        dname = os.path.dirname(abspath)
+        os.chdir(old_dir)
         filename = os.path.join(CIFAR_DIR, 'data_batch_' + str(i))
+        os.chdir(dname)
         X, Y = load_CIFAR10_batch(filename)
         xs.append(X)
         ys.append(Y)
