@@ -868,7 +868,7 @@ class Environment(object):
             additional_feed_dict = dict()
         example_batches = batch_generator_class(validation_dataset[0], 1, **valid_batch_kwargs)
         self._handler.start_example_accumulation()
-        for c_idx in range(min(example_length, example_batches.get_dataset_length()) + 1):
+        for c_idx in range(min(example_length, example_batches.get_num_batches()) + 1):
             inputs, _ = example_batches.next()
             input_str = batch_generator_class.vec2char_fast(
                 np.reshape(inputs, (1, -1)),
@@ -904,7 +904,7 @@ class Environment(object):
             self._session.run(self._hooks['reset_validation_state'])
         # print('batch_generator_class:', batch_generator_class)
         valid_batches = batch_generator_class(validation_dataset[0], validation_batch_size, **valid_batch_kwargs)
-        length = valid_batches.get_dataset_length()
+        length = valid_batches.get_num_batches()
         inputs, labels = valid_batches.next()
         step = 0
         self._handler.start_accumulation(validation_dataset[1], training_step=training_step)
@@ -921,7 +921,8 @@ class Environment(object):
             valid_res = self._session.run(validation_operations, feed_dict=feed_dict)
             self._handler.process_results(training_step, valid_res, regime='validation')
             step += 1
-            inputs, labels = valid_batches.next()
+            if step < length:
+                inputs, labels = valid_batches.next()
 
         # print("(Environment._validate/after loop)self._current_place_for_result_saving:",
         #       self._current_place_for_result_saving)
@@ -948,7 +949,7 @@ class Environment(object):
             self._session.run(self._hooks['reset_validation_state'])
         # print('batch_generator_class:', batch_generator_class)
         valid_batches = batch_generator_class(validation_dataset[0], validation_batch_size, **valid_batch_kwargs)
-        length = valid_batches.get_dataset_length()
+        length = valid_batches.get_num_batches()
         inputs, labels, correct_tokens = valid_batches.next_with_tokens()
         step = 0
         self._handler.start_accumulation(validation_dataset[1], training_step=training_step)

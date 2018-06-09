@@ -93,7 +93,7 @@ class BpeBatchGenerator(object):
         self._cursor = [offset * segment for offset in range(batch_size)]
         self._last_batch = self._start_batch()
 
-    def get_dataset_length(self):
+    def get_num_batches(self):
         return len(self._pairs)
 
     def get_vocabulary_size(self):
@@ -219,7 +219,7 @@ class BpeFastBatchGenerator(object):
         self._last_batch = self._start_batch()
         # print('(BpeFastBatchGenerator.__init__)len(self._pairs):', len(self._pairs))
 
-    def get_dataset_length(self):
+    def get_num_batches(self):
         return len(self._pairs)
 
     def get_vocabulary_size(self):
@@ -419,7 +419,7 @@ class BpeBatchGeneratorOneHot(object):
         self._cursor = [offset * segment for offset in range(batch_size)]
         self._last_batch = self._start_batch()
 
-    def get_dataset_length(self):
+    def get_num_batches(self):
         return len(self._pairs)
 
     def get_vocabulary_size(self):
@@ -623,7 +623,7 @@ class BpeFastBatchGeneratorOneHot(object):
         self._cursor = [offset * segment for offset in range(batch_size)]
         self._last_batch = self._start_batch()
 
-    def get_dataset_length(self):
+    def get_num_batches(self):
         return len(self._pairs)
 
     def get_vocabulary_size(self):

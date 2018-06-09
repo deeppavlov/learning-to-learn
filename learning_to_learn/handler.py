@@ -1,10 +1,11 @@
+import os
 import datetime as dt
 
 import numpy as np
 import tensorflow as tf
 
 from learning_to_learn.useful_functions import create_path, add_index_to_filename_if_needed, construct, nested2string, \
-    WrongMethodCallError, extend_dictionary, flatten
+    WrongMethodCallError, extend_dictionary, flatten, check_if_line_is_header
 
 
 class Handler(object):
@@ -92,6 +93,9 @@ class Handler(object):
         self._printed_result_types = None
         self._printed_controllers = None
 
+        print("(Handler._create_train_fields)self._summary:", self._summary)
+        print("(Handler._create_train_fields)self._save_path:", self._save_path)
+        print("(Handler._create_train_fields)self._add_graph_to_summary:", self._add_graph_to_summary)
         if self._summary and self._save_path is not None:
             self._writer = tf.summary.FileWriter(self._save_path + '/' + 'summary')
             if self._add_graph_to_summary:
@@ -237,9 +241,16 @@ class Handler(object):
                 else:
                     result_names.append(self._hyperparameter_name_string(result_type))
             for dataset_name in eval_dataset_names:
-                self._file_names[dataset_name] = self._save_path + '/' + dataset_name + '.txt'
-                with open(self._file_names[dataset_name], 'a') as fd:
-                    fd.write(self._tmpl % tuple(result_names))
+                self._file_names[dataset_name] = os.path.join(self._save_path, dataset_name + '.txt')
+                header_is_needed = True
+                if not os.path.exists(self._file_names[dataset_name]):
+                    with open(self._file_names[dataset_name], 'r') as fd:
+                        fd.write(self._tmpl % tuple(result_names))
+                elif os.stat("file").st_size == 0:
+                    with open(self._file_names[dataset_name], 'a') as fd:
+                        fd.write(self._tmpl % tuple(result_names))
+                else:
+                    pass
 
             self._environment_instance.set_in_storage(launches=list())
 

@@ -22,6 +22,8 @@ escape_sequences_replacements = {'\\': '\\\\',
                                  '\r': '\\r',
                                  '\t': '\\t',
                                  '\v': '\\v'}
+METRICS = ['accuracy', 'bpc', 'loss', 'perplexity']
+DIGITS = list('0123456789')
 
 
 class InvalidArgumentError(Exception):
@@ -1373,6 +1375,62 @@ def get_combs_and_num_exps(eval_dir):
         return [], 0, None
 
 
+def parse_header_line(line):
+    names = line.split()
+    metrics = list()
+    hp_names = list()
+    for name in names:
+        if name in METRICS:
+            metrics.append(name)
+        else:
+            hp_names.append(name)
+    return metrics, hp_names
+
+
+def check_if_line_contains_results(line):
+    allowed_chars = DIGITS + ['e', '+', '-', '.', ' ']
+    if len(line) == 0:
+        return False
+    for c in line:
+        if c not in allowed_chars:
+            return False
+    return True
+
+
+def check_if_line_is_header(line):
+    return not check_if_line_contains_results(line)
+
+
+def extract_hp_set(line, hp_names):
+    hp_set = dict()
+    hp_values = line.split()[-len(hp_names):]
+    for hp_name, hp_value in zip(hp_names, hp_values):
+        if '.' in hp_value:
+            value_type = 'float'
+        else:
+            value_type = 'int'
+        hp_set[hp_name] = convert(hp_value, value_type)
+    return hp_set
+
+
+def get_combs_and_num_exps_pupil(eval_file, order):
+    tested_combs = list()
+    if os.path.exists(eval_file):
+        with open(eval_file, 'r') as f:
+            lines = f.read().split('\n')
+        metrics, hp_names = parse_header_line(lines[0])
+        for line in lines[1:]:
+            if check_if_line_contains_results(line):
+                hp_set = extract_hp_set(line, hp_names)
+                comb = list()
+                for name in order:
+                    comb.append(hp_set[name])
+                tested_combs.append(comb)
+        return tested_combs, len(tested_combs)
+    else:
+        return [], 0
+
+
 def get_num_exps_and_res_files(eval_dir):
     pairs = list()
     if os.path.exists(eval_dir):
@@ -1405,12 +1463,17 @@ def remove_repeats_from_list(l):
     return res
 
 
-def compose_hp_confs(file_name, eval_dir, chop_last_experiment=False):
-    grid, init_conf, num_exps = make_initial_grid(file_name, eval_dir, chop_last_experiment=chop_last_experiment)
+def compose_hp_confs(file_name, eval_dir_or_file, chop_last_experiment=False, model='optimizer'):
+    grid, init_conf, num_exps = make_initial_grid(
+        file_name,
+        eval_dir_or_file,
+        chop_last_experiment=chop_last_experiment,
+        model=model
+    )
     return form_confs(grid, init_conf), num_exps
 
 
-def make_initial_grid(file_name, eval_dir, chop_last_experiment=False):
+def make_initial_grid(file_name, eval_dir_or_file, chop_last_experiment=False, model='optimizer'):
     init_conf = OrderedDict()
     init_grid_values = list()
     with open(file_name, 'r') as f:
@@ -1421,10 +1484,15 @@ def make_initial_grid(file_name, eval_dir, chop_last_experiment=False):
         param_values = remove_repeats_from_list([convert(v, hp_type) for v in line.split()])
         init_conf[hp_name] = param_values
         init_grid_values.append(param_values)
-    tested_combs, num_exps, last_exp_file_name = get_combs_and_num_exps(eval_dir)
-    if num_exps > 0 and chop_last_experiment:
-        os.remove(os.path.join(eval_dir, last_exp_file_name))
-        shutil.rmtree(os.path.join(eval_dir, last_exp_file_name[:-4]))
+    if model == 'optimizer':
+        tested_combs, num_exps, last_exp_file_name = get_combs_and_num_exps(eval_dir_or_file)
+    else:
+        tested_combs, num_exps = get_combs_and_num_exps_pupil(eval_dir_or_file, hp_names)
+        last_exp_file_name = None
+        # print("(useful_functions.make_initial_grid)tested_combs:", tested_combs)
+    if num_exps > 0 and chop_last_experiment and model == 'optimizer':
+        os.remove(os.path.join(eval_dir_or_file, last_exp_file_name))
+        shutil.rmtree(os.path.join(eval_dir_or_file, last_exp_file_name[:-4]))
         tested_combs = tested_combs[:-1]
         num_exps -= 1
     # print("(useful_functions.make_initial_grid)tested_combs:", tested_combs)

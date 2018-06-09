@@ -82,37 +82,41 @@ def identity_tensor(**kwargs):
 
 
 def compute_metrics(metrics, predictions=None, labels=None, loss=None, keep_first_dim=False):
-    res = dict()
-    if 'loss' in metrics:
-        l = loss_tensor(predictions=predictions, labels=labels, keep_first_dim=keep_first_dim)
-        res['loss'] = l
-    else:
-        l = None
-    if 'bpc' in metrics:
-        if loss is not None:
-            bpc = bpc_tensor(loss=loss)
-            res['bpc'] = bpc
-        elif l is not None:
-            bpc = bpc_tensor(loss=l)
-            res['bpc'] = bpc
-        elif predictions is not None and labels is not None:
-            bpc = bpc_tensor(loss=loss_tensor(predictions=predictions, labels=labels, keep_first_dim=keep_first_dim))
-            res['bpc'] = bpc
+    print("(tensors.compute_metrics)predictions.shape:", predictions.get_shape().as_list())
+    print("(tensors.compute_metrics)labels.shape:", labels.get_shape().as_list())
+    print("(tensors.compute_metrics)loss.shape:", loss.get_shape().as_list())
+    with tf.name_scope('compute_metrics'):
+        res = dict()
+        if 'loss' in metrics:
+            l = loss_tensor(predictions=predictions, labels=labels, keep_first_dim=keep_first_dim)
+            res['loss'] = l
         else:
-            print('loss:', loss)
-            print('metrics:', metrics)
-            print('predictions:', predictions)
-            print('labels:', labels)
-            raise InvalidArgumentError(
-                'Could not build bpc graph. Not enough arguments were provided.',
-                [metrics, predictions, labels, loss],
-                ['metrics', 'predictions', 'labels', 'loss'],
-                'At least loss or predictions and labels has to be not None'
-            )
-    if 'accuracy' in metrics:
-        accuracy = accuracy_tensor(predictions=predictions, labels=labels, keep_first_dim=keep_first_dim)
-        res['accuracy'] = accuracy
-    if 'perplexity' in metrics:
-        perplexity = perplexity_tensor(probabilities=predictions, keep_first_dim=keep_first_dim)
-        res['perplexity'] = perplexity
-    return res
+            l = None
+        if 'bpc' in metrics:
+            if loss is not None:
+                bpc = bpc_tensor(loss=loss)
+                res['bpc'] = bpc
+            elif l is not None:
+                bpc = bpc_tensor(loss=l)
+                res['bpc'] = bpc
+            elif predictions is not None and labels is not None:
+                bpc = bpc_tensor(loss=loss_tensor(predictions=predictions, labels=labels, keep_first_dim=keep_first_dim))
+                res['bpc'] = bpc
+            else:
+                print('loss:', loss)
+                print('metrics:', metrics)
+                print('predictions:', predictions)
+                print('labels:', labels)
+                raise InvalidArgumentError(
+                    'Could not build bpc graph. Not enough arguments were provided.',
+                    [metrics, predictions, labels, loss],
+                    ['metrics', 'predictions', 'labels', 'loss'],
+                    'At least loss or predictions and labels has to be not None'
+                )
+        if 'accuracy' in metrics:
+            accuracy = accuracy_tensor(predictions=predictions, labels=labels, keep_first_dim=keep_first_dim)
+            res['accuracy'] = accuracy
+        if 'perplexity' in metrics:
+            perplexity = perplexity_tensor(probabilities=predictions, keep_first_dim=keep_first_dim)
+            res['perplexity'] = perplexity
+        return res

@@ -50,7 +50,7 @@ class LstmBatchGenerator(object):
             self._cursor = [offset * segment for offset in range(batch_size)]
         self._last_batch = self._start_batch()
 
-    def get_dataset_length(self):
+    def get_num_batches(self):
         return len(self._text)
 
     def get_vocabulary_size(self):
@@ -132,7 +132,7 @@ class LstmFastBatchGenerator(object):
             self._cursor = [offset * segment for offset in range(batch_size)]
         self._last_batch = self._start_batch()
 
-    def get_dataset_length(self):
+    def get_num_batches(self):
         return len(self._text)
 
     def get_vocabulary_size(self):

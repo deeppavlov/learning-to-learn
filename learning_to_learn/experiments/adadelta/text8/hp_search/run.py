@@ -23,7 +23,12 @@ if len(sys.argv) > 2:
 else:
     chop_last_experiment = False
 save_path = os.path.join(parameter_set_file_name.split('.')[0], 'evaluation')
-confs, _ = compose_hp_confs(parameter_set_file_name, save_path, chop_last_experiment=chop_last_experiment)
+confs, _ = compose_hp_confs(
+    parameter_set_file_name,
+    os.path.join(save_path, 'valid.txt'),
+    chop_last_experiment=chop_last_experiment,
+    model='pupil',
+)
 confs.reverse()  # start with small configs
 print("confs:", confs)
 

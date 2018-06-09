@@ -122,8 +122,29 @@ class MlpForMeta(object):
             biases = trainable['biases']
 
             logits, opt_ins = self._mlp(inputs, matrices, biases)
+            self._logits = logits
+            # with tf.device('/cpu:0'):
+            #     logits = tf.Print(
+            #         logits,
+            #         [logits],
+            #         message="\n(MlpForMeta.loss_and_opt_ins)logits:",
+            #         summarize=320
+            #     )
+            #     logits = tf.Print(
+            #         logits,
+            #         [inputs],
+            #         message="\n(MlpForMeta.loss_and_opt_ins)inputs:",
+            #         summarize=320
+            #     )
             predictions = tf.nn.softmax(logits)
 
+            # with tf.device('/cpu:0'):
+            #     predictions = tf.Print(
+            #         predictions,
+            #         [predictions],
+            #         message="\n(MlpForMeta.loss_and_opt_ins)predictions:",
+            #         summarize=320
+            #     )
             # print('(LstmForMeta.loss_and_opt_ins)labels_shape:', labels.get_shape().as_list())
             # print('(LstmForMeta.loss_and_opt_ins)logits_shape:', logits.get_shape().as_list())
             labels = tf.one_hot(labels, self._num_classes)
@@ -160,6 +181,7 @@ class MlpForMeta(object):
             self._additional_metrics,
             predictions=predictions,
             labels=labels,
+            loss=loss,
             keep_first_dim=False
         )
         self._hooks['predictions'] = predictions
@@ -172,6 +194,31 @@ class MlpForMeta(object):
             self,
             loss
     ):
+        # with tf.device('/cpu:0'):
+        #     self._autonomous_train_specific_placeholders['learning_rate'] = tf.Print(
+        #         self._autonomous_train_specific_placeholders['learning_rate'],
+        #         [self._autonomous_train_specific_placeholders['learning_rate']],
+        #         message="\n(MlpForMeta._add_train_op)self._autonomous_train_specific_placeholders['learning_rate']:",
+        #         summarize=320
+        #     )
+        #     self._autonomous_train_specific_placeholders['learning_rate'] = tf.Print(
+        #         self._autonomous_train_specific_placeholders['learning_rate'],
+        #         [self._trainable['matrices'][0]],
+        #         message="\n(MlpForMeta._add_train_op)self._trainable['matrices'][0]:",
+        #         summarize=320
+        #     )
+        #     self._autonomous_train_specific_placeholders['learning_rate'] = tf.Print(
+        #         self._autonomous_train_specific_placeholders['learning_rate'],
+        #         [tf.gradients(loss, self._logits)],
+        #         message="\n(MlpForMeta._add_train_op)sigma:",
+        #         summarize=320
+        #     )
+        #     # loss = tf.Print(
+        #     #     loss,
+        #     #     [self._trainable['matrices'][1]],
+        #     #     message="\n(MlpForMeta._add_train_op)self._trainable['matrices'][1]:",
+        #     #     summarize=320
+        #     # )
         if self._optimizer == 'adam':
             opt = tf.train.AdamOptimizer(
                 learning_rate=self._autonomous_train_specific_placeholders['learning_rate'])
@@ -200,7 +247,19 @@ class MlpForMeta(object):
             opt = tf.train.GradientDescentOptimizer(
                 self._autonomous_train_specific_placeholders['learning_rate'])
         l2_loss = self._l2_loss(self._trainable['matrices'])
-        self._hooks['train_op'] = opt.minimize(loss + l2_loss)
+        gv = opt.compute_gradients(loss + l2_loss)
+        g, v = zip(*gv)
+        g = list(g)
+        # with tf.device('/cpu:0'):
+        #     g[0] = tf.Print(
+        #         g[0],
+        #         g,
+        #         message="(MlpForMeta._add_train_op)gradients:",
+        #         summarize=320
+        #     )
+        gv = list(zip(g, v))
+        self._hooks['train_op'] = opt.apply_gradients(gv)
+        # self._hooks['train_op'] = opt.minimize(loss + l2_loss)
 
     def _compute_matrix_parameters(self, idx):
         if idx == 0:
@@ -258,17 +317,19 @@ class MlpForMeta(object):
     def make_inputs_and_labels_placeholders(self, device, name_scope):
         placeholders = dict()
         with tf.device(device):
+            # shape_batch_dim = [self._batch_size]
+            shape_batch_dim = [None]
             if name_scope is not None:
                 with tf.name_scope(name_scope):
                     placeholders['inputs'] = tf.placeholder(
-                        tf.float32, shape=[None] + self._input_shape, name='inputs')
+                        tf.float32, shape=shape_batch_dim + self._input_shape, name='inputs')
                     placeholders['labels'] = tf.placeholder(
-                        tf.int32, shape=[None], name='labels')
+                        tf.int32, shape=shape_batch_dim, name='labels')
             else:
                 placeholders['inputs'] = tf.placeholder(
-                    tf.float32, shape=[None] + self._input_shape, name='inputs')
+                    tf.float32, shape=shape_batch_dim + self._input_shape, name='inputs')
                 placeholders['labels'] = tf.placeholder(
-                    tf.int32, shape=[None], name='labels')
+                    tf.int32, shape=shape_batch_dim, name='labels')
         return placeholders
 
     def _add_inputs_and_labels(self):
@@ -304,7 +365,7 @@ class MlpForMeta(object):
             optimizer='adam'
     ):
         if num_hidden_nodes is None:
-            num_nodes = [1000, 1000]
+            num_hidden_nodes = [1000, 1000]
 
         self._batch_size = batch_size
         self._num_layers = num_layers
