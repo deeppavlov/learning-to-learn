@@ -2,7 +2,6 @@ import tensorflow as tf
 
 ROOT_HEIGHT = 5
 import sys
-import os
 from pathlib import Path
 file = Path(__file__).resolve()
 parent, root = file.parent, file.parents[ROOT_HEIGHT]

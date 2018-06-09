@@ -6,6 +6,7 @@ import sys
 import os
 
 
+
 def load_CIFAR10_batch(filename):
     '''load data from single CIFAR-10 file'''
 
@@ -47,9 +48,9 @@ def load_data(valid_size):
     mean_image = np.mean(x_train, axis=0)
     x_train -= mean_image
     x_test -= mean_image
-    mean_square = np.sqrt(np.mean(x_train * x_train)) * 20
-    x_train /= mean_square
-    x_test /= mean_square
+    # mean_square = np.sqrt(np.mean(x_train * x_train))
+    # x_train /= mean_square
+    # x_test /= mean_square
     train = np.array(list(zip(x_train, y_train)))
     valid = train[:valid_size]
     train = train[valid_size:]
