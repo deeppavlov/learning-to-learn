@@ -508,11 +508,11 @@ class Meta(object):
                 iv = ov[ik]
                 if isinstance(iv, list):
                     for idx, tensor in enumerate(iv):
-                        print("(Meta._collapse_exercise_dim)tensor:", tensor)
-                        tensor_shape = tensor.get_shape().as_list()
+                        # print("(Meta._collapse_exercise_dim)tensor:", tensor)
+                        tensor_shape = [-1 if a is None else a for a in tensor.get_shape().as_list()]
                         iv[idx] = tf.reshape(tensor, shape=tensor_shape[1:])
                 else:
-                    tensor_shape = iv.get_shape().as_list()
+                    tensor_shape = [-1 if a is None else a for a in iv.get_shape().as_list()]
                     ov[ik] = tf.reshape(iv, shape=tensor_shape[1:])
         return opt_ins
 
@@ -1029,8 +1029,20 @@ class Meta(object):
                 # opt = tf.train.GradientDescentOptimizer(1.)
                 # grads, vars = zip(*opt.compute_gradients(start_loss))
                 optimizer_ins = self._expand_exercise_dim(optimizer_ins, ['o', 'sigma'])
+                for ok, ov in optimizer_ins.items():
+                    for ik, iv in ov.items():
+                        print(
+                            "(Meta._inference_graph)before core optimizer_ins[%s][%s].shape:" % (ok, ik),
+                            iv[0].get_shape().as_list() if isinstance(iv, list) else iv.get_shape().as_list()
+                        )
                 optimizer_outs, new_optimizer_states = self._optimizer_core(
                     optimizer_ins, optimizer_states, 0, permute=False)
+                for ok, ov in optimizer_ins.items():
+                    for ik, iv in ov.items():
+                        print(
+                            "(Meta._inference_graph)after core optimizer_ins[%s][%s].shape:" % (ok, ik),
+                            iv[0].get_shape().as_list() if isinstance(iv, list) else iv.get_shape().as_list()
+                        )
                 optimizer_outs = self._collapse_exercise_dim(optimizer_outs, ['o_pr', 'sigma_pr'])
                 # print('\n(Meta._inference_graph)optimizer_outs:')
                 # print_optimizer_ins(optimizer_outs)
