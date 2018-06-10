@@ -291,7 +291,8 @@ class FfResOpt(Meta):
             optimizer_for_opt_type='adam',
             additional_metrics=None,
             flags=None,
-            normalizing=None
+            normalizing=None,
+            get_theta=False,
     ):
         if additional_metrics is None:
             additional_metrics = list()
@@ -325,6 +326,7 @@ class FfResOpt(Meta):
         self._additional_metrics = additional_metrics
 
         self._flags = flags
+        self._get_theta = get_theta
 
         self._normalizing = normalizing
 

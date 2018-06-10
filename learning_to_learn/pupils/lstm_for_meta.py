@@ -247,14 +247,17 @@ class Lstm(Pupil):
     @staticmethod
     def _embed(inputs, matrix):
         with tf.name_scope('embeddings'):
-            embeddings = custom_matmul(inputs, matrix, base_ndims=[3, 2])
-            embeddings_ndims = len(embeddings.get_shape().as_list())
-            if embeddings_ndims == 4:
+            inputs_ndims = len(inputs.get_shape().as_list())
+            if inputs_ndims == 4:
                 unstack_dim = 1
             else:
                 unstack_dim = 0
+            o = tf.unstack(inputs, axis=unstack_dim, name='o_embedding_layer')
+            inputs = tf.stack(o, axis=unstack_dim)
+            embeddings = custom_matmul(inputs, matrix, base_ndims=[3, 2])
+
             unstacked_embeddings = tf.unstack(embeddings, axis=unstack_dim, name='embeddings')
-            optimizer_ins = {'embedding_layer': {'o': tf.unstack(inputs, axis=unstack_dim, name='embeddings'),
+            optimizer_ins = {'embedding_layer': {'o': o,
                                                  's': unstacked_embeddings}}
             return unstacked_embeddings, optimizer_ins
 

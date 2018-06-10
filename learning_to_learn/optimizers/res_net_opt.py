@@ -545,7 +545,8 @@ class ResNet4Lstm(Meta):
             optimizer_for_opt_type='adam',
             additional_metrics=None,
             flags=None,
-            normalizing=None
+            normalizing=None,
+            get_theta=False,
     ):
         """
         :param pupil:
@@ -608,6 +609,7 @@ class ResNet4Lstm(Meta):
         self._additional_metrics = additional_metrics
 
         self._flags = flags
+        self._get_theta = get_theta
 
         self._normalizing = normalizing
 

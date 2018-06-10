@@ -3,7 +3,7 @@ from learning_to_learn.optimizers.meta import Meta
 from learning_to_learn.useful_functions import construct_dict_without_none_entries
 
 
-class Empty(Meta):
+class ChiTerm(Meta):
     @staticmethod
     def form_kwargs(kwargs_for_building, insertions):
         for insertion in insertions:
@@ -20,7 +20,67 @@ class Empty(Meta):
     def _create_optimizer_states(self, num_exercises, var_scope, gpu_idx):
         return list()
 
+    @staticmethod
+    def _add_chi_term_sum(
+            optimizer_ins
+    ):
+        for ok, ov in optimizer_ins.items():
+            if isinstance(ov['o'], list):
+                ov['o'] = [o + theta for o, theta in zip(ov['o'],ov['theta'])]
+            else:
+                ov['o'] = ov['o'] + ov['theta']
+        return optimizer_ins
+
+    @staticmethod
+    def _add_chi_term_mul(
+            optimizer_ins
+    ):
+        for ok, ov in optimizer_ins.items():
+            if isinstance(ov['o'], list):
+                ov['o'] = [o + theta * tf.square(o) for o, theta in zip(ov['o'],ov['theta'])]
+            else:
+                ov['o'] = ov['o'] + ov['theta'] * tf.square(ov['o'])
+        return optimizer_ins
+
+    @staticmethod
+    def _add_chi_term_exp(optimizer_ins):
+        for ok, ov in optimizer_ins.items():
+            if isinstance(ov['o'], list):
+                ov['o'] = [o*tf.exp(o*theta) for o, theta in zip(ov['o'],ov['theta'])]
+            else:
+                ov['o'] = ov['o'] * tf.exp(ov['theta']*tf.square(ov['o']))
+        return optimizer_ins
+
+    def _add_chi_term(
+            self,
+            optimizer_ins
+    ):
+        self._multiply_by_factor(
+            optimizer_ins,
+            dict(
+                theta=self._chi_contribution
+            )
+        )
+        if self._chi_application == 'sum':
+            optimizer_ins = self._add_chi_term_sum(optimizer_ins)
+        elif self._chi_application == 'mul':
+            optimizer_ins = self._add_chi_term_mul(optimizer_ins)
+        elif self._chi_application == 'exp':
+            optimizer_ins = self._add_chi_term_exp(optimizer_ins)
+        return optimizer_ins
+
     def _optimizer_core(self, optimizer_ins, states, gpu_idx, permute=False):
+        # optimizer_ins = self._extend_with_permutations(optimizer_ins, num_exercises, gpu_idx)
+        # optimizer_ins = self._forward_permute(optimizer_ins)
+        self._multiply_by_factor(
+            optimizer_ins,
+            dict(
+                theta=self._chi_contribution
+            )
+        )
+
+        self._add_chi_term(optimizer_ins)
+
         self._multiply_by_factor(
             optimizer_ins,
             dict(
@@ -35,7 +95,9 @@ class Empty(Meta):
             regime='train',
             additional_metrics=None,
             flags=None,
-            get_theta=False,
+            get_theta=True,
+            base_optimizer_type='sgd',
+            chi_application='sum',
     ):
         """
         :param regime:
@@ -58,8 +120,11 @@ class Empty(Meta):
         self._normalizing = None
         self._inp_gradient_clipping = None
 
-        self._learning_rate = tf.placeholder(tf.float32, name='learning_rate', shape=[])
+        self._base_optimizer_type = base_optimizer_type
+        self._chi_application = chi_application
 
+        self._learning_rate = tf.placeholder(tf.float32, name='learning_rate', shape=[])
+        self._chi_contribution = tf.placeholder(tf.float32, name='chi_contribution', shape=[])
         self._hooks = dict(
             train_with_meta_optimizer_op=None,
             reset_optimizer_inference_pupil_storage=None,
@@ -67,11 +132,13 @@ class Empty(Meta):
             pupil_trainable_initializers=None,
             train_optimizer_summary=None,
             learning_rate=None,
+            chi_contribution=None
         )
 
         for add_metric in self._additional_metrics:
             self._hooks[add_metric] = None
         self._hooks['learning_rate'] = self._learning_rate
+        self._hooks['chi_contribution'] = self._chi_contribution
         self._debug_tensors = list()
 
         if regime == 'inference':

@@ -1,4 +1,4 @@
-ROOT_HEIGHT = 5
+ROOT_HEIGHT = 6
 import sys
 from pathlib import Path
 file = Path(__file__).resolve()
@@ -13,7 +13,7 @@ from learning_to_learn.environment import Environment
 from learning_to_learn.pupils.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
 from learning_to_learn.useful_functions import create_vocabulary
 
-from learning_to_learn.optimizers.empty import Empty
+from learning_to_learn.optimizers.chiterm import ChiTerm
 
 import os
 
@@ -45,7 +45,7 @@ print(vocabulary_size)
 
 env = Environment(
     pupil_class=Lstm,
-    meta_optimizer_class=Empty,
+    meta_optimizer_class=ChiTerm,
     batch_generator_classes=BatchGenerator,
     vocabulary=vocabulary)
 
@@ -74,6 +74,7 @@ env.build_pupil(
 env.build_optimizer(
     regime='inference',
     additional_metrics=add_metrics,
+    chi_application='exp',
 )
 
 
@@ -82,6 +83,10 @@ add_feed = [
     dict(
         placeholder='learning_rate',
         value=4.
+    ),
+    dict(
+        placeholder='chi_contribution',
+        value=.01
     )
 ]
 valid_add_feed = [

@@ -277,9 +277,26 @@ class Meta(object):
                                 v[ik] = tf.stop_gradient(v[ik])
         return optimizer_ins
 
+    def _extend_opt_ins_with_derivatives(
+            self,
+            opt_ins,
+            loss,
+    ):
+        argument_names = ['s']
+        derivative_names = ['sigma']
+        if self._get_theta:
+            argument_names.append('o')
+            derivative_names.append('theta')
+        for arg_name, der_name in zip(argument_names, derivative_names):
+            retrieved_args, map_ = retrieve_from_inner_dicts(opt_ins, arg_name)
+            derivatives = tf.gradients(loss, retrieved_args)
+            opt_ins = distribute_into_inner_dicts(opt_ins, der_name, derivatives, map_)
+        return opt_ins
+
     def _eval_pupil_gradients_for_optimizer_training(
             self, pupil_grad_eval_inputs, pupil_grad_eval_labels,
-            pupil_trainable_variables, pupil_grad_eval_pupil_storage):
+            pupil_trainable_variables, pupil_grad_eval_pupil_storage,
+    ):
         """optimizer_ins is nested dictionary. its first level keys are layer names and second level keys are names
         of tensors related to specific layer. E. g. 'o', 's', 'sigma', 'matrix', 'bias'. optimizer_outs have similar
         altough they also contain 'psi' and 'phi' tensors. In train mode first dim of tensors is exercise dim"""
@@ -290,11 +307,11 @@ class Meta(object):
                 pupil_grad_eval_pupil_storage, opt_ins=pupil_trainable_variables)
             # print('(Meta._eval_pupil_gradients_for_optimizer_training)AFTER LOSS_AND_OPT_INS')
             # print_optimizer_ins(optimizer_ins)
-            s_vectors, map_ = retrieve_from_inner_dicts(optimizer_ins, 's')
-            # print('(Meta._eval_pupil_gradients_for_optimizer_training)s_vectors:', s_vectors)
-            # print('(Meta._eval_pupil_gradients_for_optimizer_training)map_:', map_)
-            sigma_vectors = tf.gradients(loss, s_vectors)
-            optimizer_ins = distribute_into_inner_dicts(optimizer_ins, 'sigma', sigma_vectors, map_)
+
+            optimizer_ins = self._extend_opt_ins_with_derivatives(
+                optimizer_ins,
+                loss
+            )
 
             optimizer_ins = self._stop_gradients_in_opt_ins(optimizer_ins, ['o', 's', 'sigma'])
             if self._normalizing is not None:
@@ -326,10 +343,11 @@ class Meta(object):
     def _eval_pupil_gradients_for_optimizer_inference(self):
         loss, optimizer_ins, storage_save_ops, predictions, labels = self._pupil.loss_and_opt_ins_for_inference()
         # print('(Meta._eval_pupil_gradients_for_optimizer_inference)optimizer_ins:', optimizer_ins)
-        s_vectors, map_ = retrieve_from_inner_dicts(optimizer_ins, 's')
-        # print('(Meta._eval_pupil_gradients_for_optimizer_inference)map_:', map_)
-        sigma_vectors = tf.gradients(loss, s_vectors)
-        optimizer_ins = distribute_into_inner_dicts(optimizer_ins, 'sigma', sigma_vectors, map_)
+        optimizer_ins = self._extend_opt_ins_with_derivatives(
+            optimizer_ins,
+            loss
+        )
+
         if self._normalizing is not None:
             optimizer_ins = self._normalize(optimizer_ins, self._normalizing)
         # print('(Meta._eval_pupil_gradients_for_optimizer_inference)optimizer_ins:', optimizer_ins)
@@ -341,6 +359,10 @@ class Meta(object):
             with tf.name_scope(ok):
                 for ik, iv in ov.items():
                     if ik in factors:
+                        # print(
+                        #     "(Meta._multiply_by_factor)opt_flow[%s][%s]:" % (ok, ik),
+                        #     opt_flow[ok][ik]
+                        # )
                         with tf.name_scope(ik):
                             ov[ik] = apply_to_nested(iv, lambda x: x*factors[ik])
         return opt_flow
@@ -792,7 +814,7 @@ class Meta(object):
                                         self._eval_pupil_gradients_for_optimizer_training(
                                             pupil_grad_eval_inputs[gpu_idx][unr_idx],
                                             pupil_grad_eval_labels[gpu_idx][unr_idx],
-                                            pupil_trainable_variables[gpu_idx], pupil_grad_eval_pupil_storage[gpu_idx]
+                                            pupil_trainable_variables[gpu_idx], pupil_grad_eval_pupil_storage[gpu_idx],
                                         )
                                 start_additional_metrics = compute_metrics(
                                     self._additional_metrics, start_predictions,
@@ -1029,20 +1051,20 @@ class Meta(object):
                 # opt = tf.train.GradientDescentOptimizer(1.)
                 # grads, vars = zip(*opt.compute_gradients(start_loss))
                 optimizer_ins = self._expand_exercise_dim(optimizer_ins, ['o', 'sigma'])
-                for ok, ov in optimizer_ins.items():
-                    for ik, iv in ov.items():
-                        print(
-                            "(Meta._inference_graph)before core optimizer_ins[%s][%s].shape:" % (ok, ik),
-                            iv[0].get_shape().as_list() if isinstance(iv, list) else iv.get_shape().as_list()
-                        )
+                # for ok, ov in optimizer_ins.items():
+                #     for ik, iv in ov.items():
+                #         print(
+                #             "(Meta._inference_graph)before core optimizer_ins[%s][%s].shape:" % (ok, ik),
+                #             iv[0].get_shape().as_list() if isinstance(iv, list) else iv.get_shape().as_list()
+                #         )
                 optimizer_outs, new_optimizer_states = self._optimizer_core(
                     optimizer_ins, optimizer_states, 0, permute=False)
-                for ok, ov in optimizer_ins.items():
-                    for ik, iv in ov.items():
-                        print(
-                            "(Meta._inference_graph)after core optimizer_ins[%s][%s].shape:" % (ok, ik),
-                            iv[0].get_shape().as_list() if isinstance(iv, list) else iv.get_shape().as_list()
-                        )
+                # for ok, ov in optimizer_ins.items():
+                #     for ik, iv in ov.items():
+                #         print(
+                #             "(Meta._inference_graph)after core optimizer_ins[%s][%s].shape:" % (ok, ik),
+                #             iv[0].get_shape().as_list() if isinstance(iv, list) else iv.get_shape().as_list()
+                #         )
                 optimizer_outs = self._collapse_exercise_dim(optimizer_outs, ['o_pr', 'sigma_pr'])
                 # print('\n(Meta._inference_graph)optimizer_outs:')
                 # print_optimizer_ins(optimizer_outs)

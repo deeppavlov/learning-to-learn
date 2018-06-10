@@ -194,7 +194,8 @@ class StackAllRnn(Meta):
             additional_metrics=None,
             flags=None,
             normalizing=None,
-            permute=False
+            permute=False,
+            get_theta=False,
     ):
         if additional_metrics is None:
             additional_metrics = list()
@@ -224,6 +225,7 @@ class StackAllRnn(Meta):
         self._additional_metrics = additional_metrics
 
         self._flags = flags
+        self._get_theta = get_theta
 
         self._normalizing = normalizing
 

@@ -2036,9 +2036,11 @@ class Environment(object):
             self,
             kwargs_for_building,
             session_specs,
-            evaluation
+            evaluation,
+            meta_optimizer_build_kwargs
     ):
         self._build_pupil(kwargs_for_building)
+        self.build_optimizer(**meta_optimizer_build_kwargs)
         # print('args_for_launches:', args_for_launches)
         self._start_session(session_specs['allow_soft_placement'],
                             session_specs['log_device_placement'],
@@ -2111,13 +2113,15 @@ class Environment(object):
             args_for_launches,
             evaluation,
             hp_combs,
-            order
+            order,
+            meta_optimizer_build_kwargs
     ):
 
         additional_feed_dict, eval_batch_gen_class, datasets = self._preparations_for_launch(
             kwargs_for_building,
             session_specs,
-            evaluation
+            evaluation,
+            meta_optimizer_build_kwargs
         )
         for hp_comb, (start_specs, run_specs_set) in zip(hp_combs, args_for_launches):
             self._launch_and_put_in_queue(
@@ -2141,12 +2145,14 @@ class Environment(object):
             run_specs_set,
             evaluation,
             hp_comb,
-            order
+            order,
+            meta_optimizer_build_kwargs
     ):
         additional_feed_dict, eval_batch_gen_class, datasets = self._preparations_for_launch(
             kwargs_for_building,
             session_specs,
-            evaluation
+            evaluation,
+            meta_optimizer_build_kwargs
         )
         self._launch_and_put_in_queue(
             hp_comb,
@@ -2302,6 +2308,7 @@ class Environment(object):
             evaluation,
             other_hp_combs,
             build_hp_comb,
+            meta_optimizer_build_kwargs=None,
             rebuild_every_time=True
     ):
         parsed = configure_args_for_launches(self, args_for_launches, shares, model='pupil')
@@ -2331,7 +2338,8 @@ class Environment(object):
                         run_specs_set,
                         evaluation,
                         hp_comb,
-                        order
+                        order,
+                        meta_optimizer_build_kwargs,
                     )
                 )
                 p.start()
@@ -2354,7 +2362,8 @@ class Environment(object):
                     args_for_launches,
                     evaluation,
                     hp_combs,
-                    order
+                    order,
+                    meta_optimizer_build_kwargs,
                 )
             )
             p.start()
@@ -2370,6 +2379,7 @@ class Environment(object):
                     kwargs_for_building,
                     build_hyperparameters=None,
                     other_hyperparameters=None,
+                    meta_optimizer_build_kwargs=None,
                     initial_experiment_counter_value=0,
                     **kwargs):
         """build_hyperparameters and other_hyperparameters are provided in the following format
@@ -2431,6 +2441,7 @@ class Environment(object):
             kwargs_for_building=kwargs_for_building,
             build_hyperparameters=build_hyperparameters,
             other_hyperparameters=other_hyperparameters,
+            initial_experiment_counter_value=0,
             kwargs=kwargs)
         if build_hyperparameters is None:
             build_hyperparameters = dict()
@@ -2494,6 +2505,7 @@ class Environment(object):
                     evaluation,
                     other_hp_combs,
                     build_hp_comb,
+                    meta_optimizer_build_kwargs=meta_optimizer_build_kwargs,
                     rebuild_every_time=True
                 )
         else:
@@ -2505,6 +2517,7 @@ class Environment(object):
                 evaluation,
                 other_hp_combs,
                 kwargs_for_building,
+                meta_optimizer_build_kwargs=meta_optimizer_build_kwargs,
                 rebuild_every_time=True
             )
 
