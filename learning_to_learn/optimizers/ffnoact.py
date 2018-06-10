@@ -233,6 +233,7 @@ class Ff(Meta):
             num_layers=4,
             num_gpus=1,
             regularization_rate=6e-6,
+            inp_gradient_clipping='norm_loss',
             clip_norm=1e+5,
             optimizer_init_parameter=.1,
             permute=True,
@@ -261,6 +262,7 @@ class Ff(Meta):
         else:
             self._base_device = '/cpu:0'
         self._regularization_rate = regularization_rate
+        self._inp_gradient_clipping = inp_gradient_clipping
         self._clip_norm = clip_norm
         self._optimizer_init_parameter = optimizer_init_parameter
         self._permute = permute

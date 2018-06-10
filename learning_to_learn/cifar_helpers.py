@@ -6,6 +6,7 @@ import os
 
 ROOT_HEIGHT = 1
 
+
 def load_CIFAR10_batch(filename):
     '''load data from single CIFAR-10 file'''
 

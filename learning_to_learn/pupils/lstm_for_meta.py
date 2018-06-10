@@ -958,7 +958,7 @@ class Lstm(Pupil):
 
         if regime == 'autonomous_training':
             self._add_trainable_variables()
-            self._add_train_storage()
+            # self._add_train_storage()
             self._add_autonomous_training_specific_placeholders()
             self._add_train_inputs_and_labels_placeholders()
             
@@ -974,14 +974,14 @@ class Lstm(Pupil):
             self._add_trainable_variables()
             self._add_train_storage()
             self._add_train_inputs_and_labels_placeholders()
-
+            self._hooks['reset_pupil_train_state'] = tf.group(*self.reset_self_train_storage())
             self._validation_graph()
 
         elif regime == 'optimizer_training':
             self._add_trainable_variables()
             self._add_train_storage()
             self._add_train_inputs_and_labels_placeholders()
-
+            self._hooks['reset_pupil_train_state'] = tf.group(*self.reset_self_train_storage())
             self._validation_graph()
 
         else:

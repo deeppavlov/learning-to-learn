@@ -537,6 +537,7 @@ class ResNet4Lstm(Meta):
             res_core_activation_func='relu',
             num_gpus=1,
             regularization_rate=6e-6,
+            inp_gradient_clipping='norm_loss',
             clip_norm=1e+5,
             optimizer_init_parameter=.1,
             permute=True,
@@ -546,6 +547,34 @@ class ResNet4Lstm(Meta):
             flags=None,
             normalizing=None
     ):
+        """
+        :param pupil:
+        :param num_exercises:
+        :param num_lstm_nodes:
+        :param num_optimizer_unrollings:
+        :param perm_period:
+        :param num_res_layers:
+        :param res_size:
+        :param res_core_activation_func:
+        :param num_gpus:
+        :param regularization_rate:
+        :param clip_norm:
+        :param optimizer_init_parameter:
+        :param permute:
+        :param regime:
+        :param optimizer_for_opt_type:
+        :param additional_metrics:
+        :param flags: a list containing some of the following
+            'summarize_opt_ins': if present summary operations for optimizer inputs ('o', 's', 'sigma') are created
+            'opt_ins_substitution': if present optimizer ins will be replaced with constant tensors. To specify them
+                got to line "if 'opt_ins_substitution' in self._flags:" and choose your option
+        :param normalizing: a dictionary. Specifies the way optimizer ins are normalized.
+            'type': normalizing type.
+            several other entries.
+            Now only 'factor' option is present.
+            If specified element of optimizer ins ('sigma', 'o' etc.) is multiplied by corresponding element of
+            normalizing['factors'] dictionary.
+        """
         if additional_metrics is None:
             additional_metrics = list()
         if flags is None:
@@ -568,6 +597,7 @@ class ResNet4Lstm(Meta):
         else:
             self._base_device = '/cpu:0'
         self._regularization_rate = regularization_rate
+        self._inp_gradient_clipping = inp_gradient_clipping
         self._clip_norm = clip_norm
         self._optimizer_init_parameter = optimizer_init_parameter
         self._permute = permute
@@ -595,7 +625,6 @@ class ResNet4Lstm(Meta):
             reset_permutation_matrices=None,
             reset_pupil_grad_eval_pupil_storage=None,
             reset_optimizer_grad_pupil_storage=None,
-            reset_optimizer_inference_pupil_storage=None,
             meta_optimizer_saver=None,
             loss=None,
             start_loss=None,
@@ -638,7 +667,6 @@ class ResNet4Lstm(Meta):
             self._hooks['reset_optimizer_grad_pupil_storage'] = tf.group(
                 *chain(*[self._pupil.reset_storage(stor) for stor in self._optimizer_grad_pupil_storage])
             )
-            self._hooks['reset_optimizer_inference_pupil_storage'] = tf.group(*self._pupil.reset_self_train_storage())
             self._add_standard_train_hooks()
 
             self._additional_loss = 0

@@ -1497,6 +1497,8 @@ class Environment(object):
         else:
             checkpoints_path = None
         init_step = 0
+        # if 'reset_pupil_train_state' in self._hooks:
+        #     self._session.run(self._hooks['reset_pupil_train_state'])
         for run_specs in run_specs_set:
             init_step = self._train(run_specs,
                                     checkpoints_path,
@@ -1820,7 +1822,8 @@ class Environment(object):
             validation_dataset
         )
         # print("(Environment._train_optimizer)self._hooks:", self._hooks)
-        self._session.run(self._hooks['reset_optimizer_inference_pupil_storage'])
+        if 'reset_pupil_train_state' in self._hooks:
+            self._session.run(self._hooks['reset_pupil_train_state'])
         self._session.run(self._hooks['reset_optimizer_inference_state'])
         print('OPTIMIZER INFERENCE ON PUPIL %s\n' % pupil_name + '*' * 40)
         self._restore_pupil(pupil_path)

@@ -508,6 +508,7 @@ class Meta(object):
                 iv = ov[ik]
                 if isinstance(iv, list):
                     for idx, tensor in enumerate(iv):
+                        print("(Meta._collapse_exercise_dim)tensor:", tensor)
                         tensor_shape = tensor.get_shape().as_list()
                         iv[idx] = tf.reshape(tensor, shape=tensor_shape[1:])
                 else:
@@ -675,32 +676,33 @@ class Meta(object):
                         optimizer_outs,
                         self._normalizing
                     )
-            with tf.name_scope('clip_gradients'):
-                glob_norm = global_norm(mods)
-                factor = tf.divide(
-                    self._clip_norm,
-                    tf.maximum(glob_norm, self._clip_norm),
-                    name='factor')
-                # norm = tf.stop_gradient(tf.maximum(global_norm(mods), 1.))
+            if self._inp_gradient_clipping is not None:
+                with tf.name_scope('clip_gradients'):
+                    glob_norm = global_norm(mods)
+                    factor = tf.divide(
+                        self._clip_norm,
+                        tf.maximum(glob_norm, self._clip_norm),
+                        name='factor')
+                    # norm = tf.stop_gradient(tf.maximum(global_norm(mods), 1.))
 
-                # with tf.device('/cpu:0'):
-                #     factor = tf.Print(factor, [factor], message='(Meta._compose_mods)factor: ')
+                    # with tf.device('/cpu:0'):
+                    #     factor = tf.Print(factor, [factor], message='(Meta._compose_mods)factor: ')
 
-                for k, v in optimizer_outs.items():
-                    with tf.name_scope(k):
-                        if 'matrix_mods' in v:
-                            with tf.name_scope('matrix'):
-                                v['matrix_mods'] = tf.multiply(v['matrix_mods'], factor, name='matrix_mods')
-                        if 'bias_mods' in v:
-                            with tf.name_scope('bias'):
-                                v['bias_mods'] = tf.multiply(v['bias_mods'], factor, name='bias_mods')
+                    for k, v in optimizer_outs.items():
+                        with tf.name_scope(k):
+                            if 'matrix_mods' in v:
+                                with tf.name_scope('matrix'):
+                                    v['matrix_mods'] = tf.multiply(v['matrix_mods'], factor, name='matrix_mods')
+                            if 'bias_mods' in v:
+                                with tf.name_scope('bias'):
+                                    v['bias_mods'] = tf.multiply(v['bias_mods'], factor, name='bias_mods')
 
-                glob_loss = global_l2_loss(mods)
+                    glob_loss = global_l2_loss(mods)
 
-                # with tf.device('/cpu:0'):
-                #     glob_loss = tf.Print(glob_loss, [glob_norm], message="(Meta._compose_mods)glob_norm: ")
+                    # with tf.device('/cpu:0'):
+                    #     glob_loss = tf.Print(glob_loss, [glob_norm], message="(Meta._compose_mods)glob_norm: ")
 
-                self._additional_loss += glob_loss / self._clip_norm
+                    self._additional_loss += glob_loss / self._clip_norm
         return optimizer_outs
 
     @staticmethod
