@@ -1404,6 +1404,8 @@ def check_if_line_is_header(line):
 def extract_hp_set(line, hp_names):
     hp_set = dict()
     hp_values = line.split()[-len(hp_names):]
+    print("(useful_functions.extract_hp_set)hp_values:", hp_values)
+    print("(useful_functions.extract_hp_set)hp_names:", hp_names)
     for hp_name, hp_value in zip(hp_names, hp_values):
         if '.' in hp_value or 'e' in hp_value:
             value_type = 'float'
@@ -1422,6 +1424,7 @@ def get_combs_and_num_exps_pupil(eval_file, order):
         for line in lines[1:]:
             if check_if_line_contains_results(line):
                 hp_set = extract_hp_set(line, hp_names)
+                print("(useful_functions.get_combs_and_num_exps_pupil)hp_set:", hp_set)
                 comb = list()
                 for name in order:
                     comb.append(hp_set[name])
@@ -1495,8 +1498,10 @@ def make_initial_grid(file_name, eval_dir_or_file, chop_last_experiment=False, m
         shutil.rmtree(os.path.join(eval_dir_or_file, last_exp_file_name[:-4]))
         tested_combs = tested_combs[:-1]
         num_exps -= 1
-    # print("(useful_functions.make_initial_grid)tested_combs:", tested_combs)
+    print("(useful_functions.make_initial_grid)tested_combs:", tested_combs)
     grid = np.zeros(tuple([len(v) for v in init_conf.values()]))
+    print("(useful_functions.make_initial_grid)init_grid_values:", init_grid_values)
+    print("(useful_functions.make_initial_grid)hp_names:", hp_names)
     for tested_comb in tested_combs:
         indices = list()
         for p_idx, v in enumerate(tested_comb):
@@ -1784,3 +1789,57 @@ def cumulative_mul(sequence, init):
     for a in sequence:
         res *= a
     return a
+
+
+def hyperparameter_name_string(name):
+    # print('(Handler._hyperparameter_name_string)name:', name)
+    string = name[1]
+    if name[2] is not None:
+        string += '[%s]' % name[2]
+    if name[3] is not None:
+        string += '/' + name[3]
+    return string
+
+
+def sort_hps(hps):
+    return sorted(hps, key=lambda x: hyperparameter_name_string(x))
+
+
+def hp_name_2_hp_description(hp_name):
+    description = ['UNKNOWN']
+    if '/' in hp_name:
+        name, other = hp_name.split('/')
+        if '[' in other:
+            spec, index_part = other.split('[')
+        else:
+            spec = other
+            index_part = None
+    else:
+        spec = None
+        if '[' in hp_name:
+            name, index_part = hp_name.split('[')
+        else:
+            name = hp_name
+            index_part = None
+    if index_part is not None:
+        index = int(index_part[:-1])
+    else:
+        index = None
+    description.extend([name, index, spec])
+    return tuple(description)
+
+
+def check_if_hp_description_is_in_list(description, l):
+    indices = list()
+    for idx, e in enumerate(l):
+        if e[1:] == description[1:]:
+            indices.append(idx)
+    num_matches = len(indices)
+    if num_matches == 0:
+        print("ERROR: failed to match description %s" % description)
+        raise Exception
+    elif num_matches > 1:
+        print("ERROR: %s matches ( " + "%s" * num_matches + ") for description %s" \
+              % tuple(get_elements(l, indices) + [description]))
+        raise Exception
+    return True, l[indices[0]]

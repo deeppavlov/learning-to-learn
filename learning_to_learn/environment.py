@@ -1115,6 +1115,7 @@ class Environment(object):
         storage['step'] = step
         # self.set_in_storage(step=step)
         train_feed_dict_additions = train_specs['additions_to_feed_dict']
+        # print("(Environment._train)train_feed_dict_additions:", train_feed_dict_additions)
         validation_additional_feed_dict = train_specs['validation_additions_to_feed_dict']
         stop_specs = construct(train_specs['stop'])
 
@@ -2316,6 +2317,8 @@ class Environment(object):
 
         # constructing all hp combinations with one build hp combination
         hp_combs = list()
+        # print("(Environment._spring_process_for_meta_grid_search)other_hp_combs:", other_hp_combs)
+        print("(Environment._spring_process_for_meta_grid_search)build_hp_comb:", build_hp_comb)
         if len(other_hp_combs) > 0:
             for idx, other_hp_comb in enumerate(other_hp_combs):
                 hp_combination = construct(build_hp_comb)
@@ -2327,6 +2330,7 @@ class Environment(object):
         order = self._handler.order
         if rebuild_every_time:
             for hp_comb, (start_specs, run_specs_set) in zip(hp_combs, parsed):
+                print("(Environment._spring_process_for_meta_grid_search)hp_comb:", hp_comb)
                 queue_ = mp.Queue()
                 p = mp.Process(
                     target=self._one_launch,
@@ -2459,9 +2463,12 @@ class Environment(object):
         # print('build_hp_combs:', build_hp_combs)
         # print('build_insertions:', build_insertions)
         # print('other_hp_combs:', other_hp_combs)
-        # print('other_insertions:', other_insertions)
+        # print("('Environment.grid_search')other_insertions:", other_insertions)
+        print("('Environment.grid_search')build_hp_combs:", build_hp_combs)
 
         args_for_launches = create_all_args_for_launches(kwargs, other_insertions)
+        # print("('Environment.grid_search')args_for_launches[0]['additions_to_feed_dict']:",
+        #       args_for_launches[0]['additions_to_feed_dict'])
 
         hps = list()
         if len(build_hp_combs) > 0:
@@ -2488,6 +2495,7 @@ class Environment(object):
                 only_build_insertions = list()
                 shares = list()
                 for insertion, share in one_set_of_insertions_and_shares:
+                    # print('(Environment.grid_search)insertion:', insertion)
                     only_build_insertions.append(insertion)
                     shares.append(share)
                 build_kwargs = self._pupil_class.form_kwargs(
@@ -2516,7 +2524,7 @@ class Environment(object):
                 session_specs,
                 evaluation,
                 other_hp_combs,
-                kwargs_for_building,
+                dict(),
                 meta_optimizer_build_kwargs=meta_optimizer_build_kwargs,
                 rebuild_every_time=True
             )

@@ -914,17 +914,40 @@ def post_process_build_insertions(combination_insertions):
 
 def formalize_and_create_insertions_for_build_hps(hps):
     hps = process_build_hp_abbreviations(hps)
-    # print('\nformalize_and_create_insertions_for_build_hps')
-    # print('hps:', hps)
+    print('\nformalize_and_create_insertions_for_build_hps')
+    print('hps:', hps)
     hp_combinations, combination_insertions = formalize_and_create_insertions(hps)
-    # print('hp_combinations:', hp_combinations)
+    print('hp_combinations:', hp_combinations)
     # print('combination_insertions:', combination_insertions)
     post_processed_combination_insertions = post_process_build_insertions(combination_insertions)
     # print('\n')
     return hp_combinations, post_processed_combination_insertions
 
 
+def check_if_additional_placeholder_is_present(additions_to_feed_dict, name):
+    # print("(args_parsing.insert_not_build_hp)additions_to_feed_dict:", additions_to_feed_dict)
+    all_names = list()
+    for add_plhld in additions_to_feed_dict:
+        if 'name' in add_plhld:
+            all_names.append(add_plhld['name'])
+        elif 'placeholder' in add_plhld:
+            all_names.append(add_plhld['placeholder'])
+        else:
+            print("ERROR: additional placeholder %s missing name" % add_plhld)
+            raise Exception
+    present = name in all_names
+    if present:
+        indices = list()
+        for idx, n in enumerate(all_names):
+            if n == name:
+                indices.append(idx)
+    else:
+        indices = None
+    return present, indices
+
+
 def insert_not_build_hp(kwargs, one_hp_insertion):
+    # print("(args_parsing.insert_not_build_hp)one_hp_insertion:", one_hp_insertion)
     if one_hp_insertion['hp_type'] == 'built-in':
         if one_hp_insertion['list_index'] is None:
             kwargs[one_hp_insertion['hp_name']] = one_hp_insertion['paste']
@@ -941,6 +964,15 @@ def insert_not_build_hp(kwargs, one_hp_insertion):
     if one_hp_insertion['hp_type'] == 'additional_placeholder':
         if 'additions_to_feed_dict' not in kwargs:
             kwargs['additions_to_feed_dict'] = list()
+        present, indices = check_if_additional_placeholder_is_present(
+            kwargs['additions_to_feed_dict'],
+            one_hp_insertion['hp_name']
+        )
+        if present:
+            print("WARNING: placeholder %s is already present. It is going to be removed" % one_hp_insertion['hp_name'])
+            for idx in indices:
+                kwargs['additions_to_feed_dict'] = kwargs['additions_to_feed_dict'][:idx] + \
+                                                   kwargs['additions_to_feed_dict'][idx+1:]
         kwargs['additions_to_feed_dict'].append(one_hp_insertion['paste'])
     return kwargs
 

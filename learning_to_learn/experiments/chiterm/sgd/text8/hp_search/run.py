@@ -105,10 +105,6 @@ meta_optimizer_build_kwargs = dict(
 # )
 add_feed = [
     {'placeholder': 'dropout', 'value': .9},
-    dict(
-        placeholder='learning_rate',
-        value=4.
-    ),
 ]
 launch_kwargs = dict(
     # gpu_memory=.3,
@@ -147,7 +143,7 @@ for conf in confs:
                 decay=1.,
                 period=1e+6
             ),
-            hp_type='built-in',
+            hp_type='additional_placeholder',
             type='exponential_decay'
         ),
         chi_contribution=dict(

@@ -5,7 +5,8 @@ import numpy as np
 import tensorflow as tf
 
 from learning_to_learn.useful_functions import create_path, add_index_to_filename_if_needed, construct, nested2string, \
-    WrongMethodCallError, extend_dictionary, flatten, check_if_line_is_header
+    WrongMethodCallError, extend_dictionary, flatten, check_if_line_is_header, parse_header_line, \
+    hyperparameter_name_string, sort_hps, hp_name_2_hp_description, check_if_hp_description_is_in_list
 
 
 class Handler(object):
@@ -231,7 +232,7 @@ class Handler(object):
             self._hyperparameters = hyperparameters
             self._order = list(self._result_types)
             if self._hyperparameters is not None:
-                self._order.extend(self._hyperparameters)
+                self._order.extend(sort_hps(self._hyperparameters))
 
             self._tmpl = '%s '*(len(self._order) - 1) + '%s\n'
             result_names = list()
@@ -239,7 +240,7 @@ class Handler(object):
                 if not isinstance(result_type, tuple):
                     result_names.append(result_type)
                 else:
-                    result_names.append(self._hyperparameter_name_string(result_type))
+                    result_names.append(hyperparameter_name_string(result_type))
             # print("(Handler.__init__)result_names:", result_names)
             # print("(Handler.__init__)self._tmpl:", self._tmpl)
             for dataset_name in eval_dataset_names:
@@ -252,17 +253,20 @@ class Handler(object):
                     with open(self._file_names[dataset_name], 'a') as fd:
                         fd.write(self._tmpl % tuple(result_names))
                 else:
-                    pass
+                    with open(self._file_names[dataset_name], 'r') as fd:
+                        lines = fd.read().split('\n')
+                    metrics, hp_names = parse_header_line(lines[0])
+                    self._order = metrics + [hp_name_2_hp_description(n) for n in hp_names]
 
             self._environment_instance.set_in_storage(launches=list())
 
         if self._processing_type == 'several_meta_optimizer_launches':
             self._eval_pupil_names = eval_pupil_names
             self._hyperparameters = hyperparameters
-            self._order = list(self._hyperparameters)
+            self._order = sort_hps(self._hyperparameters)
             result_names = list()
             for result_type in self._order:
-                result_names.append(self._hyperparameter_name_string(result_type))
+                result_names.append(hyperparameter_name_string(result_type))
             with open(self._save_path + '/' + 'hp_layout.txt', 'w') as f:
                 layout_str = ''
                 for name in result_names[:-1]:
@@ -800,10 +804,17 @@ class Handler(object):
             values = list()
             all_together = dict(hp)
             # print('dataset_name:', dataset_name)
-            # print('all_together:', all_together)
+            print("(Handler._save_launch_results)all_together:", all_together)
+            print("(Handler._save_launch_results)self._order:", self._order)
+            print("(Handler._save_launch_results)list(hp.keys()):", list(hp.keys()))
             all_together.update(res)
             for key in self._order:
-                values.append(all_together[key])
+                if isinstance(key, tuple):
+                    present, matched_key = check_if_hp_description_is_in_list(key, list(hp.keys()))
+                else:
+                    present, matched_key = True, key
+                if present:
+                    values.append(all_together[matched_key])
             with open(self._file_names[dataset_name], 'a') as f:
                 f.write(self._tmpl % tuple(values))
 
@@ -988,22 +999,13 @@ class Handler(object):
                         print('\n\n[%s]:' % idx, elem)
 
     @staticmethod
-    def _hyperparameter_name_string(name):
-        # print('(Handler._hyperparameter_name_string)name:', name)
-        string = name[1]
-        if name[2] is not None:
-            string += '[%s]' % name[2]
-        if name[3] is not None:
-            string += '/' + name[3]
-        return string
-
-    def print_hyper_parameters(self, hp, order, indent=2):
+    def print_hyper_parameters(hp, order, indent=2):
         # print("(Handler.print_hyper_parameters)self._processing_type:", self._processing_type)
         if indent != 0:
             print('\n' * (indent - 1))
         for key in order:
             if key in hp:
-                print('%s: %s' % (self._hyperparameter_name_string(key), hp[key]))
+                print('%s: %s' % (hyperparameter_name_string(key), hp[key]))
 
     def _print_launch_results(self, results, hp, idx=None, indent=2):
         self.print_hyper_parameters(hp, self._order, indent=indent)
