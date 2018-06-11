@@ -81,7 +81,7 @@ env.train(
     save_path='debug_early_stop',
     with_meta_optimizer=True,
     # restore_path='lstm_sample_test/scipop3_1000_bs256_11.12/checkpoints/2000',
-    batch_size=32,
+    batch_size=BATCH_SIZE,
     checkpoint_steps=None,
     result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
     printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy'],

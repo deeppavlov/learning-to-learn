@@ -13,7 +13,7 @@ except ValueError: # Already removed
 
 from learning_to_learn.environment import Environment
 from learning_to_learn.pupils.mlp_for_meta import MlpForMeta as Mlp
-from learning_to_learn.image_batch_gens import MnistBatchGenerator
+from learning_to_learn.image_batch_gens import CifarBatchGenerator
 from learning_to_learn.useful_functions import compose_hp_confs
 from learning_to_learn.optimizers.chiterm import ChiTerm
 
@@ -39,18 +39,16 @@ abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
 
-data_dir = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'mnist']))
+VALID_SIZE = 1000
 
 env = Environment(
     pupil_class=Mlp,
     meta_optimizer_class=ChiTerm,
-    batch_generator_classes=MnistBatchGenerator,
+    batch_generator_classes=CifarBatchGenerator,
 )
 
 add_metrics = ['bpc', 'perplexity', 'accuracy']
-train_add_feed = [
-    {'placeholder': 'dropout', 'value': .9}
-]
+
 valid_add_feed = [
     {'placeholder': 'dropout', 'value': 1.}
 ]
@@ -60,9 +58,9 @@ evaluation = dict(
     save_path=save_path,
     result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
     datasets=[('validation', 'valid')],
-    batch_gen_class=MnistBatchGenerator,
+    batch_gen_class=CifarBatchGenerator,
     batch_kwargs=dict(
-        data_dir=data_dir
+        valid_size=VALID_SIZE
     ),
     batch_size=1,
     additional_feed_dict=[{'placeholder': 'dropout', 'value': 1.}]
@@ -72,11 +70,11 @@ BATCH_SIZE = 32
 NUM_UNROLLINGS = 10
 kwargs_for_building = dict(
     batch_size=BATCH_SIZE,
-    num_layers=2,
-    num_hidden_nodes=[1000],
-    input_shape=[784],
+    num_layers=1,
+    num_hidden_nodes=[],
+    input_shape=[3072],
     num_classes=10,
-    init_parameter=3.,
+    init_parameter=.1,
     additional_metrics=add_metrics,
     regime='training_with_meta_optimizer',
 )
@@ -111,10 +109,10 @@ launch_kwargs = dict(
         train='train'
     ),
     train_batch_kwargs=dict(
-        data_dir=data_dir
+        valid_size=VALID_SIZE
     ),
     valid_batch_kwargs=dict(
-        data_dir=data_dir
+        valid_size=VALID_SIZE
     ),
 
     # train_dataset_text='abc',
