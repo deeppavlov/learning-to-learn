@@ -12,7 +12,7 @@ except ValueError:  # Already removed
 
 from learning_to_learn.environment import Environment
 from learning_to_learn.pupils.mlp_for_meta import MlpForMeta as Mlp
-from learning_to_learn.image_batch_gens import MnistBatchGenerator
+from learning_to_learn.image_batch_gens import CifarBatchGenerator
 
 from learning_to_learn.optimizers.chiterm import ChiTerm
 
@@ -33,20 +33,20 @@ data_dir = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'mnist']))
 env = Environment(
     pupil_class=Mlp,
     meta_optimizer_class=ChiTerm,
-    batch_generator_classes=MnistBatchGenerator,
+    batch_generator_classes=CifarBatchGenerator,
 )
-
+VALID_SIZE = 1000
 add_metrics = ['bpc', 'perplexity', 'accuracy']
 
 
 BATCH_SIZE = 32
 env.build_pupil(
     batch_size=BATCH_SIZE,
-    num_layers=2,
-    num_hidden_nodes=[1000],
-    input_shape=[784],
+    num_layers=1,
+    num_hidden_nodes=[],
+    input_shape=[3072],
     num_classes=10,
-    init_parameter=3.,
+    init_parameter=1.,
     additional_metrics=add_metrics,
     regime='training_with_meta_optimizer',
 )
@@ -90,10 +90,10 @@ env.train(
         train='train'
     ),
     train_batch_kwargs=dict(
-        data_dir=data_dir
+        valid_size=VALID_SIZE
     ),
     valid_batch_kwargs=dict(
-        data_dir=data_dir
+        valid_size=VALID_SIZE
     ),
 
     # train_dataset_text='abc',

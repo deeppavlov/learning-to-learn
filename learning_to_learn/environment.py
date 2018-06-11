@@ -5,6 +5,7 @@ import random
 import re
 import select
 import sys
+import os
 import time
 from collections import OrderedDict
 
@@ -1103,6 +1104,7 @@ class Environment(object):
         Args:
             kwargs should include all entries defined in self._pupil_default_training"""
         # print("(Environment._train)self._hooks:", self._hooks)
+        # print("(Environment._train)cwd:", os.getcwd())
         train_specs = construct(run_specs['train_specs'])
         # print("(Environment._train)train_specs['train_batch_kwargs']:", train_specs['train_batch_kwargs'])
         schedule = construct(run_specs['schedule'])
@@ -1187,7 +1189,7 @@ class Environment(object):
             schedule,
             [dataset[1] for dataset in train_specs['validation_datasets']]
         )
-
+        # print("(Environment._train)cwd:", os.getcwd())
         if checkpoints_path is not None:
             if train_specs['checkpoint_steps'] is not None:
                 if train_specs['checkpoint_steps']['type'] == 'true_on_steps':
@@ -1242,7 +1244,7 @@ class Environment(object):
             controllers = [learning_rate_controller]
         else:
             controllers = list()
-
+        # print("(Environment._train)cwd:", os.getcwd())
         controllers.extend(additional_controllers)
         controllers.append(batch_size_controller)
         batch_kwargs_controllers = list()
@@ -1257,7 +1259,7 @@ class Environment(object):
         # print("(Environment._train)tb_kwargs:", tb_kwargs)
         train_batches = batch_generator_class(train_specs['train_dataset'][0], batch_size, **tb_kwargs)
         feed_dict = dict()
-
+        # print("(Environment._train)cwd:", os.getcwd())
         if stop_specs['type'] == 'limit_steps':
             stop_specs['limit'] += init_step
         elif stop_specs['type'] == 'while_progress':
@@ -1266,6 +1268,7 @@ class Environment(object):
                 stop_specs['changing_parameter_controller'] = learning_rate_controller             
         should_continue = Controller(storage, stop_specs)
         while should_continue.get():
+            # print("(Environment._train)cwd:", os.getcwd())
             if should_start_debugging.get():
                 self._session = tf_debug.LocalCLIDebugWrapperSession(self._session)
                 self._session.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
@@ -2318,7 +2321,7 @@ class Environment(object):
         # constructing all hp combinations with one build hp combination
         hp_combs = list()
         # print("(Environment._spring_process_for_meta_grid_search)other_hp_combs:", other_hp_combs)
-        print("(Environment._spring_process_for_meta_grid_search)build_hp_comb:", build_hp_comb)
+        # print("(Environment._spring_process_for_meta_grid_search)build_hp_comb:", build_hp_comb)
         if len(other_hp_combs) > 0:
             for idx, other_hp_comb in enumerate(other_hp_combs):
                 hp_combination = construct(build_hp_comb)
@@ -2330,7 +2333,7 @@ class Environment(object):
         order = self._handler.order
         if rebuild_every_time:
             for hp_comb, (start_specs, run_specs_set) in zip(hp_combs, parsed):
-                print("(Environment._spring_process_for_meta_grid_search)hp_comb:", hp_comb)
+                # print("(Environment._spring_process_for_meta_grid_search)hp_comb:", hp_comb)
                 queue_ = mp.Queue()
                 p = mp.Process(
                     target=self._one_launch,
@@ -2464,7 +2467,7 @@ class Environment(object):
         # print('build_insertions:', build_insertions)
         # print('other_hp_combs:', other_hp_combs)
         # print("('Environment.grid_search')other_insertions:", other_insertions)
-        print("('Environment.grid_search')build_hp_combs:", build_hp_combs)
+        # print("('Environment.grid_search')build_hp_combs:", build_hp_combs)
 
         args_for_launches = create_all_args_for_launches(kwargs, other_insertions)
         # print("('Environment.grid_search')args_for_launches[0]['additions_to_feed_dict']:",

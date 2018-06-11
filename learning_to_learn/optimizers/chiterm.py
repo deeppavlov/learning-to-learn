@@ -84,7 +84,7 @@ class ChiTerm(Meta):
         self._multiply_by_factor(
             optimizer_ins,
             dict(
-                o=self._learning_rate
+                sigma=self._learning_rate
             )
         )
         return self._empty_core(optimizer_ins)

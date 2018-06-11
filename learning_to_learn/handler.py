@@ -788,6 +788,7 @@ class Handler(object):
 
     def _save_datum(self, descriptor, step, datum, processing_type, dataset_name):
         # print("(Handler._save_datum)self._file_names:", self._file_names)
+        # print("(Handler._save_datum)cwd:", os.getcwd())
         if self._meta_optimizer_inference_is_performed:
             file_name = self._get_optimizer_inference_file_name(processing_type, descriptor)
         else:
@@ -804,9 +805,9 @@ class Handler(object):
             values = list()
             all_together = dict(hp)
             # print('dataset_name:', dataset_name)
-            print("(Handler._save_launch_results)all_together:", all_together)
-            print("(Handler._save_launch_results)self._order:", self._order)
-            print("(Handler._save_launch_results)list(hp.keys()):", list(hp.keys()))
+            # print("(Handler._save_launch_results)all_together:", all_together)
+            # print("(Handler._save_launch_results)self._order:", self._order)
+            # print("(Handler._save_launch_results)list(hp.keys()):", list(hp.keys()))
             all_together.update(res)
             for key in self._order:
                 if isinstance(key, tuple):

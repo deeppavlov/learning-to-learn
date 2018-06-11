@@ -16,14 +16,12 @@ from learning_to_learn.image_batch_gens import CifarBatchGenerator
 
 env = Environment(Mlp, CifarBatchGenerator)
 
-add_feed = [{'placeholder': 'dropout', 'value': 0.9} #,
-            # {'placeholder': 'sampling_prob',
-            #  'value': {'type': 'linear', 'start': 0., 'end': 1., 'interval': 3000}},
-            # {'placeholder': 'loss_comp_prob',
-            #  'value': {'type': 'linear', 'start': 1., 'end': 0., 'interval': 3000}}
-            ]
-valid_add_feed = [# {'placeholder': 'sampling_prob', 'value': 1.},
-                  {'placeholder': 'dropout', 'value': 1.}]
+add_feed = [
+    {'placeholder': 'dropout', 'value': 0.9} #,
+]
+valid_add_feed = [
+    {'placeholder': 'dropout', 'value': 1.}
+]
 
 add_metrics = ['bpc', 'perplexity', 'accuracy']
 VALID_SIZE = 1000

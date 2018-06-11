@@ -30,16 +30,18 @@ def load_data(valid_size):
     CIFAR_DIR = os.path.join(*['..']*ROOT_HEIGHT + ['datasets'] + ['cifar-10-batches-py'])
     xs = []
     ys = []
+    # print("(cifar_helpers.load_data)cwd:", os.getcwd())
+    old_dir = os.getcwd()
+    abspath = os.path.abspath(__file__)
+    dname = os.path.dirname(abspath)
+    os.chdir(dname)
+    # print("(cifar_helpers.load_data)cwd:", os.getcwd())
     for i in range(1, 6):
-        old_dir = os.getcwd()
-        abspath = os.path.abspath(__file__)
-        dname = os.path.dirname(abspath)
-        os.chdir(old_dir)
         filename = os.path.join(CIFAR_DIR, 'data_batch_' + str(i))
-        os.chdir(dname)
         X, Y = load_CIFAR10_batch(filename)
         xs.append(X)
         ys.append(Y)
+
 
     x_train = np.concatenate(xs)
     y_train = np.concatenate(ys)
@@ -49,7 +51,8 @@ def load_data(valid_size):
     #     draw(x_train[i])
 
     x_test, y_test = load_CIFAR10_batch(os.path.join(CIFAR_DIR, 'test_batch'))
-
+    os.chdir(old_dir)
+    # print("(cifar_helpers.load_data)cwd:", os.getcwd())
     # Normalize Data
     mean_image = np.mean(x_train, axis=0)
     x_train -= mean_image

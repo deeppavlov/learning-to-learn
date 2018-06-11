@@ -1404,8 +1404,8 @@ def check_if_line_is_header(line):
 def extract_hp_set(line, hp_names):
     hp_set = dict()
     hp_values = line.split()[-len(hp_names):]
-    print("(useful_functions.extract_hp_set)hp_values:", hp_values)
-    print("(useful_functions.extract_hp_set)hp_names:", hp_names)
+    # print("(useful_functions.extract_hp_set)hp_values:", hp_values)
+    # print("(useful_functions.extract_hp_set)hp_names:", hp_names)
     for hp_name, hp_value in zip(hp_names, hp_values):
         if '.' in hp_value or 'e' in hp_value:
             value_type = 'float'
@@ -1424,7 +1424,7 @@ def get_combs_and_num_exps_pupil(eval_file, order):
         for line in lines[1:]:
             if check_if_line_contains_results(line):
                 hp_set = extract_hp_set(line, hp_names)
-                print("(useful_functions.get_combs_and_num_exps_pupil)hp_set:", hp_set)
+                # print("(useful_functions.get_combs_and_num_exps_pupil)hp_set:", hp_set)
                 comb = list()
                 for name in order:
                     comb.append(hp_set[name])
@@ -1498,10 +1498,10 @@ def make_initial_grid(file_name, eval_dir_or_file, chop_last_experiment=False, m
         shutil.rmtree(os.path.join(eval_dir_or_file, last_exp_file_name[:-4]))
         tested_combs = tested_combs[:-1]
         num_exps -= 1
-    print("(useful_functions.make_initial_grid)tested_combs:", tested_combs)
+    # print("(useful_functions.make_initial_grid)tested_combs:", tested_combs)
     grid = np.zeros(tuple([len(v) for v in init_conf.values()]))
-    print("(useful_functions.make_initial_grid)init_grid_values:", init_grid_values)
-    print("(useful_functions.make_initial_grid)hp_names:", hp_names)
+    # print("(useful_functions.make_initial_grid)init_grid_values:", init_grid_values)
+    # print("(useful_functions.make_initial_grid)hp_names:", hp_names)
     for tested_comb in tested_combs:
         indices = list()
         for p_idx, v in enumerate(tested_comb):
