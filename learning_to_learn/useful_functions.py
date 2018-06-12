@@ -1788,7 +1788,7 @@ def cumulative_mul(sequence, init):
     res = construct(init)
     for a in sequence:
         res *= a
-    return a
+    return res
 
 
 def hyperparameter_name_string(name):
@@ -1843,3 +1843,13 @@ def check_if_hp_description_is_in_list(description, l):
               % tuple(get_elements(l, indices) + [description]))
         raise Exception
     return True, l[indices[0]]
+
+
+def all_combs(list_of_lists):
+    lengths = [len(l) for l in list_of_lists]
+    num_combs = cumulative_mul(lengths, 1)
+    combs = list()
+    for comb_num in range(num_combs):
+        indices = one_dim_idx_2_multidim_indices(comb_num, lengths)
+        combs.append([l[idx] for l, idx in zip(list_of_lists, indices)])
+    return combs

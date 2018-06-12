@@ -13,7 +13,7 @@ except ValueError:  # Already removed
 from learning_to_learn.useful_functions import convert, apply_func_to_nested, synchronous_sort, create_path, \
     remove_empty_strings_from_list
 
-from learning_to_learn.experiments.plot_helpers import get_parameter_names, plot_hp_search, parse_eval_dir
+from learning_to_learn.experiments.plot_helpers import plot_outer_legend, get_parameter_names
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -22,21 +22,18 @@ parser.add_argument(
 )
 parser.add_argument(
     "eval_dir",
-    help="Path to evaluation directory containing experiment results. \nTo process several evaluation directories"
-         " use following format '<path1>,<path2>,...<pathi>:<pathi+1>,..:..'.\nAll possible combinations of sets"
-         " separated by colons (in specified order) will be processed. \nYou have to provide paths relative to "
-         "script. Edge characters of <path> can't be '/'"
+    help="Path to evaluation directory containing experiment results"
 )
 parser.add_argument(
     "-pd",
     "--plot_dir",
     help="Path to directory where plots are going to be saved",
-    default='plots',
+    default=None,
 )
 parser.add_argument(
     "-xs",
     "--xscale",
-    help="x axis scale. It can be log or linear. Default is linear",
+    help="Axes scale. It can be log or linear. Default is linear",
     default='linear',
 )
 parser.add_argument(
@@ -67,31 +64,8 @@ args = parser.parse_args()
 
 AVERAGING_NUMBER = 3
 
-eval_dirs = parse_eval_dir(args.eval_dir)
-for eval_dir in eval_dirs:
-    print(eval_dir)
-    plot_dir = os.path.join(*list(os.path.split(eval_dir)[:-1]) + [args.plot_dir])
-    hp_plot_order = args.hp_order.split(',')
-
-    metric_scales = dict()
-    if args.metric_scales is not None:
-        for one_metric_scale in args.metric_scales.split(','):
-            [metric, scale] = one_metric_scale.split(':')
-            metric_scales[metric] = scale
-
-    abspath = os.path.abspath(__file__)
-    dname = os.path.dirname(abspath)
-    os.chdir(dname)
-    plot_parameter_names = get_parameter_names(args.hp_names_file)
-    xscale = args.xscale
-    no_line = args.no_line
-
-    plot_hp_search(
-        eval_dir,
-        plot_dir,
-        hp_plot_order,
-        args.hp_names_file,
-        metric_scales,
-        args.xscale,
-        args.no_line,
-    )
+eval_dir = args.eval_dir
+if args.plot_dir is None:
+    plot_dir = os.path.join(os.path.split(eval_dir)[:-1], 'plots')
+else:
+    plot_dir = args.plot_dir
