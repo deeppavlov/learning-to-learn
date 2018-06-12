@@ -10,10 +10,9 @@ try:
 except ValueError:  # Already removed
     pass
 
-from learning_to_learn.useful_functions import convert, apply_func_to_nested, synchronous_sort, create_path, \
-    remove_empty_strings_from_list
-
-from learning_to_learn.experiments.plot_helpers import get_parameter_names, plot_hp_search, parse_eval_dir
+from learning_to_learn.experiments.plot_helpers import get_parameter_names, plot_hp_search_optimizer, parse_eval_dir, \
+    plot_hp_search_pupil
+from learning_to_learn.useful_functions import MissingHPError, HeaderLineError, ExtraHPError, BadFormattingError
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -63,6 +62,18 @@ parser.add_argument(
     help="File with hyper parameter names. All available files are in the same directory with this script",
     default='hp_plot_names_english.conf'
 )
+parser.add_argument(
+    '-m',
+    "--model",
+    help="Optimized model type. It can be 'pupil' or optimizer or 'optimizer'. Default is 'optimizer'",
+    default='optimizer',
+)
+parser.add_argument(
+    '-f',
+    "--line_label_format",
+    help="Format used to add labels to legend. Default is '{:.0e}'",
+    default='{:.0e}'
+)
 args = parser.parse_args()
 
 AVERAGING_NUMBER = 3
@@ -86,12 +97,66 @@ for eval_dir in eval_dirs:
     xscale = args.xscale
     no_line = args.no_line
 
-    plot_hp_search(
-        eval_dir,
-        plot_dir,
-        hp_plot_order,
-        args.hp_names_file,
-        metric_scales,
-        args.xscale,
-        args.no_line,
-    )
+    if args.model == 'optimizer':
+        try:
+            plot_hp_search_optimizer(
+                eval_dir,
+                plot_dir,
+                hp_plot_order,
+                args.hp_names_file,
+                metric_scales,
+                args.xscale,
+                args.no_line,
+                args.line_label_format,
+            )
+        except MissingHPError as e:
+            print("WARNING: can not plot results in '%s' because they miss hyper parameter %s.\n"
+                  "Try other hyper parameter configuration\n" % (eval_dir, e.hp_name))
+        except ExtraHPError as e:
+            print(
+                "WARNING: can not plot results in '%s' because not all hyper parameters were provided\n"
+                "hp_order: %s\n"
+                "hp_save_order(in hp_layout.txt): %s" % (eval_dir, e.hp_order, e.hp_names)
+            )
+        except BadFormattingError as e:
+            print(
+                "WARNING: can not plot results in '%s' because "
+                "formatting does not allow put labels in legend\n" % eval_dir,
+                e.message
+            )
+        except:
+            raise
+    elif args.model == 'pupil':
+        try:
+            plot_hp_search_pupil(
+                eval_dir,
+                plot_dir,
+                hp_plot_order,
+                args.hp_names_file,
+                metric_scales,
+                args.xscale,
+                args.no_line,
+                args.line_label_format,
+            )
+        except HeaderLineError as e:
+            print(
+                "WARNING: can not plot results in '%s' because header line '%s' is invalid" % (eval_dir, e.header_line)
+            )
+        except ExtraHPError as e:
+            print(
+                "WARNING: can not plot results in '%s' because not all hyper parameters were provided\n"
+                "hp_order: %s\n"
+                "hp_names(in file): %s" % (eval_dir, e.hp_order, e.hp_names)
+            )
+        except MissingHPError as e:
+            print("WARNING: can not plot results in '%s' because they miss hyper parameter %s.\n"
+                  "Try other hyper parameter configuration\n" % (eval_dir, e.hp_name))
+        except BadFormattingError as e:
+            print(
+                "WARNING: can not plot results in '%s' because "
+                "formatting does not allow put labels in legend\n" % eval_dir,
+                e.message
+            )
+        except:
+            raise
+

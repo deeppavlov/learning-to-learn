@@ -41,6 +41,32 @@ class WrongMethodCallError(Exception):
         self._msg = msg
 
 
+class MissingHPError(Exception):
+    def __init__(self, hp_name, message):
+        self.hp_name = hp_name
+        self.message = message
+
+
+class ExtraHPError(Exception):
+    def __init__(self, hp_order, hp_names, message):
+        self.hp_order = hp_order
+        self.hp_names = hp_names
+        self.message = message
+
+
+class HeaderLineError(Exception):
+    def __init__(self, header_line, message):
+        self.header_line = header_line
+        self.message = message
+
+
+class BadFormattingError(Exception):
+    def __init__(self, formatting, value, message):
+        self.formatting = formatting
+        self.value = value
+        self.message = message
+
+
 def create_vocabulary(text):
     all_characters = list()
     for char in text:
@@ -1401,18 +1427,32 @@ def check_if_line_is_header(line):
     return not check_if_line_contains_results(line)
 
 
+def get_type_simple(value):
+    if '.' in value or 'e' in value:
+        value_type = 'float'
+    else:
+        value_type = 'int'
+    return value_type
+
+
 def extract_hp_set(line, hp_names):
     hp_set = dict()
     hp_values = line.split()[-len(hp_names):]
     # print("(useful_functions.extract_hp_set)hp_values:", hp_values)
     # print("(useful_functions.extract_hp_set)hp_names:", hp_names)
     for hp_name, hp_value in zip(hp_names, hp_values):
-        if '.' in hp_value or 'e' in hp_value:
-            value_type = 'float'
-        else:
-            value_type = 'int'
-        hp_set[hp_name] = convert(hp_value, value_type)
+        hp_set[hp_name] = convert(hp_value, get_type_simple(hp_value))
     return hp_set
+
+
+def extract_metrics(line, metric_names):
+    res_set = dict()
+    hp_values = line.split()[:len(metric_names)]
+    # print("(useful_functions.extract_hp_set)hp_values:", hp_values)
+    # print("(useful_functions.extract_hp_set)hp_names:", hp_names)
+    for name, value in zip(metric_names, hp_values):
+        res_set[name] = convert(value, get_type_simple(value))
+    return res_set
 
 
 def get_combs_and_num_exps_pupil(eval_file, order):
@@ -1853,3 +1893,189 @@ def all_combs(list_of_lists):
         indices = one_dim_idx_2_multidim_indices(comb_num, lengths)
         combs.append([l[idx] for l, idx in zip(list_of_lists, indices)])
     return combs
+
+
+def get_optimizer_evaluation_results(eval_dir, hp_order, averaging_number):
+    eval_dir_contents = os.listdir(eval_dir)
+    eval_dir_contents.remove('hp_layout.txt')
+    edc = construct(eval_dir_contents)
+    for entry in edc:
+        if 'launch_log' in entry:
+            eval_dir_contents.remove(entry)
+        if 'plot' in entry:
+            eval_dir_contents.remove(entry)
+
+    with open(os.path.join(eval_dir, 'hp_layout.txt'), 'r') as f:
+        hp_save_order = f.read().split()
+
+    hp_value_files = list()
+    result_dirs = list()
+    for entry in eval_dir_contents:
+        if entry[-4:] == '.txt':
+            hp_value_files.append(entry)
+        else:
+            result_dirs.append(entry)
+
+    hp_value_files = sorted(hp_value_files, key=lambda elem: int(elem[:-4]))
+    result_dirs = sorted(result_dirs, key=lambda elem: int(elem))
+
+    pupil_names = os.listdir(os.path.join(eval_dir, result_dirs[0]))
+
+    res_files = os.listdir(os.path.join(eval_dir, result_dirs[0], pupil_names[0]))
+
+    result_types = list()
+    regimes = list()
+    for res_file in res_files:
+        [res_type, regime] = res_file.split('_')
+        if res_type not in result_types:
+            result_types.append(res_type)
+        regime = regime.split('.')[0]
+        if regime not in regimes:
+            regimes.append(regime)
+
+    hp_map = list()
+    # print("(plot_hp_search)hp_save_order:", hp_save_order)
+    for hp in hp_order:
+        try:
+            hp_map.append((hp, hp_save_order.index(hp)))
+        except ValueError:
+            raise MissingHPError(
+                hp,
+                "missing hyper parameter %s in %s" % (hp, eval_dir)
+            )
+    if len(hp_save_order) > len(hp_order):
+        raise ExtraHPError(
+            hp_order,
+            hp_save_order,
+            "Extra hyper parameter in evaluation directory '%s'."
+            "\nhp_order: %s\nhp_names(in file): %s" % (eval_dir, hp_order, hp_save_order)
+        )
+
+    hp_map = dict(hp_map)
+
+    for_plotting = dict()
+    for pupil_name in pupil_names:
+        for_plotting[pupil_name] = dict()
+        for res_type in result_types:
+            for_plotting[pupil_name][res_type] = dict()
+            for regime in regimes:
+                for_plotting[pupil_name][res_type][regime] = dict()
+
+    file_for_hp_types = os.path.join(eval_dir, hp_value_files[0])
+    # print("(plot_hp_search)file_for_hp_types:", file_for_hp_types)
+    with open(file_for_hp_types, 'r') as f:
+        hp_types = f.read().split('\n')[1].split()
+
+    # print("(plot_helpers.plot_hp_search)regimes:", regimes)
+    for hp_value_file, result_dir in zip(hp_value_files, result_dirs):
+        hp_value_file = os.path.join(eval_dir, hp_value_file)
+        with open(hp_value_file, 'r') as f:
+            hp_v = [convert(v, type_) for v, type_ in zip(f.read().split('\n')[0].split(), hp_types)]
+        hp_values = [hp_v[hp_map[hp]] for hp in hp_order]
+        # print("(useful_functions.get_evaluation_results)hp_values:", hp_values)
+
+        fixed_hps_tuple = tuple(hp_values[:-2])
+        if len(hp_values) > 1:
+            line_hp_value = hp_values[-2]
+        else:
+            line_hp_value = None
+        changing_hp_value = hp_values[-1]
+        for pupil_name in pupil_names:
+            for res_type in result_types:
+                for regime in regimes:
+                    d = for_plotting[pupil_name][res_type][regime]
+                    if fixed_hps_tuple not in d:
+                        d[fixed_hps_tuple] = dict()
+                    d = d[fixed_hps_tuple]
+                    if line_hp_value not in d:
+                        d[line_hp_value] = [list(), list()]
+                    r = d[line_hp_value]
+                    file_name = res_type + '_' + regime + '.txt'
+                    file_with_data = os.path.join(eval_dir, result_dir, pupil_name, file_name)
+                    with open(file_with_data, 'r') as f:
+                        t = f.read()
+                    lines = t.split('\n')
+                    lines = remove_empty_strings_from_list(lines)
+                    s = 0
+                    # print("(plot_hp_search)lines:", lines)
+                    for i in range(averaging_number):
+                        s += float(lines[-i].split()[-1])
+                    mean = s / averaging_number
+                    # print(pupil_name, res_type, regime, fixed_hps_tuple, line_hp_value, changing_hp_value)
+                    r[0].append(changing_hp_value)
+                    r[1].append(mean)
+
+    # print("(plot_helpers.plot_hp_search)for_plotting:", for_plotting)
+    for_plotting = apply_func_to_nested(for_plotting, lambda x: synchronous_sort(x, 0), (dict,))
+    return for_plotting
+
+
+def get_pupil_evaluation_results(eval_dir, hp_order):
+    eval_dir_contents = construct(os.listdir(eval_dir))
+    edc = construct(eval_dir_contents)
+    for entry in edc:
+        # print(entry)
+        if 'launch_log' in entry or not entry.endswith('.txt'):
+            eval_dir_contents.remove(entry)
+    # for entry in edc:
+    #     print(entry)
+    #     # print(eval_dir_contents)
+    #     if 'launch_log' in entry or not entry.endswith('.txt'):
+    #         # print(entry)
+    #         eval_dir_contents.remove(entry)
+    for_plotting = dict()
+    # print(eval_dir_contents)
+    # print("(useful_functions.get_evaluation_results)hp_order:", hp_order)
+    for entry in eval_dir_contents:
+        path_to_res = os.path.join(eval_dir, entry)
+        dataset_name = entry[:-4]
+        # print("(useful_functions.get_pupil_evaluation_results)path_to_res:", path_to_res)
+        with open(path_to_res, 'r') as f:
+            lines = f.read().split('\n')
+        if check_if_line_is_header(lines[0]):
+            metrics, hp_names = parse_header_line(lines[0])
+        else:
+            raise HeaderLineError(
+                lines[0],
+                "Can not parse header line in evaluation file %s" % path_to_res
+            )
+        num_hps = len(hp_names)
+        for hp_name in hp_order:
+            if hp_name not in hp_names:
+                raise MissingHPError(
+                    hp_name, "Missing hyper parameter '%s' in evaluation file '%s'" % (hp_name, path_to_res))
+        if num_hps > len(hp_order):
+            raise ExtraHPError(
+                hp_order,
+                hp_names,
+                "Extra hyper parameter in evaluation file '%s'."
+                "\nhp_order: %s\nhp_names(in file): %s" % (path_to_res, hp_order, hp_names)
+            )
+        line_hp_is_present = (len(hp_order) > 1)
+
+        for_plotting[dataset_name] = dict([(metric, dict()) for metric in metrics])
+        for idx, line in enumerate(remove_empty_strings_from_list(lines[1:])):
+            if check_if_line_contains_results(line):
+                hp_set = extract_hp_set(line, hp_names)
+                res = extract_metrics(line, metrics)
+                hp_values = [hp_set[name] for name in hp_order]
+                fixed_hps = tuple(hp_values[:-2])
+                if line_hp_is_present:
+                    line_hp = hp_values[-2]
+                else:
+                    line_hp = None
+                for metric, m_value in res.items():
+                    d = for_plotting[dataset_name][metric]
+                    if fixed_hps not in d:
+                        d[fixed_hps] = dict()
+                    d = d[fixed_hps]
+                    if line_hp not in d:
+                        d[line_hp] = [list(), list()]
+                    xy = d[line_hp]
+                    xy[0].append(hp_values[-1])
+                    xy[1].append(m_value)
+            else:
+                print(
+                    "WARNING: %s line '%s' in '%s' can not be parsed" % (idx, line, path_to_res)
+                )
+    return for_plotting
