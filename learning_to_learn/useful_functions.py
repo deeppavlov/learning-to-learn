@@ -1460,6 +1460,7 @@ def get_combs_and_num_exps_pupil(eval_file, order):
     if os.path.exists(eval_file):
         with open(eval_file, 'r') as f:
             lines = f.read().split('\n')
+        # print("(useful_functions.get_combs_and_num_exps_pupil)lines:", lines)
         metrics, hp_names = parse_header_line(lines[0])
         for line in lines[1:]:
             if check_if_line_contains_results(line):

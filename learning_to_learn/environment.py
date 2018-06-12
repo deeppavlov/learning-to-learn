@@ -2044,7 +2044,8 @@ class Environment(object):
             meta_optimizer_build_kwargs
     ):
         self._build_pupil(kwargs_for_building)
-        self.build_optimizer(**meta_optimizer_build_kwargs)
+        if meta_optimizer_build_kwargs is not None:
+            self.build_optimizer(**meta_optimizer_build_kwargs)
         # print('args_for_launches:', args_for_launches)
         self._start_session(session_specs['allow_soft_placement'],
                             session_specs['log_device_placement'],
