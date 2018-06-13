@@ -28,6 +28,28 @@ FONT = {'family': 'Verdana',
         'weight': 'normal'}
 
 
+def get_linthreshx(lines):
+    left = None
+    right = None
+    for line_data in lines:
+        for x in line_data[0]:
+            if x < 0 and (left is None or (left is not None and x > left)):
+                left = x
+            if x > 0 and (right is None or (right is not None and x < right)):
+                right = x
+    if left is None:
+        if right is None:
+            thresh = 1.
+        else:
+            thresh = abs(right)
+    else:
+        if right is None:
+            thresh = abs(left)
+        else:
+            thresh = max(abs(left), abs(right))
+    return thresh
+
+
 def plot_outer_legend(plot_data, description, xlabel, ylabel, xscale, yscale, file_name_without_ext, no_line):
     # print("(plot_helpers.plot_outer_legend)xlabel:", xlabel)
     rc('font', **FONT)
@@ -64,7 +86,13 @@ def plot_outer_legend(plot_data, description, xlabel, ylabel, xscale, yscale, fi
     # print("(plot_helpers.plot_outer_legend)labels:", labels)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
-    plt.xscale(xscale)
+    scale_kwargs = dict()
+    if xscale == 'symlog':
+        linthreshx = get_linthreshx(
+            for_plotlib[1],
+        )
+        scale_kwargs['linthreshx'] = linthreshx
+    plt.xscale(xscale, **scale_kwargs)
     plt.yscale(yscale)
 
     lgd = plt.legend(

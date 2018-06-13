@@ -3,7 +3,7 @@ from learning_to_learn.optimizers.meta import Meta
 from learning_to_learn.useful_functions import construct_dict_without_none_entries
 
 
-class ChiTerm(Meta):
+class ChiNoise(Meta):
     @staticmethod
     def form_kwargs(kwargs_for_building, insertions):
         for insertion in insertions:
@@ -20,35 +20,49 @@ class ChiTerm(Meta):
     def _create_optimizer_states(self, num_exercises, var_scope, gpu_idx):
         return list()
 
-    @staticmethod
     def _add_chi_term_sum(
+            self,
             optimizer_ins
     ):
         for ok, ov in optimizer_ins.items():
             if isinstance(ov['o'], list):
-                ov['o'] = [o + theta for o, theta in zip(ov['o'],ov['theta'])]
+                ov['o'] = [
+                    o + self._chi_contribution * tf.random_uniform(o.get_shape().as_list(), maxval=1.)
+                    for o in ov['o']
+                ]
             else:
-                ov['o'] = ov['o'] + ov['theta']
+                ov['o'] = ov['o'] + self._chi_contribution * tf.random_uniform(ov['o'].get_shape().as_list(), maxval=1.)
         return optimizer_ins
 
-    @staticmethod
     def _add_chi_term_mul(
+            self,
             optimizer_ins
     ):
         for ok, ov in optimizer_ins.items():
             if isinstance(ov['o'], list):
-                ov['o'] = [o + theta * tf.square(o) for o, theta in zip(ov['o'],ov['theta'])]
+                ov['o'] = [
+                    o + self._chi_contribution * tf.random_uniform(o.get_shape().as_list(), maxval=1.) * tf.square(o)
+                    for o in ov['o']
+                ]
             else:
-                ov['o'] = ov['o'] + ov['theta'] * tf.square(ov['o'])
+                ov['o'] = ov['o'] + \
+                          self._chi_contribution * tf.random_uniform(ov['o'].get_shape().as_list(), maxval=1.) \
+                          * tf.square(ov['o'])
         return optimizer_ins
 
-    @staticmethod
-    def _add_chi_term_exp(optimizer_ins):
+    def _add_chi_term_exp(self, optimizer_ins):
         for ok, ov in optimizer_ins.items():
             if isinstance(ov['o'], list):
-                ov['o'] = [o*tf.exp(o*theta) for o, theta in zip(ov['o'],ov['theta'])]
+                ov['o'] = [
+                    o * tf.exp(
+                        o * self._chi_contribution *
+                        tf.random_uniform(o.get_shape().as_list(), maxval=1.)
+                    )
+                    for o in ov['o']
+                ]
             else:
-                ov['o'] = ov['o'] * tf.exp(ov['theta']*ov['o'])
+                ov['o'] = ov['o'] * tf.exp(
+                    self._chi_contribution * tf.random_uniform(ov['o'].get_shape().as_list(), maxval=1.)*ov['o'])
         return optimizer_ins
 
     def _add_chi_term(

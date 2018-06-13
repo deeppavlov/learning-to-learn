@@ -914,10 +914,10 @@ def post_process_build_insertions(combination_insertions):
 
 def formalize_and_create_insertions_for_build_hps(hps):
     hps = process_build_hp_abbreviations(hps)
-    print('\nformalize_and_create_insertions_for_build_hps')
-    print('hps:', hps)
+    # print('\nformalize_and_create_insertions_for_build_hps')
+    # print('hps:', hps)
     hp_combinations, combination_insertions = formalize_and_create_insertions(hps)
-    print('hp_combinations:', hp_combinations)
+    # print('hp_combinations:', hp_combinations)
     # print('combination_insertions:', combination_insertions)
     post_processed_combination_insertions = post_process_build_insertions(combination_insertions)
     # print('\n')
