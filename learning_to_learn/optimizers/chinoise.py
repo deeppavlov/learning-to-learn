@@ -20,6 +20,10 @@ class ChiNoise(Meta):
     def _create_optimizer_states(self, num_exercises, var_scope, gpu_idx):
         return list()
 
+    @staticmethod
+    def _get_noise(shape):
+        return tf.random_uniform(shape, minval=-1., maxval=1.)
+
     def _add_chi_term_sum(
             self,
             optimizer_ins
@@ -27,11 +31,11 @@ class ChiNoise(Meta):
         for ok, ov in optimizer_ins.items():
             if isinstance(ov['o'], list):
                 ov['o'] = [
-                    o + self._chi_contribution * tf.random_uniform(o.get_shape().as_list(), maxval=1.)
+                    o + self._chi_contribution * self._get_noise(o.get_shape().as_list())
                     for o in ov['o']
                 ]
             else:
-                ov['o'] = ov['o'] + self._chi_contribution * tf.random_uniform(ov['o'].get_shape().as_list(), maxval=1.)
+                ov['o'] = ov['o'] + self._chi_contribution * self._get_noise(ov['o'].get_shape().as_list())
         return optimizer_ins
 
     def _add_chi_term_mul(
@@ -41,12 +45,12 @@ class ChiNoise(Meta):
         for ok, ov in optimizer_ins.items():
             if isinstance(ov['o'], list):
                 ov['o'] = [
-                    o + self._chi_contribution * tf.random_uniform(o.get_shape().as_list(), maxval=1.) * tf.square(o)
+                    o + self._chi_contribution * self._get_noise(o.get_shape().as_list()) * tf.square(o)
                     for o in ov['o']
                 ]
             else:
                 ov['o'] = ov['o'] + \
-                          self._chi_contribution * tf.random_uniform(ov['o'].get_shape().as_list(), maxval=1.) \
+                          self._chi_contribution * self._get_noise(ov['o'].get_shape().as_list()) \
                           * tf.square(ov['o'])
         return optimizer_ins
 
@@ -62,7 +66,7 @@ class ChiNoise(Meta):
                 ]
             else:
                 ov['o'] = ov['o'] * tf.exp(
-                    self._chi_contribution * tf.random_uniform(ov['o'].get_shape().as_list(), maxval=1.)*ov['o'])
+                    self._chi_contribution * self._get_noise(ov['o'].get_shape().as_list())*ov['o'])
         return optimizer_ins
 
     def _add_chi_term(
