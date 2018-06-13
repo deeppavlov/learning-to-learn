@@ -31,11 +31,11 @@ class ChiNoise(Meta):
         for ok, ov in optimizer_ins.items():
             if isinstance(ov['o'], list):
                 ov['o'] = [
-                    o + self._chi_contribution * self._get_noise(o.get_shape().as_list())
+                    o + self._chi_contribution * self._get_noise(tf.shape(o))
                     for o in ov['o']
                 ]
             else:
-                ov['o'] = ov['o'] + self._chi_contribution * self._get_noise(ov['o'].get_shape().as_list())
+                ov['o'] = ov['o'] + self._chi_contribution * self._get_noise(tf.shape(ov['o']))
         return optimizer_ins
 
     def _add_chi_term_mul(
@@ -45,12 +45,12 @@ class ChiNoise(Meta):
         for ok, ov in optimizer_ins.items():
             if isinstance(ov['o'], list):
                 ov['o'] = [
-                    o + self._chi_contribution * self._get_noise(o.get_shape().as_list()) * tf.square(o)
+                    o + self._chi_contribution * self._get_noise(tf.shape(o)) * tf.square(o)
                     for o in ov['o']
                 ]
             else:
                 ov['o'] = ov['o'] + \
-                          self._chi_contribution * self._get_noise(ov['o'].get_shape().as_list()) \
+                          self._chi_contribution * self._get_noise(tf.shape(ov['o'])) \
                           * tf.square(ov['o'])
         return optimizer_ins
 
@@ -60,13 +60,13 @@ class ChiNoise(Meta):
                 ov['o'] = [
                     o * tf.exp(
                         o * self._chi_contribution *
-                        tf.random_uniform(o.get_shape().as_list(), maxval=1.)
+                        self._get_noise(tf.shape(o))
                     )
                     for o in ov['o']
                 ]
             else:
                 ov['o'] = ov['o'] * tf.exp(
-                    self._chi_contribution * self._get_noise(ov['o'].get_shape().as_list())*ov['o'])
+                    self._chi_contribution * self._get_noise(tf.shape(ov['o']))*ov['o'])
         return optimizer_ins
 
     def _add_chi_term(
