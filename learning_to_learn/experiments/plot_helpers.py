@@ -32,6 +32,7 @@ def get_linthreshx(lines):
     left = None
     right = None
     for line_data in lines:
+        # print("(plot_helpers.get_linthreshx)line_data[0]:", line_data[0])
         for x in line_data[0]:
             if x < 0 and (left is None or (left is not None and x > left)):
                 left = x
@@ -47,10 +48,11 @@ def get_linthreshx(lines):
             thresh = abs(left)
         else:
             thresh = max(abs(left), abs(right))
+    print(thresh)
     return thresh
 
 
-def plot_outer_legend(plot_data, description, xlabel, ylabel, xscale, yscale, file_name_without_ext, no_line):
+def plot_outer_legend(plot_data, description, xlabel, ylabel, xscale, yscale, file_name_without_ext, style):
     # print("(plot_helpers.plot_outer_legend)xlabel:", xlabel)
     rc('font', **FONT)
     plt.clf()
@@ -62,27 +64,51 @@ def plot_outer_legend(plot_data, description, xlabel, ylabel, xscale, yscale, fi
     for_plotlib = synchronous_sort(for_plotlib, 0, lambda_func=lambda x: float(x))
     lines = list()
     labels = list()
-    if no_line:
+    if style['no_line']:
         linestyle = 'None'
     else:
         linestyle = 'solid'
     # print("(plot_helpers.plot_outer_legend)linestyle:", linestyle)
     for idx, (label, line_data) in enumerate(zip(*for_plotlib)):
+        # if idx == 0:
+        #     print("(plot_helpers.plot_outer_legend)line_data:", line_data)
         labels.append(label)
         if idx > len(COLORS) - 1:
             color = [random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1)]
         else:
             color = COLORS[idx]
+
+        if len(line_data) > 2:
+            errors = line_data[2]
+            errors = [0. if e is None else e for e in errors]
+        else:
+            errors = None
+
+        if style['error'] == 'fill':
+            yerr = None
+            ym = [y - e for y, e in zip(line_data[1], errors)]
+            yp = [y + e for y, e in zip(line_data[1], errors)]
+            plt.fill_between(
+                line_data[0],
+                ym,
+                yp,
+                alpha=.4,
+                color=color,
+            )
+        else:
+            yerr = errors
         lines.append(
-            plt.plot(
+            plt.errorbar(
                 line_data[0],
                 line_data[1],
-                'o-',
+                yerr=yerr,
+                marker=style['marker'],
                 color=color,
                 label=label,
                 ls=linestyle,
             )[0]
         )
+
     # print("(plot_helpers.plot_outer_legend)labels:", labels)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
@@ -151,7 +177,7 @@ def parse_eval_dir(eval_dir):
         if os.path.exists(dir_):
             filtered.append(dir_)
         else:
-            print("WARNING: %s directory doe not exist" % dir_)
+            print("WARNING: %s directory does not exist" % dir_)
     # print("(plot_helpers.parse_eval_dir)filtered:", filtered)
     return filtered
 
@@ -187,7 +213,7 @@ def get_y_specs(res_type, plot_parameter_names, metric_scales):
     return ylabel, yscale
 
 
-def launch_plotting(data, line_label_format, fixed_hp_tmpl, path, xlabel, ylabel, xscale, yscale, no_line):
+def launch_plotting(data, line_label_format, fixed_hp_tmpl, path, xlabel, ylabel, xscale, yscale, style):
     on_descriptions = dict()
     for fixed_hps_tuple, plot_data in data.items():
         plot_data_on_labels = dict()
@@ -214,7 +240,7 @@ def launch_plotting(data, line_label_format, fixed_hp_tmpl, path, xlabel, ylabel
     for description, plot_data in on_descriptions.items():
         file_name_without_ext = os.path.join(path, str(counter))
         plot_outer_legend(
-            plot_data, description, xlabel, ylabel, xscale, yscale, file_name_without_ext, no_line
+            plot_data, description, xlabel, ylabel, xscale, yscale, file_name_without_ext, style
         )
         counter += 1
 
@@ -226,7 +252,7 @@ def plot_hp_search_optimizer(
         hp_names_file,
         metric_scales,
         xscale,
-        no_line,
+        style,
         line_label_format,
 ):
     plot_parameter_names = get_parameter_names(hp_names_file)
@@ -247,7 +273,7 @@ def plot_hp_search_optimizer(
                 path = os.path.join(plot_dir, pupil_name, res_type, regime)
                 create_path(path)
                 data = for_plotting[pupil_name][res_type][regime]
-                launch_plotting(data, line_label_format, fixed_hp_tmpl, path, xlabel, ylabel, xscale, yscale, no_line)
+                launch_plotting(data, line_label_format, fixed_hp_tmpl, path, xlabel, ylabel, xscale, yscale, style)
 
 
 def plot_hp_search_pupil(
@@ -257,7 +283,7 @@ def plot_hp_search_pupil(
         hp_names_file,
         metric_scales,
         xscale,
-        no_line,
+        style,
         line_label_format,
 ):
     plot_parameter_names = get_parameter_names(hp_names_file)
@@ -274,4 +300,4 @@ def plot_hp_search_pupil(
             path = os.path.join(plot_dir, dataset_name, res_type)
             create_path(path)
             data = for_plotting[dataset_name][res_type]
-            launch_plotting(data, line_label_format, fixed_hp_tmpl, path, xlabel, ylabel, xscale, yscale, no_line)
+            launch_plotting(data, line_label_format, fixed_hp_tmpl, path, xlabel, ylabel, xscale, yscale, style)

@@ -1898,6 +1898,33 @@ def all_combs(list_of_lists):
     return combs
 
 
+def add_stddev(data):
+    x_values = list()
+    y_value_sets = list()
+    # print("(useful_functions.add_stddev)data:", data)
+    for x, y in zip(*data):
+        # print("(useful_functions.add_stddev)x:", x)
+        # print("(useful_functions.add_stddev)y:", y)
+        if x in x_values:
+            y_value_sets[x_values.index(x)].append(y)
+        else:
+            x_values.append(x)
+            y_value_sets.append([y])
+    # print("(useful_functions.add_stddev)x_values:", x_values)
+    # print("(useful_functions.add_stddev)y_value_sets:", y_value_sets)
+    means = [sum(value_set) / len(value_set) for value_set in y_value_sets]
+    stddevs = list()
+    for value_set, mean in zip(y_value_sets, means):
+        num_values = len(value_set)
+        if num_values > 1:
+            square_devs = [(y - mean)**2 for y in value_set]
+            stddev = np.sqrt(sum(square_devs) / (num_values - 1))
+        else:
+            stddev = None
+        stddevs.append(stddev)
+    return [x_values, means, stddevs]
+
+
 def get_optimizer_evaluation_results(eval_dir, hp_order, averaging_number):
     eval_dir_contents = os.listdir(eval_dir)
     eval_dir_contents.remove('hp_layout.txt')
@@ -2007,6 +2034,12 @@ def get_optimizer_evaluation_results(eval_dir, hp_order, averaging_number):
                     # print(pupil_name, res_type, regime, fixed_hps_tuple, line_hp_value, changing_hp_value)
                     r[0].append(changing_hp_value)
                     r[1].append(mean)
+    for pupil_res in for_plotting.values():
+        for metric_res in pupil_res.values():
+            for regime_res in metric_res.values():
+                for fixed_hps_res in regime_res.values():
+                    for line_key, line_res in fixed_hps_res.items():
+                        fixed_hps_res[line_key] = add_stddev(line_res)
 
     # print("(plot_helpers.plot_hp_search)for_plotting:", for_plotting)
     for_plotting = apply_func_to_nested(for_plotting, lambda x: synchronous_sort(x, 0), (dict,))
@@ -2081,4 +2114,10 @@ def get_pupil_evaluation_results(eval_dir, hp_order):
                 print(
                     "WARNING: %s line '%s' in '%s' can not be parsed" % (idx, line, path_to_res)
                 )
+    for dataset_res in for_plotting.values():
+        for metric_res in dataset_res.values():
+            for fixed_hps_res in metric_res.values():
+                for line_key, line_res in fixed_hps_res.items():
+                    fixed_hps_res[line_key] = add_stddev(line_res)
+    for_plotting = apply_func_to_nested(for_plotting, lambda x: synchronous_sort(x, 0), (dict,))
     return for_plotting

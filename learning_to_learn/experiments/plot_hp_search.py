@@ -74,9 +74,27 @@ parser.add_argument(
     help="Format used to add labels to legend. Default is '{:.0e}'",
     default='{:.0e}'
 )
+parser.add_argument(
+    '-e',
+    "--error",
+    help="Error style. If 'None' no error bars are plotted. Possible options 'fill', 'bar'",
+    default='None',
+)
+parser.add_argument(
+    '-mk',
+    "--marker",
+    help="Marker style. default is o",
+    default='o',
+)
 args = parser.parse_args()
 
 AVERAGING_NUMBER = 3
+
+style = dict(
+    no_line=args.no_line,
+    error=args.error,
+    marker=args.marker,
+)
 
 eval_dirs = parse_eval_dir(args.eval_dir)
 for eval_dir in eval_dirs:
@@ -95,7 +113,6 @@ for eval_dir in eval_dirs:
     os.chdir(dname)
     plot_parameter_names = get_parameter_names(args.hp_names_file)
     xscale = args.xscale
-    no_line = args.no_line
 
     if args.model == 'optimizer':
         try:
@@ -106,7 +123,7 @@ for eval_dir in eval_dirs:
                 args.hp_names_file,
                 metric_scales,
                 args.xscale,
-                args.no_line,
+                style,
                 args.line_label_format,
             )
         except MissingHPError as e:
@@ -135,7 +152,7 @@ for eval_dir in eval_dirs:
                 args.hp_names_file,
                 metric_scales,
                 args.xscale,
-                args.no_line,
+                style,
                 args.line_label_format,
             )
         except HeaderLineError as e:
