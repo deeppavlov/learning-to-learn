@@ -16,6 +16,23 @@ CLIP_NORM = 1e+5
 class Meta(object):
 
     @staticmethod
+    def _get_opt_ins_ndim(opt_ins):
+        ovs = list(opt_ins.values())
+        if 'o' in ovs[0]:
+            iv = ovs[0]['o']
+        elif 'sigma' in ovs[0]:
+            iv = ovs[0]['sigma']
+        else:
+            iv = None
+
+        if isinstance(iv, list):
+            t = iv[0]
+        else:
+            t = iv
+        ndim = len(t.get_shape().as_list())
+        return ndim
+
+    @staticmethod
     def _stack_different_exercises_variables(variables):
         """stack variables from different checkpoints or permutations.
          Stacking is performed along dimension which is last to tensor inner dimensions

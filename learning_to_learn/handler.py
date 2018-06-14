@@ -811,6 +811,7 @@ class Handler(object):
             all_together.update(res)
             for key in self._order:
                 if isinstance(key, tuple):
+                    # print("(Handler._save_launch_results)key:", key)
                     present, matched_key = check_if_hp_description_is_in_list(key, list(hp.keys()))
                 else:
                     present, matched_key = True, key

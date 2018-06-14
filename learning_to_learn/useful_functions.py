@@ -1871,6 +1871,8 @@ def hp_name_2_hp_description(hp_name):
 
 
 def check_if_hp_description_is_in_list(description, l):
+    # print("(useful_functions.check_if_hp_description_is_in_list)description:", description)
+    # print("(useful_functions.check_if_hp_description_is_in_list)l:", l)
     indices = list()
     for idx, e in enumerate(l):
         if e[1:] == description[1:]:

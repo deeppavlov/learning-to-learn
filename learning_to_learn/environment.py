@@ -550,6 +550,7 @@ class Environment(object):
         self.current_pupil_build_parameters = kwargs
         self._meta_optimizer = self._meta_optimizer_class(self._pupil, **kwargs)
         default_hooks = self._meta_optimizer.get_default_hooks()
+        print("(Environment.build_optimizer)default_hooks:", default_hooks)
         self._hooks.update(default_hooks)
 
     @classmethod
@@ -1300,6 +1301,8 @@ class Environment(object):
             else:
                 feed_dict[self._hooks['labels']] = train_labels
             for addition, add_controller in zip(train_feed_dict_additions, additional_controllers):
+                # print("(Environment._train)self._hooks:", self._hooks)
+                # print("(Environment._train)addition['placeholder']:", addition['placeholder'])
                 feed_dict[self._hooks[addition['placeholder']]] = add_controller.get()
             # print('(Environment._train)self._hooks:', self._hooks)
 
