@@ -128,37 +128,6 @@ class ArtDer(Meta):
             sh = tf.shape(t)
             return tf.slice(sh, [bdim], [1])
 
-    # @staticmethod
-    # def _perform_gathering(
-    #         o_index_sets,
-    #         sigma_index_sets,
-    #         lo,
-    #         ls,
-    #         o,
-    #         sigma,
-    #         gather_dim,
-    # ):
-    #     for o_indices, sigma_indices in zip(tf.unstack(o_index_sets), tf.unstack(sigma_index_sets)):
-    #         # print("(ArtDer._perform_gathering)gather_dim:", gather_dim)
-    #         tmp_o = tf.gather(
-    #             o,
-    #             o_indices,
-    #             axis=gather_dim
-    #         )
-    #         # print("(ArtDer._perform_gathering)tmp_o:", tmp_o)
-    #         # print("(ArtDer._perform_gathering)o:", o)
-    #         # print("(ArtDer._perform_gathering)o_indices:", o_indices)
-    #         lo.append(
-    #             tmp_o
-    #         )
-    #         ls.append(
-    #             tf.gather(
-    #                 sigma,
-    #                 sigma_indices,
-    #                 axis=gather_dim
-    #             )
-    #         )
-
     @staticmethod
     def _perform_gathering(
             o_index_sets,
@@ -264,70 +233,13 @@ class ArtDer(Meta):
                         ov['sigma'] = tf.concat([sigma, prep_sigma], gather_dim)
         return opt_ins
 
-    # def _perform_appending(self, opt_ins, o_index_sets, sigma_index_sets, batch_size):
-    #     ndim = self._get_opt_ins_ndim(opt_ins)
-    #     if ndim == 3:
-    #         gather_dim = 1
-    #     elif ndim == 2:
-    #         gather_dim = 0
-    #     else:
-    #         gather_dim = None
-    #     batch_size = tf.to_float(tf.reshape(batch_size, []))
-    #     factor = batch_size / (tf.constant(self._num_sel, dtype=tf.float32) + batch_size)
-    #     with tf.name_scope('perform_appending'):
-    #         for ok, ov in opt_ins.items():
-    #             with tf.name_scope(ok):
-    #                 o = ov['o']
-    #                 sigma = ov['sigma']
-    #                 if isinstance(o, list):
-    #                     gathered_o = [list() for _ in o]
-    #                     gathered_sigma = [list() for _ in o]
-    #                 else:
-    #                     gathered_o = list()
-    #                     gathered_sigma = list()
-    #
-    #                 if isinstance(o, list):
-    #                     for go, gs, ot, st in zip(gathered_o, gathered_sigma, o, sigma):
-    #                         self._perform_gathering(
-    #                             o_index_sets,
-    #                             sigma_index_sets,
-    #                             go,
-    #                             gs,
-    #                             ot,
-    #                             st,
-    #                             gather_dim,
-    #                         )
-    #
-    #                 else:
-    #                     self._perform_gathering(
-    #                         o_index_sets,
-    #                         sigma_index_sets,
-    #                         gathered_o,
-    #                         gathered_sigma,
-    #                         o,
-    #                         sigma,
-    #                         gather_dim,
-    #                     )
-    #                 # print("(ArtDer._perform_appending)gathered_o:", gathered_o)
-    #                 # print("(ArtDer._perform_appending)gathered_sigma:", gathered_sigma)
-    #                 prep_o = self._prepare_for_concatenation(gathered_o, gather_dim)
-    #                 prep_sigma = self._prepare_for_concatenation(gathered_sigma, gather_dim)
-    #                 if isinstance(o, list):
-    #                     ov['o'] = [factor * tf.concat([ot, self._sel_contribution * sel_ot], gather_dim)
-    #                                for ot, sel_ot in zip(o, prep_o)]
-    #                     ov['sigma'] = [tf.concat([st, self._sel_contribution * sel_st], gather_dim)
-    #                                    for st, sel_st in zip(sigma, prep_sigma)]
-    #                 else:
-    #                     ov['o'] = factor * tf.concat([o, prep_o], gather_dim)
-    #                     ov['sigma'] = tf.concat([sigma, prep_sigma], gather_dim)
-    #     return opt_ins
-
     def _append_shuffle(self, optimizer_ins):
         batch_size = self._get_batch_size(optimizer_ins)
         with tf.name_scope('collect_indices'):
             o_index_sets = self._get_index_sets(self._num_sel, batch_size, 1)
-            with tf.device('/cpu:0'):
-                sigma_index_sets = tf.transpose(tf.random_shuffle(tf.transpose(o_index_sets)))
+            tr = tf.transpose(o_index_sets)
+            tr = self._shuffle(tr)
+            sigma_index_sets = tf.transpose(tr)
         optimizer_ins = self._perform_appending(optimizer_ins, o_index_sets, sigma_index_sets, batch_size)
         return optimizer_ins
 

@@ -12,8 +12,9 @@ except ValueError: # Already removed
     pass
 
 from learning_to_learn.environment import Environment
-from learning_to_learn.pupils.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
-from learning_to_learn.useful_functions import create_vocabulary, compose_hp_confs
+from learning_to_learn.pupils.mlp_for_meta import MlpForMeta as Mlp
+from learning_to_learn.image_batch_gens import CifarBatchGenerator
+from learning_to_learn.useful_functions import compose_hp_confs
 from learning_to_learn.optimizers.artder import ArtDer
 
 import os
@@ -37,22 +38,14 @@ print("confs:", confs)
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
-dataset_path = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'text8.txt']))
-with open(dataset_path, 'r') as f:
-    text = f.read()
 
-valid_size = 10000
-valid_text = text[:valid_size]
-train_text = text[valid_size:]
-
-vocabulary = create_vocabulary(text)
-vocabulary_size = len(vocabulary)
+VALID_SIZE = 1000
 
 env = Environment(
-    pupil_class=Lstm,
+    pupil_class=Mlp,
     meta_optimizer_class=ArtDer,
-    batch_generator_classes=BatchGenerator,
-    vocabulary=vocabulary)
+    batch_generator_classes=CifarBatchGenerator,
+)
 
 add_metrics = ['bpc', 'perplexity', 'accuracy']
 train_add_feed = [
@@ -70,29 +63,25 @@ dataset_name = 'valid'
 evaluation = dict(
     save_path=save_path,
     result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
-    datasets=[(valid_text, dataset_name)],
-    batch_gen_class=BatchGenerator,
-    batch_kwargs={'vocabulary': vocabulary},
+    datasets=[('validation', 'valid')],
+    batch_gen_class=CifarBatchGenerator,
+    batch_kwargs=dict(
+        valid_size=VALID_SIZE
+    ),
     batch_size=1,
     additional_feed_dict=[{'placeholder': 'dropout', 'value': 1.}]
 )
 
 BATCH_SIZE = 32
-NUM_UNROLLINGS = 10
 kwargs_for_building = dict(
     batch_size=BATCH_SIZE,
-    num_layers=1,
-    num_nodes=[100],
-    num_output_layers=1,
-    num_output_nodes=[],
-    vocabulary_size=vocabulary_size,
-    embedding_size=150,
-    num_unrollings=NUM_UNROLLINGS,
-    init_parameter=3.,
-    num_gpus=1,
-    regime='training_with_meta_optimizer',
-    going_to_limit_memory=True,
+    num_layers=2,
+    num_hidden_nodes=[1000],
+    input_shape=[3072],
+    num_classes=10,
+    init_parameter=.1,
     additional_metrics=add_metrics,
+    regime='training_with_meta_optimizer',
 )
 
 meta_optimizer_build_kwargs = dict(
@@ -110,25 +99,33 @@ meta_optimizer_build_kwargs = dict(
 
 launch_kwargs = dict(
     # gpu_memory=.3,
-    num_unrollings=NUM_UNROLLINGS,
-    vocabulary=vocabulary,
-    with_meta_optimizer=True,
     allow_growth=True,
-    # save_path=save_path,
+    save_path='debug_early_stop',
+    with_meta_optimizer=True,
     # restore_path='lstm_sample_test/scipop3_1000_bs256_11.12/checkpoints/2000',
     batch_size=BATCH_SIZE,
     checkpoint_steps=None,
     result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
     printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
     stop=1000,
-    # stop=4000,
-    train_dataset_text=train_text,
+    train_dataset=dict(
+        train='train'
+    ),
+    train_batch_kwargs=dict(
+        valid_size=VALID_SIZE
+    ),
+    valid_batch_kwargs=dict(
+        valid_size=VALID_SIZE
+    ),
+
     # train_dataset_text='abc',
-    validation_dataset_texts=[valid_text],
+    validation_datasets=dict(
+        valid='validation'
+    ),
     results_collect_interval=100,
     additions_to_feed_dict=train_add_feed,
     validation_additions_to_feed_dict=valid_add_feed,
-    no_validation=True,
+    no_validation=False
 )
 
 tf.set_random_seed(1)
