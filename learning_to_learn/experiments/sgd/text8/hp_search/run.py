@@ -114,7 +114,7 @@ for conf in confs:
     other_hyperparameters = dict(
         learning_rate=dict(
             varying=dict(
-                init=conf['learning_rate']
+                init=conf['learning_rate/init']
             ),
             fixed=dict(
                 decay=.5,

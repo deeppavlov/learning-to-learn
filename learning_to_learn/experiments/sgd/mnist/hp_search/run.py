@@ -108,7 +108,7 @@ launch_kwargs = dict(
     ),
     batch_size=BATCH_SIZE
 )
-
+# tf.set_random_seed(1)
 for conf in confs:
     build_hyperparameters = dict(
         init_parameter=conf['init_parameter']
@@ -127,8 +127,6 @@ for conf in confs:
             type='exponential_decay'
         )
     )
-
-    tf.set_random_seed(1)
     env.grid_search(
         evaluation,
         kwargs_for_building,

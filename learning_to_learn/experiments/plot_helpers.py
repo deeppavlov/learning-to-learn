@@ -3,6 +3,7 @@ import sys
 import os
 from matplotlib import pyplot as plt, rc
 from matplotlib.legend_handler import HandlerLine2D
+from matplotlib import container
 from pathlib import Path  # if you haven't already done so
 file = Path(__file__).resolve()
 parent, root = file.parent, file.parents[2]
@@ -95,8 +96,11 @@ def plot_outer_legend(plot_data, description, xlabel, ylabel, xscale, yscale, fi
                 alpha=.4,
                 color=color,
             )
-        else:
+        elif style['error'] == 'bar':
             yerr = errors
+        else:
+            yerr = None
+        # print("(plot_helpers.plot_outer_legend)yerr:", yerr)
         lines.append(
             plt.errorbar(
                 line_data[0],
@@ -121,12 +125,26 @@ def plot_outer_legend(plot_data, description, xlabel, ylabel, xscale, yscale, fi
     plt.xscale(xscale, **scale_kwargs)
     plt.yscale(yscale)
 
-    lgd = plt.legend(
+    handler_map = dict(list(zip(lines, [HandlerLine2D(numpoints=1) for _ in range(len(lines))])))
+    # print("(plot_helpers.plot_outer_legend)handler_map:", handler_map)
+    ax = plt.gca()
+    handles, labels = ax.get_legend_handles_labels()
+    handles = [h[0] if isinstance(h, container.ErrorbarContainer) else h for h in handles]
+    lgd = ax.legend(
+        handles,
+        labels,
         bbox_to_anchor=(1.05, 1),
         loc=2,
         borderaxespad=0.,
-        handler_map=dict(list(zip(lines, [HandlerLine2D(numpoints=1) for _ in range(len(lines))])))
+        handler_map=handler_map,
+
     )
+    # lgd = plt.legend(
+    #     bbox_to_anchor=(1.05, 1),
+    #     loc=2,
+    #     borderaxespad=0.,
+    #     handler_map=handler_map,
+    # )
 
     for format in FORMATS:
         if format == 'pdf':

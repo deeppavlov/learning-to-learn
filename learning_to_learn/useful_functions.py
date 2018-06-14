@@ -1508,13 +1508,18 @@ def remove_repeats_from_list(l):
 
 
 def compose_hp_confs(file_name, eval_dir_or_file, chop_last_experiment=False, model='optimizer'):
-    grid, init_conf, num_exps = make_initial_grid(
+    grids, init_conf, num_exps = make_initial_grid(
         file_name,
         eval_dir_or_file,
         chop_last_experiment=chop_last_experiment,
         model=model
     )
-    return form_confs(grid, init_conf), num_exps
+    confs = list()
+    # print("(useful_functions.compose_hp_confs)model:", model)
+    for grid in grids:
+        # print("(useful_functions.compose_hp_confs)grid:", grid)
+        confs.extend(form_confs(grid, init_conf))
+    return confs, num_exps
 
 
 def make_initial_grid(file_name, eval_dir_or_file, chop_last_experiment=False, model='optimizer'):
@@ -1524,12 +1529,20 @@ def make_initial_grid(file_name, eval_dir_or_file, chop_last_experiment=False, m
         lines = f.read().split('\n')
     hp_names = lines[0].split()
     hp_types = lines[1].split()
-    for hp_name, hp_type, line in zip(hp_names, hp_types, lines[2:]):
+    num_params = len(hp_names)
+    for hp_name, hp_type, line in zip(hp_names, hp_types, lines[2:2+num_params]):
         param_values = remove_repeats_from_list([convert(v, hp_type) for v in line.split()])
         init_conf[hp_name] = param_values
         init_grid_values.append(param_values)
+    if len(lines) > 2+num_params and len(lines[2+num_params]) > 0:
+        num_repeats = int(lines[2+num_params])
+    else:
+        num_repeats = 1
+    # print("(useful_functions.make_initial_grid)num_repeats:", num_repeats)
+    # print("(useful_functions.make_initial_grid)lines:", lines)
     if model == 'optimizer':
         tested_combs, num_exps, last_exp_file_name = get_combs_and_num_exps(eval_dir_or_file)
+        # print("(useful_functions.make_initial_grid)tested_combs:", tested_combs)
     else:
         tested_combs, num_exps = get_combs_and_num_exps_pupil(eval_dir_or_file, hp_names)
         last_exp_file_name = None
@@ -1540,16 +1553,25 @@ def make_initial_grid(file_name, eval_dir_or_file, chop_last_experiment=False, m
         tested_combs = tested_combs[:-1]
         num_exps -= 1
     # print("(useful_functions.make_initial_grid)tested_combs:", tested_combs)
-    grid = np.zeros(tuple([len(v) for v in init_conf.values()]))
+    exp_counter_grid = np.zeros(tuple([len(v) for v in init_conf.values()]))
     # print("(useful_functions.make_initial_grid)init_grid_values:", init_grid_values)
     # print("(useful_functions.make_initial_grid)hp_names:", hp_names)
     for tested_comb in tested_combs:
         indices = list()
         for p_idx, v in enumerate(tested_comb):
             indices.append(init_grid_values[p_idx].index(v))
-        grid[tuple(indices)] = 1.
+        exp_counter_grid[tuple(indices)] += 1.
+
     # print("(useful_functions.make_initial_grid)grid:", grid)
-    return grid, init_conf, num_exps
+    return slice_to_conf_grids(exp_counter_grid, num_repeats), init_conf, num_exps
+
+
+def slice_to_conf_grids(exp_counter_grid, num_repeats):
+    grids = list()
+    for i in range(num_repeats):
+        mask = np.greater(exp_counter_grid, i)
+        grids.append(mask.astype(float))
+    return grids
 
 
 def one_dim_idx_2_multidim_indices(idx, shape):
