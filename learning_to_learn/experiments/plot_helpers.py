@@ -15,7 +15,7 @@ except ValueError:  # Already removed
 
 from learning_to_learn.useful_functions import synchronous_sort, create_path, get_pupil_evaluation_results, \
     BadFormattingError, all_combs, get_optimizer_evaluation_results, select_for_plot, convert, retrieve_lines, \
-    add_index_to_filename_if_needed, nested2string
+    add_index_to_filename_if_needed, nested2string, isnumber
 
 COLORS = [
     'r', 'g', 'b', 'k', 'c', 'magenta', 'brown',
@@ -31,9 +31,12 @@ FONT = {'family': 'Verdana',
 
 
 def fixed_hps_from_str(string):
-    tmp = string[1:-1]
-    hps = [convert(x, "float") for x in tmp]
-    return tuple(hps)
+    if len(string) > 0:
+        tmp = string[1:-1]
+        hps = [convert(x, "float") for x in tmp]
+        return tuple(hps)
+    else:
+        return ()
 
 
 def parse_metric_scales_str(string):
@@ -78,7 +81,7 @@ def plot_outer_legend(plot_data, description, xlabel, ylabel, xscale, yscale, fi
     for label, line_data in plot_data.items():
         for_plotlib[0].append(label)
         for_plotlib[1].append(line_data)
-    for_plotlib = synchronous_sort(for_plotlib, 0, lambda_func=lambda x: float(x))
+    for_plotlib = synchronous_sort(for_plotlib, 0, lambda_func=lambda x: float(x) if isnumber(x) else x)
     lines = list()
     labels = list()
     if style['no_line']:
@@ -117,6 +120,7 @@ def plot_outer_legend(plot_data, description, xlabel, ylabel, xscale, yscale, fi
         else:
             yerr = None
         # print("(plot_helpers.plot_outer_legend)yerr:", yerr)
+        # print("(plot_helpers.plot_outer_legend)line_data:", line_data)
         lines.append(
             plt.errorbar(
                 line_data[0],
@@ -345,7 +349,7 @@ def plot_hp_search_pupil(
 def plot_lines_from_diff_hp_searches(
         line_retrieve_inf,
         plot_dir,
-        hp_plot_order,
+        changing_hp,
         plot_parameter_names,
         metric_scales,
         xscale,
@@ -353,11 +357,12 @@ def plot_lines_from_diff_hp_searches(
         x_select,
         model,
 ):
-    changing_hp = hp_plot_order[-1]
-    lines = retrieve_lines(line_retrieve_inf, x_select, hp_plot_order, model, AVERAGING_NUMBER)
+    # print(line_retrieve_inf)
+    lines = retrieve_lines(line_retrieve_inf, x_select, model, AVERAGING_NUMBER)
     xlabel = plot_parameter_names[changing_hp]
-    plot_description_file = os.path.join(plot_dir, '_description.txt')
-    with open(plot_description_file, 'r') as f:
+    create_path(plot_dir)
+    plot_description_file = os.path.join(plot_dir, 'description.txt')
+    with open(plot_description_file, 'w') as f:
         f.write(nested2string(line_retrieve_inf))
     for res_type, plot_data in lines.items():
         ylabel, yscale = get_y_specs(res_type, plot_parameter_names, metric_scales)

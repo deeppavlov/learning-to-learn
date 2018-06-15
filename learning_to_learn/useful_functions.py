@@ -24,6 +24,7 @@ escape_sequences_replacements = {'\\': '\\\\',
                                  '\v': '\\v'}
 METRICS = ['accuracy', 'bpc', 'loss', 'perplexity']
 DIGITS = list('0123456789')
+NUMBER_CHARS = DIGITS + ['e', '+', '-', '.', ' ']
 
 
 class InvalidArgumentError(Exception):
@@ -272,6 +273,9 @@ def get_keys_from_nested(obj, ready=None, collected=None):
 
 def get_obj_elem_by_path(obj, path):
     for k in path:
+        # print('\n')
+        # print(k)
+        # print(obj)
         obj = obj[k]
     return obj
 
@@ -1421,11 +1425,10 @@ def parse_header_line(line):
 
 
 def check_if_line_contains_results(line):
-    allowed_chars = DIGITS + ['e', '+', '-', '.', ' ']
     if len(line) == 0:
         return False
     for c in line:
-        if c not in allowed_chars:
+        if c not in NUMBER_CHARS:
             return False
     return True
 
@@ -2252,33 +2255,36 @@ def get_res_types(for_plotting):
 
 def get_lines_by_res_type(for_plotting, inf, x_select, model):
     res_types = list(for_plotting[inf['dataset_name']].keys())
-    line_data = dict([(t, list()) for t in res_types])
+    line_data = dict()
     if model == 'pupil':
-        path_tmpl = [inf['dataset_name'], None]
+        path_tmpl = [inf['dataset_name'], None, inf['fixed_hps'], inf['line_hp']]
     elif model == 'optimizer':
-        path_tmpl = [inf['pupil_name'], None, inf['regime']]
+        path_tmpl = [inf['pupil_name'], None, inf['regime'], inf['fixed_hps'], inf['line_hp']]
     else:
         path_tmpl = None
     for t in res_types:
         path = construct(path_tmpl)
         path[1] = t
         line = get_obj_elem_by_path(for_plotting, path)
+        # print(line)
         line = select_by_x(line, x_select)
-        line_data[t].append(line)
+        line_data[t] = line
     return line_data
 
 
-def retrieve_lines(retrieve_inf, x_select, hp_plot_order, model, averaging_number):
+def retrieve_lines(retrieve_inf, x_select, model, averaging_number):
     for_plotting = dict()
     all_res_types = list()
-    for eval_dir, inf in retrieve_inf.items():
+    for eval_dir, inf_list in retrieve_inf.items():
         if model == 'pupil':
-            fp = get_pupil_evaluation_results(eval_dir, hp_plot_order)
+            fp = get_pupil_evaluation_results(eval_dir, inf_list[0]['hp_plot_order'])
         elif model == 'optimizer':
-            fp = get_optimizer_evaluation_results(eval_dir, hp_plot_order, averaging_number)
+            fp = get_optimizer_evaluation_results(eval_dir, inf_list[0]['hp_plot_order'], averaging_number)
         for_plotting[eval_dir] = fp
+        # print(fp)
         res_types = get_res_types(fp)
         all_res_types = add_missing_to_list(all_res_types, res_types)
+    # print(all_res_types)
     lines = dict([(t, dict()) for t in all_res_types])
     for eval_dir, inf_list in retrieve_inf.items():
         for inf in inf_list:
@@ -2293,4 +2299,12 @@ def retrieve_lines(retrieve_inf, x_select, hp_plot_order, model, averaging_numbe
                 lines[res_type][label] = line
     return lines
 
+
+def isnumber(string):
+    if len(string) == 0:
+        return False
+    for c in string:
+        if c not in NUMBER_CHARS:
+            return False
+    return True
 

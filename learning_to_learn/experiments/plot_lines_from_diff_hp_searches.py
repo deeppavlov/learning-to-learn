@@ -19,7 +19,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
     "hp_orders",
     help="Order of hyper parameters. Hyper parameter names as in run config separated by commas without spaces."
-         " You have to provide hyper parameters for all evaluation directories separating them with colon character"
+         " You may provide hyper parameters for all evaluation directories separating them with colon character"
 )
 parser.add_argument(
     "eval_dir",
@@ -127,7 +127,7 @@ parser.add_argument(
     '-fhp',
     "--fixed_hp_values",
     help="Values of fixed hyper parameters. Format: '(<hp1>,<hp2>...),()...:()...'",
-    default=None
+    default='',
 )
 
 args = parser.parse_args()
@@ -135,28 +135,33 @@ args = parser.parse_args()
 eval_dirs = parse_eval_dir(args.eval_dir)
 
 [lines_by_ed, labels_by_ed, fixed_hp_by_ed,
- regimes_by_ed, pupil_names_by_ed, dataset_names_by_ed] = split_strings_by_char(
-    [args.lines, args.labels, args.fixed_hp_values, args.regimes, args.pupil_names, args.dataset_names], ':'
+ regimes_by_ed, pupil_names_by_ed, dataset_names_by_ed, hp_orders_by_ed] = split_strings_by_char(
+    [args.line_select, args.labels, args.fixed_hp_values,
+     args.regimes, args.pupil_names, args.dataset_names, args.hp_orders],
+    ':'
+)
+
+num_ed = len(eval_dirs)
+# print("(plot_lines_from_diff_hp_searches)num_ed:", num_ed)
+[fixed_hp_by_ed, hp_orders_by_ed, lines_by_ed] = broadcast_many_lists(
+    [fixed_hp_by_ed, hp_orders_by_ed, lines_by_ed],
+    num_ed
 )
 num_lines = [len(ed_lines.split(',')) for ed_lines in lines_by_ed]
-num_ed = len(eval_dirs)
-fixed_hp_by_ed = broadcast_list(fixed_hp_by_ed, num_ed)
 
-if args.model == 'pupil':
-    dataset_names_by_ed = broadcast_list(dataset_names_by_ed, num_ed)
+[regimes_by_ed, pupil_names_by_ed, dataset_names_by_ed] = broadcast_many_lists(
+    [regimes_by_ed, pupil_names_by_ed, dataset_names_by_ed],
+    num_ed
+)
 
-elif args.model == 'optimizer':
-    [regimes_by_ed, pupil_names_by_ed] = broadcast_many_lists(
-        [regimes_by_ed, pupil_names_by_ed],
-        num_ed
-    )
-
-
+changing_hps = list()
 line_retrieve_inf = dict()
-for eval_dir, ed_lines, ed_fixed_hps, ed_regimes, ed_pupil_names, ed_dataset_names, ed_labels, nlines in \
+# print(eval_dirs, lines_by_ed, fixed_hp_by_ed, regimes_by_ed,
+#             pupil_names_by_ed, dataset_names_by_ed, labels_by_ed, hp_orders_by_ed, num_lines)
+for eval_dir, ed_lines, ed_fixed_hps, ed_regimes, ed_pupil_names, ed_dataset_names, ed_labels, hp_order, nlines in \
         zip(
             eval_dirs, lines_by_ed, fixed_hp_by_ed, regimes_by_ed,
-            pupil_names_by_ed, dataset_names_by_ed, labels_by_ed, num_lines
+            pupil_names_by_ed, dataset_names_by_ed, labels_by_ed, hp_orders_by_ed, num_lines
         ):
     [ed_lines, ed_fixed_hps, ed_regimes, ed_pupil_names, ed_dataset_names, ed_labels] = split_strings_by_char(
         [ed_lines, ed_fixed_hps, ed_regimes, ed_pupil_names, ed_dataset_names, ed_labels], ','
@@ -170,6 +175,8 @@ for eval_dir, ed_lines, ed_fixed_hps, ed_regimes, ed_pupil_names, ed_dataset_nam
     ed_lines = [convert(x, 'float') for x in ed_lines]
     ed_fixed_hps = [fixed_hps_from_str(x) for x in ed_fixed_hps]
 
+    hp_plot_order = hp_order.split(',')
+    changing_hps.append(hp_plot_order[-1])
     line_retr_inf = list()
     if args.model == 'pupil':
         for line_hp, fixed_hps, dataset_name, label in zip(
@@ -181,6 +188,7 @@ for eval_dir, ed_lines, ed_fixed_hps, ed_regimes, ed_pupil_names, ed_dataset_nam
                     fixed_hps=fixed_hps,
                     dataset_name=dataset_name,
                     label=label,
+                    hp_plot_order=hp_plot_order,
                 )
             )
     elif args.model == 'optimizer':
@@ -194,8 +202,10 @@ for eval_dir, ed_lines, ed_fixed_hps, ed_regimes, ed_pupil_names, ed_dataset_nam
                     regime=regime,
                     pupil_name=pupil_name,
                     label=label,
+                    hp_plot_order=hp_plot_order,
                 )
             )
+    line_retrieve_inf[eval_dir] = line_retr_inf
 
 if args.x_select is None:
     x_select = None
@@ -210,18 +220,17 @@ style = dict(
 
 metric_scales = parse_metric_scales_str(args.metric_scales)
 
-hp_plot_order = args.hp_order.split(',')
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
-
+# print("(plot_lines_from_diff_hp_searches)changing_hps:", changing_hps)
 plot_parameter_names = get_parameter_names(args.hp_names_file)
 xscale = args.xscale
 
 plot_lines_from_diff_hp_searches(
         line_retrieve_inf,
         args.plot_dir,
-        hp_plot_order,
+        changing_hps[-1],
         plot_parameter_names,
         metric_scales,
         xscale,
