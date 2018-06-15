@@ -365,7 +365,7 @@ def loop_through_indices(filename, start_index):
     else:
         name += '#%s'
     if path != '':
-        base_path = '/'.join([path, name])
+        base_path = os.path.join(path, name)
     else:
         base_path = name
     index = start_index
@@ -2240,3 +2240,57 @@ def split_strings_by_char(strings, char):
     for string in strings:
         res.append(string.split(char))
     return res
+
+
+def get_res_types(for_plotting):
+    all_res_types = list()
+    for res in for_plotting.values():
+        res_types = list(res.keys())
+        all_res_types = add_missing_to_list(all_res_types, res_types)
+    return all_res_types
+
+
+def get_lines_by_res_type(for_plotting, inf, x_select, model):
+    res_types = list(for_plotting[inf['dataset_name']].keys())
+    line_data = dict([(t, list()) for t in res_types])
+    if model == 'pupil':
+        path_tmpl = [inf['dataset_name'], None]
+    elif model == 'optimizer':
+        path_tmpl = [inf['pupil_name'], None, inf['regime']]
+    else:
+        path_tmpl = None
+    for t in res_types:
+        path = construct(path_tmpl)
+        path[1] = t
+        line = get_obj_elem_by_path(for_plotting, path)
+        line = select_by_x(line, x_select)
+        line_data[t].append(line)
+    return line_data
+
+
+def retrieve_lines(retrieve_inf, x_select, hp_plot_order, model, averaging_number):
+    for_plotting = dict()
+    all_res_types = list()
+    for eval_dir, inf in retrieve_inf.items():
+        if model == 'pupil':
+            fp = get_pupil_evaluation_results(eval_dir, hp_plot_order)
+        elif model == 'optimizer':
+            fp = get_optimizer_evaluation_results(eval_dir, hp_plot_order, averaging_number)
+        for_plotting[eval_dir] = fp
+        res_types = get_res_types(fp)
+        all_res_types = add_missing_to_list(all_res_types, res_types)
+    lines = dict([(t, dict()) for t in all_res_types])
+    for eval_dir, inf_list in retrieve_inf.items():
+        for inf in inf_list:
+            lines_by_res_type = get_lines_by_res_type(
+                for_plotting[eval_dir],
+                inf,
+                x_select,
+                model,
+            )
+            label = inf['label']
+            for res_type, line in lines_by_res_type.items():
+                lines[res_type][label] = line
+    return lines
+
+

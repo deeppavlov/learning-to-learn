@@ -14,7 +14,8 @@ except ValueError:  # Already removed
     pass
 
 from learning_to_learn.useful_functions import synchronous_sort, create_path, get_pupil_evaluation_results, \
-    BadFormattingError, all_combs, get_optimizer_evaluation_results, select_for_plot, convert
+    BadFormattingError, all_combs, get_optimizer_evaluation_results, select_for_plot, convert, retrieve_lines, \
+    add_index_to_filename_if_needed
 
 COLORS = [
     'r', 'g', 'b', 'k', 'c', 'magenta', 'brown',
@@ -352,5 +353,10 @@ def plot_lines_from_diff_hp_searches(
         model,
 ):
     changing_hp = hp_plot_order[-1]
-    if model == 'pupil':
-        for_plotting = get_pupil_evaluation_results(eval_dir, hp_plot_order)
+    lines = retrieve_lines(line_retrieve_inf, x_select, hp_plot_order, model, AVERAGING_NUMBER)
+    xlabel = plot_parameter_names[changing_hp]
+
+    for res_type, data in lines.items():
+        ylabel, yscale = get_y_specs(res_type, plot_parameter_names, metric_scales)
+
+        file_name_without_ext = add_index_to_filename_if_needed(os.path.join(plot_dir, res_type))
