@@ -11,7 +11,7 @@ except ValueError:  # Already removed
     pass
 
 from learning_to_learn.experiments.plot_helpers import get_parameter_names, plot_hp_search_optimizer, parse_eval_dir, \
-    plot_hp_search_pupil
+    plot_hp_search_pupil, parse_metric_scales_str
 from learning_to_learn.useful_functions import MissingHPError, HeaderLineError, ExtraHPError, BadFormattingError, \
     parse_x_select, parse_line_select
 import argparse
@@ -118,22 +118,19 @@ style = dict(
 )
 
 eval_dirs = parse_eval_dir(args.eval_dir)
+metric_scales = parse_metric_scales_str(args.metric_scales)
+
+hp_plot_order = args.hp_order.split(',')
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
+
+plot_parameter_names = get_parameter_names(args.hp_names_file)
+xscale = args.xscale
+
 for eval_dir in eval_dirs:
     print(eval_dir)
     plot_dir = os.path.join(*list(os.path.split(eval_dir)[:-1]) + [args.plot_dir])
-    hp_plot_order = args.hp_order.split(',')
-
-    metric_scales = dict()
-    if args.metric_scales is not None:
-        for one_metric_scale in args.metric_scales.split(','):
-            [metric, scale] = one_metric_scale.split(':')
-            metric_scales[metric] = scale
-
-    abspath = os.path.abspath(__file__)
-    dname = os.path.dirname(abspath)
-    os.chdir(dname)
-    plot_parameter_names = get_parameter_names(args.hp_names_file)
-    xscale = args.xscale
 
     if args.model == 'optimizer':
         try:

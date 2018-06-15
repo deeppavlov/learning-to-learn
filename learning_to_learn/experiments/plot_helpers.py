@@ -35,6 +35,15 @@ def fixed_hps_from_str(string):
     return tuple(hps)
 
 
+def parse_metric_scales_str(string):
+    metric_scales = dict()
+    if string is not None:
+        for one_metric_scale in string.split(','):
+            [metric, scale] = one_metric_scale.split(':')
+            metric_scales[metric] = scale
+    return metric_scales
+
+
 def get_linthreshx(lines):
     left = None
     right = None
@@ -333,3 +342,5 @@ def plot_hp_search_pupil(
             launch_plotting(
                 data, line_label_format, fixed_hp_tmpl, path, xlabel, ylabel, xscale, yscale, style, select
             )
+
+

@@ -11,7 +11,7 @@ except ValueError:  # Already removed
     pass
 
 from learning_to_learn.experiments.plot_helpers import get_parameter_names, plot_hp_search_optimizer, parse_eval_dir, \
-    plot_hp_search_pupil, fixed_hps_from_str
+    plot_hp_search_pupil, fixed_hps_from_str, parse_metric_scales_str
 from learning_to_learn.useful_functions import MissingHPError, HeaderLineError, ExtraHPError, BadFormattingError, \
     parse_x_select, parse_line_select, broadcast_list, broadcast_many_lists, split_strings_by_char, convert
 import argparse
@@ -196,6 +196,28 @@ for eval_dir, ed_lines, ed_fixed_hps, ed_regimes, ed_pupil_names, ed_dataset_nam
                     label=label,
                 )
             )
+
+if args.x_select is None:
+    x_select = None
+else:
+    x_select = parse_x_select(args.x_select)
+
+style = dict(
+    no_line=args.no_line,
+    error=args.error,
+    marker=args.marker,
+)
+
+metric_scales = parse_metric_scales_str(args.metric_scales)
+
+hp_plot_order = args.hp_order.split(',')
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
+
+plot_parameter_names = get_parameter_names(args.hp_names_file)
+xscale = args.xscale
+
 
 
 
