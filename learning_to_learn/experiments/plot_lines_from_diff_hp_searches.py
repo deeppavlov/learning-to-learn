@@ -11,7 +11,7 @@ except ValueError:  # Already removed
     pass
 
 from learning_to_learn.experiments.plot_helpers import get_parameter_names, plot_hp_search_optimizer, parse_eval_dir, \
-    plot_hp_search_pupil
+    plot_hp_search_pupil, fixed_hps_from_str
 from learning_to_learn.useful_functions import MissingHPError, HeaderLineError, ExtraHPError, BadFormattingError, \
     parse_x_select, parse_line_select, broadcast_list, broadcast_many_lists, split_strings_by_char, convert
 import argparse
@@ -151,14 +151,13 @@ elif args.model == 'optimizer':
         num_ed
     )
 
+
+line_retrieve_inf = dict()
 for eval_dir, ed_lines, ed_fixed_hps, ed_regimes, ed_pupil_names, ed_dataset_names, ed_labels, nlines in \
         zip(
             eval_dirs, lines_by_ed, fixed_hp_by_ed, regimes_by_ed,
             pupil_names_by_ed, dataset_names_by_ed, labels_by_ed, num_lines
         ):
-    ed_regimes = ed_regimes.split(',')
-    ed_pupil_names = ed_pupil_names.split(',')
-    ed_dataset_names = ed_dataset_names.split(',')
     [ed_lines, ed_fixed_hps, ed_regimes, ed_pupil_names, ed_dataset_names, ed_labels] = split_strings_by_char(
         [ed_lines, ed_fixed_hps, ed_regimes, ed_pupil_names, ed_dataset_names, ed_labels], ','
     )
@@ -167,6 +166,38 @@ for eval_dir, ed_lines, ed_fixed_hps, ed_regimes, ed_pupil_names, ed_dataset_nam
         [ed_regimes, ed_pupil_names, ed_dataset_names, ed_fixed_hps],
         nlines,
     )
+
+    ed_lines = [convert(x, 'float') for x in ed_lines]
+    ed_fixed_hps = [fixed_hps_from_str(x) for x in ed_fixed_hps]
+
+    line_retr_inf = list()
+    if args.model == 'pupil':
+        for line_hp, fixed_hps, dataset_name, label in zip(
+                ed_lines, ed_fixed_hps, ed_dataset_names, ed_labels
+        ):
+            line_retr_inf.append(
+                dict(
+                    line_hp=line_hp,
+                    fixed_hps=fixed_hps,
+                    dataset_name=dataset_name,
+                    label=label,
+                )
+            )
+    elif args.model == 'optimizer':
+        for line_hp, fixed_hps, regime, pupil_name, label in zip(
+                ed_lines, ed_fixed_hps, ed_regimes, ed_pupil_names, ed_labels
+        ):
+            line_retr_inf.append(
+                dict(
+                    line_hp=line_hp,
+                    fixed_hps=fixed_hps,
+                    regime=regime,
+                    pupil_name=pupil_name,
+                    label=label,
+                )
+            )
+
+
 
 
     

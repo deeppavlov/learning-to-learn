@@ -14,7 +14,7 @@ except ValueError:  # Already removed
     pass
 
 from learning_to_learn.useful_functions import synchronous_sort, create_path, get_pupil_evaluation_results, \
-    BadFormattingError, all_combs, get_optimizer_evaluation_results, select_for_plot
+    BadFormattingError, all_combs, get_optimizer_evaluation_results, select_for_plot, convert
 
 COLORS = [
     'r', 'g', 'b', 'k', 'c', 'magenta', 'brown',
@@ -27,6 +27,12 @@ AVERAGING_NUMBER = 3
 
 FONT = {'family': 'Verdana',
         'weight': 'normal'}
+
+
+def fixed_hps_from_str(string):
+    tmp = string[1:-1]
+    hps = [convert(x, "float") for x in tmp]
+    return tuple(hps)
 
 
 def get_linthreshx(lines):
