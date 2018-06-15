@@ -284,16 +284,14 @@ def plot_hp_search_optimizer(
         eval_dir,
         plot_dir,
         hp_plot_order,
-        hp_names_file,
+        plot_parameter_names,
         metric_scales,
         xscale,
         style,
         line_label_format,
         select,
 ):
-    plot_parameter_names = get_parameter_names(hp_names_file)
     changing_hp = hp_plot_order[-1]
-    create_path(plot_dir)
     for_plotting = get_optimizer_evaluation_results(eval_dir, hp_plot_order, AVERAGING_NUMBER)
     pupil_names = sorted(list(for_plotting.keys()))
     result_types = sorted(list(for_plotting[pupil_names[0]].keys()))
@@ -318,16 +316,14 @@ def plot_hp_search_pupil(
         eval_dir,
         plot_dir,
         hp_plot_order,
-        hp_names_file,
+        plot_parameter_names,
         metric_scales,
         xscale,
         style,
         line_label_format,
         select,
 ):
-    plot_parameter_names = get_parameter_names(hp_names_file)
     changing_hp = hp_plot_order[-1]
-    create_path(plot_dir)
     for_plotting = get_pupil_evaluation_results(eval_dir, hp_plot_order)
     dataset_names = sorted(list(for_plotting.keys()))
     result_types = sorted(list(for_plotting[dataset_names[0]].keys()))
@@ -344,3 +340,17 @@ def plot_hp_search_pupil(
             )
 
 
+def plot_lines_from_diff_hp_searches(
+        line_retrieve_inf,
+        plot_dir,
+        hp_plot_order,
+        plot_parameter_names,
+        metric_scales,
+        xscale,
+        style,
+        x_select,
+        model,
+):
+    changing_hp = hp_plot_order[-1]
+    if model == 'pupil':
+        for_plotting = get_pupil_evaluation_results(eval_dir, hp_plot_order)

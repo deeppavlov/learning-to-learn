@@ -13,7 +13,7 @@ except ValueError:  # Already removed
 from learning_to_learn.experiments.plot_helpers import get_parameter_names, plot_hp_search_optimizer, parse_eval_dir, \
     plot_hp_search_pupil, parse_metric_scales_str
 from learning_to_learn.useful_functions import MissingHPError, HeaderLineError, ExtraHPError, BadFormattingError, \
-    parse_x_select, parse_line_select
+    parse_x_select, parse_line_select, create_path
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -127,7 +127,7 @@ os.chdir(dname)
 
 plot_parameter_names = get_parameter_names(args.hp_names_file)
 xscale = args.xscale
-
+create_path(args.plot_dir)
 for eval_dir in eval_dirs:
     print(eval_dir)
     plot_dir = os.path.join(*list(os.path.split(eval_dir)[:-1]) + [args.plot_dir])
@@ -138,7 +138,7 @@ for eval_dir in eval_dirs:
                 eval_dir,
                 plot_dir,
                 hp_plot_order,
-                args.hp_names_file,
+                plot_parameter_names,
                 metric_scales,
                 args.xscale,
                 style,
@@ -168,7 +168,7 @@ for eval_dir in eval_dirs:
                 eval_dir,
                 plot_dir,
                 hp_plot_order,
-                args.hp_names_file,
+                plot_parameter_names,
                 metric_scales,
                 args.xscale,
                 style,
