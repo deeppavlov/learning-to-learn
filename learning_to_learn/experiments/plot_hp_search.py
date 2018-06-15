@@ -46,11 +46,11 @@ parser.add_argument(
          "Scales are provided in following format <metric>:<scale>,<metric>:<scale>. "
          "Default is linear"
 )
-parser.add_argument(
-    "-nlfp",
-    "--num_lines_for_plot",
-    help="Number of lines per one plot. Default is all lines."
-)
+# parser.add_argument(
+#     "-nlfp",
+#     "--num_lines_for_plot",
+#     help="Number of lines per one plot. Default is all lines."
+# )
 parser.add_argument(
     "-nl",
     "--no_line",
