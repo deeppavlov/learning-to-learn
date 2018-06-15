@@ -14,7 +14,7 @@ except ValueError:  # Already removed
     pass
 
 from learning_to_learn.useful_functions import synchronous_sort, create_path, get_pupil_evaluation_results, \
-    BadFormattingError, all_combs, get_optimizer_evaluation_results
+    BadFormattingError, all_combs, get_optimizer_evaluation_results, select_for_plot
 
 COLORS = [
     'r', 'g', 'b', 'k', 'c', 'magenta', 'brown',
@@ -231,7 +231,9 @@ def get_y_specs(res_type, plot_parameter_names, metric_scales):
     return ylabel, yscale
 
 
-def launch_plotting(data, line_label_format, fixed_hp_tmpl, path, xlabel, ylabel, xscale, yscale, style):
+def launch_plotting(data, line_label_format, fixed_hp_tmpl, path, xlabel, ylabel, xscale, yscale, style, select):
+    if select is not None:
+        data = select_for_plot(data, select)
     on_descriptions = dict()
     for fixed_hps_tuple, plot_data in data.items():
         plot_data_on_labels = dict()
@@ -272,6 +274,7 @@ def plot_hp_search_optimizer(
         xscale,
         style,
         line_label_format,
+        select,
 ):
     plot_parameter_names = get_parameter_names(hp_names_file)
     changing_hp = hp_plot_order[-1]
@@ -291,7 +294,9 @@ def plot_hp_search_optimizer(
                 path = os.path.join(plot_dir, pupil_name, res_type, regime)
                 create_path(path)
                 data = for_plotting[pupil_name][res_type][regime]
-                launch_plotting(data, line_label_format, fixed_hp_tmpl, path, xlabel, ylabel, xscale, yscale, style)
+                launch_plotting(
+                    data, line_label_format, fixed_hp_tmpl, path, xlabel, ylabel, xscale, yscale, style, select
+                )
 
 
 def plot_hp_search_pupil(
@@ -303,6 +308,7 @@ def plot_hp_search_pupil(
         xscale,
         style,
         line_label_format,
+        select,
 ):
     plot_parameter_names = get_parameter_names(hp_names_file)
     changing_hp = hp_plot_order[-1]
@@ -318,4 +324,6 @@ def plot_hp_search_pupil(
             path = os.path.join(plot_dir, dataset_name, res_type)
             create_path(path)
             data = for_plotting[dataset_name][res_type]
-            launch_plotting(data, line_label_format, fixed_hp_tmpl, path, xlabel, ylabel, xscale, yscale, style)
+            launch_plotting(
+                data, line_label_format, fixed_hp_tmpl, path, xlabel, ylabel, xscale, yscale, style, select
+            )

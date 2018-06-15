@@ -2143,3 +2143,61 @@ def get_pupil_evaluation_results(eval_dir, hp_order):
                     fixed_hps_res[line_key] = add_stddev(line_res)
     for_plotting = apply_func_to_nested(for_plotting, lambda x: synchronous_sort(x, 0), (dict,))
     return for_plotting
+
+
+def parse_x_select(x_select_str):
+    tmp = x_select_str.split('[')
+    tmp2 = [el[:-1].split(',') for el in tmp[1:]]
+    x_select = [
+        [convert(el[0], 'float'), convert(el[1], 'float')] for el in tmp2
+    ]
+    return x_select
+
+
+def parse_line_select(line_select_str):
+    tmp = line_select_str.split(',')
+    return [convert(el, 'float') for el in tmp]
+
+
+def check_in_range(x, range_):
+    in_range = True
+    if x < range_[0] or x > range_[1]:
+        in_range = False
+    return in_range
+
+
+def check_in_ranges(x, ranges):
+    in_ranges = False
+    for range_ in ranges:
+        in_ranges = in_ranges or check_in_range(x, range_)
+    return in_ranges
+
+
+def select_by_x(line_data, x_select):
+    selected_x, selected_y, selected_stddev = list(), list(), list()
+    for x, y, stddev in zip(*line_data):
+        if check_in_ranges(x, x_select):
+            selected_x.append(x)
+            selected_y.append(y)
+            selected_stddev.append(stddev)
+    return [selected_x, selected_y, selected_stddev]
+
+
+def select_for_plot(data, select):
+    selected = dict()
+    for fixed_hps, fixed_hp_data in data.items():
+        selected_lines = dict()
+        present_line_keys = list(fixed_hp_data.keys())
+        if select['line_select'] is None:
+            line_keys = present_line_keys
+        else:
+            line_keys = select['line_select']
+        for line_key in line_keys:
+            if line_key in present_line_keys:
+                line_data = fixed_hp_data[line_key]
+                if select['x_select'] is None:
+                    selected_lines[line_key] = line_data
+                else:
+                    selected_lines[line_key] = select_by_x(line_data, select['x_select'])
+        selected[fixed_hps] = selected_lines
+    return selected

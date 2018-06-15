@@ -12,7 +12,8 @@ except ValueError:  # Already removed
 
 from learning_to_learn.experiments.plot_helpers import get_parameter_names, plot_hp_search_optimizer, parse_eval_dir, \
     plot_hp_search_pupil
-from learning_to_learn.useful_functions import MissingHPError, HeaderLineError, ExtraHPError, BadFormattingError
+from learning_to_learn.useful_functions import MissingHPError, HeaderLineError, ExtraHPError, BadFormattingError, \
+    parse_x_select, parse_line_select
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -86,9 +87,31 @@ parser.add_argument(
     help="Marker style. default is o",
     default='o',
 )
+parser.add_argument(
+    '-xst',
+    '--x_select',
+    help="select x values from specified range. Use following format '[x1,x2][x3,x4]...'. Default is None",
+    default=None,
+)
+parser.add_argument(
+    '-lst',
+    '--line_select',
+    help="select line hyper parameter values. Format: '<value1>,<value2>,...'. Default is None",
+    default=None,
+)
 args = parser.parse_args()
 
 AVERAGING_NUMBER = 3
+
+select = dict()
+if args.x_select is None:
+    select['x_select'] = None
+else:
+    select['x_select'] = parse_x_select(args.x_select)
+if args.line_select is None:
+    select['line_select'] = None
+else:
+    select['line_select'] = parse_line_select(args.line_select)
 
 style = dict(
     no_line=args.no_line,
@@ -125,6 +148,7 @@ for eval_dir in eval_dirs:
                 args.xscale,
                 style,
                 args.line_label_format,
+                select,
             )
         except MissingHPError as e:
             print("WARNING: can not plot results in '%s' because they miss hyper parameter %s.\n"
@@ -154,6 +178,7 @@ for eval_dir in eval_dirs:
                 args.xscale,
                 style,
                 args.line_label_format,
+                select,
             )
         except HeaderLineError as e:
             print(
