@@ -30,12 +30,44 @@ class ChiNoise(Meta):
     ):
         for ok, ov in optimizer_ins.items():
             if isinstance(ov['o'], list):
-                ov['o'] = [
-                    o + self._chi_contribution * self._get_noise(tf.shape(o))
-                    for o in ov['o']
-                ]
+                # with tf.device('/cpu:0'):
+                #     self._chi_contribution = tf.Print(
+                #         self._chi_contribution,
+                #         [self._chi_contribution],
+                #         message="\n\n(ChiNoise._add_chi_term_sum)self._chi_contribution:\n"
+                #     )
+                changed = list()
+                for o in ov['o']:
+                    noise = self._get_noise(tf.shape(o))
+                    # with tf.device('/cpu:0'):
+                    #     noise = tf.Print(
+                    #         noise,
+                    #         [noise],
+                    #         message="\n\n(ChiNoise._add_chi_term_sum)noise:\n"
+                    #     )
+                    changed.append(o + self._chi_contribution * noise)
+                ov['o'] = changed
+                # ov['o'] = [
+                #     o + self._chi_contribution * self._get_noise(tf.shape(o))
+                #     for o in ov['o']
+                # ]
             else:
-                ov['o'] = ov['o'] + self._chi_contribution * self._get_noise(tf.shape(ov['o']))
+                # with tf.device('/cpu:0'):
+                #     self._chi_contribution = tf.Print(
+                #         self._chi_contribution,
+                #         [self._chi_contribution],
+                #         message="\n\n(ChiNoise._add_chi_term_sum)self._chi_contribution:\n"
+                #     )
+
+                noise = self._get_noise(tf.shape(ov['o']))
+                # with tf.device('/cpu:0'):
+                #     noise = tf.Print(
+                #         noise,
+                #         [noise],
+                #         message="\n\n(ChiNoise._add_chi_term_sum)noise:\n"
+                #     )
+                ov['o'] = ov['o'] + self._chi_contribution * noise
+                # ov['o'] = ov['o'] + self._chi_contribution * self._get_noise(tf.shape(ov['o']))
         return optimizer_ins
 
     def _add_chi_term_mul(
