@@ -29,6 +29,13 @@ parser.add_argument(
          "script. Edge characters of <path> can't be '/'"
 )
 parser.add_argument(
+    '-lbl',
+    "--labels",
+    help="labels for plotted lines. Labels are provided in format '<label1>,<label2>,...:<labeli>...'."
+         " Labels for different evaluation directories are separated by colons. Default is numeration from 1'",
+    default=None
+)
+parser.add_argument(
     "-pd",
     "--plot_dir",
     help="Path to directory where plots are going to be saved. In contrast to 'plot_hp_search.py' it is full path.",
@@ -66,12 +73,6 @@ parser.add_argument(
     default='optimizer',
 )
 parser.add_argument(
-    '-f',
-    "--line_label_format",
-    help="Format used to add labels to legend. Default is '{:.0e}'",
-    default='{:.0e}'
-)
-parser.add_argument(
     '-e',
     "--error",
     help="Error style. If 'None' no error bars are plotted. Possible options 'fill', 'bar'",
@@ -92,6 +93,37 @@ parser.add_argument(
 parser.add_argument(
     '-lst',
     '--line_select',
-    help="select line hyper parameter values. Format: '<value1>,<value2>,...'. Default is None",
+    help="select line hyper parameter values. Format: '<value1>,<value2>,...:<valuei>...'. Line hyper parameter"
+         " values for different evaluation directories are separated by colons."
+         "Default is None",
     default=None,
 )
+parser.add_argument(
+    '-rg',
+    "--regimes",
+    help="select regimes from which lines are taken. Format: '<regime1>,<regime2>,...:<regimei>...'. "
+         " Regimes for different evaluation directories are separated by colons. This option is used only for "
+         "optimizers. Default is validation",
+    default='validation',
+)
+parser.add_argument(
+    '-pn',
+    "--pupil_names",
+    help="select pupil names for which lines are taken. Format: '<pupil1>,<pupil2>,...:<pupili>...'. "
+         " Pupil names for different evaluation directories are separated by colons. This option is used only for "
+         "optimizers. Default is 'pretrain0",
+    default='pretrain0',
+)
+parser.add_argument(
+    '-dn',
+    "--dataset_names",
+    help="select dataset names for which lines are taken. Format: '<dataset_name1>,<dataset_name2>,...:"
+         "<dataset_namei>...'. "
+         " Dataset_names for different evaluation directories are separated by colons. This option is used only for "
+         "optimizers. Default is 'valid'",
+    default='valid',
+)
+
+args = parser.parse_args()
+
+x-select

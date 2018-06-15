@@ -101,8 +101,6 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-AVERAGING_NUMBER = 3
-
 select = dict()
 if args.x_select is None:
     select['x_select'] = None
