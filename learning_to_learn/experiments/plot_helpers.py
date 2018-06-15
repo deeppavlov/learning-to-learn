@@ -15,7 +15,7 @@ except ValueError:  # Already removed
 
 from learning_to_learn.useful_functions import synchronous_sort, create_path, get_pupil_evaluation_results, \
     BadFormattingError, all_combs, get_optimizer_evaluation_results, select_for_plot, convert, retrieve_lines, \
-    add_index_to_filename_if_needed
+    add_index_to_filename_if_needed, nested2string
 
 COLORS = [
     'r', 'g', 'b', 'k', 'c', 'magenta', 'brown',
@@ -172,9 +172,10 @@ def plot_outer_legend(plot_data, description, xlabel, ylabel, xscale, yscale, fi
         create_path(fig_path, file_name_is_in_path=True)
         r = plt.savefig(fig_path, bbox_extra_artists=(lgd,), bbox_inches='tight')
         # print("%s %s %s %s:" % (pupil_name, res_type, regime, format), r)
-    description_file = os.path.join(file_name_without_ext + '.txt')
-    with open(description_file, 'w') as f:
-        f.write(description)
+    if description is not None:
+        description_file = os.path.join(file_name_without_ext + '.txt')
+        with open(description_file, 'w') as f:
+            f.write(description)
 
 
 def get_parameter_names(conf_file):
@@ -355,8 +356,12 @@ def plot_lines_from_diff_hp_searches(
     changing_hp = hp_plot_order[-1]
     lines = retrieve_lines(line_retrieve_inf, x_select, hp_plot_order, model, AVERAGING_NUMBER)
     xlabel = plot_parameter_names[changing_hp]
-
-    for res_type, data in lines.items():
+    plot_description_file = os.path.join(plot_dir, '_description.txt')
+    with open(plot_description_file, 'r') as f:
+        f.write(nested2string(line_retrieve_inf))
+    for res_type, plot_data in lines.items():
         ylabel, yscale = get_y_specs(res_type, plot_parameter_names, metric_scales)
-
         file_name_without_ext = add_index_to_filename_if_needed(os.path.join(plot_dir, res_type))
+        plot_outer_legend(
+            plot_data, None, xlabel, ylabel, xscale, yscale, file_name_without_ext, style
+        )
