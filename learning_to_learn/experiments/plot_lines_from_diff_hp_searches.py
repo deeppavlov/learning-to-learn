@@ -10,8 +10,8 @@ try:
 except ValueError:  # Already removed
     pass
 
-from learning_to_learn.experiments.plot_helpers import get_parameter_names, plot_hp_search_optimizer, parse_eval_dir, \
-    plot_hp_search_pupil, fixed_hps_from_str, parse_metric_scales_str
+from learning_to_learn.experiments.plot_helpers import get_parameter_names, plot_lines_from_diff_hp_searches, \
+    parse_eval_dir, fixed_hps_from_str, parse_metric_scales_str
 from learning_to_learn.useful_functions import MissingHPError, HeaderLineError, ExtraHPError, BadFormattingError, \
     parse_x_select, parse_line_select, broadcast_list, broadcast_many_lists, split_strings_by_char, convert
 import argparse
@@ -218,6 +218,17 @@ os.chdir(dname)
 plot_parameter_names = get_parameter_names(args.hp_names_file)
 xscale = args.xscale
 
+plot_lines_from_diff_hp_searches(
+        line_retrieve_inf,
+        args.plot_dir,
+        hp_plot_order,
+        plot_parameter_names,
+        metric_scales,
+        xscale,
+        style,
+        x_select,
+        args.model,
+)
 
 
 

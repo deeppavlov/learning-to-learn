@@ -15,7 +15,7 @@ from learning_to_learn.environment import Environment
 from learning_to_learn.pupils.mlp_for_meta import MlpForMeta as Mlp
 from learning_to_learn.image_batch_gens import MnistBatchGenerator
 from learning_to_learn.useful_functions import compose_hp_confs
-from learning_to_learn.optimizers.chiterm import ChiTerm
+from learning_to_learn.optimizers.chinoise import ChiNoise
 
 import os
 
@@ -43,7 +43,7 @@ data_dir = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'mnist']))
 
 env = Environment(
     pupil_class=Mlp,
-    meta_optimizer_class=ChiTerm,
+    meta_optimizer_class=ChiNoise,
     batch_generator_classes=MnistBatchGenerator,
 )
 

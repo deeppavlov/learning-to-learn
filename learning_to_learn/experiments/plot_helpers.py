@@ -65,7 +65,7 @@ def get_linthreshx(lines):
             thresh = abs(left)
         else:
             thresh = max(abs(left), abs(right))
-    print(thresh)
+    # print(thresh)
     return thresh
 
 

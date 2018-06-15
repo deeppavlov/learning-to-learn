@@ -127,11 +127,11 @@ os.chdir(dname)
 
 plot_parameter_names = get_parameter_names(args.hp_names_file)
 xscale = args.xscale
-create_path(args.plot_dir)
+
 for eval_dir in eval_dirs:
     print(eval_dir)
     plot_dir = os.path.join(*list(os.path.split(eval_dir)[:-1]) + [args.plot_dir])
-
+    create_path(plot_dir)
     if args.model == 'optimizer':
         try:
             plot_hp_search_optimizer(
