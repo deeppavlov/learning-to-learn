@@ -13,7 +13,7 @@ except ValueError:  # Already removed
 from learning_to_learn.experiments.plot_helpers import get_parameter_names, plot_hp_search_optimizer, parse_eval_dir, \
     plot_hp_search_pupil
 from learning_to_learn.useful_functions import MissingHPError, HeaderLineError, ExtraHPError, BadFormattingError, \
-    parse_x_select, parse_line_select
+    parse_x_select, parse_line_select, broadcast_list, broadcast_many_lists, split_strings_by_char, convert
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -32,7 +32,7 @@ parser.add_argument(
     '-lbl',
     "--labels",
     help="labels for plotted lines. Labels are provided in format '<label1>,<label2>,...:<labeli>...'."
-         " Labels for different evaluation directories are separated by colons. Default is numeration from 1'",
+         " Labels for different evaluation directories are separated by colons. It is obligatory parameter'",
     default=None
 )
 parser.add_argument(
@@ -123,7 +123,51 @@ parser.add_argument(
          "optimizers. Default is 'valid'",
     default='valid',
 )
+parser.add_argument(
+    '-fhp',
+    "--fixed_hp_values",
+    help="Values of fixed hyper parameters. Format: '(<hp1>,<hp2>...),()...:()...'",
+    default=None
+)
 
 args = parser.parse_args()
 
-x-select
+eval_dirs = parse_eval_dir(args.eval_dir)
+
+[lines_by_ed, labels_by_ed, fixed_hp_by_ed,
+ regimes_by_ed, pupil_names_by_ed, dataset_names_by_ed] = split_strings_by_char(
+    [args.lines, args.labels, args.fixed_hp_values, args.regimes, args.pupil_names, args.dataset_names], ':'
+)
+num_lines = [len(ed_lines.split(',')) for ed_lines in lines_by_ed]
+num_ed = len(eval_dirs)
+fixed_hp_by_ed = broadcast_list(fixed_hp_by_ed, num_ed)
+
+if args.model == 'pupil':
+    dataset_names_by_ed = broadcast_list(dataset_names_by_ed, num_ed)
+
+elif args.model == 'optimizer':
+    [regimes_by_ed, pupil_names_by_ed] = broadcast_many_lists(
+        [regimes_by_ed, pupil_names_by_ed],
+        num_ed
+    )
+
+for eval_dir, ed_lines, ed_fixed_hps, ed_regimes, ed_pupil_names, ed_dataset_names, ed_labels, nlines in \
+        zip(
+            eval_dirs, lines_by_ed, fixed_hp_by_ed, regimes_by_ed,
+            pupil_names_by_ed, dataset_names_by_ed, labels_by_ed, num_lines
+        ):
+    ed_regimes = ed_regimes.split(',')
+    ed_pupil_names = ed_pupil_names.split(',')
+    ed_dataset_names = ed_dataset_names.split(',')
+    [ed_lines, ed_fixed_hps, ed_regimes, ed_pupil_names, ed_dataset_names, ed_labels] = split_strings_by_char(
+        [ed_lines, ed_fixed_hps, ed_regimes, ed_pupil_names, ed_dataset_names, ed_labels], ','
+    )
+
+    [ed_regimes, ed_pupil_names, ed_dataset_names, ed_fixed_hps] = broadcast_many_lists(
+        [ed_regimes, ed_pupil_names, ed_dataset_names, ed_fixed_hps],
+        nlines,
+    )
+
+
+    
+

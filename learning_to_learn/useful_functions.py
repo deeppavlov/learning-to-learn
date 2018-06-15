@@ -67,6 +67,13 @@ class BadFormattingError(Exception):
         self.message = message
 
 
+class FailedBroadcastError(Exception):
+    def __init__(self, required_num, list_, message):
+        self.required_num = required_num
+        self.list_ = list_
+        self.message = message
+
+
 def create_vocabulary(text):
     all_characters = list()
     for char in text:
@@ -2201,3 +2208,35 @@ def select_for_plot(data, select):
                     selected_lines[line_key] = select_by_x(line_data, select['x_select'])
         selected[fixed_hps] = selected_lines
     return selected
+
+
+def broadcast_list(l, n):
+    if n > 1:
+        if len(l) == 1:
+            return l*n
+        elif len(l) != n:
+            raise FailedBroadcastError(
+                n,
+                l,
+                "Failed to broadcast list %s to length %s" % (l, n)
+            )
+        else:
+            return l
+    else:
+        return l
+
+
+def broadcast_many_lists(lists, n):
+    res = list()
+    for l in lists:
+        res.append(
+            broadcast_list(l, n)
+        )
+    return res
+
+
+def split_strings_by_char(strings, char):
+    res = list()
+    for string in strings:
+        res.append(string.split(char))
+    return res
