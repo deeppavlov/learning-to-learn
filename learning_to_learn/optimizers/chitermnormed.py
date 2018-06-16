@@ -62,7 +62,7 @@ class ChiTermNormed(Meta):
                 ]
             else:
                 ov['o'] = ov['o'] * tf.exp(
-                    self._normalize(ov['theta']*ov['o'], ov['o'])
+                    normalize(ov['theta']*ov['o'], ov['o'])
                 )
         return optimizer_ins
 
