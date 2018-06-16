@@ -3,7 +3,7 @@ from learning_to_learn.optimizers.meta import Meta
 from learning_to_learn.useful_functions import construct_dict_without_none_entries, global_norm, normalize
 
 
-class ChiNoise(Meta):
+class ChiTermNormed(Meta):
     @staticmethod
     def form_kwargs(kwargs_for_building, insertions):
         for insertion in insertions:
@@ -20,67 +20,18 @@ class ChiNoise(Meta):
     def _create_optimizer_states(self, num_exercises, var_scope, gpu_idx):
         return list()
 
-    @staticmethod
-    def _get_noise(shape):
-        return tf.random_uniform(shape, minval=-1., maxval=1.)
-
     def _add_chi_term_sum(
             self,
             optimizer_ins
     ):
         for ok, ov in optimizer_ins.items():
             if isinstance(ov['o'], list):
-                # with tf.device('/cpu:0'):
-                #     self._chi_contribution = tf.Print(
-                #         self._chi_contribution,
-                #         [self._chi_contribution],
-                #         message="\n\n(ChiNoise._add_chi_term_sum)self._chi_contribution:\n"
-                #     )
-                changed = list()
-                for o in ov['o']:
-                    noise = self._get_noise(tf.shape(o))
-                    noise = normalize(noise, o)
-                    # with tf.device('/cpu:0'):
-                    #     noise = tf.Print(
-                    #         noise,
-                    #         [global_norm([noise])],
-                    #         message="\n\n(ChiNoise._add_chi_term_sum)noise:\n"
-                    #     )
-                    #     o = tf.Print(
-                    #         o,
-                    #         [global_norm([o])],
-                    #         message="\n\n(ChiNoise._add_chi_term_sum)o:\n"
-                    #     )
-                    changed.append(o + self._chi_contribution * noise)
-                ov['o'] = changed
-                # ov['o'] = [
-                #     o + self._chi_contribution * self._get_noise(tf.shape(o))
-                #     for o in ov['o']
-                # ]
+                ov['o'] = [
+                    o + self._chi_contribution * normalize(theta, o)
+                    for o, theta in zip(ov['o'],ov['theta'])
+                ]
             else:
-                # with tf.device('/cpu:0'):
-                #     self._chi_contribution = tf.Print(
-                #         self._chi_contribution,
-                #         [self._chi_contribution],
-                #         message="\n\n(ChiNoise._add_chi_term_sum)self._chi_contribution:\n"
-                #     )
-
-                noise = self._get_noise(tf.shape(ov['o']))
-                noise = normalize(noise, ov['o'])
-                # with tf.device('/cpu:0'):
-                #     noise = tf.Print(
-                #         noise,
-                #         [global_norm([noise])],
-                #         message="\n\n(ChiNoise._add_chi_term_sum)noise:\n"
-                #     )
-                #     ov['o'] = tf.Print(
-                #         ov['o'],
-                #
-                #         [global_norm([ov['o']])],
-                #         message="\n\n(ChiNoise._add_chi_term_sum)ov['o']:\n"
-                #     )
-                ov['o'] = ov['o'] + self._chi_contribution * noise
-                # ov['o'] = ov['o'] + self._chi_contribution * self._get_noise(tf.shape(ov['o']))
+                ov['o'] = ov['o'] + self._chi_contribution * normalize(ov['theta'], ov['o'])
         return optimizer_ins
 
     def _add_chi_term_mul(
@@ -90,40 +41,35 @@ class ChiNoise(Meta):
         for ok, ov in optimizer_ins.items():
             if isinstance(ov['o'], list):
                 ov['o'] = [
-                    o + self._chi_contribution * self._get_noise(tf.shape(o)) * tf.square(o)
-                    for o in ov['o']
+                    o + self._chi_contribution * normalize(theta * tf.square(o), o)
+                    for o, theta in zip(ov['o'],ov['theta'])
                 ]
             else:
-                ov['o'] = ov['o'] + \
-                          self._chi_contribution * self._get_noise(tf.shape(ov['o'])) \
-                          * tf.square(ov['o'])
+                ov['o'] = ov['o'] + self._chi_contribution * normalize(
+                    ov['theta'] * tf.square(ov['o']),
+                    ov['o']
+                )
         return optimizer_ins
 
     def _add_chi_term_exp(self, optimizer_ins):
         for ok, ov in optimizer_ins.items():
             if isinstance(ov['o'], list):
                 ov['o'] = [
-                    o * tf.exp(
-                        o * self._chi_contribution *
-                        self._get_noise(tf.shape(o))
+                    o*tf.exp(
+                        self._chi_contribution * normalize(o*theta, o)
                     )
-                    for o in ov['o']
+                    for o, theta in zip(ov['o'],ov['theta'])
                 ]
             else:
                 ov['o'] = ov['o'] * tf.exp(
-                    self._chi_contribution * self._get_noise(tf.shape(ov['o']))*ov['o'])
+                    self._normalize(ov['theta']*ov['o'], ov['o'])
+                )
         return optimizer_ins
 
     def _add_chi_term(
             self,
             optimizer_ins
     ):
-        self._multiply_by_factor(
-            optimizer_ins,
-            dict(
-                theta=self._chi_contribution
-            )
-        )
         if self._chi_application == 'sum':
             optimizer_ins = self._add_chi_term_sum(optimizer_ins)
         elif self._chi_application == 'mul':

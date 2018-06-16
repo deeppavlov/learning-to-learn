@@ -2308,3 +2308,6 @@ def isnumber(string):
             return False
     return True
 
+
+def normalize(normalized, norm_bearer):
+    return normalized / global_norm([normalized]) * global_norm([norm_bearer])
