@@ -765,7 +765,7 @@ class Environment(object):
                                 verbose=start_specs['verbose'])
         # print('(Environment.test)self._storage:', self._storage)
         self._handler.log_launch()
-        empty_batch_gen = batch_generator_class('', 1, vocabulary=start_specs['vocabulary'])
+        empty_batch_gen = batch_generator_class('', 1, **work['valid_batch_kwargs'])
         if work['fuses'] is not None:
             fuse_res = self._on_fuses(empty_batch_gen,
                                       work['fuses'],

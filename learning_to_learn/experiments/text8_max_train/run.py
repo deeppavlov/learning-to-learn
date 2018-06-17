@@ -65,7 +65,6 @@ valid_add_feed = [
 
 dataset_name = 'valid'
 
-tf.set_random_seed(1)
 BATCH_SIZE = 32
 NUM_UNROLLINGS = 10
 env.build_pupil(
@@ -100,8 +99,8 @@ for run_num in range(num_runs):
         result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
         additions_to_feed_dict=train_add_feed,
         # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
-        # stop=1000,
-        stop=stop_specs,
+        stop=1000,
+        # stop=stop_specs,
         vocabulary=vocabulary,
         num_unrollings=NUM_UNROLLINGS,
         results_collect_interval=100,
@@ -126,5 +125,8 @@ for run_num in range(num_runs):
         vocabulary=vocabulary,
         additions_to_feed_dict=valid_add_feed,
         validation_dataset_texts=[test_text],
+        valid_batch_kwargs=dict(
+            vocabulary=vocabulary
+        ),
         printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy']
     )
