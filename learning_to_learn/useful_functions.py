@@ -1656,14 +1656,16 @@ def get_missing_hp_sets(conf_file, eval_dir, model):
     missing_hp_sets = list()
     grids, conf, _ = make_initial_grid(conf_file, eval_dir, model=model)
     # print(grids)
+    total_required = 0
     missing_indices = list()
     for grid in grids:
+        total_required += cumulative_mul(grid.shape, 1)
         missing_indices.extend(get_missing_entries(grid))
     for indices in missing_indices:
         missing_hp_sets.append(
             get_hp_set_from_ordered_dict_by_indices(conf, indices)
         )
-    return missing_hp_sets
+    return missing_hp_sets, total_required
 
 
 def get_all_permutations(list_to_permute):

@@ -64,9 +64,9 @@ for conf, dirs in zip(confs, eval_dirs):
         print('no experiments found')
     for dir in dirs:
         print(' '*4, dir)
-        missing_hp_sets = get_missing_hp_sets(conf, dir, args.model)
+        missing_hp_sets, total_required = get_missing_hp_sets(conf, dir, args.model)
         num_missing = len(missing_hp_sets)
-        print('missing: %s' % num_missing)
+        print(('missing: %s' + ' '*10 + 'total_required: %s') % (num_missing, total_required))
         if args.verbose:
             for idx, hp_set in enumerate(missing_hp_sets):
                 print(idx)
