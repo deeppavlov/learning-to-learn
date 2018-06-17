@@ -5,7 +5,7 @@ from learning_to_learn.useful_functions import construct, get_keys_from_nested, 
     retrieve_from_inner_dicts, distribute_into_inner_dicts, custom_matmul, values_from_nested, sort_lists_map, \
     global_l2_loss, filter_none_gradients, go_through_nested_with_name_scopes_to_perform_func_and_distribute_results, \
     global_norm, func_on_list_in_nested, append_to_nested, get_substitution_tensor, variable_summaries, \
-    apply_to_nested, flatten
+    apply_to_nested_on_depth, flatten
 
 from learning_to_learn.tensors import compute_metrics
 
@@ -381,7 +381,7 @@ class Meta(object):
                         #     opt_flow[ok][ik]
                         # )
                         with tf.name_scope(ik):
-                            ov[ik] = apply_to_nested(iv, lambda x: x*factors[ik])
+                            ov[ik] = apply_to_nested_on_depth(iv, lambda x: x*factors[ik])
         return opt_flow
 
     def _normalize(self, opt_flow, normalizing):
@@ -1009,7 +1009,7 @@ class Meta(object):
                     grads_and_vars = average_gradients(tower_grads)
                     grads, v = self._tune_gradients(grads_and_vars)
 
-                    # opt_vars_l2_norm = apply_to_nested(self._opt_trainable, l2_loss_per_elem)
+                    # opt_vars_l2_norm = apply_to_nested_on_depth(self._opt_trainable, l2_loss_per_elem)
                     # grads[0] = tf_print_nested(opt_vars_l2_norm, 'opt_vars_l2_norm', grads[0], 10)
 
                     train_op = self._optimizer_for_optimizer_training.apply_gradients(zip(grads, v))

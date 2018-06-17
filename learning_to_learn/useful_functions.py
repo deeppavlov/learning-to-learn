@@ -25,6 +25,12 @@ escape_sequences_replacements = {'\\': '\\\\',
 METRICS = ['accuracy', 'bpc', 'loss', 'perplexity']
 DIGITS = list('0123456789')
 NUMBER_CHARS = DIGITS + ['e', '+', '-', '.', ' ']
+METRIC_IMPROVEMENT_DIRECTIONS = dict(
+    accuracy='up',
+    bpc='down',
+    loss='down',
+    perplexity='down',
+)
 
 
 class InvalidArgumentError(Exception):
@@ -1180,22 +1186,43 @@ def l2_loss_per_elem(t):
     return tf.nn.l2_loss(t) / num_elems
 
 
-def apply_to_nested(nested, func):
+def apply_recur(nested, func, depth):
     if isinstance(nested, list):
         res = list()
         for elem in nested:
-            res.append(apply_to_nested(elem, func))
+            res.append(apply_to_nested_on_depth(elem, func, depth=depth))
     elif isinstance(nested, tuple):
         res = list()
         for elem in nested:
-            res.append(apply_to_nested(elem, func))
+            res.append(apply_to_nested_on_depth(elem, func, depth=depth))
         res = tuple(res)
     elif isinstance(nested, dict):
         res = dict()
         for k, v in nested.items():
-            res[k] = apply_to_nested(v, func)
+            res[k] = apply_to_nested_on_depth(v, func, depth=depth)
+    elif isinstance(nested, OrderedDict):
+        res = OrderedDict()
+        for k, v in nested.items():
+            res[k] = apply_to_nested_on_depth(v, func, depth=depth)
     else:
-        res = func(nested)
+        raise InvalidArgumentError("nested has to be object of types list, tuple, dict, OrderedDict",
+                                   nested,
+                                   'nested',
+                                   "list, tuple, dict, OrderedDict")
+    return res
+
+
+def apply_to_nested_on_depth(nested, func, depth=None):
+    if depth is None:
+        if isinstance(nested, (list, tuple, dict, OrderedDict)):
+            res = apply_recur(nested, func, depth)
+        else:
+            res = func(nested)
+    else:
+        if depth > 0:
+            res = apply_recur(nested, func, depth-1)
+        else:
+            res = func(nested)
     return res
 
 
@@ -1485,14 +1512,19 @@ def get_combs_and_num_exps_pupil(eval_file, order):
         return [], 0
 
 
+def get_exp_description_files_and_contents(eval_dir):
+    contents = os.listdir(eval_dir)
+    exp_description_files = list()
+    for entry in contents:
+        if entry[-4:] == '.txt' and is_int(entry[:-4]):
+            exp_description_files.append(entry)
+    return exp_description_files, contents
+
+
 def get_num_exps_and_res_files(eval_dir):
     pairs = list()
     if os.path.exists(eval_dir):
-        contents = os.listdir(eval_dir)
-        exp_description_files = list()
-        for entry in contents:
-            if entry[-4:] == '.txt' and is_int(entry[:-4]):
-                exp_description_files.append(entry)
+        exp_description_files, contents = get_exp_description_files_and_contents(eval_dir)
         exp_description_files = sorted(exp_description_files, key=lambda elem: int(elem[:-4]))
         biggest_idx = 0
         for file_name in exp_description_files:
@@ -1620,8 +1652,10 @@ def get_missing_entries(grid):
 
 def get_missing_hp_sets(conf_file, eval_dir):
     missing_hp_sets = list()
-    grid, conf, _ = make_initial_grid(conf_file, eval_dir)
-    missing_indices = get_missing_entries(grid)
+    grids, conf, _ = make_initial_grid(conf_file, eval_dir)
+    missing_indices = list()
+    for grid in grids:
+        missing_indices.extend(get_missing_entries(grid))
     for indices in missing_indices:
         missing_hp_sets.append(
             get_hp_set_from_ordered_dict_by_indices(conf, indices)
@@ -2079,12 +2113,7 @@ def get_optimizer_evaluation_results(eval_dir, hp_order, averaging_number):
 
 
 def get_pupil_evaluation_results(eval_dir, hp_order):
-    eval_dir_contents = construct(os.listdir(eval_dir))
-    edc = construct(eval_dir_contents)
-    for entry in edc:
-        # print(entry)
-        if 'launch_log' in entry or not entry.endswith('.txt'):
-            eval_dir_contents.remove(entry)
+    eval_dir_contents = get_pupil_eval_dir_contents(eval_dir)
     # for entry in edc:
     #     print(entry)
     #     # print(eval_dir_contents)
@@ -2311,3 +2340,120 @@ def isnumber(string):
 
 def normalize(normalized, norm_bearer):
     return normalized / global_norm([normalized]) * global_norm([norm_bearer])
+
+
+def get_pupil_eval_dir_contents(eval_dir):
+    contents = construct(os.listdir(eval_dir))
+    filtered = list()
+    for entry in contents:
+        if 'launch_log' not in entry and entry[-4:] == '.txt':
+            filtered.append(entry)
+    return filtered
+
+
+def get_hp_and_metric_names_from_pupil_eval_dir(eval_dir):
+    filtered = get_pupil_eval_dir_contents(eval_dir)
+    with open(filtered[0], 'r') as f:
+        lines = f.read().split('\n')
+    lines = remove_empty_strings_from_list(lines)
+    if not check_if_line_contains_results(lines[0]):
+        raise HeaderLineError(
+            lines[0],
+            "broken header line %s in file %s" % (lines[0], os.path.join(eval_dir, filtered[0]))
+        )
+    metric_names, hp_names = parse_header_line(lines[0])
+    return hp_names, metric_names
+
+
+def get_hp_names_from_optimizer_eval_dir(eval_dir):
+    with open(os.path.join(eval_dir, 'hp_layout.txt'), 'r') as f:
+        hp_names = f.read().split('\n')[0]
+    filtered = list()
+    for name in hp_names:
+        if len(name) != 0:
+            filtered.append(name)
+    return filtered
+
+
+def get_dataset_names_from_eval_dir(eval_dir):
+    contents = get_pupil_eval_dir_contents(eval_dir)
+    return [entry[:-4] for entry in contents]
+
+
+def get_pupil_names_from_eval_dir(eval_dir):
+    exp_description_files, _ = get_exp_description_files_and_contents(eval_dir)
+    name = exp_description_files[0][:-4]
+    return os.listdir(os.path.join(eval_dir, name))
+
+
+def get_metric_names_and_regimes_from_optimizer_eval_dir(eval_dir):
+    exp_description_files, _ = get_exp_description_files_and_contents(eval_dir)
+    name = exp_description_files[0][:-4]
+    pupil_name = os.listdir(os.path.join(eval_dir, name))[0]
+    result_files = os.listdir(os.path.join(eval_dir, name, pupil_name))
+    metric_names = list()
+    regimes = list()
+    for res_file in result_files:
+        spl = res_file.split('_')
+        metric_name = spl[0]
+        regime = spl[1].split('.')[0]
+        if regime not in regimes:
+            regimes.append(regime)
+        if metric_name not in metric_names:
+            metric_names.append(metric_name)
+    return metric_names, regimes
+
+
+def search_hps_giving_min_and_max(data):
+    min = None
+    max = None
+    for fixed_hps_tuple, fdata in data.items():
+        for line_hp, ldata in fdata.items():
+            for changing_hp, v, _ in zip(*ldata):
+                if max is None or v > max:
+                    max = v
+                    max_res_hp = list(fixed_hps_tuple) + [line_hp, changing_hp]
+                if min is None or v < min:
+                    min = v
+                    min_res_hp = list(fixed_hps_tuple) + [line_hp, changing_hp]
+    return dict(
+        min=[tuple(min_res_hp), min],
+        max=[tuple(max_res_hp), max]
+    )
+
+
+def get_min_and_max(for_plotting, model):
+    if model == 'pupil':
+        depth = 2
+    elif model == 'optimizer':
+        depth = 3
+    return apply_to_nested_on_depth(for_plotting, search_hps_giving_min_and_max, depth)
+
+
+def apply_direction(minmax, metric):
+    if METRIC_IMPROVEMENT_DIRECTIONS[metric] == 'up':
+        return minmax['max']
+    else:
+        return minmax['min']
+
+
+
+def get_best(for_plotting, model):
+    minmax = get_min_and_max(for_plotting, model)
+    res = dict()
+    if model == 'pupil':
+        for dataset_name, dataset_res in minmax.items():
+            res[dataset_name] = dict()
+            d = res[dataset_name]
+            for metric, metric_minmax in dataset_res.items():
+                d[metric] = apply_direction(metric_minmax, metric)
+    elif model == 'optimizer':
+        for pupil_name, pupil_res in minmax.items():
+            res[pupil_name] = dict()
+            d = res[pupil_name]
+            for metric, metric_res in pupil_res.items():
+                d[metric] = dict()
+                d = d[metric]
+                for regime, regime_minmax in metric_res.items():
+                    d[regime] = apply_direction(regime_minmax, metric)
+    return res
