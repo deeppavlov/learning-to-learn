@@ -47,8 +47,6 @@ valid_add_feed = [
 add_metrics = ['bpc', 'perplexity', 'accuracy']
 VALID_SIZE = 1000
 
-tf.set_random_seed(1)
-
 BATCH_SIZE = 32
 env.build_pupil(
     batch_size=BATCH_SIZE,
@@ -56,7 +54,7 @@ env.build_pupil(
     num_hidden_nodes=[1000],
     input_shape=[3072],
     num_classes=10,
-    init_parameter=1.,
+    init_parameter=hps['init_parameter'],
     additional_metrics=add_metrics,
     optimizer=opt
 )
@@ -64,23 +62,24 @@ env.build_pupil(
 print('building is finished')
 stop_specs = dict(
     type='while_progress',
-    max_no_progress_points=10,
+    max_no_progress_points=20,
     changing_parameter_name='learning_rate',
     path_to_target_metric_storage=('valid', 'loss')
 )
 
 for run_num in range(num_runs):
+    path = save_path % run_num
     learning_rate = dict(
         type='adaptive_change',
-        max_no_progress_points=10,
+        max_no_progress_points=20,
         decay=.5,
-        init=4.,
+        init=hps['learning_rate'],
         path_to_target_metric_storage=('valid', 'loss')
     )
     env.train(
         # gpu_memory=.3,
         allow_growth=True,
-        save_path='debug_early_stop',
+        save_path=path,
         # restore_path='lstm_sample_test/scipop3_1000_bs256_11.12/checkpoints/2000',
         learning_rate=learning_rate,
         batch_size=BATCH_SIZE,
@@ -88,7 +87,7 @@ for run_num in range(num_runs):
         result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
         printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
         stop=stop_specs,
-        # stop=2000,
+        # stop=1000,
         train_dataset=dict(
             train='train'
         ),
@@ -109,4 +108,18 @@ for run_num in range(num_runs):
         summary=False,
         add_graph_to_summary=False,
     )
+
+    env.test(
+        restore_path=os.path.join(path, 'checkpoints/best'),
+        save_path=os.path.join(path, 'test'),
+        additions_to_feed_dict=valid_add_feed,
+        validation_datasets=dict(
+            test='test'
+        ),
+        valid_batch_kwargs=dict(
+            valid_size=VALID_SIZE
+        ),
+        printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy']
+    )
+
 # log_device_placement=True)
