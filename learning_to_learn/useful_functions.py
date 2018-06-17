@@ -2470,19 +2470,62 @@ def print_hps(hp_names, hp_values, indent):
         print(indent_str + hp_name + ':', hp_value)
 
 
-def parse_path_comb(eval_dir):
+def parse_path_comb(eval_dir, filter_=True):
     dir_sets = eval_dir.split(':')
     dir_sets_prepared = list()
     for dir_set in dir_sets:
         dir_sets_prepared.append(dir_set.split(','))
     eval_dirs = [os.path.join(*comb) for comb in all_combs(dir_sets_prepared)]
     # print("(plot_helpers.parse_path_comb)eval_dirs:", eval_dirs)
-    filtered = list()
-    for dir_ in eval_dirs:
-        if os.path.exists(dir_):
-            filtered.append(dir_)
-        else:
-            print("WARNING: %s directory does not exist" % dir_)
+    if filter_:
+        filtered = list()
+        for dir_ in eval_dirs:
+            if os.path.exists(dir_):
+                filtered.append(dir_)
+            else:
+                print("WARNING: %s directory does not exist" % dir_)
+    else:
+        filtered = eval_dirs
     # print("(plot_helpers.parse_path_comb)filtered:", filtered)
     return filtered
 
+
+def get_points_from_range(string):
+    [start, end, num_points, scale] = string.split(',')
+    start = convert(start, 'float')
+    end = convert(end, 'float')
+    num_points = int(num_points)
+
+    points = list()
+    if scale == 'linear':
+        step = (end - start) / num_points
+        significant_digit = int(max(np.log10(abs(end / step)), np.log10(abs(start / step))))
+        for i in range(num_points + 1):
+            point = start + i * step
+            points.append(point)
+    if scale in ['log', 'symlog']:
+        if start * end < 0:
+            raise InvalidArgumentError(
+                'if scale is log or symlog start*end should be positive',
+                allowed_values='start*end>0',
+                value=[start, end],
+                name="start and end",
+            )
+        else:
+            factor = (end / start) ** (1. / num_points)
+            significant_digit = int(np.log10((1. / abs(abs(factor) - 1.)))) + 1
+
+            for i in range(num_points + 1):
+                point = start * factor ** i
+                points.append(point)
+    format = '{:0.%se}' % significant_digit
+    if scale == 'symlog':
+        for p in list(points):
+            points.append(-p)
+        points.append(0.)
+    return [format.format(p) for p in points]
+
+
+def get_tmpl(l):
+    length = len(l)
+    return '%s ' * (length - 1) + '%s'
