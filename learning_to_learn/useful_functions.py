@@ -2356,10 +2356,10 @@ def get_pupil_eval_dir_contents(eval_dir):
 
 def get_hp_and_metric_names_from_pupil_eval_dir(eval_dir):
     filtered = get_pupil_eval_dir_contents(eval_dir)
-    with open(filtered[0], 'r') as f:
+    with open(os.path.join(eval_dir, filtered[0]), 'r') as f:
         lines = f.read().split('\n')
     lines = remove_empty_strings_from_list(lines)
-    if not check_if_line_contains_results(lines[0]):
+    if not check_if_line_is_header(lines[0]):
         raise HeaderLineError(
             lines[0],
             "broken header line %s in file %s" % (lines[0], os.path.join(eval_dir, filtered[0]))
@@ -2372,7 +2372,7 @@ def get_hp_names_from_optimizer_eval_dir(eval_dir):
     with open(os.path.join(eval_dir, 'hp_layout.txt'), 'r') as f:
         hp_names = f.read().split('\n')[0]
     filtered = list()
-    for name in hp_names:
+    for name in hp_names.split():
         if len(name) != 0:
             filtered.append(name)
     return filtered
@@ -2440,23 +2440,31 @@ def apply_direction(minmax, metric):
         return minmax['min']
 
 
-
 def get_best(for_plotting, model):
     minmax = get_min_and_max(for_plotting, model)
     res = dict()
     if model == 'pupil':
         for dataset_name, dataset_res in minmax.items():
             res[dataset_name] = dict()
-            d = res[dataset_name]
+            rd = res[dataset_name]
             for metric, metric_minmax in dataset_res.items():
-                d[metric] = apply_direction(metric_minmax, metric)
+                rd[metric] = apply_direction(metric_minmax, metric)
     elif model == 'optimizer':
+        # print("(useful_functions.get_best)pupil_names:", list(minmax.keys()))
         for pupil_name, pupil_res in minmax.items():
             res[pupil_name] = dict()
-            d = res[pupil_name]
+            rp = res[pupil_name]
+            # print("(useful_functions.get_best)metrics:", list(pupil_res.keys()))
             for metric, metric_res in pupil_res.items():
-                d[metric] = dict()
-                d = d[metric]
+                rp[metric] = dict()
+                rm = rp[metric]
+                # print("(useful_functions.get_best)regimes:", list(metric_res.keys()))
                 for regime, regime_minmax in metric_res.items():
-                    d[regime] = apply_direction(regime_minmax, metric)
+                    rm[regime] = apply_direction(regime_minmax, metric)
     return res
+
+
+def print_hps(hp_names, hp_values, indent):
+    indent_str = ' ' * indent
+    for hp_name, hp_value in zip(hp_names, hp_values):
+        print(indent_str + hp_name + ':', hp_value)
