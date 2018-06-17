@@ -833,10 +833,6 @@ class Meta(object):
                                             pupil_grad_eval_labels[gpu_idx][unr_idx],
                                             pupil_trainable_variables[gpu_idx], pupil_grad_eval_pupil_storage[gpu_idx],
                                         )
-                                start_additional_metrics = compute_metrics(
-                                    self._additional_metrics, start_predictions,
-                                    start_labels, start_loss, keep_first_dim=True)
-
                                 # print("(Meta._train_graph)pupil_trainable_variables[%s]:" % gpu_idx,
                                 #       pupil_trainable_variables[gpu_idx])
 
@@ -858,6 +854,7 @@ class Meta(object):
                                 optimizer_outs = self._compose_phi_and_psi(optimizer_outs)
                                 optimizer_outs_with_mods = self._compose_mods(optimizer_outs)
                                 optimizer_outs_mods_are_applied = self._sub_mods(optimizer_outs_with_mods)
+
                                 new_pupil_trainable = self._filter_opt_flow_dict(
                                     optimizer_outs_mods_are_applied, ['matrix', 'bias'])
 
@@ -868,6 +865,10 @@ class Meta(object):
                                         optimizer_grad_pupil_storage[gpu_idx], opt_ins=new_pupil_trainable,
                                         name_scope='pupil_loss_after_pupil_modification'
                                     )
+
+                                start_additional_metrics = compute_metrics(
+                                    self._additional_metrics, start_predictions,
+                                    start_labels, start_loss, keep_first_dim=True)
                                 end_additional_metrics = compute_metrics(
                                     self._additional_metrics, end_predictions,
                                     end_labels, end_loss, keep_first_dim=True)
@@ -1055,10 +1056,6 @@ class Meta(object):
                 optimizer_ins, pupil_save_ops, start_loss, predictions, labels = \
                     self._eval_pupil_gradients_for_optimizer_inference()
 
-                additional_metrics = compute_metrics(
-                    self._additional_metrics, predictions,
-                    labels, start_loss, keep_first_dim=False)
-
                 # optimizer_ins = self._extend_with_permutations(optimizer_ins, 0)
                 # print('\n(Meta._inference_graph)optimizer_ins before permutations:')
                 # print_optimizer_ins(optimizer_ins)
@@ -1097,6 +1094,7 @@ class Meta(object):
                 # print('\n(Meta._inference_graph)')
                 # print_optimizer_ins(mods)
                 mods = self._sub_mods(mods)
+
                 optimizer_save_states_ops = compose_save_list(
                     (optimizer_states, new_optimizer_states), name_scope='save_optimizer_states')
                 # print('\n(Meta._inference_graph)pupil_save_ops:', pupil_save_ops)
@@ -1105,6 +1103,8 @@ class Meta(object):
                     train_op = tf.group(*self._pupil.apply_mods(mods), name='train_with_meta_optimizer_op')
                 self._hooks['train_with_meta_optimizer_op'] = train_op
                 self._hooks['loss'] = start_loss
-
+                additional_metrics = compute_metrics(
+                    self._additional_metrics, predictions,
+                    labels, start_loss, keep_first_dim=False)
                 for add_metric in self._additional_metrics:
                     self._hooks[add_metric] = additional_metrics[add_metric]
