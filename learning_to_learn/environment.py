@@ -550,7 +550,7 @@ class Environment(object):
         self.current_pupil_build_parameters = kwargs
         self._meta_optimizer = self._meta_optimizer_class(self._pupil, **kwargs)
         default_hooks = self._meta_optimizer.get_default_hooks()
-        print("(Environment.build_optimizer)default_hooks:", default_hooks)
+        # print("(Environment.build_optimizer)default_hooks:", default_hooks)
         self._hooks.update(default_hooks)
 
     @classmethod

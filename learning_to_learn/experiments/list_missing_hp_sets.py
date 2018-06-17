@@ -12,8 +12,9 @@ from learning_to_learn.useful_functions import get_missing_hp_sets
 
 conf_file = sys.argv[1]
 eval_dir = sys.argv[2]
+model = sys.argv[3]
 
-missing_hp_sets = get_missing_hp_sets(conf_file, eval_dir)
+missing_hp_sets = get_missing_hp_sets(conf_file, eval_dir, model)
 num_missing = len(missing_hp_sets)
 for idx, hp_set in enumerate(missing_hp_sets):
     print(idx)

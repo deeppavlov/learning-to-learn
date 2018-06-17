@@ -1604,7 +1604,7 @@ def make_initial_grid(file_name, eval_dir_or_file, chop_last_experiment=False, m
             indices.append(init_grid_values[p_idx].index(v))
         exp_counter_grid[tuple(indices)] += 1.
 
-    # print("(useful_functions.make_initial_grid)grid:", grid)
+    # print("(useful_functions.make_initial_grid)exp_counter_grid:", exp_counter_grid)
     return slice_to_conf_grids(exp_counter_grid, num_repeats), init_conf, num_exps
 
 
@@ -1650,9 +1650,10 @@ def get_missing_entries(grid):
     return missing
 
 
-def get_missing_hp_sets(conf_file, eval_dir):
+def get_missing_hp_sets(conf_file, eval_dir, model):
     missing_hp_sets = list()
-    grids, conf, _ = make_initial_grid(conf_file, eval_dir)
+    grids, conf, _ = make_initial_grid(conf_file, eval_dir, model=model)
+    # print(grids)
     missing_indices = list()
     for grid in grids:
         missing_indices.extend(get_missing_entries(grid))
