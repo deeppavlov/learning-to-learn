@@ -2468,3 +2468,21 @@ def print_hps(hp_names, hp_values, indent):
     indent_str = ' ' * indent
     for hp_name, hp_value in zip(hp_names, hp_values):
         print(indent_str + hp_name + ':', hp_value)
+
+
+def parse_path_comb(eval_dir):
+    dir_sets = eval_dir.split(':')
+    dir_sets_prepared = list()
+    for dir_set in dir_sets:
+        dir_sets_prepared.append(dir_set.split(','))
+    eval_dirs = [os.path.join(*comb) for comb in all_combs(dir_sets_prepared)]
+    # print("(plot_helpers.parse_path_comb)eval_dirs:", eval_dirs)
+    filtered = list()
+    for dir_ in eval_dirs:
+        if os.path.exists(dir_):
+            filtered.append(dir_)
+        else:
+            print("WARNING: %s directory does not exist" % dir_)
+    # print("(plot_helpers.parse_path_comb)filtered:", filtered)
+    return filtered
+

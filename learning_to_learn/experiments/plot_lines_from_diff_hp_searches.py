@@ -11,9 +11,10 @@ except ValueError:  # Already removed
     pass
 
 from learning_to_learn.experiments.plot_helpers import get_parameter_names, plot_lines_from_diff_hp_searches, \
-    parse_eval_dir, fixed_hps_from_str, parse_metric_scales_str
+    fixed_hps_from_str, parse_metric_scales_str
 from learning_to_learn.useful_functions import MissingHPError, HeaderLineError, ExtraHPError, BadFormattingError, \
-    parse_x_select, parse_line_select, broadcast_list, broadcast_many_lists, split_strings_by_char, convert
+    parse_x_select, parse_line_select, broadcast_list, broadcast_many_lists, split_strings_by_char, convert, \
+    parse_path_comb
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -132,7 +133,7 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-eval_dirs = parse_eval_dir(args.eval_dir)
+eval_dirs = parse_path_comb(args.eval_dir)
 
 [lines_by_ed, labels_by_ed, fixed_hp_by_ed,
  regimes_by_ed, pupil_names_by_ed, dataset_names_by_ed, hp_orders_by_ed] = split_strings_by_char(

@@ -207,23 +207,6 @@ def get_parameter_names(conf_file):
     return plot_parameter_names
 
 
-def parse_eval_dir(eval_dir):
-    dir_sets = eval_dir.split(':')
-    dir_sets_prepared = list()
-    for dir_set in dir_sets:
-        dir_sets_prepared.append(dir_set.split(','))
-    eval_dirs = [os.path.join(*comb) for comb in all_combs(dir_sets_prepared)]
-    # print("(plot_helpers.parse_eval_dir)eval_dirs:", eval_dirs)
-    filtered = list()
-    for dir_ in eval_dirs:
-        if os.path.exists(dir_):
-            filtered.append(dir_)
-        else:
-            print("WARNING: %s directory does not exist" % dir_)
-    # print("(plot_helpers.parse_eval_dir)filtered:", filtered)
-    return filtered
-
-
 def create_plot_hp_layout(plot_dir, hp_plot_order, changing_hp):
     file_with_hp_layout_description = os.path.join(plot_dir, 'plot_hp_layout.txt')
     num_of_hps = len(hp_plot_order)

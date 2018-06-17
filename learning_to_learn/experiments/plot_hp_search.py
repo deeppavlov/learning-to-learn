@@ -10,10 +10,10 @@ try:
 except ValueError:  # Already removed
     pass
 
-from learning_to_learn.experiments.plot_helpers import get_parameter_names, plot_hp_search_optimizer, parse_eval_dir, \
+from learning_to_learn.experiments.plot_helpers import get_parameter_names, plot_hp_search_optimizer, \
     plot_hp_search_pupil, parse_metric_scales_str
 from learning_to_learn.useful_functions import MissingHPError, HeaderLineError, ExtraHPError, BadFormattingError, \
-    parse_x_select, parse_line_select, create_path
+    parse_x_select, parse_line_select, create_path, parse_path_comb
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -117,7 +117,7 @@ style = dict(
     marker=args.marker,
 )
 
-eval_dirs = parse_eval_dir(args.eval_dir)
+eval_dirs = parse_path_comb(args.eval_dir)
 metric_scales = parse_metric_scales_str(args.metric_scales)
 
 hp_plot_order = args.hp_order.split(',')
