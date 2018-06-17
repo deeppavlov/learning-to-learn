@@ -84,12 +84,12 @@ for run_num in range(num_runs):
         save_path=path,
         # restore_path='lstm_sample_test/scipop3_1000_bs256_11.12/checkpoints/2000',
         learning_rate=learning_rate,
-        batch_size=32,
+        batch_size=BATCH_SIZE,
         checkpoint_steps=None,
         result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
         printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
-        # stop=stop_specs,
-        stop=1000,
+        stop=stop_specs,
+        # stop=1000,
         train_dataset=dict(
             train='train'
         ),
