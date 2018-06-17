@@ -58,6 +58,8 @@ def get_linthreshx(lines):
                 left = x
             if x > 0 and (right is None or (right is not None and x < right)):
                 right = x
+    # print(left)
+    # print(right)
     if left is None:
         if right is None:
             thresh = 1.
@@ -67,7 +69,8 @@ def get_linthreshx(lines):
         if right is None:
             thresh = abs(left)
         else:
-            thresh = max(abs(left), abs(right))
+            thresh = min(abs(left), abs(right))
+
     # print(thresh)
     return thresh
 

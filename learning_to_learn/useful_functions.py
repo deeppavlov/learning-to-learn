@@ -31,6 +31,7 @@ METRIC_IMPROVEMENT_DIRECTIONS = dict(
     loss='down',
     perplexity='down',
 )
+EPSILON = 1e-10
 
 
 class InvalidArgumentError(Exception):
@@ -1642,6 +1643,7 @@ def get_missing_entries(grid):
         if grid[tuple(indices)] == 0:
             missing.append(indices)
         # else:
+        # else:
         #     print("(useful_functions.get_missing_entries)present indices:", indices)
     # print("(useful_functions.get_missing_entries)grid[(0, 12, 11)]:", grid[(0, 12, 11)])
     # print("(useful_functions.get_missing_entries)grid[(0, 12, 12)]:", grid[(0, 12, 12)])
@@ -2340,7 +2342,7 @@ def isnumber(string):
 
 
 def normalize(normalized, norm_bearer):
-    return normalized / global_norm([normalized]) * global_norm([norm_bearer])
+    return normalized / (global_norm([normalized]) + EPSILON) * global_norm([norm_bearer])
 
 
 def get_pupil_eval_dir_contents(eval_dir):
