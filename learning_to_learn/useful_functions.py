@@ -1427,8 +1427,7 @@ def get_combs_and_num_exps(eval_dir):
                     file_is_broken = True
             if file_is_broken:
                 file_is_broken = False
-                print("WARNING: file %s is broken and is going to be removed" % file_path)
-                os.remove(file_path)
+                print("WARNING: file %s is broken" % file_path)
         # print("(useful_functions.get_combs_and_num_exps)hp_sets:", hp_sets)
 
         if len(exp_description_files) > 0:
