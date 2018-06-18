@@ -8,13 +8,13 @@ parent, root = file.parent, file.parents[ROOT_HEIGHT]
 sys.path.append(str(root))
 try:
     sys.path.remove(str(parent))
-except ValueError:  # Already removed
+except ValueError: # Already removed
     pass
 
 from learning_to_learn.environment import Environment
-from learning_to_learn.pupils.mlp_for_meta import MlpForMeta as Mlp
-from learning_to_learn.image_batch_gens import MnistBatchGenerator
-from learning_to_learn.useful_functions import compose_hp_confs, get_best, get_pupil_evaluation_results, print_hps
+from learning_to_learn.pupils.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
+from learning_to_learn.useful_functions import create_vocabulary, compose_hp_confs, get_pupil_evaluation_results, \
+    print_hps, get_best
 
 import os
 
@@ -35,9 +35,21 @@ print("confs:", confs)
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
-data_dir = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'mnist']))
+dataset_path = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'text8.txt']))
+with open(dataset_path, 'r') as f:
+    text = f.read()
 
-env = Environment(Mlp, MnistBatchGenerator)
+valid_size = 1000
+valid_text = text[:valid_size]
+train_text = text[valid_size:]
+
+vocabulary = create_vocabulary(text)
+vocabulary_size = len(vocabulary)
+
+env = Environment(
+    pupil_class=Lstm,
+    batch_generator_classes=BatchGenerator,
+    vocabulary=vocabulary)
 
 add_metrics = ['bpc', 'perplexity', 'accuracy']
 train_add_feed = [
@@ -45,36 +57,38 @@ train_add_feed = [
 ]
 if base in ['nesterov', 'momnetum']:
     train_add_feed.append(
-        {'placeholder': 'momentum', 'value': 0.9}
+        {'placeholder': 'momentum', 'value': 0.97}
     )
 valid_add_feed = [
     {'placeholder': 'dropout', 'value': 1.}
 ]
 
 dataset_name = 'valid'
-RESTORE_PATH = '../mnist_max_train/adagrad/8/checkpoints/best'
+RESTORE_PATH = '../text8_max_train/adam/2/checkpoints/best'
 evaluation = dict(
     save_path=save_path,
     result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
-    datasets=[
-        ('validation', 'valid')
-    ],
-    batch_gen_class=MnistBatchGenerator,
-    batch_kwargs=dict(
-        data_dir=data_dir
-    ),
-    batch_size=None,
-    additional_feed_dict=valid_add_feed,
+    datasets=[(valid_text, dataset_name)],
+    batch_gen_class=BatchGenerator,
+    batch_kwargs={'vocabulary': vocabulary},
+    batch_size=1,
+    additional_feed_dict=[{'placeholder': 'dropout', 'value': 1.}]
 )
 
 BATCH_SIZE = 32
 kwargs_for_building = dict(
     batch_size=BATCH_SIZE,
-    num_layers=2,
-    num_hidden_nodes=[1000],
-    input_shape=[784],
-    num_classes=10,
+    num_layers=1,
+    num_nodes=[100],
+    num_output_layers=1,
+    num_output_nodes=[],
+    vocabulary_size=vocabulary_size,
+    embedding_size=150,
+    num_unrollings=10,
+    num_gpus=1,
+    regime='autonomous_training',
     additional_metrics=add_metrics,
+    going_to_limit_memory=True,
     optimizer=opt
 )
 
@@ -84,32 +98,23 @@ kwargs_for_building = dict(
 #     changing_parameter_name='learning_rate',
 #     path_to_target_metric_storage=('valid', 'loss')
 # )
-
 launch_kwargs = dict(
     allow_growth=True,
     # save_path='debug_grid_search',
     result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
     additions_to_feed_dict=train_add_feed,
+    restore_path=RESTORE_PATH,
     # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
     # stop=stop_specs,
-    restore_path=RESTORE_PATH,
     stop=1000,
+    vocabulary=vocabulary,
+    num_unrollings=10,
     results_collect_interval=500,
+    # opt_inf_results_collect_interval=1,
     summary=False,
     add_graph_to_summary=False,
-    train_dataset=dict(
-        train='train'
-    ),
-    train_batch_kwargs=dict(
-        data_dir=data_dir
-    ),
-    valid_batch_kwargs=dict(
-        data_dir=data_dir
-    ),
-    # train_dataset_text='abc',
-    validation_datasets=dict(
-        valid='validation'
-    ),
+    train_dataset_text=train_text,
+    validation_datasets=dict(valid=valid_text),
     batch_size=BATCH_SIZE,
     no_validation=True,
 )
@@ -132,7 +137,6 @@ for conf in confs:
         )
     )
 
-    tf.set_random_seed(1)
     env.grid_search(
         evaluation,
         kwargs_for_building,
@@ -145,13 +149,20 @@ hp_names = list(confs[0].keys())
 for_plotting = get_pupil_evaluation_results(save_path, hp_names)
 
 best = get_best(for_plotting, 'pupil')
+
 env.build_pupil(
     batch_size=BATCH_SIZE,
-    num_layers=2,
-    num_hidden_nodes=[1000],
-    input_shape=[784],
-    num_classes=10,
+    num_layers=1,
+    num_nodes=[100],
+    num_output_layers=1,
+    num_output_nodes=[],
+    vocabulary_size=vocabulary_size,
+    embedding_size=150,
+    num_unrollings=10,
+    num_gpus=1,
+    regime='autonomous_training',
     additional_metrics=add_metrics,
+    going_to_limit_memory=True,
     optimizer=opt
 )
 for dataset_name, dataset_res in best.items():
@@ -167,35 +178,28 @@ for dataset_name, dataset_res in best.items():
             # save_path='debug_grid_search',
             result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
             additions_to_feed_dict=train_add_feed,
-            # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
-            # stop=stop_specs,
             restore_path=RESTORE_PATH,
             save_path=training_path,
+            # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
+            # stop=stop_specs,
             stop=1000,
+            vocabulary=vocabulary,
+            num_unrollings=10,
             results_collect_interval=500,
+            # opt_inf_results_collect_interval=1,
             summary=False,
             add_graph_to_summary=False,
-            train_dataset=dict(
-                train='train'
-            ),
-            train_batch_kwargs=dict(
-                data_dir=data_dir
-            ),
-            valid_batch_kwargs=dict(
-                data_dir=data_dir
-            ),
-            # train_dataset_text='abc',
-            validation_datasets=dict(
-                valid='validation'
-            ),
+            train_dataset_text=train_text,
+            validation_datasets=dict(valid=valid_text),
+            batch_size=BATCH_SIZE,
+            no_validation=True,
             learning_rate=dict(
                 init=best_conf['learning_rate/init'],
                 decay=1.,
                 period=1e+6,
                 type='exponential_decay',
             ),
-            batch_size=BATCH_SIZE,
-            no_validation=True,
+
         )
 
         env.test(
@@ -206,7 +210,8 @@ for dataset_name, dataset_res in best.items():
                 test='test'
             ),
             valid_batch_kwargs=dict(
-                data_dir=data_dir
+                vocabulary=vocabulary
             ),
             printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy']
         )
+

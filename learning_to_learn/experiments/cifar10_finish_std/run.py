@@ -148,7 +148,15 @@ hp_names = list(confs[0].keys())
 for_plotting = get_pupil_evaluation_results(save_path, hp_names)
 
 best = get_best(for_plotting, 'pupil')
-
+env.build_pupil(
+    batch_size=BATCH_SIZE,
+    num_layers=2,
+    num_hidden_nodes=[1000],
+    input_shape=[3072],
+    num_classes=10,
+    additional_metrics=add_metrics,
+    optimizer=opt
+)
 for dataset_name, dataset_res in best.items():
     print('dataset:', dataset_name)
     for metric, b in dataset_res.items():
@@ -156,15 +164,6 @@ for dataset_name, dataset_res in best.items():
         print_hps(hp_names, b[0], 4)
         best_conf = dict(list(zip(hp_names, b[0])))
         training_path = os.path.join(base, metric + '_best', 'test', 'training')
-        env.build_pupil(
-            batch_size=BATCH_SIZE,
-            num_layers=2,
-            num_hidden_nodes=[1000],
-            input_shape=[3072],
-            num_classes=10,
-            additional_metrics=add_metrics,
-            optimizer=opt
-        )
 
         env.train(
             allow_growth=True,

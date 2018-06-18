@@ -587,7 +587,7 @@ class Lstm(Pupil):
                             # splitting concatenated results for different characters
             with tf.device(self._base_device):
                 with tf.name_scope(device_name_scope(self._base_device) + '_gradients'):
-                    # print('(Lstm._train_graph)tower_grads:', tower_grads)
+                    print('(Lstm._train_graph)tower_grads:', tower_grads)
                     grads_and_vars = average_gradients(tower_grads)
                     grads, v = zip(*grads_and_vars)
                     # grads, _ = tf.clip_by_global_norm(grads, 1.)
