@@ -42,7 +42,7 @@ class ChiTermNormed(Meta):
             if isinstance(ov['o'], list):
                 ov['o'] = [
                     o + self._chi_contribution * normalize(theta * tf.square(o), o)
-                    for o, theta in zip(ov['o'],ov['theta'])
+                    for o, theta in zip(ov['o'], ov['theta'])
                 ]
             else:
                 ov['o'] = ov['o'] + self._chi_contribution * normalize(
@@ -62,7 +62,7 @@ class ChiTermNormed(Meta):
                 ]
             else:
                 ov['o'] = ov['o'] * tf.exp(
-                    normalize(ov['theta']*ov['o'], ov['o'])
+                    self._chi_contribution * normalize(ov['theta']*ov['o'], ov['o'])
                 )
         return optimizer_ins
 
