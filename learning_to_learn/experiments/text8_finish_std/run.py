@@ -55,7 +55,8 @@ add_metrics = ['bpc', 'perplexity', 'accuracy']
 train_add_feed = [
     {'placeholder': 'dropout', 'value': .9}
 ]
-if base in ['nesterov', 'momnetum']:
+
+if base in ['nesterov', 'momentum']:
     train_add_feed.append(
         {'placeholder': 'momentum', 'value': 0.97}
     )
