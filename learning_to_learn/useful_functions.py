@@ -2568,3 +2568,137 @@ def perform_sym_cut(old_values_str, borders_str):
     if .0 not in new_values:
         new_values.append(.0)
     return new_values
+
+
+def get_pupil_result_paths(model_path):
+    res = dict()
+    contents = os.listdir(model_path)
+    for entry in contents:
+        path = os.path.join(model_path, entry)
+        if is_int(entry) and os.path.isdir(path):
+            res[entry] = path
+    return res
+
+
+def get_values_in_pupil_test_results(all_results, dataset, metric):
+    tmp = [[e, v[dataset][metric]] for e, v in all_results.items()]
+    exps, values = zip(*tmp)
+    return list(exps), list(values)
+
+
+def compute_stddev(l):
+    num_el = len(l)
+    mean = float(sum(l)) / num_el
+    sqdif = [(v-mean)**2 for v in l]
+    if num_el > 1:
+        return np.sqrt(sum(sqdif) / (num_el - 1))
+    else:
+        return None
+
+
+def get_stats_of_pupil_test_results(all_results):
+    res = dict()
+    exps = list(all_results.keys())
+    datasets = list(all_results[exps[0]].keys())
+    metrics = list(all_results[exps[0]][datasets[0]].keys())
+    for dataset in datasets:
+        res[dataset] = dict()
+        for metric in metrics:
+            exps, values = get_values_in_pupil_test_results(all_results, dataset, metric)
+            maxv = max(values)
+            maxe = exps[values.index(maxv)]
+            minv = min(values)
+            mine = exps[values.index(minv)]
+            num_exp = len(exps)
+            mean = sum(values) / num_exp
+            stddev = compute_stddev(values)
+            res[dataset][metric] = dict(
+                maximum=maxv,
+                minimum=minv,
+                stddev=stddev,
+                mean=mean,
+                maxexp=maxe,
+                minexp=mine,
+                numexp=num_exp,
+            )
+    return res
+
+
+def pupil_test_results_summarize(model_path):
+    res_dirs = get_pupil_result_paths(model_path)
+    all_results = dict()
+    for exp, path in res_dirs.items():
+        res = dict()
+        test_dir = os.path.join(path, 'test', 'results')
+        test_result_files = os.listdir(test_dir)
+        for file in test_result_files:
+            path_to_file = os.path.join(test_dir, file)
+            with open(path_to_file, 'r') as f:
+                v = float(f.read())
+            spl = file.split('_')
+            metric = spl[0]
+            dataset = '_'.join(spl[1:])[:-4]
+            if dataset not in res:
+                res[dataset] = {metric: v}
+            else:
+                res[dataset][metric] = v
+        all_results[exp] = res
+    stats = get_stats_of_pupil_test_results(all_results)
+    return stats
+
+
+def indent_text(text, indent):
+    res = ' ' * indent
+    for c in text:
+        if c == '\n':
+            res += c + ' ' * indent
+        else:
+            res += c
+    return res
+
+
+def stats_string(stats):
+    string = ''
+    if 'mean' in stats:
+        string += 'mean: %s' % stats['mean'] + '\n'
+    if 'stddev' in stats:
+        string += 'stddev: %s' % stats['stddev'] + '\n'
+    if 'maximum' in stats:
+        maxstr = 'max: %s' % stats['maximum']
+        if 'maxexp' in stats:
+            maxstr += '(%s)' % stats['maxexp']
+        string += maxstr + '\n'
+    if 'minimum' in stats:
+        minstr = 'min: %s' % stats['minimum']
+        if 'minexp' in stats:
+            minstr += '(%s)' % stats['minexp']
+        string += minstr + '\n'
+    if 'numexp' in stats:
+        string += 'number of experiments: %s' % stats['numexp'] + '\n'
+    return string[:-1]
+
+
+def stats_string_for_all_metrics(metric_stats, indent):
+    string = ''
+    for metric, stats in metric_stats.items():
+        string += metric + ':\n'
+        string += indent_text(stats_string(stats), indent) + '\n'
+    return string[:-1]
+
+
+def stats_string_for_all_datasets(dataset_stats, indent):
+    string = ''
+    for dataset, stats in dataset_stats.items():
+        string += dataset + ':\n'
+        string += indent_text(stats_string_for_all_metrics(stats, indent), indent) + '\n'
+    return string[:-1]
+
+
+def stats_string_for_all_models(model_stats, indent):
+    string = ''
+    for model, stats in model_stats.items():
+        string += model + ':\n'
+        string += indent_text(stats_string_for_all_datasets(stats, indent), indent) + '\n'
+    return string[:-1]
+
+

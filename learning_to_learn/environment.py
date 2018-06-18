@@ -114,8 +114,10 @@ class Controller(object):
         def f(line):
             if len(line) == 0:
                 return True
-            else:
+            elif len(line) == 1:
                 return comp(line) == line[-1]
+            else:
+                return comp(line) == line[-1] and comp(line[:-1]) != line[-1]
         return f
 
     def _changes_detector(self):
