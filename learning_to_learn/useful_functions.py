@@ -2416,10 +2416,16 @@ def search_hps_giving_min_and_max(data):
             for changing_hp, v, _ in zip(*ldata):
                 if max is None or v > max:
                     max = v
-                    max_res_hp = list(fixed_hps_tuple) + [line_hp, changing_hp]
+                    if line_hp is None:
+                        max_res_hp = list(fixed_hps_tuple) + [changing_hp]
+                    else:
+                        max_res_hp = list(fixed_hps_tuple) + [line_hp, changing_hp]
                 if min is None or v < min:
                     min = v
-                    min_res_hp = list(fixed_hps_tuple) + [line_hp, changing_hp]
+                    if line_hp is None:
+                        min_res_hp = list(fixed_hps_tuple) + [changing_hp]
+                    else:
+                        min_res_hp = list(fixed_hps_tuple) + [line_hp, changing_hp]
     return dict(
         min=[tuple(min_res_hp), min],
         max=[tuple(max_res_hp), max]

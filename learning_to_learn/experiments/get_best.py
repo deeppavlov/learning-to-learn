@@ -81,6 +81,7 @@ if args.target_metrics is not None:
 
 best = get_best(for_plotting, model)
 indents = [4, 8, 12]
+print(best)
 if model == 'pupil':
     for dataset_name in dataset_names:
         print('dataset:', dataset_name)

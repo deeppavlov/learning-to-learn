@@ -20,7 +20,6 @@ from learning_to_learn.useful_functions import synchronous_sort, create_path, ge
 COLORS = [
     'r', 'g', 'b', 'k', 'c', 'magenta', 'brown',
     'darkviolet', 'pink', 'yellow', 'gray', 'orange', 'olive',
-
 ]
 DPI = 900
 FORMATS = ['pdf', 'png']
@@ -95,6 +94,8 @@ def plot_outer_legend(plot_data, description, xlabel, ylabel, xscale, yscale, fi
     for idx, (label, line_data) in enumerate(zip(*for_plotlib)):
         # if idx == 0:
         #     print("(plot_helpers.plot_outer_legend)line_data:", line_data)
+        if label is None or label == 'None':
+            label = ''
         labels.append(label)
         if idx > len(COLORS) - 1:
             color = [random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1)]
@@ -148,20 +149,28 @@ def plot_outer_legend(plot_data, description, xlabel, ylabel, xscale, yscale, fi
     plt.xscale(xscale, **scale_kwargs)
     plt.yscale(yscale)
 
-    handler_map = dict(list(zip(lines, [HandlerLine2D(numpoints=1) for _ in range(len(lines))])))
-    # print("(plot_helpers.plot_outer_legend)handler_map:", handler_map)
-    ax = plt.gca()
-    handles, labels = ax.get_legend_handles_labels()
-    handles = [h[0] if isinstance(h, container.ErrorbarContainer) else h for h in handles]
-    lgd = ax.legend(
-        handles,
-        labels,
-        bbox_to_anchor=(1.05, 1),
-        loc=2,
-        borderaxespad=0.,
-        handler_map=handler_map,
+    there_is_labels = False
+    for label in labels:
+        if len(label) > 0:
+            there_is_labels = there_is_labels or True
+    if there_is_labels:
+        handler_map = dict(list(zip(lines, [HandlerLine2D(numpoints=1) for _ in range(len(lines))])))
+        # print("(plot_helpers.plot_outer_legend)handler_map:", handler_map)
+        ax = plt.gca()
+        handles, labels = ax.get_legend_handles_labels()
+        handles = [h[0] if isinstance(h, container.ErrorbarContainer) else h for h in handles]
+        lgd = ax.legend(
+            handles,
+            labels,
+            bbox_to_anchor=(1.05, 1),
+            loc=2,
+            borderaxespad=0.,
+            handler_map=handler_map,
 
-    )
+        )
+        bbox_extra_artists = (lgd)
+    else:
+        bbox_extra_artists = ()
     # lgd = plt.legend(
     #     bbox_to_anchor=(1.05, 1),
     #     loc=2,
@@ -177,7 +186,7 @@ def plot_outer_legend(plot_data, description, xlabel, ylabel, xscale, yscale, fi
         else:
             fig_path = None
         create_path(fig_path, file_name_is_in_path=True)
-        r = plt.savefig(fig_path, bbox_extra_artists=(lgd,), bbox_inches='tight')
+        r = plt.savefig(fig_path, bbox_extra_artists=bbox_extra_artists, bbox_inches='tight')
         # print("%s %s %s %s:" % (pupil_name, res_type, regime, format), r)
     if description is not None:
         description_file = os.path.join(file_name_without_ext + '.txt')
