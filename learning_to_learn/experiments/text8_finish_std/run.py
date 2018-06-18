@@ -18,10 +18,10 @@ from learning_to_learn.useful_functions import create_vocabulary, compose_hp_con
 
 import os
 
-opt = sys.argv[1]
-parameter_set_file_name = sys.argv[2]
+parameter_set_file_name = sys.argv[1]
 chop_last_experiment = False
 base = parameter_set_file_name.split('.')[0]
+opt = base
 save_path = os.path.join(base, 'evaluation')
 confs, _ = compose_hp_confs(
     parameter_set_file_name,
