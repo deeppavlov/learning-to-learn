@@ -712,6 +712,7 @@ class Environment(object):
             self._hooks['saver'].save(self._session, path)
 
     def _restore_pupil(self, restore_path, verbose=True):
+        # print("(Environment._restore_pupil)self._hooks:", self._hooks)
         if restore_path is not None:
             if verbose:
                 print('restoring pupil from %s' % restore_path)
@@ -1236,6 +1237,8 @@ class Environment(object):
                 storage,
                 {'type': 'always_false'}
             )
+
+        # print("(Environment._train)train_specs['learning_rate']:", train_specs['learning_rate'])
         # print(
         #     "(Environment._train/after new schedule)self._current_place_for_result_saving",
         #     self._current_place_for_result_saving
