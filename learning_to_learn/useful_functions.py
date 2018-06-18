@@ -2530,3 +2530,41 @@ def get_points_from_range(string):
 def get_tmpl(l):
     length = len(l)
     return '%s ' * (length - 1) + '%s'
+
+
+def get_values(values_str):
+    return [convert(v, 'float') for v in remove_empty_strings_from_list(values_str.split())]
+
+
+def get_borders(borders_str):
+    return [convert(v, 'float') for v in borders_str.split(',')]
+
+
+def apply_borders(values, borders):
+    res = list()
+    for v in values:
+        if borders[0] <= v <= borders[1]:
+            res.append(v)
+    return res
+
+
+def perform_cut(old_values_str, borders_str):
+    old_values = get_values(old_values_str)
+    borders = get_borders(borders_str)
+    new_values = apply_borders(old_values, borders)
+    return new_values
+
+
+def perform_sym_cut(old_values_str, borders_str):
+    old_values = get_values(old_values_str)
+    borders = get_borders(borders_str)
+    all_borders = [
+        borders,
+        [-borders[1], -borders[0]]
+    ]
+    new_values = list()
+    for bs in all_borders:
+        new_values.extend(apply_borders(old_values, bs))
+    if .0 not in new_values:
+        new_values.append(.0)
+    return new_values

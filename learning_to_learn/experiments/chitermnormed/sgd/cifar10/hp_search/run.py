@@ -19,12 +19,17 @@ from learning_to_learn.optimizers.chitermnormed import ChiTermNormed
 
 import os
 
-chi_application = sys.argv[1]
-parameter_set_file_name = sys.argv[2]
-if len(sys.argv) > 3:
-    chop_last_experiment = bool(sys.argv[3])
+fix_seed = sys.argv[1]
+chi_application = sys.argv[2]
+parameter_set_file_name = sys.argv[3]
+if fix_seed == 'True':
+    fix_seed = True
+elif fix_seed == 'False':
+    fix_seed = False
 else:
-    chop_last_experiment = False
+    fix_seed = None
+chop_last_experiment = False
+
 save_path = os.path.join(parameter_set_file_name.split('.')[0], 'evaluation')
 confs, _ = compose_hp_confs(
     parameter_set_file_name,
@@ -124,7 +129,8 @@ launch_kwargs = dict(
     no_validation=False
 )
 
-tf.set_random_seed(1)
+if fix_seed:
+    tf.set_random_seed(1)
 for conf in confs:
     build_hyperparameters = dict(
     )
