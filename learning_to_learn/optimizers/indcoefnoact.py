@@ -32,7 +32,9 @@ class IndCoefNoAct(Meta):
         return list()
 
     def _create_optimizer_trainable_vars(self):
-        total_ndim = sum(flatten(self._pupil_dims)) * self._pupil_net_size['num_unrollings']
+        total_ndim = sum(flatten(self._pupil_dims))
+        if 'num_unrollings' in self._pupil_net_size:
+            total_ndim *= self._pupil_net_size['num_unrollings']
         with tf.variable_scope('optimizer_trainable_variables'):
             matrix = tf.Variable(tf.ones([total_ndim]), name='coefs')
             bias = tf.Variable(tf.zeros([total_ndim]), name='bias')

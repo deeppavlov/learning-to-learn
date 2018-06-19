@@ -2525,6 +2525,8 @@ def get_points_from_range(string):
             for i in range(num_points + 1):
                 point = start * factor ** i
                 points.append(point)
+    if significant_digit < 0:
+        significant_digit = 0
     format = '{:0.%se}' % significant_digit
     if scale == 'symlog':
         for p in list(points):

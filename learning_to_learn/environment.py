@@ -104,6 +104,7 @@ class Controller(object):
             self._specifications['comp_func'] = self._comp_func_gen(min)
         else:
             self._specifications['comp_func'] = self._comp_func_gen(max)
+        print(self._storage)
         self._specifications['line'] = get_elem_from_nested(
             self._storage,
             self._specifications['path_to_target_metric_storage']
@@ -709,7 +710,7 @@ class Environment(object):
         if model_type == 'pupil':
             self._hooks['saver'].save(self._session, path)
         elif model_type == 'meta_optimizer':
-            self._hooks['saver'].save(self._session, path)
+            self._hooks['meta_optimizer_saver'].save(self._session, path)
 
     def _restore_pupil(self, restore_path, verbose=True):
         # print("(Environment._restore_pupil)self._hooks:", self._hooks)
@@ -1883,6 +1884,21 @@ class Environment(object):
         schedule = construct(run_specs['schedule'])
         optimizer_inference = construct(run_specs['optimizer_inference'])
         step = init_step
+        # print("(Environment._train_optimizer)optimizer_inference:", optimizer_inference)
+        if optimizer_inference['opt_inf_pupil_restore_paths'] is None:
+            opt_if_pupil_names = None
+        else:
+            opt_if_pupil_names = nth_element_of_sequence_of_sequences(
+                optimizer_inference['opt_inf_pupil_restore_paths'],
+                0
+            )
+        self._handler.set_optimizer_train_schedule(
+            schedule,
+            opt_inf_pupil_names=opt_if_pupil_names,
+            opt_inf_to_be_collected_while_training=optimizer_inference['opt_inf_to_be_collected_while_training'],
+            opt_inf_train_tensor_schedule=optimizer_inference['opt_inf_train_tensor_schedule'],
+            opt_inf_validation_tensor_schedule=optimizer_inference['opt_inf_validation_tensor_schedule']
+        )
 
         # creating batch generator
 
@@ -1957,22 +1973,6 @@ class Environment(object):
             controllers_for_printing = []
 
         controllers_for_printing.extend(additional_controllers)
-
-        # print("(Environment._train_optimizer)optimizer_inference:", optimizer_inference)
-        if optimizer_inference['opt_inf_pupil_restore_paths'] is None:
-            opt_if_pupil_names = None
-        else:
-            opt_if_pupil_names = nth_element_of_sequence_of_sequences(
-                optimizer_inference['opt_inf_pupil_restore_paths'],
-                0
-            )
-        self._handler.set_optimizer_train_schedule(
-            schedule,
-            opt_inf_pupil_names=opt_if_pupil_names,
-            opt_inf_to_be_collected_while_training=optimizer_inference['opt_inf_to_be_collected_while_training'],
-            opt_inf_train_tensor_schedule=optimizer_inference['opt_inf_train_tensor_schedule'],
-            opt_inf_validation_tensor_schedule=optimizer_inference['opt_inf_validation_tensor_schedule']
-        )
 
         self._handler.set_controllers(controllers_for_printing)
         # print("(Environment._train_optimizer)train_specs['train_datasets']:", train_specs['train_datasets'])
