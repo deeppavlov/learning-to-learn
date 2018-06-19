@@ -2002,7 +2002,7 @@ class Environment(object):
             random_=False
         )
         feed_dict = dict()
-        print("(Environment._train_optimizer)before loop")
+        # print("(Environment._train_optimizer)before loop")
         while should_continue.get():
             if should_start_debugging.get():
                 self._session = tf_debug.LocalCLIDebugWrapperSession(self._session)
@@ -2025,7 +2025,7 @@ class Environment(object):
             # print("(Environment._train_optimizer)feed_dict:", feed_dict)
             train_res = self._session.run(train_operations, feed_dict=feed_dict)
             # here loss is given in bits per input (BPI)
-            print("(Environment._train_optimizer)after session run")
+            # print("(Environment._train_optimizer)after session run")
             self._handler.process_results(step, train_res, regime='train_meta_optimizer')
             if it_is_time_for_opt_inf.get():
                 for idx, (pupil_name, path) in enumerate(optimizer_inference['opt_inf_pupil_restore_paths']):

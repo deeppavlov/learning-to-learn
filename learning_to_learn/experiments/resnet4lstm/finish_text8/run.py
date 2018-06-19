@@ -16,7 +16,7 @@ from learning_to_learn.pupils.lstm_for_meta import Lstm, LstmFastBatchGenerator 
 from learning_to_learn.useful_functions import create_vocabulary, compose_hp_confs, get_num_exps_and_res_files, \
     get_optimizer_evaluation_results, get_best, print_hps
 
-from learning_to_learn.optimizers.indcoefnoact import IndCoefNoAct
+from learning_to_learn.optimizers.res_net_opt import ResNet4Lstm
 import os
 
 parameter_set_file_name = sys.argv[1]
@@ -46,7 +46,7 @@ vocabulary_size = len(vocabulary)
 
 env = Environment(
     pupil_class=Lstm,
-    meta_optimizer_class=IndCoefNoAct,
+    meta_optimizer_class=ResNet4Lstm,
     batch_generator_classes=BatchGenerator,
     vocabulary=vocabulary)
 
@@ -82,7 +82,7 @@ PUPIL_RESTORE_PATHS = [
 ]
 OPTIMIZER_RANGE = NUM_OPTIMIZER_UNROLLINGS * RESET_PERIOD * NUM_UNROLLINGS
 AVERAGING_NUMBER = 3
-NUM_OPTIMIZER_TRAIN_STEPS = 1000
+NUM_OPTIMIZER_TRAIN_STEPS = 20000
 LSTM_SIZE = dict(
     num_layers=1,
     num_nodes=[100],
@@ -95,8 +95,10 @@ LSTM_SIZE = dict(
 OPTIMIZER_PARAMETERS = dict(
     regime='train',
     # regime='inference',
-    num_optimizer_unrollings=NUM_OPTIMIZER_UNROLLINGS,
+    num_optimizer_unrollings=10,
     num_exercises=NUM_EXERCISES,
+    res_size=2000,
+    permute=False,
     optimizer_for_opt_type='adam',
     additional_metrics=add_metrics
 )
@@ -149,7 +151,7 @@ for conf in confs:
     build_pupil_hyperparameters = dict(
     )
     build_optimizer_hyperparameters = dict(
-        pupil_learning_rate=conf['pupil_learning_rate'],
+        optimizer_init_parameter=conf['optimizer_init_parameter'],
         clip_norm=conf['clip_norm']
     )
 
@@ -208,7 +210,7 @@ env.build_pupil(
 
 env.build_optimizer(
     **OPTIMIZER_PARAMETERS,
-    pupil_learning_rate=best_conf['pupil_learning_rate'],
+    optimizer_init_parameter=best_conf['optimizer_init_parameter'],
     clip_norm=best_conf['clip_norm'],
 )
 
@@ -217,7 +219,7 @@ stop_specs = NUM_OPTIMIZER_TRAIN_STEPS
 
 learning_rate = dict(
     type='exponential_decay',
-    period=500,
+    period=4000,
     decay=.5,
     init=best_conf['learning_rate/init'],
 )
