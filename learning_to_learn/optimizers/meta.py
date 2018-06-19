@@ -845,6 +845,26 @@ class Meta(object):
                                             pupil_grad_eval_labels[gpu_idx][unr_idx],
                                             pupil_trainable_variables[gpu_idx], pupil_grad_eval_pupil_storage[gpu_idx],
                                         )
+                                with tf.device('/cpu:0'):
+                                    for ok, ov in optimizer_ins.items():
+                                        for ik, iv in ov.items():
+                                            if ik in ['o_pr', 'sigma_pr']:
+                                                msg = '\n\nouts\n' + ' '*4 + ok + ':\n' + ' '*2 + ik + ':\n'
+                                                if isinstance(iv, list):
+                                                    for idx, v in enumerate(iv):
+                                                        iv[idx] = tf.Print(
+                                                            v,
+                                                            [v],
+                                                            message=msg + '%s' % idx + '\n',
+                                                            summarize=20,
+                                                        )
+                                                else:
+                                                    ov[ik] = tf.Print(
+                                                        iv,
+                                                        [iv],
+                                                        message=msg,
+                                                        summarize=20,
+                                                    )
                                 # print("(Meta._train_graph)pupil_trainable_variables[%s]:" % gpu_idx,
                                 #       pupil_trainable_variables[gpu_idx])
 

@@ -143,8 +143,8 @@ class IndCoefNoAct(Meta):
         self._pupil = pupil
         self._pupil_net_size = self._pupil.get_net_size()
         self._pupil_dims = self._pupil.get_layer_dims()
-        # print(self._pupil_net_size)
-        # print(self._pupil_dims)
+        # print("(IndCoefNoAct.__init__)self._pupil_net_size:", self._pupil_net_size)
+        # print("(IndCoefNoAct.__init__)self._pupil_dims:", self._pupil_dims)
         self._emb_layer_is_present = 'embedding_size' in self._pupil_net_size
         self._num_exercises = num_exercises
         self._num_optimizer_unrollings = num_optimizer_unrollings

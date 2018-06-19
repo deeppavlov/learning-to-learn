@@ -57,8 +57,8 @@ valid_add_feed = [
 the_only_pupil_restore_path = os.path.join(*(['..']*2 + ['cifar10_max_train', 'adagrad/0/checkpoints/best']))
 NUM_EXERCISES = 10
 BATCH_SIZE = 32
-NUM_OPTIMIZER_UNROLLINGS = 100
-RESET_PERIOD = 1
+NUM_OPTIMIZER_UNROLLINGS = 10
+RESET_PERIOD = 10
 OPT_INF_STOP = 10
 RESTORE_PUPIL_PATHS = [
     the_only_pupil_restore_path
