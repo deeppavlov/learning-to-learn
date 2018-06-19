@@ -96,7 +96,7 @@ class MlpForMeta(Pupil):
         return hs, opt_ins
 
     def loss_and_opt_ins(
-            self, inputs, labels, opt_ins=None, trainable_variables=None, name_scope='pupil_loss'
+            self, inputs, labels, pgeps, opt_ins=None, trainable_variables=None, name_scope='pupil_loss'
     ):
         """Args:
             either trainable_variables or opt_ins have to be provided
@@ -160,15 +160,16 @@ class MlpForMeta(Pupil):
                 axis=[-1]
             )
             optimizer_ins = self._acomplish_optimizer_ins(opt_ins, trainable)
-            return loss, optimizer_ins, [], predictions, labels
+            return loss, optimizer_ins, dict(), predictions, labels
 
     def loss_and_opt_ins_for_inference(self):
-        loss, optimizer_ins, stor_save_ops, predictions, labels = self.loss_and_opt_ins(
+        loss, optimizer_ins, new_stor, predictions, labels = self.loss_and_opt_ins(
             self._inputs_and_labels_placeholders['inputs'],
             self._inputs_and_labels_placeholders['labels'],
+            [],
             trainable_variables=self._trainable
         )
-        return loss, optimizer_ins, stor_save_ops, predictions, labels
+        return loss, optimizer_ins, [], predictions, labels
 
     def _add_metrics_and_hooks(
             self,
@@ -449,7 +450,17 @@ class MlpForMeta(Pupil):
     def get_layer_dims(self):
         dims = dict()
         dims['layers'] = []
-        for layer_idx, _ in enumerate(self._num_hidden_nodes):
+        for layer_idx in range(self._num_layers):
             in_dim, out_dim, _ = self._compute_matrix_parameters(layer_idx)
             dims['layers'].append((in_dim, out_dim))
         return dims
+
+    def create_storage(self, device, name_scope):
+        return dict()
+
+    @staticmethod
+    def reset_storage(storage):
+        return []
+
+    def reset_self_train_storage(self):
+        return self.reset_storage(1)

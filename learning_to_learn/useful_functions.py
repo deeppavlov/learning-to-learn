@@ -1402,7 +1402,7 @@ def get_hps(file_name):
     return res
 
 
-def get_combs_and_num_exps(eval_dir):
+def get_combs_and_num_exps(eval_dir, hp_order):
     hp_sets = list()
     if os.path.exists(eval_dir):
         contents = os.listdir(eval_dir)
@@ -1411,8 +1411,13 @@ def get_combs_and_num_exps(eval_dir):
             if entry[-4:] == '.txt' and is_int(entry[:-4]):
                 exp_description_files.append(entry)
         exp_description_files = sorted(exp_description_files, key=lambda elem: int(elem[:-4]))
+
+        hp_layout_file = os.path.join(eval_dir, 'hp_layout.txt')
+        with open(hp_layout_file, 'r') as f:
+            layout = remove_empty_strings_from_list(remove_empty_strings_from_list(f.read().split('\n'))[0].split())
         # print("(useful_functions.get_combs_and_num_exps)len(exp_description_files):", len(exp_description_files))
         # print("(useful_functions.get_combs_and_num_exps)exp_description_files:", exp_description_files)
+        map_ = dict(list(zip(hp_order, [layout.index(hp) for hp in hp_order])))
         file_is_broken = False
         for file_name in exp_description_files:
             file_path = os.path.join(eval_dir, file_name)
@@ -1420,7 +1425,11 @@ def get_combs_and_num_exps(eval_dir):
                 lines = f.read().split('\n')
                 if len(lines) >= 2:
                     types = lines[1].split()
-                    hp_set = tuple([convert(v, t) for v, t in zip(lines[0].split(), types)])
+                    hp_set = list()
+                    values = [convert(v, t) for v, t in zip(lines[0].split(), types)]
+                    for hp in hp_order:
+                        hp_set.append(values[map_[hp]])
+                    hp_set = tuple(hp_set)
                     if hp_set not in hp_sets:
                         hp_sets.append(hp_set)
                 else:
@@ -1583,7 +1592,7 @@ def make_initial_grid(file_name, eval_dir_or_file, chop_last_experiment=False, m
     # print("(useful_functions.make_initial_grid)num_repeats:", num_repeats)
     # print("(useful_functions.make_initial_grid)lines:", lines)
     if model == 'optimizer':
-        tested_combs, num_exps, last_exp_file_name = get_combs_and_num_exps(eval_dir_or_file)
+        tested_combs, num_exps, last_exp_file_name = get_combs_and_num_exps(eval_dir_or_file, hp_names)
         # print("(useful_functions.make_initial_grid)tested_combs:", tested_combs)
     else:
         tested_combs, num_exps = get_combs_and_num_exps_pupil(eval_dir_or_file, hp_names)
@@ -1601,7 +1610,13 @@ def make_initial_grid(file_name, eval_dir_or_file, chop_last_experiment=False, m
     for tested_comb in tested_combs:
         indices = list()
         for p_idx, v in enumerate(tested_comb):
-            indices.append(init_grid_values[p_idx].index(v))
+            try:
+                indices.append(init_grid_values[p_idx].index(v))
+            except ValueError:
+                print("(useful_functions.make_initial_grid)init_grid_values:", init_grid_values)
+                print("(useful_functions.make_initial_grid)p_idx:", p_idx)
+                print("(useful_functions.make_initial_grid)tested_comb:", tested_comb)
+                raise
         exp_counter_grid[tuple(indices)] += 1.
 
     # print("(useful_functions.make_initial_grid)exp_counter_grid:", exp_counter_grid)

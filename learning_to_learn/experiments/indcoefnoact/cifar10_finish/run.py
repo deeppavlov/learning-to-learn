@@ -12,8 +12,9 @@ except ValueError: # Already removed
     pass
 
 from learning_to_learn.environment import Environment
-from learning_to_learn.pupils.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
-from learning_to_learn.useful_functions import create_vocabulary, compose_hp_confs, get_num_exps_and_res_files, \
+from learning_to_learn.pupils.mlp_for_meta import MlpForMeta as Mlp
+from learning_to_learn.image_batch_gens import CifarBatchGenerator
+from learning_to_learn.useful_functions import compose_hp_confs, get_num_exps_and_res_files, \
     get_optimizer_evaluation_results, get_best, print_hps
 
 from learning_to_learn.optimizers.indcoefnoact import IndCoefNoAct
@@ -31,24 +32,13 @@ print("confs:", confs)
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
-dataset_path = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'text8.txt']))
-with open(dataset_path, 'r') as f:
-    text = f.read()
-
-valid_size = 2000
-test_size = 100000
-test_text = text[:test_size]
-valid_text = text[test_size:valid_size+test_size]
-train_text = text[valid_size+test_size:]
-
-vocabulary = create_vocabulary(text)
-vocabulary_size = len(vocabulary)
+VALID_SIZE = 1000
 
 env = Environment(
-    pupil_class=Lstm,
+    pupil_class=Mlp,
     meta_optimizer_class=IndCoefNoAct,
-    batch_generator_classes=BatchGenerator,
-    vocabulary=vocabulary)
+    batch_generator_classes=CifarBatchGenerator,
+)
 
 add_metrics = ['bpc', 'perplexity', 'accuracy']
 train_opt_add_feed = [
@@ -64,13 +54,12 @@ valid_add_feed = [
     {'placeholder': 'optimizer_dropout_keep_prob', 'value': 1.}
 ]
 
-the_only_pupil_restore_path = os.path.join(*(['..']*2 + ['text8_max_train', 'adam/2/checkpoints/best']))
+the_only_pupil_restore_path = os.path.join(*(['..']*2 + ['cifar10_max_train', 'adagrad/0/checkpoints/best']))
 NUM_EXERCISES = 10
 BATCH_SIZE = 32
-NUM_UNROLLINGS = 10
-NUM_OPTIMIZER_UNROLLINGS = 10
+NUM_OPTIMIZER_UNROLLINGS = 1
 RESET_PERIOD = 1
-OPT_INF_STOP = 10
+OPT_INF_STOP = 1
 RESTORE_PUPIL_PATHS = [
     the_only_pupil_restore_path
 ]
@@ -80,32 +69,29 @@ OPT_INF_RESTORE_PUPIL_PATHS = [
 PUPIL_RESTORE_PATHS = [
     RESTORE_PUPIL_PATHS[0]
 ]
-OPTIMIZER_RANGE = NUM_OPTIMIZER_UNROLLINGS * RESET_PERIOD * NUM_UNROLLINGS
+OPTIMIZER_RANGE = NUM_OPTIMIZER_UNROLLINGS * RESET_PERIOD
 AVERAGING_NUMBER = 3
+NUM_OPTIMIZER_TRAIN_STEPS = 5
 evaluation = dict(
     save_path=save_path,
     opt_inf_is_performed=True,
     opt_inf_stop=OPT_INF_STOP,
     opt_inf_pupil_restore_paths=OPT_INF_RESTORE_PUPIL_PATHS,
     opt_inf_additions_to_feed_dict=opt_inf_add_feed,
-    opt_inf_validation_dataset_texts=[valid_text],
-    opt_inf_train_dataset_texts=[train_text],
+    opt_inf_validation_datasets=[['validation', 'valid']],
+    opt_inf_train_datasets=[['train', 'train']],
     opt_inf_results_collect_interval=1,
     validation_additions_to_feed_dict=valid_add_feed
 )
 
 kwargs_for_pupil_building = dict(
     batch_size=BATCH_SIZE,
-    num_layers=1,
-    num_nodes=[100],
-    num_output_layers=1,
-    num_output_nodes=[],
-    vocabulary_size=vocabulary_size,
-    embedding_size=150,
-    num_unrollings=NUM_UNROLLINGS,
+    num_layers=2,
+    num_hidden_nodes=[1000],
+    input_shape=[3072],
+    num_classes=10,
     regime='training_with_meta_optimizer',
     additional_metrics=add_metrics,
-    going_to_limit_memory=True
 )
 
 kwargs_for_optimizer_building = dict(
@@ -118,31 +104,35 @@ kwargs_for_optimizer_building = dict(
 )
 
 launch_kwargs = dict(
-        allow_growth=True,
-        # save_path='debug_grid_search',
-        result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
-        additions_to_feed_dict=train_opt_add_feed,
-        pupil_restore_paths=PUPIL_RESTORE_PATHS,
-        # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
-        reset_period=RESET_PERIOD,
-        stop=1000,
-        train_dataset_texts=[train_text],
-        opt_inf_is_performed=False,
-        num_exercises=NUM_EXERCISES,
-        vocabulary=vocabulary,
-        batch_size=BATCH_SIZE,
-        num_unrollings=NUM_UNROLLINGS,
-        results_collect_interval=200,
-        # opt_inf_results_collect_interval=1,
-        summary=False,
-        add_graph_to_summary=False
-    )
+    allow_growth=True,
+    # save_path='debug_grid_search',
+    result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
+    additions_to_feed_dict=train_opt_add_feed,
+    pupil_restore_paths=PUPIL_RESTORE_PATHS,
+    # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
+    reset_period=RESET_PERIOD,
+    stop=NUM_OPTIMIZER_TRAIN_STEPS,
+    train_datasets=[('train', 'train')],
+    opt_inf_is_performed=False,
+    num_exercises=NUM_EXERCISES,
+    batch_size=BATCH_SIZE,
+    results_collect_interval=200,
+    # opt_inf_results_collect_interval=1,
+    summary=False,
+    add_graph_to_summary=False,
+    train_batch_kwargs=dict(
+        valid_size=VALID_SIZE
+    ),
+    valid_batch_kwargs=dict(
+        valid_size=VALID_SIZE
+    ),
+    one_batch_gen=True,
+)
 
 for conf in confs:
     build_pupil_hyperparameters = dict(
     )
     build_optimizer_hyperparameters = dict(
-        optimizer_init_parameter=conf['optimizer_init_parameter'],
         clip_norm=conf['clip_norm']
     )
 
@@ -158,6 +148,10 @@ for conf in confs:
             ),
             hp_type='built-in',
             type='exponential_decay'
+        ),
+        pupil_learning_rate=dict(
+            hp_type='additional_placeholder',
+            varying=conf['pupil_learning_rate/value'],
         )
     )
 
@@ -193,16 +187,12 @@ print_hps(hp_names, best_on_valid[0], 4)
 best_conf = dict(list(zip(hp_names, best_on_valid[0])))
 env.build_pupil(
     batch_size=BATCH_SIZE,
-    num_layers=1,
-    num_nodes=[100],
-    num_output_layers=1,
-    num_output_nodes=[],
-    vocabulary_size=vocabulary_size,
-    embedding_size=150,
-    num_unrollings=NUM_UNROLLINGS,
+    num_layers=2,
+    num_hidden_nodes=[1000],
+    input_shape=[3072],
+    num_classes=10,
     regime='training_with_meta_optimizer',
     additional_metrics=add_metrics,
-    going_to_limit_memory=True,
 )
 
 env.build_optimizer(
@@ -213,11 +203,15 @@ env.build_optimizer(
     optimizer_for_opt_type='adam',
     additional_metrics=add_metrics,
     clip_norm=best_conf['clip_norm'],
-    optimizer_init_parameter=best_conf['optimizer_init_parameter']
 )
 
-
-stop_specs = 1000
+train_opt_add_feed.append(
+    {'placeholder': 'pupil_learning_rate', 'value': best_conf['pupil_learning_rate/value']}
+)
+opt_inf_add_feed.append(
+    {'placeholder': 'pupil_learning_rate', 'value': best_conf['pupil_learning_rate/value']}
+)
+stop_specs = NUM_OPTIMIZER_TRAIN_STEPS
 
 learning_rate = dict(
     type='exponential_decay',
@@ -236,30 +230,27 @@ env.train_optimizer(
     reset_period=RESET_PERIOD,
     num_exercises=NUM_EXERCISES,
     stop=stop_specs,
-    train_dataset_texts=[train_text],
+    train_datasets=[('train', 'train')],
     opt_inf_is_performed=True,
     opt_inf_stop=OPT_INF_STOP,
     opt_inf_pupil_restore_paths=OPT_INF_RESTORE_PUPIL_PATHS,
     opt_inf_additions_to_feed_dict=opt_inf_add_feed,
-    opt_inf_validation_dataset_texts=[valid_text],
-    opt_inf_train_dataset_texts=[train_text],
+    opt_inf_validation_datasets=[['validation', 'valid']],
+    opt_inf_train_datasets=[['train', 'train']],
     validation_additions_to_feed_dict=valid_add_feed,
-    vocabulary=vocabulary,
     batch_size=BATCH_SIZE,
     batch_gen_init_is_random=True,
-    num_unrollings=NUM_UNROLLINGS,
     learning_rate=learning_rate,
     results_collect_interval=100,
     opt_inf_results_collect_interval=1,
     permute=False,
     summary=True,
-    add_graph_to_summary=True
+    add_graph_to_summary=True,
+    one_batch_gen=True,
 )
 
 env.train(
     # gpu_memory=.3,
-    num_unrollings=NUM_UNROLLINGS,
-    vocabulary=vocabulary,
     with_meta_optimizer=True,
     restore_path=the_only_pupil_restore_path,
     restore_optimizer_path=os.path.join(training_path, 'checkpoints', 'final'),
@@ -271,8 +262,18 @@ env.train(
     printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
     stop=OPTIMIZER_RANGE,
     # stop=4000,
-    train_dataset_text=train_text,
-    validation_dataset_texts=[valid_text],
+    train_dataset=dict(
+        train='train'
+    ),
+    validation_datasets=dict(
+        valid='validation'
+    ),
+    train_batch_kwargs=dict(
+        valid_size=VALID_SIZE
+    ),
+    valid_batch_kwargs=dict(
+        valid_size=VALID_SIZE
+    ),
     results_collect_interval=10,
     additions_to_feed_dict=opt_inf_add_feed,
     validation_additions_to_feed_dict=valid_add_feed,
@@ -283,9 +284,11 @@ env.test(
     restore_path=os.path.join(base, 'loss_best', 'test', 'pupil_training', 'checkpoints/final'),
     save_path=os.path.join(base, 'loss_best', 'test', 'testing'),
     additions_to_feed_dict=valid_add_feed,
-    validation_dataset_texts=[test_text],
+    validation_datasets=dict(
+        test='test'
+    ),
     valid_batch_kwargs=dict(
-        vocabulary=vocabulary
+        valid_size=VALID_SIZE
     ),
     printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy']
 )

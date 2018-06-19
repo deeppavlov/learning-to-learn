@@ -36,9 +36,9 @@ class IndCoefNoAct(Meta):
         if 'num_unrollings' in self._pupil_net_size:
             total_ndim *= self._pupil_net_size['num_unrollings']
         with tf.variable_scope('optimizer_trainable_variables'):
-            matrix = tf.Variable(tf.ones([total_ndim]), name='coefs')
-            bias = tf.Variable(tf.zeros([total_ndim]), name='bias')
-            vars = [matrix, bias]
+            matrix = tf.Variable(tf.ones([total_ndim]), name='coefs', trainable=False)
+            bias = tf.Variable(tf.zeros([total_ndim]), name='bias', trainable=True)
+            vars = [matrix, 0*bias]
             tf.add_to_collection(tf.GraphKeys.WEIGHTS, matrix)
         return vars
 
@@ -57,6 +57,12 @@ class IndCoefNoAct(Meta):
         outs = self._unpack_all_ins_from_1_vec(output, map_)
         outs = self._mv_tensors(outs, ['o', 'sigma'], ['o_pr', 'sigma_pr'])
         optimizer_outs = unite_nested_dicts([optimizer_ins, outs], 1)
+        self._multiply_by_factor(
+            optimizer_outs,
+            dict(
+                sigma=self._pupil_learning_rate
+            )
+        )
         return optimizer_outs, state
 
     def __init__(
@@ -69,7 +75,6 @@ class IndCoefNoAct(Meta):
             regularization_rate=1e-7,
             inp_gradient_clipping='norm_loss',
             clip_norm=1e+5,
-            optimizer_init_parameter=.1,
             regime='train',
             optimizer_for_opt_type='adam',
             additional_metrics=None,
@@ -85,6 +90,8 @@ class IndCoefNoAct(Meta):
         self._pupil = pupil
         self._pupil_net_size = self._pupil.get_net_size()
         self._pupil_dims = self._pupil.get_layer_dims()
+        # print(self._pupil_net_size)
+        # print(self._pupil_dims)
         self._emb_layer_is_present = 'embedding_size' in self._pupil_net_size
         self._num_exercises = num_exercises
         self._num_optimizer_unrollings = num_optimizer_unrollings
@@ -97,7 +104,6 @@ class IndCoefNoAct(Meta):
         self._regularization_rate = regularization_rate
         self._inp_gradient_clipping = inp_gradient_clipping
         self._clip_norm = clip_norm
-        self._optimizer_init_parameter = optimizer_init_parameter
         self._regime = regime
 
         self._optimizer_for_opt_type = optimizer_for_opt_type
@@ -119,6 +125,7 @@ class IndCoefNoAct(Meta):
             pupil_savers=None,
             optimizer_train_op=None,
             learning_rate_for_optimizer_training=None,
+            pupil_learning_rate=None,
             train_with_meta_optimizer_op=None,
             reset_optimizer_train_state=None,
             reset_optimizer_inference_state=None,
@@ -140,7 +147,8 @@ class IndCoefNoAct(Meta):
             self._hooks[add_metric] = None
 
         self._debug_tensors = list()
-
+        self._pupil_learning_rate = tf.placeholder(tf.float32, name='pupil_learning_rate', shape=[])
+        self._hooks['pupil_learning_rate'] = self._pupil_learning_rate
         self._optimizer_dropout_keep_prob = tf.placeholder(tf.float32, name='optimizer_dropout_keep_prob')
         self._hooks['optimizer_dropout_keep_prob'] = self._optimizer_dropout_keep_prob
         if regime == 'train':

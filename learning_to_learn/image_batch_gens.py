@@ -4,7 +4,7 @@ import numpy as np
 
 
 class MnistBatchGenerator:
-    def __init__(self, dataset_type, batch_size, data_dir=None):
+    def __init__(self, dataset_type, batch_size, data_dir=None, random_batch_initiation=None):
         self._dataset_type = dataset_type
         self._batch_size = batch_size
         self._mnist = input_data.read_data_sets(data_dir)
@@ -29,7 +29,7 @@ class MnistBatchGenerator:
 
 
 class CifarBatchGenerator:
-    def __init__(self, dataset_type, batch_size, valid_size=None):
+    def __init__(self, dataset_type, batch_size, valid_size=None, random_batch_initiation=None):
         self._dataset_type = dataset_type
         self._batch_size = batch_size
         self._valid_size = valid_size

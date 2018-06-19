@@ -168,7 +168,7 @@ def plot_outer_legend(plot_data, description, xlabel, ylabel, xscale, yscale, fi
             handler_map=handler_map,
 
         )
-        bbox_extra_artists = (lgd)
+        bbox_extra_artists = [lgd]
     else:
         bbox_extra_artists = ()
     # lgd = plt.legend(

@@ -432,6 +432,7 @@ class Environment(object):
                     num_exercises=10,
                     reset_period=None,
                     batch_gen_init_is_random=True,
+                    one_batch_gen=False,
                     share_train_data=False,
 
                     restore_paths_datasets_map=None,
@@ -1679,6 +1680,7 @@ class Environment(object):
             train_batch_kwargs,
             restore_paths_datasets_map,
             share_train_data,
+            one_batch_gen,
             random_=True
     ):
         # print("EXERCISES RESET!")
@@ -1704,15 +1706,22 @@ class Environment(object):
             if restore_paths_datasets_map is None:
                 restore_paths_datasets_map = create_distribute_map(len(datasets), len(paths))
         pupil_grad_eval_batch_gens = list()
-        if not share_train_data:
-            optimizer_grad_batch_gens = list()
-        else:
+        if share_train_data:
             optimizer_grad_batch_gens = None
+        else:
+            optimizer_grad_batch_gens = list()
         batch_size = batch_size_controller.get()
         tb_kwargs = self._build_batch_kwargs(train_batch_kwargs)
         # print("(Environment._reset_exercises)tb_kwargs:", tb_kwargs)
         # print("(Environment._reset_exercises)restore_paths_datasets_map:", restore_paths_datasets_map)
         # print("(Environment._reset_exercises)datasets:", datasets)
+        if one_batch_gen:
+            bg = batch_generator_class(
+                datasets[restore_paths_datasets_map[0]][0],
+                batch_size,
+                **tb_kwargs,
+                random_batch_initiation=batch_gen_init_is_random
+            )
         for idx, (saver, pupil_trainable_initializer, path) in enumerate(
                 zip(self._hooks['pupil_savers'], self._hooks['pupil_trainable_initializers'], paths)):
             if path is None:
@@ -1722,21 +1731,23 @@ class Environment(object):
                 saver.restore(self._session, path)
             # print("(Environment._reset_exercises)restore_paths_datasets_map:", restore_paths_datasets_map)
             # print("(Environment._reset_exercises)idx:", idx)
-            pupil_grad_eval_batch_gens.append(batch_generator_class(
+            if not one_batch_gen:
+                bg = batch_generator_class(
                     datasets[restore_paths_datasets_map[idx]][0],
                     batch_size,
                     **tb_kwargs,
                     random_batch_initiation=batch_gen_init_is_random
                 )
-            )
+            pupil_grad_eval_batch_gens.append(bg)
             if not share_train_data:
-                optimizer_grad_batch_gens.append(batch_generator_class(
+                if not one_batch_gen:
+                    bg = batch_generator_class(
                         datasets[restore_paths_datasets_map[idx]][0],
                         batch_size,
                         **tb_kwargs,
                         random_batch_initiation=batch_gen_init_is_random
                     )
-                )
+                optimizer_grad_batch_gens.append(bg)
         # print("(Environment._reset_exercises)len(pupil_grad_eval_batch_gens):", len(pupil_grad_eval_batch_gens))
         # print(
         #     "(Environment._reset_exercises)len(self._hooks['pupil_trainable_initializers']):",
@@ -1987,6 +1998,7 @@ class Environment(object):
             train_batch_kwargs,
             train_specs['restore_paths_datasets_map'],
             train_specs['share_train_data'],
+            train_specs['one_batch_gen'],
             random_=False
         )
         feed_dict = dict()
@@ -2039,7 +2051,8 @@ class Environment(object):
                     train_specs['batch_gen_init_is_random'],
                     train_batch_kwargs,
                     train_specs['restore_paths_datasets_map'],
-                    train_specs['share_train_data']
+                    train_specs['share_train_data'],
+                    train_specs['one_batch_gen'],
                 )
             self.set_in_storage(step=step)
         return step

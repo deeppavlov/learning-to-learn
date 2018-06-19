@@ -158,13 +158,17 @@ class Meta(object):
 
     @staticmethod
     def _unstack_storage(num_exercises, storage, name_scope='unstack_storages'):
-        with tf.name_scope(name_scope):
-            tmpl = construct(storage)
-            unstacked = [construct(tmpl) for _ in range(num_exercises)]
-            paths = get_keys_from_nested(tmpl)
-            key_values, _ = sort_lists_map(paths)
-            go_through_nested_with_name_scopes_to_perform_func_and_distribute_results(
-                storage, key_values, [], tf.unstack, unstacked)
+        if len(list(storage.keys())) > 0:
+            with tf.name_scope(name_scope):
+                tmpl = construct(storage)
+                unstacked = [construct(tmpl) for _ in range(num_exercises)]
+                paths = get_keys_from_nested(tmpl)
+                print(paths)
+                key_values, _ = sort_lists_map(paths)
+                go_through_nested_with_name_scopes_to_perform_func_and_distribute_results(
+                    storage, key_values, [], tf.unstack, unstacked)
+        else:
+            unstacked = [dict() for _ in range(num_exercises)]
         return unstacked
 
     @classmethod
@@ -793,7 +797,7 @@ class Meta(object):
                         self._pupil_grad_eval_pupil_storage,
                         self._optimizer_grad_pupil_storage
                     )
-
+            # print("(Meta._train_graph)pupil_grad_eval_pupil_storage:", pupil_grad_eval_pupil_storage)
             start_losses_by_gpu = list()
             end_losses_by_gpu = list()
             start_additional_metrics_by_gpu = dict()
