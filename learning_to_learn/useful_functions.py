@@ -82,6 +82,13 @@ class FailedBroadcastError(Exception):
         self.message = message
 
 
+class DatasetSizeError(Exception):
+    def __init__(self, provided_size, required_size, message):
+        self.provided_size = provided_size
+        self.required_size = required_size
+        self.message = message
+
+
 def create_vocabulary(text):
     all_characters = list()
     for char in text:

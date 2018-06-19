@@ -438,7 +438,7 @@ class Environment(object):
                     restore_paths_datasets_map=None,
 
                     train_datasets=[default_dataset],
-                    batch_size={'type': 'fixed', 'value': 64, 'name': 'batch_size'},
+                    batch_size={'type': 'fixed', 'value': 32, 'name': 'batch_size'},
                     train_batch_kwargs=dict(),
 
                     checkpoint_steps=None,
@@ -2202,6 +2202,15 @@ class Environment(object):
             evaluation,
             queue_
     ):
+        # print("(Environment._several_optimizer_launches_without_rebuilding)run_specs_set:", run_specs_set)
+        # print("(Environment._several_optimizer_launches_without_rebuilding)run_specs_set[0]['train_specs']:",
+        #       run_specs_set[0]['train_specs'])
+        # print("(Environment._several_optimizer_launches_without_rebuilding)run_specs_set")
+        # for idx, rss in enumerate(run_specs_set):
+        #     print(idx)
+        #     for k, v in rss.items():
+        #         print(k)
+        #         print(v)
         self._handler.print_hyper_parameters(hp_comb, order)
 
         result_types = start_specs['result_types']
@@ -2296,6 +2305,7 @@ class Environment(object):
                             session_specs['gpu_memory'],
                             session_specs['allow_growth'],
                             session_specs['visible_device_list'])
+        # print("(Environment._one_optimizer_launch)run_specs_set:", run_specs_set)
         self._launch_optimizer_and_put_in_queue(
             hp_comb,
             order,
@@ -2571,6 +2581,7 @@ class Environment(object):
             rebuild_every_time=True
     ):
         parsed = configure_args_for_launches(self, args_for_launches, shares, model='meta_optimizer')
+        # print("(Environment._spring_process_for_meta_grid_search)parsed:", parsed)
         queue_ = mp.Queue()
         self.mp_debug_flag += 1
 
@@ -2657,6 +2668,12 @@ class Environment(object):
             for_evaluation_parsing['vocabulary'] = kwargs['vocabulary']
         if 'num_unrollings' in kwargs:
             for_evaluation_parsing['num_unrollings'] = kwargs['num_unrollings']
+
+        # Essential for image batch generators functioning
+        if 'valid_batch_kwargs' in kwargs:
+            for_evaluation_parsing['valid_batch_kwargs'] = kwargs['valid_batch_kwargs']
+        if 'train_batch_kwargs' in kwargs:
+            for_evaluation_parsing['train_batch_kwargs'] = kwargs['train_batch_kwargs']
         parsed_evaluation = parse_train_optimizer_method_arguments(
             self, [], for_evaluation_parsing, set_passed_parameters_as_default=False
         )
@@ -2670,7 +2687,7 @@ class Environment(object):
             build_optimizer_hyperparameters = dict()
         if other_hyperparameters is None:
             other_hyperparameters = dict()
-
+        # print("(Environment.grid_search_for_meta)kwargs:", kwargs)
         tmp_output = parse_train_optimizer_method_arguments(
             self,
             [],
@@ -2686,7 +2703,7 @@ class Environment(object):
         other_hp_combs, other_insertions = formalize_and_create_insertions_for_other_hps(other_hyperparameters)
 
         args_for_launches = create_all_args_for_launches(kwargs, other_insertions)
-
+        # print("(Environment.grid_search_for_meta)args_for_launches:", args_for_launches)
 
         hps = list()
         if len(build_pupil_hp_combs) > 0:
