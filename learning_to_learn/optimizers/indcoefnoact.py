@@ -36,10 +36,10 @@ class IndCoefNoAct(Meta):
         if 'num_unrollings' in self._pupil_net_size:
             total_ndim *= self._pupil_net_size['num_unrollings']
         with tf.variable_scope('optimizer_trainable_variables'):
-            matrix = tf.Variable(tf.ones([total_ndim]), name='coefs', trainable=False)
+            coefs = tf.Variable(tf.ones([total_ndim]), name='coefs', trainable=True)
             bias = tf.Variable(tf.zeros([total_ndim]), name='bias', trainable=True)
-            vars = [matrix, 0*bias]
-            tf.add_to_collection(tf.GraphKeys.WEIGHTS, matrix)
+            vars = [coefs, bias]
+            tf.add_to_collection(tf.GraphKeys.WEIGHTS, coefs)
         return vars
 
     # def _optimizer_core(self, optimizer_ins, num_exercises, states, gpu_idx):
@@ -52,17 +52,69 @@ class IndCoefNoAct(Meta):
             return tf.multiply(inp, vars[0]) + vars[1]
 
     def _optimizer_core(self, optimizer_ins, state, gpu_idx, permute=True):
+        # with tf.device('/cpu:0'):
+        #     for ok, ov in optimizer_ins.items():
+        #         for ik, iv in ov.items():
+        #             if ik in ['o', 'sigma']:
+        #                 msg = '\n\nins\n' + ' '*4 + ok + ':\n' + ' '*2 + ik + ':\n'
+        #                 if isinstance(iv, list):
+        #                     for idx, v in enumerate(iv):
+        #                         iv[idx] = tf.Print(
+        #                             v,
+        #                             [v],
+        #                             message=msg + '%s' % idx + '\n',
+        #                             summarize=20,
+        #                         )
+        #                 else:
+        #                     ov[ik] = tf.Print(
+        #                         iv,
+        #                         [iv],
+        #                         message=msg,
+        #                         summarize=20,
+        #                     )
         vec, map_ = self._all_ins_2_1_vec(optimizer_ins, ['o', 'sigma'])
         output = self._apply_layer(vec, self._opt_trainable)
+        # output = vec + 0 * self._apply_layer(vec, self._opt_trainable)
         outs = self._unpack_all_ins_from_1_vec(output, map_)
         outs = self._mv_tensors(outs, ['o', 'sigma'], ['o_pr', 'sigma_pr'])
         optimizer_outs = unite_nested_dicts([optimizer_ins, outs], 1)
         self._multiply_by_factor(
             optimizer_outs,
             dict(
-                sigma=self._pupil_learning_rate
+                sigma_pr=self._pupil_learning_rate
             )
         )
+        # print('\n' * 3)
+        # print("(Meta._optimizer_core)after multiplying")
+        # for ok, ov in optimizer_ins.items():
+        #     print(' ' * 4, ok)
+        #     for ik, iv in ov.items():
+        #         print(' ' * 2, ik)
+        #         if isinstance(iv, list):
+        #             print([v.get_shape().as_list() for v in iv])
+        #         else:
+        #             print(iv.get_shape().as_list())
+        # print("(IndCoefNoAct._optimizer_core)optimizer_outs:", optimizer_outs)
+        # with tf.device('/cpu:0'):
+        #     for ok, ov in optimizer_outs.items():
+        #         for ik, iv in ov.items():
+        #             if ik in ['o_pr', 'sigma_pr']:
+        #                 msg = '\n\nouts\n' + ' '*4 + ok + ':\n' + ' '*2 + ik + ':\n'
+        #                 if isinstance(iv, list):
+        #                     for idx, v in enumerate(iv):
+        #                         iv[idx] = tf.Print(
+        #                             v,
+        #                             [v],
+        #                             message=msg + '%s' % idx + '\n',
+        #                             summarize=20,
+        #                         )
+        #                 else:
+        #                     ov[ik] = tf.Print(
+        #                         iv,
+        #                         [iv],
+        #                         message=msg,
+        #                         summarize=20,
+        #                     )
         return optimizer_outs, state
 
     def __init__(
@@ -75,6 +127,7 @@ class IndCoefNoAct(Meta):
             regularization_rate=1e-7,
             inp_gradient_clipping='norm_loss',
             clip_norm=1e+5,
+            pupil_learning_rate=1e-3,
             regime='train',
             optimizer_for_opt_type='adam',
             additional_metrics=None,
@@ -104,6 +157,7 @@ class IndCoefNoAct(Meta):
         self._regularization_rate = regularization_rate
         self._inp_gradient_clipping = inp_gradient_clipping
         self._clip_norm = clip_norm
+        self._pupil_learning_rate = pupil_learning_rate
         self._regime = regime
 
         self._optimizer_for_opt_type = optimizer_for_opt_type
@@ -125,7 +179,6 @@ class IndCoefNoAct(Meta):
             pupil_savers=None,
             optimizer_train_op=None,
             learning_rate_for_optimizer_training=None,
-            pupil_learning_rate=None,
             train_with_meta_optimizer_op=None,
             reset_optimizer_train_state=None,
             reset_optimizer_inference_state=None,
@@ -147,7 +200,6 @@ class IndCoefNoAct(Meta):
             self._hooks[add_metric] = None
 
         self._debug_tensors = list()
-        self._pupil_learning_rate = tf.placeholder(tf.float32, name='pupil_learning_rate', shape=[])
         self._hooks['pupil_learning_rate'] = self._pupil_learning_rate
         self._optimizer_dropout_keep_prob = tf.placeholder(tf.float32, name='optimizer_dropout_keep_prob')
         self._hooks['optimizer_dropout_keep_prob'] = self._optimizer_dropout_keep_prob

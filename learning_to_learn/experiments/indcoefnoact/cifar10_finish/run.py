@@ -57,9 +57,9 @@ valid_add_feed = [
 the_only_pupil_restore_path = os.path.join(*(['..']*2 + ['cifar10_max_train', 'adagrad/0/checkpoints/best']))
 NUM_EXERCISES = 10
 BATCH_SIZE = 32
-NUM_OPTIMIZER_UNROLLINGS = 1
+NUM_OPTIMIZER_UNROLLINGS = 100
 RESET_PERIOD = 1
-OPT_INF_STOP = 1
+OPT_INF_STOP = 10
 RESTORE_PUPIL_PATHS = [
     the_only_pupil_restore_path
 ]
@@ -72,6 +72,12 @@ PUPIL_RESTORE_PATHS = [
 OPTIMIZER_RANGE = NUM_OPTIMIZER_UNROLLINGS * RESET_PERIOD
 AVERAGING_NUMBER = 3
 NUM_OPTIMIZER_TRAIN_STEPS = 5
+MLP_SIZE=dict(
+    num_layers=2,
+    num_hidden_nodes=[1000],
+    input_shape=[3072],
+    num_classes=10,
+)
 evaluation = dict(
     save_path=save_path,
     opt_inf_is_performed=True,
@@ -86,10 +92,7 @@ evaluation = dict(
 
 kwargs_for_pupil_building = dict(
     batch_size=BATCH_SIZE,
-    num_layers=2,
-    num_hidden_nodes=[1000],
-    input_shape=[3072],
-    num_classes=10,
+    **MLP_SIZE,
     regime='training_with_meta_optimizer',
     additional_metrics=add_metrics,
 )
@@ -133,7 +136,8 @@ for conf in confs:
     build_pupil_hyperparameters = dict(
     )
     build_optimizer_hyperparameters = dict(
-        clip_norm=conf['clip_norm']
+        clip_norm=conf['clip_norm'],
+        pupil_learning_rate=conf['pupil_learning_rate'],
     )
 
     # other_hyperparameters={'dropout': [.3, .5, .7, .8, .9, .95]},
@@ -149,10 +153,6 @@ for conf in confs:
             hp_type='built-in',
             type='exponential_decay'
         ),
-        pupil_learning_rate=dict(
-            hp_type='additional_placeholder',
-            varying=conf['pupil_learning_rate/value'],
-        )
     )
 
 
@@ -187,10 +187,7 @@ print_hps(hp_names, best_on_valid[0], 4)
 best_conf = dict(list(zip(hp_names, best_on_valid[0])))
 env.build_pupil(
     batch_size=BATCH_SIZE,
-    num_layers=2,
-    num_hidden_nodes=[1000],
-    input_shape=[3072],
-    num_classes=10,
+    **MLP_SIZE,
     regime='training_with_meta_optimizer',
     additional_metrics=add_metrics,
 )
@@ -203,14 +200,9 @@ env.build_optimizer(
     optimizer_for_opt_type='adam',
     additional_metrics=add_metrics,
     clip_norm=best_conf['clip_norm'],
+    pupil_learning_rate=best_conf['pupil_learning_rate'],
 )
 
-train_opt_add_feed.append(
-    {'placeholder': 'pupil_learning_rate', 'value': best_conf['pupil_learning_rate/value']}
-)
-opt_inf_add_feed.append(
-    {'placeholder': 'pupil_learning_rate', 'value': best_conf['pupil_learning_rate/value']}
-)
 stop_specs = NUM_OPTIMIZER_TRAIN_STEPS
 
 learning_rate = dict(

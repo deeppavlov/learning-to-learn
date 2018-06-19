@@ -26,6 +26,12 @@ parser.add_argument(
     help="Output file name. Path relative to this script."
 )
 parser.add_argument(
+    '-i',
+    "--inter_path",
+    help="Path between model folder and results folder. default is 'test'",
+    default='test',
+)
+parser.add_argument(
     "-v",
     "--verbose",
     help="Regulate verbosity",
@@ -38,7 +44,7 @@ model_paths = parse_path_comb(args.model_paths, filter_=False)
 results = dict()
 
 for model_path in model_paths:
-    results[model_path] = pupil_test_results_summarize(model_path)
+    results[model_path] = pupil_test_results_summarize(model_path, args.inter_path)
 
 string = stats_string_for_all_models(results, 2)
 

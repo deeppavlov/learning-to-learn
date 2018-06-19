@@ -2647,12 +2647,12 @@ def get_stats_of_pupil_test_results(all_results):
     return res
 
 
-def pupil_test_results_summarize(model_path):
+def pupil_test_results_summarize(model_path, inter_path):
     res_dirs = get_pupil_result_paths(model_path)
     all_results = dict()
     for exp, path in res_dirs.items():
         res = dict()
-        test_dir = os.path.join(path, 'test', 'results')
+        test_dir = os.path.join(path, inter_path, 'results')
         test_result_files = os.listdir(test_dir)
         for file in test_result_files:
             path_to_file = os.path.join(test_dir, file)

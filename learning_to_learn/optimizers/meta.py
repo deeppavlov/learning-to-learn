@@ -163,7 +163,7 @@ class Meta(object):
                 tmpl = construct(storage)
                 unstacked = [construct(tmpl) for _ in range(num_exercises)]
                 paths = get_keys_from_nested(tmpl)
-                print(paths)
+                # print("(Meta._unstack_storage)paths:", paths)
                 key_values, _ = sort_lists_map(paths)
                 go_through_nested_with_name_scopes_to_perform_func_and_distribute_results(
                     storage, key_values, [], tf.unstack, unstacked)
@@ -492,7 +492,10 @@ class Meta(object):
     def _mv_tensors(opt_ins, source_keys, dest_keys):
         for ov in opt_ins.values():
             for s_key, d_key in zip(source_keys, dest_keys):
-                ov[d_key] = ov[s_key]
+                if isinstance(ov[s_key], list):
+                    ov[d_key] = list(ov[s_key])
+                else:
+                    ov[d_key] = ov[s_key]
         return opt_ins
 
     @staticmethod
@@ -675,6 +678,11 @@ class Meta(object):
                                 elif ndims < o_ndims:
                                     o = tf.reshape(o, [-1] + o_shape[2:])
                                     sigma = tf.reshape(sigma, [-1] + sigma_shape[2:])
+                                # print('\n'*2)
+                                # print("(Meta._compose_mods)k:", k)
+                                # print("(Meta._compose_mods)o:", o)
+                                # print("(Meta._compose_mods)sigma:", sigma)
+                                # print("(Meta._compose_mods)eq:", eq)
                                 basic_mods = tf.einsum(eq, o, sigma)
                                 
                             with tf.name_scope('relative_difference_computation'):
@@ -1059,6 +1067,15 @@ class Meta(object):
                 optimizer_states = self._create_optimizer_states(1, 'inference_optimizer_states', 0)
                 optimizer_ins, pupil_save_ops, start_loss, predictions, labels = \
                     self._eval_pupil_gradients_for_optimizer_inference()
+                # print('\n' * 3)
+                # for ok, ov in optimizer_ins.items():
+                #     print(' '*4, ok)
+                #     for ik, iv in ov.items():
+                #         print(' '*2, ik)
+                #         if isinstance(iv, list):
+                #             print([v.get_shape().as_list() for v in iv])
+                #         else:
+                #             print(iv.get_shape().as_list())
 
                 # optimizer_ins = self._extend_with_permutations(optimizer_ins, 0)
                 # print('\n(Meta._inference_graph)optimizer_ins before permutations:')
@@ -1087,6 +1104,8 @@ class Meta(object):
                 # print('\n(Meta._inference_graph)optimizer_outs:')
                 # print_optimizer_ins(optimizer_outs)
                 # optimizer_outs = self._backward_permute(optimizer_outs, ['o_pr'], ['sigma_pr'], collapse_1st_dim=True)
+
+
                 optimizer_outs = self._compose_phi_and_psi(optimizer_outs)
                 # for var, gr in zip(vars, grads):
                 #     with tf.device('/cpu:0'):
@@ -1094,6 +1113,19 @@ class Meta(object):
                 #             optimizer_outs['lstm_layer_0']['psi'], [gr], message='\n' + var.name + ':\n')
                 # print('\n(Meta._inference_graph)optimizer_states:', optimizer_states)
                 # print('\n(Meta._inference_graph)new_optimizer_states:', new_optimizer_states)
+
+                # print("(Meta._inference_graph)optimizer_outs:", optimizer_outs)
+
+                # print('\n' * 3)
+                # for ok, ov in optimizer_outs.items():
+                #     print(' '*4, ok)
+                #     for ik, iv in ov.items():
+                #         print(' '*2, ik)
+                #         if isinstance(iv, list):
+                #             print([v.get_shape().as_list() for v in iv])
+                #         else:
+                #             print(iv.get_shape().as_list())
+
                 mods = self._compose_mods(optimizer_outs, learning_rate=LEARNING_RATE_FOR_EMPTY_CORE)
                 # print('\n(Meta._inference_graph)')
                 # print_optimizer_ins(mods)
