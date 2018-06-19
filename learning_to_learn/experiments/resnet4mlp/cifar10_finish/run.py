@@ -57,9 +57,9 @@ valid_add_feed = [
 the_only_pupil_restore_path = os.path.join(*(['..']*2 + ['cifar10_max_train', 'adagrad/0/checkpoints/best']))
 NUM_EXERCISES = 10
 BATCH_SIZE = 32
-NUM_OPTIMIZER_UNROLLINGS = 10
-RESET_PERIOD = 10
-OPT_INF_STOP = 100
+NUM_OPTIMIZER_UNROLLINGS = 5
+RESET_PERIOD = 20
+OPT_INF_STOP = RESET_PERIOD * NUM_OPTIMIZER_UNROLLINGS
 RESTORE_PUPIL_PATHS = [
     the_only_pupil_restore_path
 ]
@@ -83,7 +83,8 @@ OPTIMIZER_PARAMETERS = dict(
     # regime='inference',
     num_optimizer_unrollings=NUM_OPTIMIZER_UNROLLINGS,
     num_exercises=NUM_EXERCISES,
-    res_size=2000,
+    res_size=1000,
+    num_layers=4,
     permute=False,
     optimizer_for_opt_type='adam',
     additional_metrics=add_metrics
