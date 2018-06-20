@@ -17,7 +17,7 @@ from learning_to_learn.image_batch_gens import MnistBatchGenerator
 from learning_to_learn.useful_functions import compose_hp_confs, get_num_exps_and_res_files, \
     get_optimizer_evaluation_results, get_best, print_hps
 
-from learning_to_learn.optimizers.resnet4mlp import ResNet4Mlp
+from learning_to_learn.optimizers.l2l import L2L
 import os
 
 parameter_set_file_name = sys.argv[1]
@@ -36,7 +36,7 @@ data_dir = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'mnist']))
 
 env = Environment(
     pupil_class=Mlp,
-    meta_optimizer_class=ResNet4Mlp,
+    meta_optimizer_class=L2L,
     batch_generator_classes=MnistBatchGenerator,
 )
 

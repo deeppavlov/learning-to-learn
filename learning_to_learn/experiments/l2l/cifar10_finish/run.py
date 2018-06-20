@@ -17,7 +17,7 @@ from learning_to_learn.image_batch_gens import CifarBatchGenerator
 from learning_to_learn.useful_functions import compose_hp_confs, get_num_exps_and_res_files, \
     get_optimizer_evaluation_results, get_best, print_hps
 
-from learning_to_learn.optimizers.resnet4mlp import ResNet4Mlp
+from learning_to_learn.optimizers.l2l import L2L
 import os
 
 parameter_set_file_name = sys.argv[1]
@@ -36,7 +36,7 @@ VALID_SIZE = 1000
 
 env = Environment(
     pupil_class=Mlp,
-    meta_optimizer_class=ResNet4Mlp,
+    meta_optimizer_class=L2L,
     batch_generator_classes=CifarBatchGenerator,
 )
 
@@ -91,10 +91,10 @@ the_only_pupil_restore_path = os.path.join(*(['..']*2 + ['cifar10_max_train', 'a
 # )
 
 NUM_EXERCISES = 1
-BATCH_SIZE = 2
-NUM_OPTIMIZER_UNROLLINGS = 1
-RESET_PERIOD = 1
-OPT_INF_STOP = RESET_PERIOD * NUM_OPTIMIZER_UNROLLINGS
+BATCH_SIZE = 32
+NUM_OPTIMIZER_UNROLLINGS = 10
+RESET_PERIOD = 10
+OPT_INF_STOP = NUM_OPTIMIZER_UNROLLINGS * RESET_PERIOD
 RESTORE_PUPIL_PATHS = [
     the_only_pupil_restore_path
 ]
@@ -106,7 +106,7 @@ PUPIL_RESTORE_PATHS = [
 ]
 OPTIMIZER_RANGE = NUM_OPTIMIZER_UNROLLINGS * RESET_PERIOD
 AVERAGING_NUMBER = 3
-NUM_OPTIMIZER_TRAIN_STEPS = 1
+NUM_OPTIMIZER_TRAIN_STEPS = 1000
 MLP_SIZE = dict(
     num_layers=2,
     num_hidden_nodes=[1000],
@@ -118,8 +118,8 @@ OPTIMIZER_PARAMETERS = dict(
     # regime='inference',
     num_optimizer_unrollings=NUM_OPTIMIZER_UNROLLINGS,
     num_exercises=NUM_EXERCISES,
-    num_lstm_layers=1,
-    num_lstm_nodes=[1,1],
+    num_lstm_layers=2,
+    num_lstm_nodes=[20, 20],
     selected=['omega', 'beta'],
     optimizer_for_opt_type='adam',
     additional_metrics=add_metrics,
@@ -238,7 +238,7 @@ env.build_optimizer(
     optimizer_init_parameter=best_conf['optimizer_init_parameter'],
 )
 
-stop_specs = 2         #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+stop_specs = 20000         #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 learning_rate = dict(
     type='exponential_decay',

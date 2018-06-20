@@ -104,7 +104,7 @@ class Controller(object):
             self._specifications['comp_func'] = self._comp_func_gen(min)
         else:
             self._specifications['comp_func'] = self._comp_func_gen(max)
-        print(self._storage)
+        # print(self._storage)
         self._specifications['line'] = get_elem_from_nested(
             self._storage,
             self._specifications['path_to_target_metric_storage']
