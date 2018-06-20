@@ -134,6 +134,7 @@ class IndCoefNoAct(Meta):
             flags=None,
             normalizing=None,
             get_theta=False,
+            get_omega=False,
     ):
         if additional_metrics is None:
             additional_metrics = list()
@@ -166,6 +167,7 @@ class IndCoefNoAct(Meta):
 
         self._flags = flags
         self._get_theta = get_theta
+        self._get_omega = get_omega
 
         self._normalizing = normalizing
 

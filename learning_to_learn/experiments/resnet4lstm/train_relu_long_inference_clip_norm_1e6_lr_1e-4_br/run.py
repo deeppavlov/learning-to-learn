@@ -50,8 +50,8 @@ env = Environment(
     vocabulary=vocabulary)
 
 add_metrics = ['bpc', 'perplexity', 'accuracy']
-NUM_EXERCISES = 10
-NUM_UNROLLINGS = 4
+NUM_EXERCISES = 2
+NUM_UNROLLINGS = 1
 tmpl = os.path.join(*['..']*ROOT_HEIGHT + [restore_path, 'checkpoints', '%s'])
 RESTORE_PUPIL_PATHS = [
     tmpl % 0
@@ -62,9 +62,9 @@ OPT_INF_RESTORE_PUPIL_PATHS = [
 PUPIL_RESTORE_PATHS = [
     RESTORE_PUPIL_PATHS[0]
 ]
-
+BATCH_SIZE = 1
 env.build_pupil(
-    batch_size=32,
+    batch_size=BATCH_SIZE,
     num_layers=1,
     num_nodes=[100],
     num_output_layers=1,
@@ -82,9 +82,11 @@ env.build_pupil(
 env.build_optimizer(
     regime='train',
     # regime='inference',
-    num_optimizer_unrollings=10,
+    num_optimizer_unrollings=1,
     num_exercises=NUM_EXERCISES,
-    res_size=2000,
+    res_size=2,
+    num_res_layers=1,
+    num_lstm_nodes=10,
     permute=False,
     optimizer_for_opt_type='adam',
     additional_metrics=add_metrics,
@@ -125,7 +127,7 @@ env.train_optimizer(
     opt_inf_train_dataset_texts=[train_text],
     validation_additions_to_feed_dict=valid_add_feed,
     vocabulary=vocabulary,
-    batch_size=32,
+    batch_size=BATCH_SIZE,
     batch_gen_init_is_random=True,
     num_unrollings=NUM_UNROLLINGS,
     learning_rate={'type': 'exponential_decay',

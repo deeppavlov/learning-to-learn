@@ -315,6 +315,7 @@ class ArtDer(Meta):
         self._num_sel = tf.placeholder(tf.int32, name='num_sel', shape=[])
 
         self._get_theta = False
+        self._get_omega = False
         self._hooks = dict(
             train_with_meta_optimizer_op=None,
             reset_optimizer_inference_pupil_storage=None,

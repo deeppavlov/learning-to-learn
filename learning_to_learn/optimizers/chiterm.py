@@ -117,6 +117,7 @@ class ChiTerm(Meta):
         self._additional_metrics = additional_metrics
         self._flags = flags
         self._get_theta = get_theta
+        self._get_omega = False
         self._normalizing = None
         self._inp_gradient_clipping = None
 

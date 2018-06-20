@@ -308,6 +308,9 @@ class Meta(object):
         if self._get_theta:
             argument_names.append('o')
             derivative_names.append('theta')
+        if self._get_omega:
+            argument_names.append('matrix')
+            derivative_names.append('omega')
         for arg_name, der_name in zip(argument_names, derivative_names):
             retrieved_args, map_ = retrieve_from_inner_dicts(opt_ins, arg_name)
             derivatives = tf.gradients(loss, retrieved_args)
@@ -333,8 +336,12 @@ class Meta(object):
                 optimizer_ins,
                 loss
             )
-
-            optimizer_ins = self._stop_gradients_in_opt_ins(optimizer_ins, ['o', 's', 'sigma'])
+            stop_tensors = ['o', 's', 'sigma']
+            if self._get_theta:
+                stop_tensors.append('theta')
+            if self._get_omega:
+                stop_tensors.append('omega')
+            optimizer_ins = self._stop_gradients_in_opt_ins(optimizer_ins, stop_tensors)
             if self._normalizing is not None:
                 optimizer_ins = self._normalize(optimizer_ins, self._normalizing)
             # print('(Meta._eval_pupil_gradients_for_optimizer_training)AFTER GRADIENT STOPPING')
@@ -469,13 +476,17 @@ class Meta(object):
 
             return res
 
-    @staticmethod
-    def _substitute_opt_ins(opt_ins, substitution_way):
+    def _substitute_opt_ins(self, opt_ins, substitution_way):
+        substitute_tensors = ['s', 'o', 'sigma']
+        if self._get_theta:
+            substitute_tensors.append('theta')
+        if self._get_omega:
+            substitute_tensors.append('omega')
         with tf.name_scope('opt_ins_substitution'):
             for ok, ov in opt_ins.items():
                 with tf.name_scope(ok):
                     for ik, iv in ov.items():
-                        if ik in ['s', 'o', 'sigma']:
+                        if ik in substitute_tensors:
                             with tf.name_scope(ik):
                                 if isinstance(iv, list):
                                     ov[ik] = [
@@ -871,10 +882,15 @@ class Meta(object):
                                 # print("(Meta._train_graph)BEFORE OPTIMIZER CORE:")
                                 # print_optimizer_ins(optimizer_ins)
                                 if 'summarize_opt_ins' in self._flags:
+                                    summarize_tensors = ['o', 's', 'sigma']
+                                    if self._get_theta:
+                                        summarize_tensors.append('theta')
+                                    if self._get_omega:
+                                        summarize_tensors.append('omega')
                                     summaries.append(
                                         self._summarize_opt_flow(
                                             optimizer_ins,
-                                            ['o', 's', 'sigma'],
+                                            summarize_tensors,
                                             ['mean', 'stddev', 'min', 'max', 'histogram'],
                                             'opt_ins'
                                         )
@@ -943,16 +959,16 @@ class Meta(object):
                             one_gpu_end_additional_metrics, tf.reduce_mean)
 
                         new_pupil_trainable = self._retrieve_and_unstack_trainable_variables(
-                            self._num_exercises, new_pupil_trainable)
+                            self._num_ex_on_gpus[gpu_idx], new_pupil_trainable)
                         # print("(Meta._train_graph)pupil_grad_eval_pupil_storage (before unstacking):",
                         #       pupil_grad_eval_pupil_storage)
                         pupil_grad_eval_pupil_storage[gpu_idx] = self._unstack_storage(
-                            self._num_exercises, pupil_grad_eval_pupil_storage[gpu_idx],
+                            self._num_ex_on_gpus[gpu_idx], pupil_grad_eval_pupil_storage[gpu_idx],
                             name_scope='unstack_pupil_grad_eval_pupil_storage')
                         # print("(Meta._train_graph)pupil_grad_eval_pupil_storage (after unstacking):",
                         #       pupil_grad_eval_pupil_storage)
                         optimizer_grad_pupil_storage[gpu_idx] = self._unstack_storage(
-                            self._num_exercises, optimizer_grad_pupil_storage[gpu_idx],
+                            self._num_ex_on_gpus[gpu_idx], optimizer_grad_pupil_storage[gpu_idx],
                             name_scope='unstack_optimizer_grad_pupil_storage'
                         )
                         # print("(Meta._train_graph)self._gpu_borders:", self._gpu_borders)
