@@ -102,8 +102,8 @@ OPTIMIZER_PARAMETERS = dict(
     # regime='inference',
     num_optimizer_unrollings=NUM_OPTIMIZER_UNROLLINGS,
     num_exercises=NUM_EXERCISES,
-    num_lstm_layers=1,
-    num_lstm_nodes=[1,1],
+    num_lstm_layers=2,
+    num_lstm_nodes=[20, 20],
     selected=['omega', 'beta'],
     optimizer_for_opt_type='adam',
     additional_metrics=add_metrics,
@@ -222,7 +222,7 @@ env.build_optimizer(
     optimizer_init_parameter=best_conf['optimizer_init_parameter'],
 )
 
-stop_specs = 20000 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+stop_specs = 20000  #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 learning_rate = dict(
     type='exponential_decay',
