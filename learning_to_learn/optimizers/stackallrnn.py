@@ -9,15 +9,6 @@ from learning_to_learn.useful_functions import flatten, construct_dict_without_n
 class StackAllRnn(Meta):
 
     @staticmethod
-    def form_kwargs(kwargs_for_building, insertions):
-        for insertion in insertions:
-            if insertion['list_index'] is None:
-                kwargs_for_building[insertion['hp_name']] = insertion['paste']
-            else:
-                kwargs_for_building[insertion['hp_name']][insertion['list_index']] = insertion['paste']
-        return kwargs_for_building
-
-    @staticmethod
     def check_kwargs(**kwargs):
         pass
 

@@ -723,6 +723,8 @@ class Environment(object):
     def _restore_meta_optimizer(self, restore_path):
         if restore_path is not None:
             print('restoring meta optimizer from %s' % restore_path)
+            print("(Environment._restore_meta_optimizer)self._hooks['meta_optimizer_saver']:",
+                  self._hooks['meta_optimizer_saver'])
             self._hooks['meta_optimizer_saver'].restore(self._session, restore_path)
 
     def test(self,
@@ -1565,6 +1567,12 @@ class Environment(object):
     def _train_optimizer_repeatedly(self, start_specs, run_specs_set, log=True):
         # initializing model
         self.flush_storage()
+        # print("(Environment._train_optimizer_repeatedly)all_trainable:")
+        # for v in tf.trainable_variables():
+        #     print(v)
+        # print("(Environment._train_optimizer_repeatedly)global_variables:")
+        # for v in tf.global_variables():
+        #     print(v)
         self._session.run(tf.global_variables_initializer())
         self._restore_meta_optimizer(start_specs['restore_optimizer_path'])
         processing_type = 'train_meta_optimizer'
@@ -2003,6 +2011,7 @@ class Environment(object):
         )
         feed_dict = dict()
         # print("(Environment._train_optimizer)before loop")
+
         while should_continue.get():
             if should_start_debugging.get():
                 self._session = tf_debug.LocalCLIDebugWrapperSession(self._session)

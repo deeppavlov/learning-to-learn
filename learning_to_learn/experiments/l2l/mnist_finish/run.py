@@ -13,7 +13,7 @@ except ValueError: # Already removed
 
 from learning_to_learn.environment import Environment
 from learning_to_learn.pupils.mlp_for_meta import MlpForMeta as Mlp
-from learning_to_learn.image_batch_gens import CifarBatchGenerator
+from learning_to_learn.image_batch_gens import MnistBatchGenerator
 from learning_to_learn.useful_functions import compose_hp_confs, get_num_exps_and_res_files, \
     get_optimizer_evaluation_results, get_best, print_hps
 
@@ -32,12 +32,12 @@ print("confs:", confs)
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
-VALID_SIZE = 1000
+data_dir = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'mnist']))
 
 env = Environment(
     pupil_class=Mlp,
     meta_optimizer_class=ResNet4Mlp,
-    batch_generator_classes=CifarBatchGenerator,
+    batch_generator_classes=MnistBatchGenerator,
 )
 
 add_metrics = ['bpc', 'perplexity', 'accuracy']
@@ -54,12 +54,12 @@ valid_add_feed = [
     {'placeholder': 'optimizer_dropout_keep_prob', 'value': 1.}
 ]
 
-the_only_pupil_restore_path = os.path.join(*(['..']*2 + ['cifar10_max_train', 'adagrad/0/checkpoints/best']))
+the_only_pupil_restore_path = os.path.join(*(['..']*2 + ['mnist_max_train', 'adagrad/8/checkpoints/best']))
 NUM_EXERCISES = 10
 BATCH_SIZE = 32
-NUM_OPTIMIZER_UNROLLINGS = 5
-RESET_PERIOD = 20
-OPT_INF_STOP = RESET_PERIOD * NUM_OPTIMIZER_UNROLLINGS
+NUM_OPTIMIZER_UNROLLINGS = 10
+RESET_PERIOD = 10
+OPT_INF_STOP = 100
 RESTORE_PUPIL_PATHS = [
     the_only_pupil_restore_path
 ]
@@ -72,10 +72,10 @@ PUPIL_RESTORE_PATHS = [
 OPTIMIZER_RANGE = NUM_OPTIMIZER_UNROLLINGS * RESET_PERIOD
 AVERAGING_NUMBER = 3
 NUM_OPTIMIZER_TRAIN_STEPS = 1000
-MLP_SIZE = dict(
+MLP_SIZE=dict(
     num_layers=2,
     num_hidden_nodes=[1000],
-    input_shape=[3072],
+    input_shape=[784],
     num_classes=10,
 )
 OPTIMIZER_PARAMETERS = dict(
@@ -83,47 +83,13 @@ OPTIMIZER_PARAMETERS = dict(
     # regime='inference',
     num_optimizer_unrollings=NUM_OPTIMIZER_UNROLLINGS,
     num_exercises=NUM_EXERCISES,
-    res_size=1000,
-    num_res_layers=4,
-    permute=False,
+    num_lstm_layers=1,
+    num_lstm_nodes=[1,1],
+    selected=['omega', 'beta'],
     optimizer_for_opt_type='adam',
-    additional_metrics=add_metrics
+    additional_metrics=add_metrics,
+    get_omega_and_beta=True,
 )
-
-# NUM_EXERCISES = 1
-# BATCH_SIZE = 2
-# NUM_OPTIMIZER_UNROLLINGS = 1
-# RESET_PERIOD = 1
-# OPT_INF_STOP = RESET_PERIOD * NUM_OPTIMIZER_UNROLLINGS
-# RESTORE_PUPIL_PATHS = [
-#     the_only_pupil_restore_path
-# ]
-# OPT_INF_RESTORE_PUPIL_PATHS = [
-#     ('adam_prep', the_only_pupil_restore_path)
-# ]
-# PUPIL_RESTORE_PATHS = [
-#     RESTORE_PUPIL_PATHS[0]
-# ]
-# OPTIMIZER_RANGE = NUM_OPTIMIZER_UNROLLINGS * RESET_PERIOD
-# AVERAGING_NUMBER = 3
-# NUM_OPTIMIZER_TRAIN_STEPS = 1
-# MLP_SIZE = dict(
-#     num_layers=2,
-#     num_hidden_nodes=[1000],
-#     input_shape=[3072],
-#     num_classes=10,
-# )
-# OPTIMIZER_PARAMETERS = dict(
-#     regime='train',
-#     # regime='inference',
-#     num_optimizer_unrollings=NUM_OPTIMIZER_UNROLLINGS,
-#     num_exercises=NUM_EXERCISES,
-#     res_size=1,
-#     num_res_layers=1,
-#     permute=False,
-#     optimizer_for_opt_type='adam',
-#     additional_metrics=add_metrics
-# )
 evaluation = dict(
     save_path=save_path,
     opt_inf_is_performed=True,
@@ -165,10 +131,10 @@ launch_kwargs = dict(
     summary=False,
     add_graph_to_summary=False,
     train_batch_kwargs=dict(
-        valid_size=VALID_SIZE
+        data_dir=data_dir
     ),
     valid_batch_kwargs=dict(
-        valid_size=VALID_SIZE
+        data_dir=data_dir
     ),
     one_batch_gen=True,
 )
@@ -177,9 +143,7 @@ for conf in confs:
     build_pupil_hyperparameters = dict(
     )
     build_optimizer_hyperparameters = dict(
-        clip_norm=conf['clip_norm'],
         optimizer_init_parameter=conf['optimizer_init_parameter'],
-        pupil_learning_rate=conf['pupil_learning_rate'],
     )
 
     # other_hyperparameters={'dropout': [.3, .5, .7, .8, .9, .95]},
@@ -236,16 +200,14 @@ env.build_pupil(
 
 env.build_optimizer(
     **OPTIMIZER_PARAMETERS,
-    clip_norm=best_conf['clip_norm'],
     optimizer_init_parameter=best_conf['optimizer_init_parameter'],
-    pupil_learning_rate=best_conf['pupil_learning_rate'],
 )
 
-stop_specs = 20000         #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+stop_specs = 20000
 
 learning_rate = dict(
     type='exponential_decay',
-    period=4000,
+    period=5000,
     decay=.5,
     init=best_conf['learning_rate/init'],
 )
@@ -278,10 +240,10 @@ env.train_optimizer(
     add_graph_to_summary=True,
     one_batch_gen=True,
     train_batch_kwargs=dict(
-        valid_size=VALID_SIZE
+        data_dir=data_dir
     ),
     valid_batch_kwargs=dict(
-        valid_size=VALID_SIZE
+        data_dir=data_dir
     ),
 )
 
@@ -305,10 +267,10 @@ env.train(
         valid='validation'
     ),
     train_batch_kwargs=dict(
-        valid_size=VALID_SIZE
+        data_dir=data_dir
     ),
     valid_batch_kwargs=dict(
-        valid_size=VALID_SIZE
+        data_dir=data_dir
     ),
     results_collect_interval=10,
     additions_to_feed_dict=opt_inf_add_feed,
@@ -324,7 +286,7 @@ env.test(
         test='test'
     ),
     valid_batch_kwargs=dict(
-        valid_size=VALID_SIZE
+        data_dir=data_dir
     ),
     printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy']
 )

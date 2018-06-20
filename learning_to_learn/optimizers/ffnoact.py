@@ -10,15 +10,6 @@ from learning_to_learn.useful_functions import block_diagonal, custom_matmul, cu
 class Ff(Meta):
 
     @staticmethod
-    def form_kwargs(kwargs_for_building, insertions):
-        for insertion in insertions:
-            if insertion['list_index'] is None:
-                kwargs_for_building[insertion['hp_name']] = insertion['paste']
-            else:
-                kwargs_for_building[insertion['hp_name']][insertion['list_index']] = insertion['paste']
-        return kwargs_for_building
-
-    @staticmethod
     def check_kwargs(**kwargs):
         pass
 
@@ -244,7 +235,7 @@ class Ff(Meta):
             normalizing=None,
             get_theta=False,
             get_omega_and_beta=False,
-            matrix_mod='phi_psi',
+            matrix_mod='phi_and_psi'
     ):
         if additional_metrics is None:
             additional_metrics = list()

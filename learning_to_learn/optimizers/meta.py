@@ -15,6 +15,64 @@ CLIP_NORM = 1e+5
 
 class Meta(object):
 
+    _opt_in_types = dict(
+        matrix='variable',
+        bias='variable',
+        o='inter',
+        sigma='inter',
+        theta='inter',
+        omega='variable',
+        beta='variable',
+    )
+
+    @staticmethod
+    def form_kwargs(kwargs_for_building, insertions):
+        for insertion in insertions:
+            if insertion['list_index'] is None:
+                kwargs_for_building[insertion['hp_name']] = insertion['paste']
+            else:
+                kwargs_for_building[insertion['hp_name']][insertion['list_index']] = insertion['paste']
+        return kwargs_for_building
+
+    @staticmethod
+    def _get_opt_in_sizes(pupil_layer_dims, pupil_net_size):
+        # print("(Meta._get_opt_in_sizes)pupil_layer_dims:", pupil_layer_dims)
+        sizes = dict()
+        if 'num_unrollings' in pupil_net_size:
+            nu = pupil_net_size['num_unrollings']
+        else:
+            nu = None
+        bs = pupil_net_size['batch_size']
+        for layer_name, dims in pupil_layer_dims.items():
+            if isinstance(dims, list):
+                for idx, ds in enumerate(dims):
+                    sizes[layer_name[:-1] + '_%s' % idx] = dict(
+                        matrix=ds[0] * ds[1],
+                        bias=ds[1],
+                        o=ds[0],
+                        sigma=ds[1],
+                        theta=ds[0],
+                        omega=ds[0] * ds[1],
+                        beta=ds[1],
+                        s=ds[1],
+                        nu=nu,
+                        bs=bs,
+                    )
+            else:
+                sizes[layer_name] = dict(
+                    matrix=dims[0]*dims[1],
+                    bias=dims[1],
+                    o=dims[0],
+                    sigma=dims[1],
+                    theta=dims[0],
+                    omega=dims[0]*dims[1],
+                    beta=dims[1],
+                    s=dims[1],
+                    nu=nu,
+                    bs=bs,
+                )
+        return sizes
+
     @staticmethod
     def _get_opt_ins_ndim(opt_ins):
         ovs = list(opt_ins.values())
@@ -286,13 +344,16 @@ class Meta(object):
             for k, v in optimizer_ins.items():
                 with tf.name_scope(k):
                     for ik in inner_keys:
-                        with tf.name_scope(ik):
-                            # print("\n(Meta._stop_gradients_in_o_and_s)v['o']:", v['o'])
-                            if isinstance(v[ik], (list, tuple)):
-                                for idx, t in enumerate(v[ik]):
-                                    v[ik][idx] = tf.stop_gradient(t)
-                            else:
-                                v[ik] = tf.stop_gradient(v[ik])
+                        if ik in v:
+                            with tf.name_scope(ik):
+                                # print("\n(Meta._stop_gradients_in_o_and_s)v['o']:", v['o'])
+                                if isinstance(v[ik], (list, tuple)):
+                                    for idx, t in enumerate(v[ik]):
+                                        v[ik][idx] = tf.stop_gradient(t)
+                                else:
+                                    v[ik] = tf.stop_gradient(v[ik])
+                        else:
+                            print("WARNING: %s misses %s (_stop_gradients_in_opt_ins)" % (k, ik))
         return optimizer_ins
 
     def _extend_opt_ins_with_derivatives(
@@ -511,7 +572,7 @@ class Meta(object):
                     else:
                         ov[d_key] = ov[s_key]
                 else:
-                    print("(WARNING: %s misses %s (retrieve_from_inner_dicts)" % (ok, s_key))
+                    print("WARNING: %s misses %s (retrieve_from_inner_dicts)" % (ok, s_key))
         return opt_ins
 
     @staticmethod
@@ -800,15 +861,15 @@ class Meta(object):
         return optimizer_outs_mods_are_applied
 
     def _create_omega_mods(self, opt_outs):
-        with tf.device('/cpu:0'):
-            for ok, ov in opt_outs.items():
-                for ik, iv in ov.items():
-                    # if ik in ['omega_pr', 'beta_pr']:
-                    ov[ik] = tf.Print(
-                        iv,
-                        [iv],
-                        message="\n\n%s %s:\n" % (ok, ik)
-                    )
+        # with tf.device('/cpu:0'):
+        #     for ok, ov in opt_outs.items():
+        #         for ik, iv in ov.items():
+        #             # if ik in ['omega_pr', 'beta_pr']:
+        #             ov[ik] = tf.Print(
+        #                 iv,
+        #                 [iv],
+        #                 message="\n\n%s %s:\n" % (ok, ik)
+        #             )
         opt_outs = self._mv_tensors(opt_outs, ['omega_pr', 'beta_pr'], ['matrix_mods', 'bias_mods'])
         return opt_outs
 
@@ -1028,6 +1089,28 @@ class Meta(object):
                         #           [self._gpu_borders[gpu_idx][0]:self._gpu_borders[gpu_idx][1]])
                         # print("(Meta._train_graph)optimizer_grad_pupil_storage[gpu_idx]:",
                         #       optimizer_grad_pupil_storage[gpu_idx])
+
+                        # print("\n\n(Meta._train_graph)optimizer_states:",
+                        #       optimizer_states)
+                        # print(
+                        #     "\n\n(Meta._train_graph)self._pupil_trainable_variables["
+                        #     "self._gpu_borders[gpu_idx][0]:self._gpu_borders[gpu_idx][1]]:",
+                        #     self._pupil_trainable_variables[
+                        #     self._gpu_borders[gpu_idx][0]:self._gpu_borders[gpu_idx][1]]
+                        # )
+                        # print(
+                        #     "\n\n(Meta._train_graph)self._pupil_grad_eval_pupil_storage["
+                        #     "self._gpu_borders[gpu_idx][0]:self._gpu_borders[gpu_idx][1]]:",
+                        #     self._pupil_grad_eval_pupil_storage[
+                        #     self._gpu_borders[gpu_idx][0]:self._gpu_borders[gpu_idx][1]]
+                        # )
+                        # print(
+                        #     "\n\n(Meta._train_graph)self._optimizer_grad_pupil_storage["
+                        #     "self._gpu_borders[gpu_idx][0]:self._gpu_borders[gpu_idx][1]]:",
+                        #     self._optimizer_grad_pupil_storage[
+                        #     self._gpu_borders[gpu_idx][0]:self._gpu_borders[gpu_idx][1]]
+                        # )
+
                         save_ops = compose_save_list(
                             (optimizer_states, tmp_states),
                             name_scope='save_opt_states'

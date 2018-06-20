@@ -120,3 +120,16 @@ def compute_metrics(metrics, predictions=None, labels=None, loss=None, keep_firs
             perplexity = perplexity_tensor(probabilities=predictions, keep_first_dim=keep_first_dim)
             res['perplexity'] = perplexity
         return res
+
+
+def log_and_sign(inp, p):
+    edge = np.exp(-p)
+    greater_first = tf.log(tf.abs(inp)) / p
+    greater_second = tf.sign(inp)
+    less_first = tf.fill(tf.shape(inp), -1.)
+    less_second = np.exp(p) * inp
+    greater = tf.stack([greater_first, greater_second], axis=-1)
+    less = tf.stack([less_first, less_second], axis=-1)
+    mask = tf.expand_dims(tf.to_float(inp > edge), axis=-1)
+    res = mask * greater + (1. - mask) * less
+    return res

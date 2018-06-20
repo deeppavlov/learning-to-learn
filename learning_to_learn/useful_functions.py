@@ -1014,6 +1014,7 @@ def compose_save_list(*pairs, name_scope='save_list'):
         for pair in pairs:
             # print('pair:', pair)
             [variables, new_values] = synchronous_flatten(pair[0], pair[1])
+            # print("(useful_functions.compose_save_list)variables:", variables)
             # variables = flatten(pair[0])
             # # print(variables)
             # new_values = flatten(pair[1])
@@ -1106,7 +1107,7 @@ def retrieve_from_inner_dicts(d, key):
                 start += 1
                 retrieved.append(v[key])
         else:
-            print("(WARNING: %s misses %s (retrieve_from_inner_dicts)" % (k, key))
+            print("WARNING: %s misses %s (retrieve_from_inner_dicts)" % (k, key))
     return retrieved, map_
 
 
@@ -1118,7 +1119,7 @@ def distribute_into_inner_dicts(d, key, to_distribute, map_):
             else:
                 v[key] = to_distribute[map_[k]]
         else:
-            print("(WARNING: %s misses %s (distribute_into_inner_dicts)" % (k, key))
+            print("WARNING: %s misses %s (distribute_into_inner_dicts)" % (k, key))
     return d
 
 

@@ -55,45 +55,10 @@ valid_add_feed = [
 ]
 
 the_only_pupil_restore_path = os.path.join(*(['..']*2 + ['cifar10_max_train', 'adagrad/0/checkpoints/best']))
-NUM_EXERCISES = 10
-BATCH_SIZE = 32
-NUM_OPTIMIZER_UNROLLINGS = 5
-RESET_PERIOD = 20
-OPT_INF_STOP = RESET_PERIOD * NUM_OPTIMIZER_UNROLLINGS
-RESTORE_PUPIL_PATHS = [
-    the_only_pupil_restore_path
-]
-OPT_INF_RESTORE_PUPIL_PATHS = [
-    ('adam_prep', the_only_pupil_restore_path)
-]
-PUPIL_RESTORE_PATHS = [
-    RESTORE_PUPIL_PATHS[0]
-]
-OPTIMIZER_RANGE = NUM_OPTIMIZER_UNROLLINGS * RESET_PERIOD
-AVERAGING_NUMBER = 3
-NUM_OPTIMIZER_TRAIN_STEPS = 1000
-MLP_SIZE = dict(
-    num_layers=2,
-    num_hidden_nodes=[1000],
-    input_shape=[3072],
-    num_classes=10,
-)
-OPTIMIZER_PARAMETERS = dict(
-    regime='train',
-    # regime='inference',
-    num_optimizer_unrollings=NUM_OPTIMIZER_UNROLLINGS,
-    num_exercises=NUM_EXERCISES,
-    res_size=1000,
-    num_res_layers=4,
-    permute=False,
-    optimizer_for_opt_type='adam',
-    additional_metrics=add_metrics
-)
-
-# NUM_EXERCISES = 1
-# BATCH_SIZE = 2
-# NUM_OPTIMIZER_UNROLLINGS = 1
-# RESET_PERIOD = 1
+# NUM_EXERCISES = 10
+# BATCH_SIZE = 32
+# NUM_OPTIMIZER_UNROLLINGS = 5
+# RESET_PERIOD = 20
 # OPT_INF_STOP = RESET_PERIOD * NUM_OPTIMIZER_UNROLLINGS
 # RESTORE_PUPIL_PATHS = [
 #     the_only_pupil_restore_path
@@ -106,7 +71,7 @@ OPTIMIZER_PARAMETERS = dict(
 # ]
 # OPTIMIZER_RANGE = NUM_OPTIMIZER_UNROLLINGS * RESET_PERIOD
 # AVERAGING_NUMBER = 3
-# NUM_OPTIMIZER_TRAIN_STEPS = 1
+# NUM_OPTIMIZER_TRAIN_STEPS = 1000
 # MLP_SIZE = dict(
 #     num_layers=2,
 #     num_hidden_nodes=[1000],
@@ -118,12 +83,48 @@ OPTIMIZER_PARAMETERS = dict(
 #     # regime='inference',
 #     num_optimizer_unrollings=NUM_OPTIMIZER_UNROLLINGS,
 #     num_exercises=NUM_EXERCISES,
-#     res_size=1,
-#     num_res_layers=1,
+#     res_size=1000,
+#     num_res_layers=4,
 #     permute=False,
 #     optimizer_for_opt_type='adam',
 #     additional_metrics=add_metrics
 # )
+
+NUM_EXERCISES = 1
+BATCH_SIZE = 2
+NUM_OPTIMIZER_UNROLLINGS = 1
+RESET_PERIOD = 1
+OPT_INF_STOP = RESET_PERIOD * NUM_OPTIMIZER_UNROLLINGS
+RESTORE_PUPIL_PATHS = [
+    the_only_pupil_restore_path
+]
+OPT_INF_RESTORE_PUPIL_PATHS = [
+    ('adam_prep', the_only_pupil_restore_path)
+]
+PUPIL_RESTORE_PATHS = [
+    RESTORE_PUPIL_PATHS[0]
+]
+OPTIMIZER_RANGE = NUM_OPTIMIZER_UNROLLINGS * RESET_PERIOD
+AVERAGING_NUMBER = 3
+NUM_OPTIMIZER_TRAIN_STEPS = 1
+MLP_SIZE = dict(
+    num_layers=2,
+    num_hidden_nodes=[1000],
+    input_shape=[3072],
+    num_classes=10,
+)
+OPTIMIZER_PARAMETERS = dict(
+    regime='train',
+    # regime='inference',
+    num_optimizer_unrollings=NUM_OPTIMIZER_UNROLLINGS,
+    num_exercises=NUM_EXERCISES,
+    num_lstm_layers=1,
+    num_lstm_nodes=[1,1],
+    selected=['omega', 'beta'],
+    optimizer_for_opt_type='adam',
+    additional_metrics=add_metrics,
+    get_omega_and_beta=True,
+)
 evaluation = dict(
     save_path=save_path,
     opt_inf_is_performed=True,
@@ -177,9 +178,7 @@ for conf in confs:
     build_pupil_hyperparameters = dict(
     )
     build_optimizer_hyperparameters = dict(
-        clip_norm=conf['clip_norm'],
         optimizer_init_parameter=conf['optimizer_init_parameter'],
-        pupil_learning_rate=conf['pupil_learning_rate'],
     )
 
     # other_hyperparameters={'dropout': [.3, .5, .7, .8, .9, .95]},
@@ -236,12 +235,10 @@ env.build_pupil(
 
 env.build_optimizer(
     **OPTIMIZER_PARAMETERS,
-    clip_norm=best_conf['clip_norm'],
     optimizer_init_parameter=best_conf['optimizer_init_parameter'],
-    pupil_learning_rate=best_conf['pupil_learning_rate'],
 )
 
-stop_specs = 20000         #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+stop_specs = 2         #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 learning_rate = dict(
     type='exponential_decay',
