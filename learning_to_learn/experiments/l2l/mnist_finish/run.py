@@ -55,11 +55,11 @@ valid_add_feed = [
 ]
 
 the_only_pupil_restore_path = os.path.join(*(['..']*2 + ['mnist_max_train', 'adagrad/8/checkpoints/best']))
-NUM_EXERCISES = 10
-BATCH_SIZE = 32
-NUM_OPTIMIZER_UNROLLINGS = 10
-RESET_PERIOD = 10
-OPT_INF_STOP = 100
+NUM_EXERCISES = 1
+BATCH_SIZE = 1
+NUM_OPTIMIZER_UNROLLINGS = 1
+RESET_PERIOD = 1
+OPT_INF_STOP = 1
 RESTORE_PUPIL_PATHS = [
     the_only_pupil_restore_path
 ]
@@ -71,7 +71,26 @@ PUPIL_RESTORE_PATHS = [
 ]
 OPTIMIZER_RANGE = NUM_OPTIMIZER_UNROLLINGS * RESET_PERIOD
 AVERAGING_NUMBER = 3
-NUM_OPTIMIZER_TRAIN_STEPS = 1000
+NUM_OPTIMIZER_TRAIN_STEPS = 1
+
+# NUM_EXERCISES = 1
+# BATCH_SIZE = 32
+# NUM_OPTIMIZER_UNROLLINGS = 10
+# RESET_PERIOD = 10
+# OPT_INF_STOP = 100
+# RESTORE_PUPIL_PATHS = [
+#     the_only_pupil_restore_path
+# ]
+# OPT_INF_RESTORE_PUPIL_PATHS = [
+#     ('adam_prep', the_only_pupil_restore_path)
+# ]
+# PUPIL_RESTORE_PATHS = [
+#     RESTORE_PUPIL_PATHS[0]
+# ]
+# OPTIMIZER_RANGE = NUM_OPTIMIZER_UNROLLINGS * RESET_PERIOD
+# AVERAGING_NUMBER = 3
+# NUM_OPTIMIZER_TRAIN_STEPS = 1000
+
 MLP_SIZE=dict(
     num_layers=2,
     num_hidden_nodes=[1000],
@@ -203,7 +222,7 @@ env.build_optimizer(
     optimizer_init_parameter=best_conf['optimizer_init_parameter'],
 )
 
-stop_specs = 20000
+stop_specs = 2 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 learning_rate = dict(
     type='exponential_decay',
