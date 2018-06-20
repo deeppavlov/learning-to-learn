@@ -1092,27 +1092,33 @@ def block_diagonal(matrices, dtype=tf.float32):
 
 
 def retrieve_from_inner_dicts(d, key):
-    map = dict()
+    map_ = dict()
     retrieved = list()
     start = 0
     for k, v in d.items():
-        if isinstance(v[key], list):
-            map[k] = [start, start + len(v[key])]
-            start += len(v[key])
-            retrieved.extend(v[key])
+        if key in v:
+            if isinstance(v[key], list):
+                map_[k] = [start, start + len(v[key])]
+                start += len(v[key])
+                retrieved.extend(v[key])
+            else:
+                map_[k] = start
+                start += 1
+                retrieved.append(v[key])
         else:
-            map[k] = start
-            start += 1
-            retrieved.append(v[key])
-    return retrieved, map
+            print("(WARNING: %s misses %s (retrieve_from_inner_dicts)" % (k, key))
+    return retrieved, map_
 
 
 def distribute_into_inner_dicts(d, key, to_distribute, map_):
     for k, v in d.items():
-        if isinstance(map_[k], list):
-            v[key] = to_distribute[map_[k][0]:map_[k][1]]
+        if k in map_:
+            if isinstance(map_[k], list):
+                v[key] = to_distribute[map_[k][0]:map_[k][1]]
+            else:
+                v[key] = to_distribute[map_[k]]
         else:
-            v[key] = to_distribute[map_[k]]
+            print("(WARNING: %s misses %s (distribute_into_inner_dicts)" % (k, key))
     return d
 
 

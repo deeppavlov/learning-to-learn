@@ -118,10 +118,7 @@ class Meta(object):
                     for d in unstacked:
                         d[ok] = dict()
                     for ik in ov.keys():
-                        allowed = False
-                        for k in allowed_keys:
-                            allowed = allowed or (k == ik)
-                        if allowed:
+                        if ik in allowed_keys:
                             for t, d in zip(tf.unstack(trainable_on_gpu[ok][ik], name=ik), unstacked):
                                 d[ok][ik] = t
         return unstacked
@@ -308,9 +305,11 @@ class Meta(object):
         if self._get_theta:
             argument_names.append('o')
             derivative_names.append('theta')
-        if self._get_omega:
+        if self._get_omega_and_beta:
             argument_names.append('matrix')
             derivative_names.append('omega')
+            argument_names.append('bias')
+            derivative_names.append('beta')
         for arg_name, der_name in zip(argument_names, derivative_names):
             retrieved_args, map_ = retrieve_from_inner_dicts(opt_ins, arg_name)
             derivatives = tf.gradients(loss, retrieved_args)
@@ -339,8 +338,10 @@ class Meta(object):
             stop_tensors = ['o', 's', 'sigma']
             if self._get_theta:
                 stop_tensors.append('theta')
-            if self._get_omega:
+            if self._get_omega_and_beta:
                 stop_tensors.append('omega')
+                stop_tensors.append('beta')
+
             optimizer_ins = self._stop_gradients_in_opt_ins(optimizer_ins, stop_tensors)
             if self._normalizing is not None:
                 optimizer_ins = self._normalize(optimizer_ins, self._normalizing)
@@ -480,8 +481,9 @@ class Meta(object):
         substitute_tensors = ['s', 'o', 'sigma']
         if self._get_theta:
             substitute_tensors.append('theta')
-        if self._get_omega:
+        if self._get_omega_and_beta:
             substitute_tensors.append('omega')
+            substitute_tensors.append('beta')
         with tf.name_scope('opt_ins_substitution'):
             for ok, ov in opt_ins.items():
                 with tf.name_scope(ok):
@@ -501,12 +503,15 @@ class Meta(object):
 
     @staticmethod
     def _mv_tensors(opt_ins, source_keys, dest_keys):
-        for ov in opt_ins.values():
+        for ok, ov in opt_ins.items():
             for s_key, d_key in zip(source_keys, dest_keys):
-                if isinstance(ov[s_key], list):
-                    ov[d_key] = list(ov[s_key])
+                if s_key in ov:
+                    if isinstance(ov[s_key], list):
+                        ov[d_key] = list(ov[s_key])
+                    else:
+                        ov[d_key] = ov[s_key]
                 else:
-                    ov[d_key] = ov[s_key]
+                    print("(WARNING: %s misses %s (retrieve_from_inner_dicts)" % (ok, s_key))
         return opt_ins
 
     @staticmethod
@@ -548,29 +553,35 @@ class Meta(object):
 
     @staticmethod
     def _expand_exercise_dim(opt_ins, inner_keys):
-        for ov in opt_ins.values():
+        for ok, ov in opt_ins.items():
             for ik in inner_keys:
-                iv = ov[ik]
-                if isinstance(iv, list):
-                    for idx, tensor in enumerate(iv):
-                        iv[idx] = tf.expand_dims(tensor, axis=0)
+                if ik in ov:
+                    iv = ov[ik]
+                    if isinstance(iv, list):
+                        for idx, tensor in enumerate(iv):
+                            iv[idx] = tf.expand_dims(tensor, axis=0)
+                    else:
+                        ov[ik] = tf.expand_dims(iv, axis=0)
                 else:
-                    ov[ik] = tf.expand_dims(iv, axis=0)
+                    print("WARNING: %s misses %s (_expand_exercise_dim)" % (ok, ik))
         return opt_ins
 
     @staticmethod
     def _collapse_exercise_dim(opt_ins, inner_keys):
-        for ov in opt_ins.values():
+        for ok, ov in opt_ins.items():
             for ik in inner_keys:
-                iv = ov[ik]
-                if isinstance(iv, list):
-                    for idx, tensor in enumerate(iv):
-                        # print("(Meta._collapse_exercise_dim)tensor:", tensor)
-                        tensor_shape = [-1 if a is None else a for a in tensor.get_shape().as_list()]
-                        iv[idx] = tf.reshape(tensor, shape=tensor_shape[1:])
+                if ik in ov:
+                    iv = ov[ik]
+                    if isinstance(iv, list):
+                        for idx, tensor in enumerate(iv):
+                            # print("(Meta._collapse_exercise_dim)tensor:", tensor)
+                            tensor_shape = [-1 if a is None else a for a in tensor.get_shape().as_list()]
+                            iv[idx] = tf.reshape(tensor, shape=tensor_shape[1:])
+                    else:
+                        tensor_shape = [-1 if a is None else a for a in iv.get_shape().as_list()]
+                        ov[ik] = tf.reshape(iv, shape=tensor_shape[1:])
                 else:
-                    tensor_shape = [-1 if a is None else a for a in iv.get_shape().as_list()]
-                    ov[ik] = tf.reshape(iv, shape=tensor_shape[1:])
+                    print("WARNING: %s misses %s (_collapse_exercise_dim)" % (ok, ik))
         return opt_ins
 
     @staticmethod
@@ -647,6 +658,10 @@ class Meta(object):
             for k, v in optimizer_ins.items():
                 v['o_pr'] = v['o']
                 v['sigma_pr'] = v['sigma']
+                if 'omega' in v:
+                    v['omega_pr'] = v['omega']
+                if 'beta' in v:
+                    v['beta_pr'] = v['beta']
         return optimizer_ins, []
 
     def _compose_mods(self, optimizer_outs):
@@ -784,6 +799,24 @@ class Meta(object):
         optimizer_outs_mods_are_applied = self._sub_mods(optimizer_outs_with_mods)
         return optimizer_outs_mods_are_applied
 
+    def _create_omega_mods(self, opt_outs):
+        with tf.device('/cpu:0'):
+            for ok, ov in opt_outs.items():
+                for ik, iv in ov.items():
+                    # if ik in ['omega_pr', 'beta_pr']:
+                    ov[ik] = tf.Print(
+                        iv,
+                        [iv],
+                        message="\n\n%s %s:\n" % (ok, ik)
+                    )
+        opt_outs = self._mv_tensors(opt_outs, ['omega_pr', 'beta_pr'], ['matrix_mods', 'bias_mods'])
+        return opt_outs
+
+    def _omega_modification(self, opt_outs):
+        opt_outs = self._create_omega_mods(opt_outs)
+        optimizer_outs_mods_are_applied = self._sub_mods(opt_outs)
+        return optimizer_outs_mods_are_applied
+
     def _compute_optimizer_gradients(self, loss, name_scope='compute_optimizer_gradients'):
         with tf.name_scope(name_scope):
             loss = tf.add(loss, self._additional_loss, name='loss_with_additional_loss')
@@ -891,8 +924,9 @@ class Meta(object):
                                     summarize_tensors = ['o', 's', 'sigma']
                                     if self._get_theta:
                                         summarize_tensors.append('theta')
-                                    if self._get_omega:
+                                    if self._get_omega_and_beta:
                                         summarize_tensors.append('omega')
+                                        summarize_tensors.append('beta')
                                     summaries.append(
                                         self._summarize_opt_flow(
                                             optimizer_ins,
@@ -905,8 +939,10 @@ class Meta(object):
                                     optimizer_ins = self._substitute_opt_ins(optimizer_ins, 'constant')
                                 optimizer_outs, tmp_states = self._optimizer_core(
                                     optimizer_ins, tmp_states, gpu_idx, permute=self._permute)
-                                if self._matrix_mod:
+                                if self._matrix_mod == 'phi_and_psi':
                                     optimizer_outs_mods_are_applied = self._phi_psi_matrix_modification(optimizer_outs)
+                                elif self._matrix_mod == 'omega':
+                                    optimizer_outs_mods_are_applied = self._omega_modification(optimizer_outs)
 
                                 new_pupil_trainable = self._filter_opt_flow_dict(
                                     optimizer_outs_mods_are_applied, ['matrix', 'bias'])
@@ -1130,8 +1166,9 @@ class Meta(object):
                 tensors_with_exercise_dims = ['o', 'sigma']
                 if self._get_theta:
                     tensors_with_exercise_dims.append('theta')
-                if self._get_omega:
+                if self._get_omega_and_beta:
                     tensors_with_exercise_dims.append('omega')
+                    tensors_with_exercise_dims.append('beta')
                 optimizer_ins = self._expand_exercise_dim(optimizer_ins, tensors_with_exercise_dims)
                 # for ok, ov in optimizer_ins.items():
                 #     for ik, iv in ov.items():
@@ -1183,8 +1220,10 @@ class Meta(object):
                 # print_optimizer_ins(mods)
 
                 # mods = self._sub_mods(mods)
-                if self._matrix_mod:
+                if self._matrix_mod == 'phi_and_psi':
                     mods = self._phi_psi_matrix_modification(optimizer_outs)
+                elif self._matrix_mod == 'omega':
+                    mods = self._omega_modification(optimizer_outs)
 
                 optimizer_save_states_ops = compose_save_list(
                     (optimizer_states, new_optimizer_states), name_scope='save_optimizer_states')

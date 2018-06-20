@@ -21,11 +21,16 @@ class Empty(Meta):
         return list()
 
     def _optimizer_core(self, optimizer_ins, states, gpu_idx, permute=False):
+        mul_dict = dict(
+            sigma=self._learning_rate
+        )
+        if self._get_omega_and_beta:
+            mul_dict['omega'] = self._learning_rate
+            mul_dict['beta'] = self._learning_rate
+
         self._multiply_by_factor(
             optimizer_ins,
-            dict(
-                sigma=self._learning_rate
-            )
+            mul_dict
         )
         return self._empty_core(optimizer_ins)
 
@@ -36,6 +41,7 @@ class Empty(Meta):
             additional_metrics=None,
             flags=None,
             get_theta=False,
+            get_omega_and_beta=False,
             matrix_mod='phi_psi',
     ):
         """
@@ -56,7 +62,7 @@ class Empty(Meta):
         self._additional_metrics = additional_metrics
         self._flags = flags
         self._get_theta = get_theta
-        self._get_omega = False
+        self._get_omega_and_beta = get_omega_and_beta
         self._matrix_mod = matrix_mod
         self._normalizing = None
         self._inp_gradient_clipping = None

@@ -54,6 +54,8 @@ env.build_pupil(
 env.build_optimizer(
     regime='inference',
     additional_metrics=add_metrics,
+    get_omega_and_beta=True,
+    matrix_mod='omega',
 )
 
 
