@@ -649,7 +649,7 @@ class Meta(object):
                 v['sigma_pr'] = v['sigma']
         return optimizer_ins, []
 
-    def _compose_mods(self, optimizer_outs, learning_rate=None):
+    def _compose_mods(self, optimizer_outs):
         mods = list()
         with tf.name_scope('pupil_mods'):
             for k, v in optimizer_outs.items():
@@ -778,6 +778,12 @@ class Meta(object):
                         v['bias'] = tf.subtract(v['bias'], v['bias_mods'], name='bias')
             return mods
 
+    def _phi_psi_matrix_modification(self, opt_outs):
+        opt_outs = self._compose_phi_and_psi(opt_outs)
+        optimizer_outs_with_mods = self._compose_mods(opt_outs)
+        optimizer_outs_mods_are_applied = self._sub_mods(optimizer_outs_with_mods)
+        return optimizer_outs_mods_are_applied
+
     def _compute_optimizer_gradients(self, loss, name_scope='compute_optimizer_gradients'):
         with tf.name_scope(name_scope):
             loss = tf.add(loss, self._additional_loss, name='loss_with_additional_loss')
@@ -899,9 +905,7 @@ class Meta(object):
                                     optimizer_ins = self._substitute_opt_ins(optimizer_ins, 'constant')
                                 optimizer_outs, tmp_states = self._optimizer_core(
                                     optimizer_ins, tmp_states, gpu_idx, permute=self._permute)
-                                optimizer_outs = self._compose_phi_and_psi(optimizer_outs)
-                                optimizer_outs_with_mods = self._compose_mods(optimizer_outs)
-                                optimizer_outs_mods_are_applied = self._sub_mods(optimizer_outs_with_mods)
+                                optimizer_outs_mods_are_applied = self._phi_psi_matrix_modification(optimizer_outs)
 
                                 new_pupil_trainable = self._filter_opt_flow_dict(
                                     optimizer_outs_mods_are_applied, ['matrix', 'bias'])
@@ -1121,7 +1125,13 @@ class Meta(object):
                 # print_optimizer_ins(optimizer_ins)
                 # opt = tf.train.GradientDescentOptimizer(1.)
                 # grads, vars = zip(*opt.compute_gradients(start_loss))
-                optimizer_ins = self._expand_exercise_dim(optimizer_ins, ['o', 'sigma'])
+
+                tensors_with_exercise_dims = ['o', 'sigma']
+                if self._get_theta:
+                    tensors_with_exercise_dims.append('theta')
+                if self._get_omega:
+                    tensors_with_exercise_dims.append('omega')
+                optimizer_ins = self._expand_exercise_dim(optimizer_ins, tensors_with_exercise_dims)
                 # for ok, ov in optimizer_ins.items():
                 #     for ik, iv in ov.items():
                 #         print(
@@ -1136,13 +1146,17 @@ class Meta(object):
                 #             "(Meta._inference_graph)after core optimizer_ins[%s][%s].shape:" % (ok, ik),
                 #             iv[0].get_shape().as_list() if isinstance(iv, list) else iv.get_shape().as_list()
                 #         )
-                optimizer_outs = self._collapse_exercise_dim(optimizer_outs, ['o_pr', 'sigma_pr'])
+                optimizer_outs = self._collapse_exercise_dim(
+                    optimizer_outs,
+                    [s + '_pr' for s in tensors_with_exercise_dims]
+                )
                 # print('\n(Meta._inference_graph)optimizer_outs:')
                 # print_optimizer_ins(optimizer_outs)
                 # optimizer_outs = self._backward_permute(optimizer_outs, ['o_pr'], ['sigma_pr'], collapse_1st_dim=True)
 
 
-                optimizer_outs = self._compose_phi_and_psi(optimizer_outs)
+                # optimizer_outs = self._compose_phi_and_psi(optimizer_outs)
+
                 # for var, gr in zip(vars, grads):
                 #     with tf.device('/cpu:0'):
                 #         optimizer_outs['lstm_layer_0']['psi'] = tf.Print(
@@ -1162,10 +1176,13 @@ class Meta(object):
                 #         else:
                 #             print(iv.get_shape().as_list())
 
-                mods = self._compose_mods(optimizer_outs, learning_rate=LEARNING_RATE_FOR_EMPTY_CORE)
+                # mods = self._compose_mods(optimizer_outs, learning_rate=LEARNING_RATE_FOR_EMPTY_CORE)
+
                 # print('\n(Meta._inference_graph)')
                 # print_optimizer_ins(mods)
-                mods = self._sub_mods(mods)
+
+                # mods = self._sub_mods(mods)
+                mods = self._phi_psi_matrix_modification(optimizer_outs)
 
                 optimizer_save_states_ops = compose_save_list(
                     (optimizer_states, new_optimizer_states), name_scope='save_optimizer_states')
