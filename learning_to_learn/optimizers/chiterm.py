@@ -98,6 +98,7 @@ class ChiTerm(Meta):
             get_theta=True,
             base_optimizer_type='sgd',
             chi_application='sum',
+            matrix_mod='phi_psi',
     ):
         """
         :param regime:
@@ -118,6 +119,7 @@ class ChiTerm(Meta):
         self._flags = flags
         self._get_theta = get_theta
         self._get_omega = False
+        self._matrix_mod = matrix_mod
         self._normalizing = None
         self._inp_gradient_clipping = None
 

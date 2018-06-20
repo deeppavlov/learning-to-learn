@@ -905,7 +905,8 @@ class Meta(object):
                                     optimizer_ins = self._substitute_opt_ins(optimizer_ins, 'constant')
                                 optimizer_outs, tmp_states = self._optimizer_core(
                                     optimizer_ins, tmp_states, gpu_idx, permute=self._permute)
-                                optimizer_outs_mods_are_applied = self._phi_psi_matrix_modification(optimizer_outs)
+                                if self._matrix_mod:
+                                    optimizer_outs_mods_are_applied = self._phi_psi_matrix_modification(optimizer_outs)
 
                                 new_pupil_trainable = self._filter_opt_flow_dict(
                                     optimizer_outs_mods_are_applied, ['matrix', 'bias'])
@@ -1182,7 +1183,8 @@ class Meta(object):
                 # print_optimizer_ins(mods)
 
                 # mods = self._sub_mods(mods)
-                mods = self._phi_psi_matrix_modification(optimizer_outs)
+                if self._matrix_mod:
+                    mods = self._phi_psi_matrix_modification(optimizer_outs)
 
                 optimizer_save_states_ops = compose_save_list(
                     (optimizer_states, new_optimizer_states), name_scope='save_optimizer_states')

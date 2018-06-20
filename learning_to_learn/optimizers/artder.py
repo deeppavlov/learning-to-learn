@@ -285,6 +285,7 @@ class ArtDer(Meta):
             # num_sel=1,
             base_optimizer_type='sgd',
             selection_application='mean',
+            matrix_mod='phi_psi',
     ):
         """
         :param regime:
@@ -316,6 +317,7 @@ class ArtDer(Meta):
 
         self._get_theta = False
         self._get_omega = False
+        self._matrix_mod = matrix_mod
         self._hooks = dict(
             train_with_meta_optimizer_op=None,
             reset_optimizer_inference_pupil_storage=None,

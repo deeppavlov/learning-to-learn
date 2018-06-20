@@ -548,6 +548,7 @@ class ResNet4Lstm(Meta):
             normalizing=None,
             get_theta=False,
             get_omega=False,
+            matrix_mod='phi_psi',
     ):
         """
         :param pupil:
@@ -612,6 +613,7 @@ class ResNet4Lstm(Meta):
         self._flags = flags
         self._get_theta = get_theta
         self._get_omega = get_omega
+        self._matrix_mod = matrix_mod
 
         self._normalizing = normalizing
 

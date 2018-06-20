@@ -36,6 +36,7 @@ class Empty(Meta):
             additional_metrics=None,
             flags=None,
             get_theta=False,
+            matrix_mod='phi_psi',
     ):
         """
         :param regime:
@@ -56,6 +57,7 @@ class Empty(Meta):
         self._flags = flags
         self._get_theta = get_theta
         self._get_omega = False
+        self._matrix_mod = matrix_mod
         self._normalizing = None
         self._inp_gradient_clipping = None
 

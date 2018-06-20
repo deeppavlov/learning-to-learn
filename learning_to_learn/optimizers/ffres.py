@@ -294,6 +294,7 @@ class FfResOpt(Meta):
             normalizing=None,
             get_theta=False,
             get_omega=False,
+            matrix_mod='phi_psi',
     ):
         if additional_metrics is None:
             additional_metrics = list()
@@ -329,6 +330,7 @@ class FfResOpt(Meta):
         self._flags = flags
         self._get_theta = get_theta
         self._get_omega = get_omega
+        self._matrix_mod = matrix_mod
 
         self._normalizing = normalizing
 
