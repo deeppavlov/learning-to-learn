@@ -93,7 +93,7 @@ the_only_pupil_restore_path = os.path.join(*(['..']*2 + ['cifar10_max_train', 'a
 NUM_EXERCISES = 1
 BATCH_SIZE = 32
 NUM_OPTIMIZER_UNROLLINGS = 3
-RESET_PERIOD = 10
+RESET_PERIOD = 33
 OPT_INF_STOP = NUM_OPTIMIZER_UNROLLINGS * RESET_PERIOD
 RESTORE_PUPIL_PATHS = [
     the_only_pupil_restore_path
