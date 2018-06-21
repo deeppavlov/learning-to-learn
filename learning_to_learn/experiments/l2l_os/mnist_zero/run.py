@@ -102,7 +102,7 @@ OPTIMIZER_PARAMETERS = dict(
     optimizer_for_opt_type='adam',
     additional_metrics=add_metrics,
     matrix_mod='phi_and_psi',
-    get_omega_and_beta=True,
+    get_omega_and_beta=False,
 )
 evaluation = dict(
     save_path=save_path,

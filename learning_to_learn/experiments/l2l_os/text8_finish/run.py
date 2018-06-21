@@ -83,7 +83,7 @@ PUPIL_RESTORE_PATHS = [
 ]
 OPTIMIZER_RANGE = NUM_OPTIMIZER_UNROLLINGS * RESET_PERIOD * NUM_UNROLLINGS
 AVERAGING_NUMBER = 3
-NUM_OPTIMIZER_TRAIN_STEPS = 1
+NUM_OPTIMIZER_TRAIN_STEPS = 1000
 LSTM_SIZE = dict(
     num_layers=1,
     num_nodes=[100],
@@ -104,7 +104,7 @@ OPTIMIZER_PARAMETERS = dict(
     optimizer_for_opt_type='adam',
     additional_metrics=add_metrics,
     matrix_mod='phi_and_psi',
-    get_omega_and_beta=True,
+    get_omega_and_beta=False,
 )
 evaluation = dict(
     save_path=save_path,
@@ -217,7 +217,7 @@ env.build_optimizer(
 )
 
 
-stop_specs = 2
+stop_specs = 20000
 
 learning_rate = dict(
     type='exponential_decay',
