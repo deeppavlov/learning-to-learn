@@ -162,6 +162,7 @@ class IndCoefNoAct(Meta):
         self._get_theta = get_theta
         self._get_omega_and_beta = get_omega_and_beta
         self._matrix_mod = matrix_mod
+        self._no_end = no_end
 
         self._normalizing = normalizing
 

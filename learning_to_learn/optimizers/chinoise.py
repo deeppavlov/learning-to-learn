@@ -181,6 +181,7 @@ class ChiNoise(Meta):
 
         self._base_optimizer_type = base_optimizer_type
         self._chi_application = chi_application
+        self._no_end = no_end
 
         self._learning_rate = tf.placeholder(tf.float32, name='learning_rate', shape=[])
         self._chi_contribution = tf.placeholder(tf.float32, name='chi_contribution', shape=[])

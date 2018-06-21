@@ -59,6 +59,7 @@ class Empty(Meta):
         self._matrix_mod = matrix_mod
         self._normalizing = None
         self._inp_gradient_clipping = None
+        self._no_end = no_end
 
         self._learning_rate = tf.placeholder(tf.float32, name='learning_rate', shape=[])
 

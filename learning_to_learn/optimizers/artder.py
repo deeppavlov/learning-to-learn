@@ -307,6 +307,8 @@ class ArtDer(Meta):
         self._sel_contribution = tf.placeholder(tf.float32, name='sel_contribution', shape=[])
         self._selection_size = tf.placeholder(tf.int32, name='selection_size', shape=[])
         self._num_sel = tf.placeholder(tf.int32, name='num_sel', shape=[])
+        self._no_end = no_end
+
 
         self._get_theta = False
         self._get_omega_and_beta = False
