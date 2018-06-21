@@ -428,7 +428,7 @@ class Environment(object):
                     additions_to_feed_dict=list(),
                     stop={'type': 'limit_steps', 'limit': 10000, 'name': 'stop'},
 
-                    pupil_restore_paths=None,
+                    pupil_restore_paths=[None],
                     num_exercises=10,
                     reset_period=None,
                     batch_gen_init_is_random=True,
@@ -1905,15 +1905,15 @@ class Environment(object):
         step = init_step
         # print("(Environment._train_optimizer)optimizer_inference:", optimizer_inference)
         if optimizer_inference['opt_inf_pupil_restore_paths'] is None:
-            opt_if_pupil_names = None
+            opt_inf_pupil_names = None
         else:
-            opt_if_pupil_names = nth_element_of_sequence_of_sequences(
+            opt_inf_pupil_names = nth_element_of_sequence_of_sequences(
                 optimizer_inference['opt_inf_pupil_restore_paths'],
                 0
             )
         self._handler.set_optimizer_train_schedule(
             schedule,
-            opt_inf_pupil_names=opt_if_pupil_names,
+            opt_inf_pupil_names=opt_inf_pupil_names,
             opt_inf_to_be_collected_while_training=optimizer_inference['opt_inf_to_be_collected_while_training'],
             opt_inf_train_tensor_schedule=optimizer_inference['opt_inf_train_tensor_schedule'],
             opt_inf_validation_tensor_schedule=optimizer_inference['opt_inf_validation_tensor_schedule']
