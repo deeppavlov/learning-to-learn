@@ -130,6 +130,6 @@ def log_and_sign(inp, p):
     less_second = np.exp(p) * inp
     greater = tf.stack([greater_first, greater_second], axis=-1)
     less = tf.stack([less_first, less_second], axis=-1)
-    mask = tf.expand_dims(tf.to_float(inp > edge), axis=-1)
+    mask = tf.expand_dims(tf.to_float(tf.abs(inp) > edge), axis=-1)
     res = mask * greater + (1. - mask) * less
     return res

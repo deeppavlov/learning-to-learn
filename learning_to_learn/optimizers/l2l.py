@@ -86,7 +86,7 @@ class L2L(Meta):
         else:
             input_dim = self._num_lstm_nodes[idx - 1] + self._num_lstm_nodes[idx]
         output_dim = 4 * self._num_lstm_nodes[idx]
-        stddev = self._optimizer_init_parameter * np.sqrt(1. / input_dim)
+        stddev = self._optimizer_init_parameter * np.sqrt(1. / (input_dim + output_dim))
         return input_dim, output_dim, stddev
 
     def _create_optimizer_trainable_vars(self):
