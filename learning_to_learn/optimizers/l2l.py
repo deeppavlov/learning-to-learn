@@ -278,7 +278,7 @@ class L2L(Meta):
         self._selected = selected
 
         self._regularization_rate = regularization_rate
-        self._inp_gradient_clipping = False
+        self._inp_gradient_clipping = None
         self._optimizer_init_parameter = optimizer_init_parameter
         self._regime = regime
         self._scale = scale
