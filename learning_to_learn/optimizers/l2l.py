@@ -206,7 +206,7 @@ class L2L(Meta):
             )
             inp = new_h
         with tf.name_scope('linear'):
-            linear_res = custom_matmul(inp, vars['linear'])
+            linear_res = self._scale * custom_matmul(inp, vars['linear'])
         res = self._reshape_back(linear_res, old_shape, stack)
         return res, new_state
 
@@ -248,6 +248,7 @@ class L2L(Meta):
             get_theta=False,
             get_omega_and_beta=True,
             matrix_mod='omega',
+            scale=0.01,
     ):
         if additional_metrics is None:
             additional_metrics = list()
@@ -279,6 +280,7 @@ class L2L(Meta):
         self._inp_gradient_clipping = False
         self._optimizer_init_parameter = optimizer_init_parameter
         self._regime = regime
+        self._scale = scale
 
         self._optimizer_for_opt_type = optimizer_for_opt_type
 
