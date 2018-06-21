@@ -153,7 +153,8 @@ class ChiNoise(Meta):
             get_theta=True,
             base_optimizer_type='sgd',
             chi_application='sum',
-            matrix_mod='phi_and_psi'
+            matrix_mod='phi_and_psi',
+            no_end=False,
     ):
         """
         :param regime:

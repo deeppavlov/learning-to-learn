@@ -99,7 +99,8 @@ class ChiTermNormed(Meta):
             get_theta=True,
             base_optimizer_type='sgd',
             chi_application='sum',
-            matrix_mod='phi_and_psi'
+            matrix_mod='phi_and_psi',
+            no_end=False,
     ):
         """
         :param regime:
@@ -125,6 +126,7 @@ class ChiTermNormed(Meta):
 
         self._base_optimizer_type = base_optimizer_type
         self._chi_application = chi_application
+        self._matrix_mod = matrix_mod
 
         self._learning_rate = tf.placeholder(tf.float32, name='learning_rate', shape=[])
         self._chi_contribution = tf.placeholder(tf.float32, name='chi_contribution', shape=[])

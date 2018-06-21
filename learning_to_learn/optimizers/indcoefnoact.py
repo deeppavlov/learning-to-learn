@@ -127,6 +127,7 @@ class IndCoefNoAct(Meta):
             get_theta=False,
             get_omega_and_beta=False,
             matrix_mod='phi_psi',
+            no_end=False,
     ):
         if additional_metrics is None:
             additional_metrics = list()

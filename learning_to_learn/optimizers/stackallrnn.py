@@ -188,6 +188,7 @@ class StackAllRnn(Meta):
             permute=False,
             get_theta=False,
             get_omega_and_beta=False,
+            no_end=False,
     ):
         if additional_metrics is None:
             additional_metrics = list()

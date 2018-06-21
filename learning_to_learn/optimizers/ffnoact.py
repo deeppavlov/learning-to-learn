@@ -235,7 +235,8 @@ class Ff(Meta):
             normalizing=None,
             get_theta=False,
             get_omega_and_beta=False,
-            matrix_mod='phi_and_psi'
+            matrix_mod='phi_and_psi',
+            no_end=False,
     ):
         if additional_metrics is None:
             additional_metrics = list()

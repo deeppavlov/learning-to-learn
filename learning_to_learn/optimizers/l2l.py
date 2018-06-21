@@ -249,6 +249,7 @@ class L2L(Meta):
             get_omega_and_beta=True,
             matrix_mod='omega',
             scale=0.01,
+            no_end=False,
     ):
         if additional_metrics is None:
             additional_metrics = list()
@@ -291,6 +292,7 @@ class L2L(Meta):
         self._flags = flags
         self._get_theta = get_theta
         self._get_omega_and_beta = get_omega_and_beta
+        self._no_end = no_end
 
         self._normalizing = None
         self._hooks = dict(

@@ -1008,22 +1008,30 @@ class Meta(object):
                                 new_pupil_trainable = self._filter_opt_flow_dict(
                                     optimizer_outs_mods_are_applied, ['matrix', 'bias'])
 
-                                end_loss, _, optimizer_grad_pupil_storage[gpu_idx], end_predictions, end_labels = \
-                                    self._pupil.loss_and_opt_ins(
-                                        optimizer_grad_inputs[gpu_idx][unr_idx],
-                                        optimizer_grad_labels[gpu_idx][unr_idx],
-                                        optimizer_grad_pupil_storage[gpu_idx], opt_ins=new_pupil_trainable,
-                                        name_scope='pupil_loss_after_pupil_modification'
-                                    )
+                                if self._no_end:
+                                    end_loss, optimizer_grad_pupil_storage[gpu_idx], end_predictions, end_labels = \
+                                        start_loss, pupil_grad_eval_pupil_storage[gpu_idx], start_predictions, \
+                                            start_labels
+                                else:
+                                    end_loss, _, optimizer_grad_pupil_storage[gpu_idx], end_predictions, end_labels = \
+                                        self._pupil.loss_and_opt_ins(
+                                            optimizer_grad_inputs[gpu_idx][unr_idx],
+                                            optimizer_grad_labels[gpu_idx][unr_idx],
+                                            optimizer_grad_pupil_storage[gpu_idx], opt_ins=new_pupil_trainable,
+                                            name_scope='pupil_loss_after_pupil_modification'
+                                        )
 
                                 start_additional_metrics = compute_metrics(
                                     self._additional_metrics, start_predictions,
                                     start_labels, start_loss, keep_first_dim=True)
-                                end_additional_metrics = compute_metrics(
-                                    self._additional_metrics, end_predictions,
-                                    end_labels, end_loss, keep_first_dim=True)
-                                # print("(Meta._train_graph)new_pupil_trainable:",
-                                #       new_pupil_trainable)
+                                if self._no_end:
+                                    end_additional_metrics = start_additional_metrics
+                                else:
+                                    end_additional_metrics = compute_metrics(
+                                        self._additional_metrics, end_predictions,
+                                        end_labels, end_loss, keep_first_dim=True)
+                                    # print("(Meta._train_graph)new_pupil_trainable:",
+                                    #       new_pupil_trainable)
 
                                 pupil_trainable_variables[gpu_idx] = new_pupil_trainable
                                 one_gpu_start_losses.append(start_loss)

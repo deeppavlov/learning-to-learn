@@ -277,7 +277,8 @@ class ArtDer(Meta):
             # num_sel=1,
             base_optimizer_type='sgd',
             selection_application='mean',
-            matrix_mod='phi_and_psi'
+            matrix_mod='phi_and_psi',
+            no_end=False,
     ):
         """
         :param regime:
