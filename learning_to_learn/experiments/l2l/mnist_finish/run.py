@@ -156,6 +156,7 @@ launch_kwargs = dict(
         data_dir=data_dir
     ),
     one_batch_gen=True,
+    # debug=0,
 )
 
 for conf in confs:

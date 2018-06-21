@@ -124,12 +124,14 @@ def compute_metrics(metrics, predictions=None, labels=None, loss=None, keep_firs
 
 def log_and_sign(inp, p):
     edge = np.exp(-p)
-    greater_first = tf.log(tf.abs(inp)) / p
+    mask1 = tf.to_float(tf.abs(inp) > edge)
+    mask = tf.expand_dims(mask1, axis=-1)
+    prep_for_log = mask1 * inp + (1. - mask1)
+    greater_first = tf.log(tf.abs(prep_for_log)) / p
     greater_second = tf.sign(inp)
     less_first = tf.fill(tf.shape(inp), -1.)
     less_second = np.exp(p) * inp
     greater = tf.stack([greater_first, greater_second], axis=-1)
     less = tf.stack([less_first, less_second], axis=-1)
-    mask = tf.expand_dims(tf.to_float(tf.abs(inp) > edge), axis=-1)
     res = mask * greater + (1. - mask) * less
     return res

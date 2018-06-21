@@ -249,7 +249,7 @@ class L2L(Meta):
             get_omega_and_beta=True,
             matrix_mod='omega',
             scale=0.01,
-            no_end=False,
+            no_end=True,
     ):
         if additional_metrics is None:
             additional_metrics = list()
