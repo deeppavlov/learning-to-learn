@@ -226,13 +226,17 @@ class MlpForMeta(Pupil):
                 learning_rate=self._autonomous_train_specific_placeholders['learning_rate'])
         elif self._optimizer == 'rmsprop':
             opt = tf.train.RMSPropOptimizer(
-                learning_rate=self._autonomous_train_specific_placeholders['learning_rate'])
+                learning_rate=self._autonomous_train_specific_placeholders['learning_rate'],
+                decay=self._decay,
+            )
         elif self._optimizer == 'adagrad':
             opt = tf.train.AdagradOptimizer(
                 learning_rate=self._autonomous_train_specific_placeholders['learning_rate'])
         elif self._optimizer == 'adadelta':
             opt = tf.train.AdadeltaOptimizer(
-                learning_rate=self._autonomous_train_specific_placeholders['learning_rate'])
+                learning_rate=1.,
+                rho=self._rho,
+            )
         elif self._optimizer == 'momentum':
             opt = tf.train.MomentumOptimizer(
                 learning_rate=self._autonomous_train_specific_placeholders['learning_rate'],
@@ -364,7 +368,9 @@ class MlpForMeta(Pupil):
             input_shape=None,
             num_classes=None,
             regime='autonomous_training',
-            optimizer='adam'
+            optimizer='adam',
+            rho=0.95,  # used for adadelta
+            decay=0.9,  # used for rmsprop
     ):
         if num_hidden_nodes is None:
             num_hidden_nodes = [1000, 1000]
@@ -380,6 +386,8 @@ class MlpForMeta(Pupil):
         self._num_classes = num_classes
         self._additional_metrics = additional_metrics
         self._optimizer = optimizer
+        self._rho = rho
+        self._decay = decay
 
         self._hooks = dict(
             inputs=None,

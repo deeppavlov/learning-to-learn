@@ -510,13 +510,17 @@ class Lstm(Pupil):
                 learning_rate=self._autonomous_train_specific_placeholders['learning_rate'])
         elif self._optimizer == 'rmsprop':
             opt = tf.train.RMSPropOptimizer(
-                learning_rate=self._autonomous_train_specific_placeholders['learning_rate'])
+                learning_rate=self._autonomous_train_specific_placeholders['learning_rate'],
+                decay=self._decay,
+            )
         elif self._optimizer == 'adagrad':
             opt = tf.train.AdagradOptimizer(
                 learning_rate=self._autonomous_train_specific_placeholders['learning_rate'])
         elif self._optimizer == 'adadelta':
             opt = tf.train.AdadeltaOptimizer(
-                learning_rate=self._autonomous_train_specific_placeholders['learning_rate'])
+                learning_rate=1.,
+                rho=self._rho,
+            )
         elif self._optimizer == 'momentum':
             opt = tf.train.MomentumOptimizer(
                 learning_rate=self._autonomous_train_specific_placeholders['learning_rate'],
@@ -884,7 +888,9 @@ class Lstm(Pupil):
             additional_metrics=None,
             regime='autonomous_training',
             going_to_limit_memory=False,
-            optimizer='adam'
+            optimizer='adam',
+            rho=0.95,  # used only for adadelta
+            decay=0.9,  # used for rmsprop
     ):
         """4 regimes are possible: autonomous_training, inference, training_with_meta_optimizer, optimizer_training"""
 
@@ -907,6 +913,8 @@ class Lstm(Pupil):
         self._regularization_rate = regularization_rate
         self._additional_metrics = additional_metrics
         self._optimizer = optimizer
+        self._rho = rho
+        self._decay = decay
 
         self._hooks = dict(
             inputs=None,
