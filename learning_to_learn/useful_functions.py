@@ -1587,6 +1587,13 @@ def compose_hp_confs(file_name, eval_dir_or_file, chop_last_experiment=False, mo
     return confs, num_exps
 
 
+def get_hp_names_from_conf_file(file_name):
+    with open(file_name, 'r') as f:
+        lines = f.read().split('\n')
+    hp_names = remove_empty_strings_from_list(lines[0].split())
+    return hp_names
+
+
 def make_initial_grid(file_name, eval_dir_or_file, chop_last_experiment=False, model='optimizer'):
     init_conf = OrderedDict()
     init_grid_values = list()
