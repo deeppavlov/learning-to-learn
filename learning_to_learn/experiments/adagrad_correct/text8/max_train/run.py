@@ -1,4 +1,4 @@
-ROOT_HEIGHT = 3
+ROOT_HEIGHT = 5
 import sys
 from pathlib import Path
 import tensorflow as tf
