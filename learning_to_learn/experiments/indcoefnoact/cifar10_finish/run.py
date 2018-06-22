@@ -15,7 +15,7 @@ from learning_to_learn.environment import Environment
 from learning_to_learn.pupils.mlp_for_meta import MlpForMeta as Mlp
 from learning_to_learn.image_batch_gens import CifarBatchGenerator
 from learning_to_learn.useful_functions import compose_hp_confs, get_num_exps_and_res_files, \
-    get_optimizer_evaluation_results, get_best, print_hps
+    get_optimizer_evaluation_results, get_best, print_hps, get_hp_names_from_conf_file
 
 from learning_to_learn.optimizers.indcoefnoact import IndCoefNoAct
 import os
@@ -174,7 +174,7 @@ for conf in confs:
     )
 
 
-hp_names = list(confs[0].keys())
+hp_names = get_hp_names_from_conf_file(parameter_set_file_name)
 for_plotting = get_optimizer_evaluation_results(save_path, hp_names, AVERAGING_NUMBER)
 
 best = get_best(for_plotting, 'optimizer')
@@ -229,6 +229,12 @@ env.train_optimizer(
     opt_inf_additions_to_feed_dict=opt_inf_add_feed,
     opt_inf_validation_datasets=[['validation', 'valid']],
     opt_inf_train_datasets=[['train', 'train']],
+    train_batch_kwargs=dict(
+        valid_size=VALID_SIZE
+    ),
+    valid_batch_kwargs=dict(
+        valid_size=VALID_SIZE
+    ),
     validation_additions_to_feed_dict=valid_add_feed,
     batch_size=BATCH_SIZE,
     batch_gen_init_is_random=True,
