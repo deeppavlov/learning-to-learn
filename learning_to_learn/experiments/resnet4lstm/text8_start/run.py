@@ -185,7 +185,7 @@ for_plotting = get_optimizer_evaluation_results(save_path, hp_names,  AVERAGING_
 
 best = get_best(for_plotting, 'optimizer')
 
-metric_res = best['adam_prep']['loss']
+metric_res = best['COLD']['loss']
 
 best_on_valid = metric_res['validation']
 print(' ' * 2 + 'loss' + ':', best_on_valid[1])

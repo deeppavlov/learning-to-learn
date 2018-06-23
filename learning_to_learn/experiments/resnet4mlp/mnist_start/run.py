@@ -61,11 +61,11 @@ RESET_PERIOD = 10
 OPT_INF_RESTORE_PUPIL_PATHS = [
     ('COLD', None)
 ]
-# OPTIMIZER_RANGE = NUM_OPTIMIZER_UNROLLINGS * RESET_PERIOD
-OPTIMIZER_RANGE = 1
+OPTIMIZER_RANGE = NUM_OPTIMIZER_UNROLLINGS * RESET_PERIOD
+# OPTIMIZER_RANGE = 1
 AVERAGING_NUMBER = 3
-NUM_OPTIMIZER_TRAIN_STEPS = 1
-OPTIMIZER_INFERENCE_LENGTH = 1
+NUM_OPTIMIZER_TRAIN_STEPS = 1000
+OPTIMIZER_INFERENCE_LENGTH = 500
 MLP_SIZE=dict(
     num_layers=2,
     num_hidden_nodes=[1000],
@@ -197,7 +197,7 @@ env.build_optimizer(
     pupil_learning_rate=best_conf['pupil_learning_rate'],
 )
 
-stop_specs = 2
+stop_specs = 20000
 
 learning_rate = dict(
     type='exponential_decay',
