@@ -227,9 +227,10 @@ class Controller(object):
 
     def _while_progress_no_changing_parameter(self):
         specs = self._specifications
+        print("(Controller._while_progress_no_changing_parameter)specs['num_points_since_best_res']:",
+              specs['num_points_since_best_res'])
         if specs['comp_func'](specs['line']):
             specs['num_points_since_best_res'] = 0
-            specs['cur_made_prog'] = True
             ret = True
         else:
             if specs['num_points_since_best_res'] > specs['max_no_progress_points']:
