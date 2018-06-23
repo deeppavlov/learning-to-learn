@@ -86,7 +86,7 @@ env.build_pupil(
 
 stop_specs = dict(
     type='while_progress_no_changing_parameter',
-    max_no_progress_points=20,
+    max_no_progress_points=40,
     path_to_target_metric_storage=('valid', 'loss')
 )
 
