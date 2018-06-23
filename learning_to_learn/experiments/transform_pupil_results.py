@@ -32,7 +32,8 @@ parser.add_argument(
 parser.add_argument(
     '-ed',
     "--new_eval_dir",
-    help='new_eval_dir name. Default is eval_fix'
+    help='new_eval_dir name. Default is eval_fix',
+    default='eval_fix',
 )
 
 parser.add_argument(
