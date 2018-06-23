@@ -17,3 +17,4 @@ subword_nmt/**
 **/hp_search/*/**
 **/hp_search_short/*/**
 **/*checkpoint*
+**/plots/
