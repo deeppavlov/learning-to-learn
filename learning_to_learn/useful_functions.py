@@ -1637,7 +1637,7 @@ def make_initial_grid(file_name, eval_dir_or_file, chop_last_experiment=False, m
                 print("(useful_functions.make_initial_grid)init_grid_values:", init_grid_values)
                 print("(useful_functions.make_initial_grid)p_idx:", p_idx)
                 print("(useful_functions.make_initial_grid)tested_comb:", tested_comb)
-                raise
+                print("WARNING: UNKNOWN POINT")
         exp_counter_grid[tuple(indices)] += 1.
 
     # print("(useful_functions.make_initial_grid)exp_counter_grid:", exp_counter_grid)
