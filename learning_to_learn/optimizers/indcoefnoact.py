@@ -258,3 +258,12 @@ class IndCoefNoAct(Meta):
 
     def get_default_hooks(self):
         return construct_dict_without_none_entries(self._hooks)
+
+    def create_saver(self):
+        # print("(Lstm.create_saver)var_dict:", var_dict)
+        with tf.device('/cpu:0'):
+            saved_vars = dict()
+            saved_vars['coefs'] = self._opt_trainable[0]
+            saved_vars['bias'] = self._opt_trainable[1]
+            saver = tf.train.Saver(saved_vars, max_to_keep=None)
+        return saver

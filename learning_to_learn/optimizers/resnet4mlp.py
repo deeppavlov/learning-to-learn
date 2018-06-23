@@ -94,7 +94,7 @@ class ResNet4Mlp(Meta):
             in_stddev = self._optimizer_init_parameter / (in_ndims + res_size)**.5
             with tf.variable_scope('in_core'):
                 matrices.append(
-                    0*tf.get_variable(
+                    tf.get_variable(
                         'matrix',
                         shape=[in_ndims, res_size],
                         initializer=tf.truncated_normal_initializer(stddev=in_stddev),
@@ -103,7 +103,7 @@ class ResNet4Mlp(Meta):
                     )
                 )
                 biases.append(
-                    0*tf.get_variable(
+                    tf.get_variable(
                         'bias',
                         shape=[res_size],
                         initializer=tf.zeros_initializer(),
@@ -112,7 +112,7 @@ class ResNet4Mlp(Meta):
                 )
             with tf.variable_scope('out_core'):
                 matrices.append(
-                0*tf.get_variable(
+                tf.get_variable(
                         'matrix',
                         # shape=[res_size, out_ndims],
                         # initializer=tf.truncated_normal_initializer(stddev=in_stddev)
@@ -122,7 +122,7 @@ class ResNet4Mlp(Meta):
                     )
                 )
                 biases.append(
-                    0*tf.get_variable(
+                    tf.get_variable(
                         'bias',
                         shape=[out_ndims],
                         # initializer=tf.zeros_initializer(),
@@ -582,5 +582,23 @@ class ResNet4Mlp(Meta):
             self._hooks['reset_optimizer_inference_state'] = self._reset_optimizer_states(
                 'inference_optimizer_states', 0)
 
+        self._hooks['meta_optimizer_saver'] = self.create_saver()
+
     def get_default_hooks(self):
         return construct_dict_without_none_entries(self._hooks)
+
+    def create_saver(self):
+        # print("(Lstm.create_saver)var_dict:", var_dict)
+        with tf.device('/cpu:0'):
+            saved_vars = dict()
+            print(self._opt_trainable)
+            for res_idx, res_layer_vars in enumerate(self._opt_trainable['res_layers']):
+                for pupil_layer, pupil_layer_core in res_layer_vars.items():
+                    for idx, (m, b) in enumerate(zip(pupil_layer_core[0], pupil_layer_core[1])):
+                        saved_vars['res_layer_%s_core_%s_m_%s' % (res_idx, pupil_layer, idx)] = m
+                        saved_vars['res_layer_%s_core_%s_b_%s' % (res_idx, pupil_layer, idx)] = b
+            saved_vars['lstm_matrix'] = self._opt_trainable['lstm_matrix']
+            saved_vars['lstm_bias'] = self._opt_trainable['lstm_bias']
+            print(saved_vars)
+            saver = tf.train.Saver(saved_vars, max_to_keep=None)
+        return saver
