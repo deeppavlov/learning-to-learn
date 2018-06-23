@@ -233,8 +233,8 @@ env.train_optimizer(
     batch_size=BATCH_SIZE,
     batch_gen_init_is_random=True,
     learning_rate=learning_rate,
-    results_collect_interval=100,
-    opt_inf_results_collect_interval=1,
+    results_collect_interval=2000,
+    opt_inf_results_collect_interval=10,
     permute=False,
     summary=True,
     add_graph_to_summary=True,
@@ -273,7 +273,7 @@ env.train(
     valid_batch_kwargs=dict(
         data_dir=data_dir
     ),
-    results_collect_interval=10,
+    results_collect_interval=1,
     additions_to_feed_dict=opt_inf_add_feed,
     validation_additions_to_feed_dict=valid_add_feed,
     no_validation=False,
