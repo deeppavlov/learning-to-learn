@@ -2253,13 +2253,16 @@ def check_in_ranges(x, ranges):
 
 
 def select_by_x(line_data, x_select):
-    selected_x, selected_y, selected_stddev = list(), list(), list()
-    for x, y, stddev in zip(*line_data):
-        if check_in_ranges(x, x_select):
-            selected_x.append(x)
-            selected_y.append(y)
-            selected_stddev.append(stddev)
-    return [selected_x, selected_y, selected_stddev]
+    if x_select is None:
+        return line_data
+    else:
+        selected_x, selected_y, selected_stddev = list(), list(), list()
+        for x, y, stddev in zip(*line_data):
+            if check_in_ranges(x, x_select):
+                selected_x.append(x)
+                selected_y.append(y)
+                selected_stddev.append(stddev)
+        return [selected_x, selected_y, selected_stddev]
 
 
 def select_for_plot(data, select):
@@ -2789,5 +2792,58 @@ def perform_transformation(old_file, new_eval_dir, old_names, new_names, types, 
                     transforms[idx](convert(v, t))
                 )
             f.write(tmpl % tuple(new_values) + '\n')
+
+
+def metric_word_index(words):
+    indices = list()
+    for idx, w in enumerate(words):
+        if w in METRICS:
+            indices.append(idx)
+    return indices[-1]
+
+
+def parse_line_file_name(file_name):
+    words = file_name.split('_')
+    words[-1] = words[-1][:-4]
+    last_metric_word_idx = metric_word_index(words)
+    metric_name = '_'.join(words[:last_metric_word_idx+1])
+    dataset_name = '_'.join(words[last_metric_word_idx+1:])
+    return metric_name, dataset_name
+
+
+def parse_1_line_dir(dir):
+    contents = os.listdir(dir)
+    res = dict()
+    for file_name in contents:
+        metric, dataset_name = parse_line_file_name(file_name)
+        if metric not in res:
+            res[metric] = {
+                dataset_name: os.path.join(dir, file_name)
+            }
+        else:
+            res[metric][dataset_name] = os.path.join(dir, file_name)
+    return res
+
+
+def keys_from_list_in_dict(dictionary, keys):
+    res = list()
+    for key in keys:
+        if key in dictionary:
+            res.append(key)
+    return res
+
+
+def extract_line_from_file(file_name):
+    with open(file_name, 'r') as f:
+        lines = remove_empty_strings_from_list(f.read().split('\n'))
+    num_entries = len(lines[0].split())
+    data = [list() for _ in range(num_entries)]
+    for line in lines:
+        values = [float(v) for v in line.split()]
+        for v, l in zip(values, data):
+            l.append(v)
+    if num_entries == 2:
+        data.append([None] * len(data[0]))
+    return data
 
 
