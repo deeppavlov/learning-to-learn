@@ -256,6 +256,8 @@ class IndCoefNoAct(Meta):
             self._inference_graph()
             self._hooks['reset_optimizer_inference_state'] = self._empty_op
 
+        self._hooks['meta_optimizer_saver'] = self.create_saver()
+
     def get_default_hooks(self):
         return construct_dict_without_none_entries(self._hooks)
 
