@@ -44,6 +44,10 @@ valid_add_feed = [
     {'placeholder': 'dropout', 'value': 1.}
 ]
 
+add_build = dict()
+if 'decay' in hps:
+    add_build['decay'] = hps['decay']
+
 add_metrics = ['bpc', 'perplexity', 'accuracy']
 VALID_SIZE = 1000
 
@@ -56,7 +60,8 @@ env.build_pupil(
     num_classes=10,
     init_parameter=hps['init_parameter'],
     additional_metrics=add_metrics,
-    optimizer=opt
+    optimizer=opt,
+    **add_build,
 )
 
 print('building is finished')
