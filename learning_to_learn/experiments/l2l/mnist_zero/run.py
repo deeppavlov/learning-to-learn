@@ -217,7 +217,7 @@ env.build_optimizer(
     optimizer_init_parameter=best_conf['optimizer_init_parameter'],
 )
 
-stop_specs = 200  #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+stop_specs = 20000  #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 learning_rate = dict(
     type='exponential_decay',
@@ -270,7 +270,7 @@ env.train(
     checkpoint_steps=None,
     result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
     printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
-    stop=OPTIMIZER_RANGE,
+    stop=OPTIMIZER_TEST_RANGE,
     # stop=4000,
     train_dataset=dict(
         train='train'
