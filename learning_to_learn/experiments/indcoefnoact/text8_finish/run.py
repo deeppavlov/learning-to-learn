@@ -14,7 +14,7 @@ except ValueError: # Already removed
 from learning_to_learn.environment import Environment
 from learning_to_learn.pupils.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
 from learning_to_learn.useful_functions import create_vocabulary, compose_hp_confs, get_num_exps_and_res_files, \
-    get_optimizer_evaluation_results, get_best, print_hps
+    get_optimizer_evaluation_results, get_best, print_hps, get_hp_names_from_conf_file
 
 from learning_to_learn.optimizers.indcoefnoact import IndCoefNoAct
 import os
@@ -187,7 +187,7 @@ for conf in confs:
     )
 
 
-hp_names = list(confs[0].keys())
+hp_names = get_hp_names_from_conf_file(parameter_set_file_name)
 for_plotting = get_optimizer_evaluation_results(save_path, hp_names,  AVERAGING_NUMBER)
 
 best = get_best(for_plotting, 'optimizer')
