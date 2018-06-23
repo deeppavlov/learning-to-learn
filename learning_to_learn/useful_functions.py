@@ -2746,3 +2746,48 @@ def stats_string_for_all_models(model_stats, indent):
     return string[:-1]
 
 
+def get_transform_func(tr):
+    if tr == 'identity':
+        return lambda x: x
+    elif tr == '1_minus_x':
+        return lambda x: 1. - x
+    else:
+        return None
+
+
+def perform_transformation(old_file, new_eval_dir, old_names, new_names, types, transformations):
+    path = os.path.split(old_file)
+    new_file = os.path.join(os.path.split(path[0])[0], new_eval_dir, path[-1])
+    create_path(new_file, file_name_is_in_path=True)
+    with open(old_file, 'r') as f:
+        lines = remove_empty_strings_from_list((f.read().split('\n')))
+        header_line = lines[0]
+        res_lines = lines[1:]
+    metrics, names = parse_header_line(header_line)
+    names = metrics + names
+    transforms = list()
+    for_header = list()
+    for n in names:
+        if n in old_names:
+            idx = old_names.index(n)
+            for_header.append(new_names[idx])
+            transforms.append(get_transform_func(transformations[idx]))
+        else:
+            for_header.append(n)
+            transforms.append(get_transform_func('identity'))
+    new_header_line = ' '.join(for_header)
+    num_params = len(names)
+    tmpl = '%s ' * (num_params - 1) + '%s'
+    if types is None:
+        types = ['float'] * num_params
+    with open(new_file, 'w') as f:
+        f.write(new_header_line + '\n')
+        for l in res_lines:
+            new_values = list()
+            for idx, (v, t) in enumerate(zip(l.split(), types)):
+                new_values.append(
+                    transforms[idx](convert(v, t))
+                )
+            f.write(tmpl % tuple(new_values) + '\n')
+
+

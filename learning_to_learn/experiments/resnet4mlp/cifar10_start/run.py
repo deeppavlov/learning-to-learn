@@ -58,14 +58,14 @@ NUM_EXERCISES = 10
 BATCH_SIZE = 32
 NUM_OPTIMIZER_UNROLLINGS = 5
 RESET_PERIOD = 20
-OPT_INF_STOP = RESET_PERIOD * NUM_OPTIMIZER_UNROLLINGS
 OPT_INF_RESTORE_PUPIL_PATHS = [
     ('COLD', None)
 ]
-OPTIMIZER_RANGE = NUM_OPTIMIZER_UNROLLINGS * RESET_PERIOD
+OPTIMIZER_RANGE = 1
+# OPTIMIZER_RANGE = NUM_OPTIMIZER_UNROLLINGS * RESET_PERIOD
 OPTIMIZER_INFERENCE_LENGTH = 1
 AVERAGING_NUMBER = 3
-NUM_OPTIMIZER_TRAIN_STEPS = 1000
+NUM_OPTIMIZER_TRAIN_STEPS = 1
 MLP_SIZE = dict(
     num_layers=2,
     num_hidden_nodes=[1000],
@@ -121,7 +121,7 @@ tf.set_random_seed(1)
 evaluation = dict(
     save_path=save_path,
     opt_inf_is_performed=True,
-    opt_inf_stop=OPT_INF_STOP,
+    opt_inf_stop=OPTIMIZER_RANGE,
     opt_inf_pupil_restore_paths=OPT_INF_RESTORE_PUPIL_PATHS,
     opt_inf_additions_to_feed_dict=opt_inf_add_feed,
     opt_inf_validation_datasets=[['validation', 'valid']],
@@ -190,8 +190,6 @@ for conf in confs:
         ),
     )
 
-
-    tf.set_random_seed(1)
     _, biggest_idx, _ = get_num_exps_and_res_files(save_path)
     if biggest_idx is None:
         initial_experiment_counter_value = 0
@@ -210,7 +208,7 @@ for conf in confs:
 
 
 hp_names = list(confs[0].keys())
-for_plotting = get_optimizer_evaluation_results(save_path, hp_names, AVERAGING_NUMBER)
+for_plotting = get_optimizer_evaluation_results(save_path, hp_names,  AVERAGING_NUMBER)
 
 best = get_best(for_plotting, 'optimizer')
 
@@ -234,7 +232,7 @@ env.build_optimizer(
     pupil_learning_rate=best_conf['pupil_learning_rate'],
 )
 
-stop_specs = 20000         #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+stop_specs = 2        #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 learning_rate = dict(
     type='exponential_decay',
@@ -254,7 +252,7 @@ env.train_optimizer(
     stop=stop_specs,
     train_datasets=[('train', 'train')],
     opt_inf_is_performed=True,
-    opt_inf_stop=OPT_INF_STOP,
+    opt_inf_stop=OPTIMIZER_RANGE,
     opt_inf_pupil_restore_paths=OPT_INF_RESTORE_PUPIL_PATHS,
     opt_inf_additions_to_feed_dict=opt_inf_add_feed,
     opt_inf_validation_datasets=[['validation', 'valid']],

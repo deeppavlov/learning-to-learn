@@ -61,9 +61,8 @@ env.build_pupil(
 
 print('building is finished')
 stop_specs = dict(
-    type='while_progress',
+    type='while_progress_no_changing_parameter',
     max_no_progress_points=20,
-    changing_parameter_name='learning_rate',
     path_to_target_metric_storage=('valid', 'loss')
 )
 

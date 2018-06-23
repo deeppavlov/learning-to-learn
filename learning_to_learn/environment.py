@@ -96,6 +96,11 @@ class Controller(object):
             self._specifications['prev_made_prog'] = True
             self._init_ops_for_adaptive_controller()
             self._specifications['current_value'] = self._specifications['changing_parameter_controller'].get()
+        elif self._specifications['type'] == 'while_progress_no_changing_parameter':
+            self.get = self._while_progress_no_changing_parameter
+            self._specifications = dict(self._specifications)
+            self._specifications['num_points_since_best_res'] = 0
+            self._init_ops_for_adaptive_controller()
             
     def _init_ops_for_adaptive_controller(self):
         if 'direction' not in self._specifications:
@@ -205,6 +210,7 @@ class Controller(object):
                                 specs['max_no_progress_points']:
                     return False
                 else:
+                    specs['num_points_since_best_res'] += 1
                     return True
         else:
             if not specs['cur_made_prog'] and not specs['prev_made_prog']:
@@ -215,6 +221,20 @@ class Controller(object):
                 specs['num_points_since_best_res'] = 0
                 specs['current_value'] = value
                 return True
+
+    def _while_progress_no_changing_parameter(self):
+        specs = self._specifications
+        if specs['comp_func'](specs['line']):
+            specs['num_points_since_best_res'] = 0
+            specs['cur_made_prog'] = True
+            return True
+        else:
+            if specs['num_points_since_best_res'] > specs['max_no_progress_points']:
+                return False
+            else:
+                specs['num_points_since_best_res'] += 1
+                return True
+
 
     @staticmethod
     def _always_false():

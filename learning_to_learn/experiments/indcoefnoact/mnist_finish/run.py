@@ -175,7 +175,7 @@ for conf in confs:
 
 
 hp_names = get_hp_names_from_conf_file(parameter_set_file_name)
-for_plotting = get_optimizer_evaluation_results(save_path, hp_names, AVERAGING_NUMBER)
+for_plotting = get_optimizer_evaluation_results(save_path, hp_names,  AVERAGING_NUMBER)
 
 best = get_best(for_plotting, 'optimizer')
 

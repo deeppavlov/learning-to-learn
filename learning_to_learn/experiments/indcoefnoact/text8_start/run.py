@@ -69,14 +69,14 @@ BATCH_SIZE = 32
 NUM_UNROLLINGS = 10
 NUM_OPTIMIZER_UNROLLINGS = 10
 RESET_PERIOD = 1
-OPT_INF_STOP = 10
+OPT_INF_STOP = NUM_OPTIMIZER_UNROLLINGS * RESET_PERIOD
 OPT_INF_RESTORE_PUPIL_PATHS = [
     ('COLD', None)
 ]
 OPTIMIZER_RANGE = NUM_OPTIMIZER_UNROLLINGS * RESET_PERIOD * NUM_UNROLLINGS
 OPTIMIZER_INFERENCE_LENGTH = 1
 AVERAGING_NUMBER = 3
-NUM_OPTIMIZER_TRAIN_STEPS = 1000
+NUM_OPTIMIZER_TRAIN_STEPS = 1
 LSTM_SIZE = dict(
     num_layers=1,
     num_nodes=[100],
@@ -162,8 +162,6 @@ for conf in confs:
         )
     )
 
-
-    tf.set_random_seed(1)
     _, biggest_idx, _ = get_num_exps_and_res_files(save_path)
     if biggest_idx is None:
         initial_experiment_counter_value = 0
@@ -182,7 +180,7 @@ for conf in confs:
 
 
 hp_names = list(confs[0].keys())
-for_plotting = get_optimizer_evaluation_results(save_path, hp_names, AVERAGING_NUMBER)
+for_plotting = get_optimizer_evaluation_results(save_path, hp_names,  AVERAGING_NUMBER)
 
 best = get_best(for_plotting, 'optimizer')
 
