@@ -115,7 +115,7 @@ launch_kwargs = dict(
 for conf in confs:
     build_hyperparameters = dict(
         init_parameter=conf['init_parameter'],
-        decay=conf['decay'],
+        decay=[1. - v for v in conf['1_minus_decay']],
     )
     # other_hyperparameters={'dropout': [.3, .5, .7, .8, .9, .95]},
     other_hyperparameters = dict(
