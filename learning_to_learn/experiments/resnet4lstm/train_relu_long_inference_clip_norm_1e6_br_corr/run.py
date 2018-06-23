@@ -1,3 +1,4 @@
+import tensorflow as tf
 ROOT_HEIGHT = 4
 import sys
 from pathlib import Path
@@ -40,7 +41,7 @@ train_text = text[valid_size:]
 vocabulary = create_vocabulary(text)
 vocabulary_size = len(vocabulary)
 print(vocabulary_size)
-
+tf.set_random_seed(1)
 env = Environment(
     pupil_class=Lstm,
     meta_optimizer_class=ResNet4Lstm,
