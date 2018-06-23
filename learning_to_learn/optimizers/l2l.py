@@ -396,6 +396,6 @@ class L2L(Meta):
                     for idx, (m, b) in enumerate(zip(iv['lstm_matrices'], iv['lstm_biases'])):
                         saved_vars['%s/%s/lstm_matrix_%s' % (ok, ik, idx)] = m
                         saved_vars['%s/%s/lstm_bias_%s' % (ok, ik, idx)] = b
-                    saved_vars['%s/%s/linear'] = iv['linear']
+                    saved_vars['%s/%s/linear' % (ok, ik)] = iv['linear']
             saver = tf.train.Saver(saved_vars, max_to_keep=None)
         return saver

@@ -86,7 +86,6 @@ class Controller(object):
             self._init_ops_for_adaptive_controller()
         elif self._specifications['type'] == 'fire_at_best':
             self.get = self._fire_at_best
-            self._specifications['last_fire_line_length'] = -1
             self._init_ops_for_adaptive_controller()
         elif self._specifications['type'] == 'while_progress':
             self.get = self._while_progress
@@ -114,6 +113,7 @@ class Controller(object):
             self._storage,
             self._specifications['path_to_target_metric_storage']
         )
+        self._specifications['last_fire_line_length'] = -1
 
     @staticmethod
     def _comp_func_gen(comp):
@@ -203,15 +203,16 @@ class Controller(object):
             if specs['comp_func'](specs['line']):
                 specs['num_points_since_best_res'] = 0
                 specs['cur_made_prog'] = True
-                return True
+                ret = True
             else:
                 if not specs['prev_made_prog'] and \
                                 specs['num_points_since_best_res'] > \
                                 specs['max_no_progress_points']:
-                    return False
+                    ret = False
                 else:
-                    specs['num_points_since_best_res'] += 1
-                    return True
+                    if specs['last_fire_line_length'] < len(specs['line']):
+                        specs['num_points_since_best_res'] += 1
+                    ret = True
         else:
             if not specs['cur_made_prog'] and not specs['prev_made_prog']:
                 return False
@@ -220,20 +221,25 @@ class Controller(object):
                 specs['cur_made_prog'] = False
                 specs['num_points_since_best_res'] = 0
                 specs['current_value'] = value
-                return True
+                ret = True
+        specs['last_fire_line_length'] = len(specs['line'])
+        return ret
 
     def _while_progress_no_changing_parameter(self):
         specs = self._specifications
         if specs['comp_func'](specs['line']):
             specs['num_points_since_best_res'] = 0
             specs['cur_made_prog'] = True
-            return True
+            ret = True
         else:
             if specs['num_points_since_best_res'] > specs['max_no_progress_points']:
-                return False
+                ret = False
             else:
-                specs['num_points_since_best_res'] += 1
-                return True
+                if specs['last_fire_line_length'] < len(specs['line']):
+                    specs['num_points_since_best_res'] += 1
+                ret = True
+        specs['last_fire_line_length'] = len(specs['line'])
+        return ret
 
 
     @staticmethod
@@ -381,7 +387,7 @@ class Environment(object):
             start_specs=dict(
                 restore_path=None,
                 with_meta_optimizer=False,
-                meta_optimizer_restore_path=None,
+                restore_optimizer_path=None,
                 save_path=None,
                 result_types=self.put_result_types_in_correct_order(
                     ['loss', 'perplexity', 'accuracy']),
@@ -727,7 +733,7 @@ class Environment(object):
 
     def _create_checkpoint(self, step, checkpoints_path, model_type='pupil'):
         path = checkpoints_path + '/' + str(step)
-        print('\nCreating checkpoint at %s' % path)
+        print('\nCreating %s checkpoint at %s' % (model_type, path))
         if model_type == 'pupil':
             self._hooks['saver'].save(self._session, path)
         elif model_type == 'meta_optimizer':
@@ -1512,7 +1518,7 @@ class Environment(object):
         self._session.run(tf.global_variables_initializer())
         self._restore_pupil(start_specs['restore_path'])
         if start_specs['with_meta_optimizer']:
-            self._restore_meta_optimizer(start_specs['meta_optimizer_restore_path'])
+            self._restore_meta_optimizer(start_specs['restore_optimizer_path'])
             processing_type = 'train_with_meta'
         else:
             processing_type = 'train'
@@ -1629,7 +1635,7 @@ class Environment(object):
                 init_step=init_step
             )
         if checkpoints_path is not None:
-            self._create_checkpoint('final', checkpoints_path)
+            self._create_checkpoint('final', checkpoints_path, model_type='optimizer')
         self._handler.log_finish_time()
         self._handler.close()
 
@@ -2038,7 +2044,7 @@ class Environment(object):
                 self._session.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
 
             if it_is_time_to_create_checkpoint.get():
-                self._create_checkpoint(step, checkpoints_path)
+                self._create_checkpoint(step, checkpoints_path, model_type='optimizer')
 
             feed_dict = self._fill_train_meta_optimizer_feed_dict_with_inputs_and_labels(
                 feed_dict, pupil_grad_eval_batch_gens, optimizer_grad_batch_gens, train_specs['share_train_data'])

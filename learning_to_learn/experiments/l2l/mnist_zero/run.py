@@ -15,7 +15,7 @@ from learning_to_learn.environment import Environment
 from learning_to_learn.pupils.mlp_for_meta import MlpForMeta as Mlp
 from learning_to_learn.image_batch_gens import MnistBatchGenerator
 from learning_to_learn.useful_functions import compose_hp_confs, get_num_exps_and_res_files, \
-    get_optimizer_evaluation_results, get_best, print_hps
+    get_optimizer_evaluation_results, get_best, print_hps, get_hp_names_from_conf_file
 
 from learning_to_learn.optimizers.l2l import L2L
 import os
@@ -193,10 +193,11 @@ for conf in confs:
     )
 
 
-hp_names = list(confs[0].keys())
+hp_names = get_hp_names_from_conf_file(parameter_set_file_name)
 for_plotting = get_optimizer_evaluation_results(save_path, hp_names,  AVERAGING_NUMBER)
 
 best = get_best(for_plotting, 'optimizer')
+print(best)
 
 metric_res = best[OPT_INF_NAME]['loss']
 
@@ -216,7 +217,7 @@ env.build_optimizer(
     optimizer_init_parameter=best_conf['optimizer_init_parameter'],
 )
 
-stop_specs = 20000  #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+stop_specs = 200  #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 learning_rate = dict(
     type='exponential_decay',
