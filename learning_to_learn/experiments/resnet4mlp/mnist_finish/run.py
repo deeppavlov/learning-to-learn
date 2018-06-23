@@ -260,7 +260,7 @@ env.train(
     checkpoint_steps=None,
     result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
     printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
-    stop=OPTIMIZER_TEST_RANGE,
+    stop=OPTIMIZER_RANGE,
     # stop=4000,
     train_dataset=dict(
         train='train'
