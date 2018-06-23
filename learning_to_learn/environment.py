@@ -736,7 +736,9 @@ class Environment(object):
         print('\nCreating %s checkpoint at %s' % (model_type, path))
         if model_type == 'pupil':
             self._hooks['saver'].save(self._session, path)
-        elif model_type == 'meta_optimizer':
+        elif model_type == 'optimizer':
+            # print("(Environment._create_checkpoint)self._hooks['meta_optimizer_saver']:",
+            #       self._hooks['meta_optimizer_saver'])
             self._hooks['meta_optimizer_saver'].save(self._session, path)
 
     def _restore_pupil(self, restore_path, verbose=True):
@@ -749,8 +751,8 @@ class Environment(object):
     def _restore_meta_optimizer(self, restore_path):
         if restore_path is not None:
             print('restoring meta optimizer from %s' % restore_path)
-            print("(Environment._restore_meta_optimizer)self._hooks['meta_optimizer_saver']:",
-                  self._hooks['meta_optimizer_saver'])
+            # print("(Environment._restore_meta_optimizer)self._hooks['meta_optimizer_saver']:",
+            #       self._hooks['meta_optimizer_saver'])
             self._hooks['meta_optimizer_saver'].restore(self._session, restore_path)
 
     def test(self,
