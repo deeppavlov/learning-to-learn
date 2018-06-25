@@ -76,6 +76,7 @@ def get_linthreshx(lines):
 
 def plot_outer_legend(plot_data, description, xlabel, ylabel, xscale, yscale, file_name_without_ext, style):
     # print("(plot_helpers.plot_outer_legend)xlabel:", xlabel)
+    # print("(plot_helpers.plot_outer_legend)plot_data:", plot_data)
     rc('font', **FONT)
     plt.clf()
     plt.subplot(111)
