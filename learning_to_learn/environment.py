@@ -1518,9 +1518,10 @@ class Environment(object):
                                 session_specs['gpu_memory'],
                                 session_specs['allow_growth'],
                                 session_specs['visible_device_list'])
-        self._train_repeatedly(start_specs, run_specs_set)
+        train_time = self._train_repeatedly(start_specs, run_specs_set)
         if close_session:
             self._close_session()
+        return train_time
 
     def _train_repeatedly(self, start_specs, run_specs_set):
         # initializing model
@@ -1551,16 +1552,19 @@ class Environment(object):
         init_step = 0
         # if 'reset_pupil_train_state' in self._hooks:
         #     self._session.run(self._hooks['reset_pupil_train_state'])
+        t1 = time.clock()
         for run_specs in run_specs_set:
             init_step = self._train(run_specs,
                                     checkpoints_path,
                                     start_specs['batch_generator_class'],
                                     start_specs['with_meta_optimizer'],
                                     init_step=init_step)
+        train_time = time.clock() - t1
         if checkpoints_path is not None:
             self._create_checkpoint('final', checkpoints_path)
         self._handler.log_finish_time()
         self._handler.close()
+        return train_time
 
     def train_optimizer(
             self,
@@ -1596,9 +1600,10 @@ class Environment(object):
                                 session_specs['gpu_memory'],
                                 session_specs['allow_growth'],
                                 session_specs['visible_device_list'])
-        self._train_optimizer_repeatedly(start_specs, run_specs_set)
+        train_time = self._train_optimizer_repeatedly(start_specs, run_specs_set)
         if close_session:
             self._close_session()
+        return train_time
 
     def _train_optimizer_repeatedly(self, start_specs, run_specs_set, log=True):
         # initializing model
@@ -1630,6 +1635,7 @@ class Environment(object):
         else:
             checkpoints_path = None
         init_step = 0
+        t1 = time.clock()
         for run_specs in run_specs_set:
             # print("(Environment._train_optimizer_repeatedly)"
             #       "run_specs['optimizer_inference']['opt_inf_train_datasets'][0][1]",
@@ -1644,10 +1650,12 @@ class Environment(object):
                 start_specs['result_types'],
                 init_step=init_step
             )
+        train_time = time.clock() - t1
         if checkpoints_path is not None:
             self._create_checkpoint('final', checkpoints_path, model_type='optimizer')
         self._handler.log_finish_time()
         self._handler.close()
+        return train_time
 
     def _fill_train_meta_optimizer_feed_dict_with_inputs_and_labels(
             self,
