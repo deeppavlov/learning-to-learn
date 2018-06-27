@@ -811,7 +811,14 @@ class Environment(object):
 
         validation_datasets = work['validation_datasets']
         # print("(Environment.test)work['valid_batch_kwargs']:", work['valid_batch_kwargs'])
+        print("Testing!")
         for validation_dataset in validation_datasets:
+            print("Validation dataset name:", validation_dataset[1])
+            print("Validation dataset_size:")
+            if len(validation_dataset[0]) > 100:
+                print(len(validation_dataset[0]))
+            else:
+                print('Either dataset is not text or dataset size is less than 100:', len(validation_dataset[0]))
             if work['validate_tokens_by_chars']:
                 _ = self._validate_by_chars(
                     batch_generator_class, validation_dataset, work['validation_batch_size'],

@@ -64,6 +64,39 @@ valid_add_feed = [
     {'placeholder': 'optimizer_dropout_keep_prob', 'value': 1.}
 ]
 
+# NUM_EXERCISES = 1
+# BATCH_SIZE = 2
+# NUM_UNROLLINGS = 1
+# NUM_OPTIMIZER_UNROLLINGS = 1
+# RESET_PERIOD = 1
+# OPT_INF_STOP = NUM_OPTIMIZER_UNROLLINGS * RESET_PERIOD
+# OPT_INF_RESTORE_PUPIL_PATHS = [
+#     ('COLD', None)
+# ]
+# OPTIMIZER_RANGE = NUM_OPTIMIZER_UNROLLINGS * RESET_PERIOD * NUM_UNROLLINGS
+# AVERAGING_NUMBER = 3
+# NUM_OPTIMIZER_TRAIN_STEPS = 1
+# OPTIMIZER_TEST_RANGE = 1
+# LSTM_SIZE = dict(
+#     num_layers=1,
+#     num_nodes=[100],
+#     num_output_layers=1,
+#     num_output_nodes=[],
+#     vocabulary_size=vocabulary_size,
+#     embedding_size=150,
+#     num_unrollings=NUM_UNROLLINGS,
+# )
+# OPTIMIZER_PARAMETERS = dict(
+#     regime='train',
+#     # regime='inference',
+#     num_optimizer_unrollings=NUM_OPTIMIZER_UNROLLINGS,
+#     num_exercises=NUM_EXERCISES,
+#     res_size=2000,
+#     permute=False,
+#     optimizer_for_opt_type='adam',
+#     additional_metrics=add_metrics
+# )
+
 NUM_EXERCISES = 10
 BATCH_SIZE = 32
 NUM_UNROLLINGS = 10
@@ -96,6 +129,7 @@ OPTIMIZER_PARAMETERS = dict(
     optimizer_for_opt_type='adam',
     additional_metrics=add_metrics
 )
+
 evaluation = dict(
     save_path=save_path,
     opt_inf_is_performed=True,
@@ -121,24 +155,24 @@ kwargs_for_optimizer_building = dict(
 )
 
 launch_kwargs = dict(
-        allow_growth=True,
-        # save_path='debug_grid_search',
-        result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
-        additions_to_feed_dict=train_opt_add_feed,
-        # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
-        reset_period=RESET_PERIOD,
-        stop=NUM_OPTIMIZER_TRAIN_STEPS,
-        train_dataset_texts=[train_text],
-        opt_inf_is_performed=False,
-        num_exercises=NUM_EXERCISES,
-        vocabulary=vocabulary,
-        batch_size=BATCH_SIZE,
-        num_unrollings=NUM_UNROLLINGS,
-        results_collect_interval=200,
-        # opt_inf_results_collect_interval=1,
-        summary=False,
-        add_graph_to_summary=False
-    )
+    allow_growth=True,
+    # save_path='debug_grid_search',
+    result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
+    additions_to_feed_dict=train_opt_add_feed,
+    # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
+    reset_period=RESET_PERIOD,
+    stop=NUM_OPTIMIZER_TRAIN_STEPS,
+    train_dataset_texts=[train_text],
+    opt_inf_is_performed=False,
+    num_exercises=NUM_EXERCISES,
+    vocabulary=vocabulary,
+    batch_size=BATCH_SIZE,
+    num_unrollings=NUM_UNROLLINGS,
+    results_collect_interval=200,
+    # opt_inf_results_collect_interval=1,
+    summary=False,
+    add_graph_to_summary=False
+)
 
 for conf in confs:
     build_pupil_hyperparameters = dict(

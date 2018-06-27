@@ -65,6 +65,44 @@ valid_add_feed = [
 ]
 
 the_only_pupil_restore_path = os.path.join(*(['..']*2 + ['text8_max_train', 'adam/2/checkpoints/best']))
+
+
+# NUM_EXERCISES = 1
+# BATCH_SIZE = 2
+# NUM_UNROLLINGS = 1
+# NUM_OPTIMIZER_UNROLLINGS = 1
+# RESET_PERIOD = 1
+# OPT_INF_STOP = 1
+# RESTORE_PUPIL_PATHS = [
+#     the_only_pupil_restore_path
+# ]
+# OPT_INF_RESTORE_PUPIL_PATHS = [
+#     ('adam_prep', the_only_pupil_restore_path)
+# ]
+# PUPIL_RESTORE_PATHS = [
+#     RESTORE_PUPIL_PATHS[0]
+# ]
+# OPTIMIZER_RANGE = NUM_OPTIMIZER_UNROLLINGS * RESET_PERIOD * NUM_UNROLLINGS
+# AVERAGING_NUMBER = 3
+# NUM_OPTIMIZER_TRAIN_STEPS = 1
+# LSTM_SIZE = dict(
+#     num_layers=1,
+#     num_nodes=[100],
+#     num_output_layers=1,
+#     num_output_nodes=[],
+#     vocabulary_size=vocabulary_size,
+#     embedding_size=150,
+#     num_unrollings=NUM_UNROLLINGS,
+# )
+# OPTIMIZER_PARAMETERS = dict(
+#     regime='train',
+#     # regime='inference',
+#     num_optimizer_unrollings=NUM_OPTIMIZER_UNROLLINGS,
+#     num_exercises=NUM_EXERCISES,
+#     optimizer_for_opt_type='adam',
+#     additional_metrics=add_metrics
+# )
+
 NUM_EXERCISES = 10
 BATCH_SIZE = 32
 NUM_UNROLLINGS = 10
@@ -100,6 +138,7 @@ OPTIMIZER_PARAMETERS = dict(
     optimizer_for_opt_type='adam',
     additional_metrics=add_metrics
 )
+
 evaluation = dict(
     save_path=save_path,
     opt_inf_is_performed=True,
@@ -132,7 +171,7 @@ launch_kwargs = dict(
         pupil_restore_paths=PUPIL_RESTORE_PATHS,
         # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
         reset_period=RESET_PERIOD,
-        stop=1000,
+        stop=NUM_OPTIMIZER_TRAIN_STEPS,
         train_dataset_texts=[train_text],
         opt_inf_is_performed=False,
         num_exercises=NUM_EXERCISES,

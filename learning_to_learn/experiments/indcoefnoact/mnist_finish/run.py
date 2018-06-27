@@ -15,7 +15,7 @@ from learning_to_learn.environment import Environment
 from learning_to_learn.pupils.mlp_for_meta import MlpForMeta as Mlp
 from learning_to_learn.image_batch_gens import MnistBatchGenerator
 from learning_to_learn.useful_functions import compose_hp_confs, get_num_exps_and_res_files, \
-    get_optimizer_evaluation_results, get_best, print_hps, get_hp_names_from_conf_file
+    get_optimizer_evaluation_results, get_best, print_hps
 
 from learning_to_learn.optimizers.indcoefnoact import IndCoefNoAct
 import os
@@ -174,7 +174,7 @@ for conf in confs:
     )
 
 
-hp_names = get_hp_names_from_conf_file(parameter_set_file_name)
+hp_names = list(confs[0].keys())
 for_plotting = get_optimizer_evaluation_results(save_path, hp_names,  AVERAGING_NUMBER)
 
 best = get_best(for_plotting, 'optimizer')
@@ -233,19 +233,12 @@ env.train_optimizer(
     batch_size=BATCH_SIZE,
     batch_gen_init_is_random=True,
     learning_rate=learning_rate,
-    results_collect_interval=2000,
-    opt_inf_results_collect_interval=10,
+    results_collect_interval=100,
+    opt_inf_results_collect_interval=1,
     permute=False,
     summary=True,
     add_graph_to_summary=True,
     one_batch_gen=True,
-    train_batch_kwargs=dict(
-        data_dir=data_dir
-    ),
-    valid_batch_kwargs=dict(
-        data_dir=data_dir
-    ),
-
 )
 
 env.train(
@@ -273,7 +266,7 @@ env.train(
     valid_batch_kwargs=dict(
         data_dir=data_dir
     ),
-    results_collect_interval=1,
+    results_collect_interval=10,
     additions_to_feed_dict=opt_inf_add_feed,
     validation_additions_to_feed_dict=valid_add_feed,
     no_validation=False,
