@@ -2887,7 +2887,36 @@ def sort_lines(lines):
     )
 
 
-def transform_data_dictionary_of_lines(data, order):
+def extend_for_relative(data):
+    if len(data) > 0:
+        if len(data[0]) > 2:
+            relative_provided = True
+        else:
+            relative_provided = False
+    else:
+        relative_provided = False
+    if not relative_provided:
+        return data
+    res = list()
+    for point in data:
+        specs = construct(point[0])
+        specs.append(
+            dict(
+                unit='seconds'
+            )
+        )
+        res.append([specs, point[1]])
+        specs = construct(point[0])
+        specs.append(
+            dict(
+                unit='relative'
+            )
+        )
+        res.append([specs, point[2]])
+        return res
+
+
+def transform_data_into_dictionary_of_lines(data, order):
     depth = len(order)
     if depth > 1:
         res = dict()
@@ -2913,25 +2942,26 @@ def transform_data_dictionary_of_lines(data, order):
     return sort_lines(res)
 
 
-def optimizer_time_measurement_save_order(names):
+def optimizer_time_measurement_save_order(names, base):
     order = list()
     for name in names:
         order.append((1, name))
+    if base is not None:
+        order.insert(-2, (3, 'unit'))
     return order
 
 
-def save_lines(lines, dir):
-    for k, v in lines.items():
-        if isinstance(v, dict):
-            path = os.path.join(dir, str(k))
-            create_path(path)
+def save_lines(lines, dir_):
+    if isinstance(lines, dict):
+        for k, v in lines.items():
+            path = os.path.join(dir_, str(k))
             save_lines(v, path)
-        else:
-            file_name = os.path.join(dir, str(k) + '.txt')
-            with open(file_name, 'w') as f:
-                num_points = len(v[0])
-                for p_idx, (x, y) in enumerate(zip(*v)):
-                    f.write('%s %s' % (x, y))
-                    if p_idx < num_points - 1:
-                        f.write('\n')
-
+    else:
+        file_name = os.path.join(dir_ + '.txt')
+        create_path(file_name, file_name_is_in_path=True)
+        with open(file_name, 'w') as f:
+            num_points = len(lines[0])
+            for p_idx, (x, y) in enumerate(zip(*lines)):
+                f.write('%s %s' % (x, y))
+                if p_idx < num_points - 1:
+                    f.write('\n')

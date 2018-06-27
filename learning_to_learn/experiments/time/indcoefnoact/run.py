@@ -14,7 +14,7 @@ from learning_to_learn.pupils.lstm_for_meta import Lstm, LstmFastBatchGenerator 
 from learning_to_learn.useful_functions import create_vocabulary, convert, transform_data_into_dictionary_of_lines, \
     optimizer_time_measurement_save_order, save_lines, extend_for_relative
 
-from learning_to_learn.optimizers.ff import Ff
+from learning_to_learn.optimizers.indcoefnoact import IndCoefNoAct
 
 import os
 
@@ -51,26 +51,25 @@ print(vocabulary_size)
 
 env = Environment(
     pupil_class=Lstm,
-    meta_optimizer_class=Ff,
+    meta_optimizer_class=IndCoefNoAct,
     batch_generator_classes=BatchGenerator,
     vocabulary=vocabulary,
 )
 
 add_metrics = ['bpc', 'perplexity', 'accuracy']
-NUM_EXERCISES = 10
-NUM_UNROLLINGS = 10
+NUM_EXERCISES = 1
+NUM_UNROLLINGS = 1
 OPT_INF_RESTORE_PUPIL_PATHS = [
     ('COLD', None)
 ]
 PUPIL_RESTORE_PATHS = [
     None
 ]
-
-BATCH_SIZE = 32
+BATCH_SIZE = 2
 pupil_build = dict(
     batch_size=BATCH_SIZE,
     num_layers=1,
-    num_nodes=[100],
+    num_nodes=[10],
     num_output_layers=1,
     num_output_nodes=[],
     vocabulary_size=vocabulary_size,
@@ -140,5 +139,7 @@ times = env.optimizer_iter_time(
 )
 times = extend_for_relative(times)
 order = optimizer_time_measurement_save_order(names, base)
+print(order)
+print(times)
 times = transform_data_into_dictionary_of_lines(times, order)
 save_lines(times, 'results')

@@ -155,7 +155,6 @@ class StackAllRnn(Meta):
             new_hidden_state = tf.multiply(output_gate, tf.tanh(new_cell_state), name='new_hidden_state')
         return new_hidden_state, new_cell_state
 
-
     def _optimizer_core(self, optimizer_ins, state, gpu_idx, permute=True):
         if permute:
             optimizer_ins = self._extend_with_permutations(optimizer_ins, gpu_idx)

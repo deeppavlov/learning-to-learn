@@ -3374,6 +3374,7 @@ class Environment(object):
             optimizer_varying,
             launch_varying,
     ):
+        # print("(Environment.optimizer_iter_time)optimizer_build_kwargs:", optimizer_build_kwargs)
         result = list()
         launch_kwargs = construct(launch_kwargs)
         launch_kwargs['stop'] = steps
