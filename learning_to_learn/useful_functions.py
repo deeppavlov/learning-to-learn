@@ -1201,24 +1201,24 @@ def l2_loss_per_elem(t):
     return tf.nn.l2_loss(t) / num_elems
 
 
-def apply_recur(nested, func, depth):
+def apply_recur(nested, func, depth, obj_types):
     if isinstance(nested, list):
         res = list()
         for elem in nested:
-            res.append(apply_to_nested_on_depth(elem, func, depth=depth))
+            res.append(apply_to_nested_on_depth(elem, func, depth=depth, obj_types=obj_types))
     elif isinstance(nested, tuple):
         res = list()
         for elem in nested:
-            res.append(apply_to_nested_on_depth(elem, func, depth=depth))
+            res.append(apply_to_nested_on_depth(elem, func, depth=depth, obj_types=obj_types))
         res = tuple(res)
     elif isinstance(nested, dict):
         res = dict()
         for k, v in nested.items():
-            res[k] = apply_to_nested_on_depth(v, func, depth=depth)
+            res[k] = apply_to_nested_on_depth(v, func, depth=depth, obj_types=obj_types)
     elif isinstance(nested, OrderedDict):
         res = OrderedDict()
         for k, v in nested.items():
-            res[k] = apply_to_nested_on_depth(v, func, depth=depth)
+            res[k] = apply_to_nested_on_depth(v, func, depth=depth, obj_types=obj_types)
     else:
         raise InvalidArgumentError("nested has to be object of types list, tuple, dict, OrderedDict",
                                    nested,
@@ -1227,15 +1227,17 @@ def apply_recur(nested, func, depth):
     return res
 
 
-def apply_to_nested_on_depth(nested, func, depth=None):
+def apply_to_nested_on_depth(nested, func, depth=None, obj_types=None):
+    if obj_types is None:
+        obj_types = (list, tuple, dict, OrderedDict)
     if depth is None:
-        if isinstance(nested, (list, tuple, dict, OrderedDict)):
-            res = apply_recur(nested, func, depth)
+        if isinstance(nested, obj_types):
+            res = apply_recur(nested, func, depth, obj_types)
         else:
             res = func(nested)
     else:
         if depth > 0:
-            res = apply_recur(nested, func, depth-1)
+            res = apply_recur(nested, func, depth-1, obj_types)
         else:
             res = func(nested)
     return res
@@ -2868,4 +2870,68 @@ def form_combinations_from_dicts(
         all_insertions.append(one_set_of_of_insertions)
     return all_insertions
 
+
+def unite_dicts_with_conflicting_keys(list_of_dicts):
+    united = dict()
+    for idx, d in enumerate(list_of_dicts):
+        for k, v in d.items():
+            united[(idx, k)] = v
+    return united
+
+
+def sort_lines(lines):
+    return apply_to_nested_on_depth(
+        lines,
+        lambda x: synchronous_sort(x, 0),
+        obj_types=(dict,),
+    )
+
+
+def transform_data_dictionary_of_lines(data, order):
+    depth = len(order)
+    if depth > 1:
+        res = dict()
+    else:
+        res = [list(), list()]
+    for point in data:
+        v = point[1]
+        specs = unite_dicts_with_conflicting_keys(point[0])
+        d = res
+        for idx, name in enumerate(order):
+            if idx < depth - 2:
+                if specs[name] not in d:
+                    d[specs[name]] = dict()
+                d = d[specs[name]]
+            elif idx == depth - 2:
+                if specs[name] not in d:
+                    d[specs[name]] = [list(), list()]
+                d = d[specs[name]]
+            else:
+                if specs[name] not in d[0]:
+                    d[0].append(specs[name])
+                    d[1].append(v)
+    return sort_lines(res)
+
+
+def optimizer_time_measurement_save_order(names):
+    order = list()
+    for name in names:
+        order.append((1, name))
+    return order
+
+
+def save_lines(lines, dir):
+    for k, v in lines.items():
+        if isinstance(v, dict):
+            path = os.path.join(dir, str(k))
+            create_path(path)
+            save_lines(v, path)
+        else:
+            file_name = os.path.join(dir, str(k) + '.txt')
+            with open(file_name, 'w') as f:
+                num_points = len(v[0])
+                for p_idx, (x, y) in enumerate(zip(*v)):
+                    f.write('%s %s' % (x, y))
+                    if p_idx < num_points - 1:
+                        f.write('\n')
 

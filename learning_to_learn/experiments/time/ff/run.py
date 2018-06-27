@@ -11,7 +11,8 @@ except ValueError: # Already removed
 
 from learning_to_learn.environment import Environment
 from learning_to_learn.pupils.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
-from learning_to_learn.useful_functions import create_vocabulary
+from learning_to_learn.useful_functions import create_vocabulary, convert, transform_data_dictionary_of_lines, \
+    optimizer_time_measurement_save_order, save_lines
 
 from learning_to_learn.optimizers.ff import Ff
 
@@ -26,12 +27,24 @@ os.chdir(dname)
 
 with open(conf_file, 'r') as f:
     lines = f.read().split('\n')
+steps = int(lines[0])
+base = lines[1]
+if base == 'None':
+    base = None
+else:
+    base = float(base)
+names = lines[2].split()
+types = lines[3].split()
+optimizer_varying = dict()
+for name, type_, line in zip(names, types, lines[4:]):
+    optimizer_varying[name] = [convert(v, type_) for v in line.split()]
+
+save_order = optimizer_time_measurement_save_order(names)
 
 dataset_path = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'text8.txt']))
 with open(dataset_path, 'r') as f:
     text = f.read()
 
-STEPS = 200
 train_text = text
 
 vocabulary = create_vocabulary(text)
@@ -81,10 +94,6 @@ optimizer_build = dict(
     optimizer_init_parameter=.01
 )
 
-optimizer_varying = dict(
-    num_layers=[1, 2, 3]
-)
-
 
 train_opt_add_feed = [
     {'placeholder': 'dropout', 'value': .9},
@@ -121,7 +130,8 @@ launch = dict(
 )
 
 times = env.optimizer_iter_time(
-    STEPS,
+    steps,
+    base,
     pupil_build,
     optimizer_build,
     launch,
@@ -130,4 +140,8 @@ times = env.optimizer_iter_time(
     dict(),
 )
 
+order = optimizer_time_measurement_save_order(names)
+print(order)
 print(times)
+times = transform_data_dictionary_of_lines(times, order)
+save_lines(times, 'results')

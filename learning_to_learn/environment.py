@@ -3366,6 +3366,7 @@ class Environment(object):
     def optimizer_iter_time(
             self,
             steps,
+            base,    # time which is used to compute relative effectiveness
             pupil_build_kwargs,
             optimizer_build_kwargs,
             launch_kwargs,
@@ -3403,7 +3404,10 @@ class Environment(object):
             p.start()
             time = queue_.get()
             p.join()
+            res = [insertion_list, time / steps]
+            if base is not None:
+                res.append(res[1] / base)
             result.append(
-                (insertion_list, time / steps)
+                res
             )
         return result
