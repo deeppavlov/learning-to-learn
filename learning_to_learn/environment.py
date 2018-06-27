@@ -20,7 +20,7 @@ from learning_to_learn.tensors import identity_tensor
 from learning_to_learn.useful_functions import InvalidArgumentError
 from learning_to_learn.useful_functions import construct, add_index_to_filename_if_needed, match_two_dicts, \
     create_path, check_if_key_in_nested_dict, add_missing_to_list, print_and_log, apply_temperature, sample, is_int, \
-    create_distribute_map, nth_element_of_sequence_of_sequences, get_elem_from_nested
+    create_distribute_map, nth_element_of_sequence_of_sequences, get_elem_from_nested, form_combinations_from_dicts
 
 from learning_to_learn.handler import Handler
 from subword_nmt.apply_bpe import BPE
@@ -3350,3 +3350,60 @@ class Environment(object):
             self.current_pupil_launch_parameters = kwargs
         elif model_type == 'optimizer':
             self.current_optimizer_launch_parameters = kwargs
+
+    def _optimizer_train_process(
+            self,
+            q,
+            pupil_build,
+            optimizer_build,
+            launch
+    ):
+        self.build_pupil(**pupil_build)
+        self.build_optimizer(**optimizer_build)
+        time = self.train_optimizer(**launch)
+        q.put(time)
+
+    def optimizer_iter_time(
+            self,
+            steps,
+            pupil_build_kwargs,
+            optimizer_build_kwargs,
+            launch_kwargs,
+            pupil_varying,
+            optimizer_varying,
+            launch_varying,
+    ):
+        result = list()
+        launch_kwargs = construct(launch_kwargs)
+        launch_kwargs['stop'] = steps
+        insertions = form_combinations_from_dicts(
+            [pupil_varying, optimizer_varying, launch_varying]
+        )
+
+        for insertion_list in insertions:
+            queue_ = mp.Queue()
+            pupil = construct(pupil_build_kwargs)
+            optimizer = construct(optimizer_build_kwargs)
+            launch = construct(launch_kwargs)
+            for name, value in insertion_list[0].items():
+                pupil[name] = value
+            for name, value in insertion_list[1].items():
+                optimizer[name] = value
+            for name, value in insertion_list[2].items():
+                launch[name] = value
+            p = mp.Process(
+                target=self._optimizer_train_process,
+                args=(
+                    queue_,
+                    pupil,
+                    optimizer,
+                    launch,
+                )
+            )
+            p.start()
+            time = queue_.get()
+            p.join()
+            result.append(
+                (insertion_list, time / steps)
+            )
+        return result

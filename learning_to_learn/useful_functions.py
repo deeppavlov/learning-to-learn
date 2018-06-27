@@ -2847,3 +2847,25 @@ def extract_line_from_file(file_name):
     return data
 
 
+def form_combinations_from_dicts(
+        dictionaries
+):
+    maps = [dict() for _ in dictionaries]
+    varying_values = list()
+    varying_counter = 0
+    for d, map_ in zip(dictionaries, maps):
+        for name, values in d.items():
+            varying_values.append(values)
+            map_[name] = varying_counter
+            varying_counter += 1
+    all_combinations = all_combs(varying_values)
+    all_insertions = list()
+    for comb in all_combinations:
+        one_set_of_of_insertions = [dict() for _ in dictionaries]
+        for one_type_insertions, map_ in zip(one_set_of_of_insertions, maps):
+            for name, idx in map_.items():
+                one_type_insertions[name] = comb[idx]
+        all_insertions.append(one_set_of_of_insertions)
+    return all_insertions
+
+
