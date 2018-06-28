@@ -30,10 +30,15 @@ valid_add_feed = [# {'placeholder': 'sampling_prob', 'value': 1.},
 
 add_metrics = ['bpc', 'perplexity', 'accuracy']
 
+
+conf_file = sys.argv[1]
+res_file = '.'.join(conf_file.split('.')[:-1] + ['txt'])
+with open(conf_file, 'r') as f:
+    steps = int(f.read().split('\n')[0])
+
 tf.set_random_seed(1)
 
 BATCH_SIZE = 32
-steps = 200
 env.build_pupil(
     batch_size=BATCH_SIZE,
     num_layers=1,
@@ -87,9 +92,11 @@ time = env.train(
     results_collect_interval=100,
     additions_to_feed_dict=add_feed,
     validation_additions_to_feed_dict=valid_add_feed,
-    no_validation=False
+    no_validation=True,
 )
 # log_device_placement=True)
 
 one_iteration = time / steps
 print(one_iteration)
+with open(res_file, 'w') as f:
+    f.write(str(one_iteration))

@@ -1581,12 +1581,14 @@ class Environment(object):
             close_session=close_session,
             set_passed_parameters_as_default=set_passed_parameters_as_default,
             kwargs=kwargs)
+        # print("\n\n(Environment.train_optimizer)kwargs:", kwargs)
         tmp_output = parse_train_optimizer_method_arguments(
             self,
             args,
             kwargs,
             set_passed_parameters_as_default=set_passed_parameters_as_default
         )
+        # print("\n\n(Environment.train_optimizer)tmp_output:", tmp_output)
         session_specs = tmp_output['session_specs']
         start_specs = tmp_output['start_specs']
         run_specs_set = tmp_output['run']
@@ -1637,6 +1639,9 @@ class Environment(object):
         init_step = 0
         t1 = time.clock()
         for run_specs in run_specs_set:
+            # print("(Environment._train_optimizer_repeatedly)"
+            #       "run_specs",
+            #       run_specs)
             # print("(Environment._train_optimizer_repeatedly)"
             #       "run_specs['optimizer_inference']['opt_inf_train_datasets'][0][1]",
             #       run_specs['optimizer_inference']['opt_inf_train_datasets'][0][1])
@@ -1737,6 +1742,7 @@ class Environment(object):
     ):
         # print("EXERCISES RESET!")
         # print('(Environment._reset_exercises)restore_paths_datasets_map:', restore_paths_datasets_map)
+        # print('(Environment._reset_exercises)datasets:', datasets)
         num_paths = len(pupil_restore_paths)
         # print("(Environment._reset_exercises)num_paths:", num_paths)
         # print("(Environment._reset_exercises)num_exercises:", num_exercises)
@@ -3358,6 +3364,7 @@ class Environment(object):
             optimizer_build,
             launch
     ):
+        # print("(Environment._optimizer_train_process)launch:", launch)
         self.build_pupil(**pupil_build)
         self.build_optimizer(**optimizer_build)
         time = self.train_optimizer(**launch)

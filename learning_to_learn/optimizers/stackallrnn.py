@@ -187,6 +187,7 @@ class StackAllRnn(Meta):
             permute=False,
             get_theta=False,
             get_omega_and_beta=False,
+            matrix_mod='phi_and_psi',
             no_end=False,
     ):
         if additional_metrics is None:
@@ -219,6 +220,7 @@ class StackAllRnn(Meta):
         self._flags = flags
         self._get_theta = get_theta
         self._get_omega_and_beta = get_omega_and_beta
+        self._matrix_mod = matrix_mod
         self._no_end = no_end
 
         self._normalizing = normalizing

@@ -10,11 +10,12 @@ except ValueError: # Already removed
     pass
 
 from learning_to_learn.environment import Environment
-from learning_to_learn.pupils.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
+from learning_to_learn.pupils.mlp_for_meta import MlpForMeta
 from learning_to_learn.useful_functions import create_vocabulary, convert, transform_data_into_dictionary_of_lines, \
     optimizer_time_measurement_save_order, save_lines, extend_for_relative
+from learning_to_learn.image_batch_gens import MnistBatchGenerator
 
-from learning_to_learn.optimizers.ff import Ff
+from learning_to_learn.optimizers.resnet4mlp import ResNet4Mlp
 
 import os
 
@@ -39,21 +40,12 @@ optimizer_varying = dict()
 for name, type_, line in zip(names, types, lines[4:]):
     optimizer_varying[name] = [convert(v, type_) for v in line.split()]
 
-dataset_path = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'text8.txt']))
-with open(dataset_path, 'r') as f:
-    text = f.read()
-
-train_text = text
-
-vocabulary = create_vocabulary(text)
-vocabulary_size = len(vocabulary)
-print(vocabulary_size)
+data_dir = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'mnist']))
 
 env = Environment(
-    pupil_class=Lstm,
-    meta_optimizer_class=Ff,
-    batch_generator_classes=BatchGenerator,
-    vocabulary=vocabulary,
+    pupil_class=MlpForMeta,
+    meta_optimizer_class=ResNet4Mlp,
+    batch_generator_classes=MnistBatchGenerator,
 )
 
 add_metrics = ['bpc', 'perplexity', 'accuracy']
@@ -69,17 +61,12 @@ BATCH_SIZE = 2
 pupil_build = dict(
     batch_size=BATCH_SIZE,
     num_layers=1,
-    num_nodes=[10],
-    num_output_layers=1,
-    num_output_nodes=[],
-    vocabulary_size=vocabulary_size,
-    embedding_size=150,
-    num_unrollings=NUM_UNROLLINGS,
+    num_hidden_nodes=[],
+    input_shape=[784],
+    num_classes=10,
     init_parameter=3.,
-    num_gpus=1,
-    regime='optimizer_training',
     additional_metrics=add_metrics,
-    going_to_limit_memory=True
+    optimizer='sgd'
 )
 
 optimizer_build = dict(
@@ -110,21 +97,27 @@ launch = dict(
     allow_growth=True,
     result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
     additions_to_feed_dict=train_opt_add_feed,
-    pupil_restore_paths=PUPIL_RESTORE_PATHS,
     # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
-    reset_period=1,
     num_exercises=NUM_EXERCISES,
-    train_dataset_texts=[train_text],
+    reset_period=1,
+    stop=steps,
+    train_datasets=[('train', 'train')],
     opt_inf_is_performed=False,
-    vocabulary=vocabulary,
+    validation_additions_to_feed_dict=valid_add_feed,
     batch_size=BATCH_SIZE,
     batch_gen_init_is_random=True,
-    num_unrollings=NUM_UNROLLINGS,
-    learning_rate={'type': 'exponential_decay',
-                   'init': 3e-4,
-                   'decay': .1,
-                   'period': 3500},
-    results_collect_interval=100,
+    results_collect_interval=2000,
+    opt_inf_results_collect_interval=10,
+    permute=False,
+    summary=True,
+    add_graph_to_summary=True,
+    one_batch_gen=True,
+    train_batch_kwargs=dict(
+        data_dir=data_dir
+    ),
+    valid_batch_kwargs=dict(
+        data_dir=data_dir
+    ),
 )
 
 times = env.optimizer_iter_time(

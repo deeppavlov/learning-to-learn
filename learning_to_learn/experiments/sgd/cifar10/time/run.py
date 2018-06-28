@@ -26,8 +26,12 @@ valid_add_feed = [
 add_metrics = ['bpc', 'perplexity', 'accuracy']
 VALID_SIZE = 1000
 
+conf_file = sys.argv[1]
+res_file = '.'.join(conf_file.split('.')[:-1] + ['txt'])
+with open(conf_file, 'r') as f:
+    steps = int(f.read().split('\n')[0])
+
 tf.set_random_seed(1)
-steps = 200
 BATCH_SIZE = 32
 env.build_pupil(
     batch_size=BATCH_SIZE,
@@ -81,7 +85,7 @@ time = env.train(
     results_collect_interval=100,
     additions_to_feed_dict=add_feed,
     validation_additions_to_feed_dict=valid_add_feed,
-    no_validation=False,
+    no_validation=True,
     summary=False,
     add_graph_to_summary=False,
 )
@@ -89,3 +93,5 @@ time = env.train(
 
 one_iteration = time / steps
 print(one_iteration)
+with open(res_file, 'w') as f:
+    f.write(str(one_iteration))

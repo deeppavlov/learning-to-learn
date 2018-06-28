@@ -24,6 +24,10 @@ dataset_path = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'text8.txt']))
 with open(dataset_path, 'r') as f:
     text = f.read()
 
+conf_file = sys.argv[1]
+res_file = '.'.join(conf_file.split('.')[:-1] + ['txt'])
+with open(conf_file, 'r') as f:
+    steps = int(f.read().split('\n')[0])
 
 valid_size = 10000
 
@@ -52,7 +56,6 @@ dataset_name = 'valid'
 tf.set_random_seed(1)
 BATCH_SIZE = 32
 NUM_UNROLLINGS = 10
-steps = 200
 env.build_pupil(
     batch_size=BATCH_SIZE,
     num_layers=1,
@@ -93,8 +96,11 @@ time = env.train(
     add_graph_to_summary=False,
     train_dataset_text=train_text,
     validation_datasets=dict(valid=valid_text),
-    batch_size=BATCH_SIZE
+    batch_size=BATCH_SIZE,
+    no_validation=True,
 )
 
 one_iteration = time / steps
 print(one_iteration)
+with open(res_file, 'w') as f:
+    f.write(str(one_iteration))

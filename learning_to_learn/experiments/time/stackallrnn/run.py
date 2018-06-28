@@ -12,7 +12,7 @@ except ValueError: # Already removed
 from learning_to_learn.environment import Environment
 from learning_to_learn.pupils.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
 from learning_to_learn.useful_functions import create_vocabulary, convert, transform_data_into_dictionary_of_lines, \
-    optimizer_time_measurement_save_order, save_lines, extend_for_relative
+    optimizer_time_measurement_save_order, save_lines, extend_for_relative, create_path
 
 from learning_to_learn.optimizers.stackallrnn import StackAllRnn
 
@@ -33,11 +33,6 @@ if base == 'None':
     base = None
 else:
     base = float(base)
-names = lines[2].split()
-types = lines[3].split()
-optimizer_varying = dict()
-for name, type_, line in zip(names, types, lines[4:]):
-    optimizer_varying[name] = [convert(v, type_) for v in line.split()]
 
 dataset_path = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'text8.txt']))
 with open(dataset_path, 'r') as f:
@@ -134,12 +129,14 @@ times = env.optimizer_iter_time(
     optimizer_build,
     launch,
     dict(),
-    optimizer_varying,
+    dict(),
     dict(),
 )
 times = extend_for_relative(times)
-order = optimizer_time_measurement_save_order(names, base)
+order = optimizer_time_measurement_save_order([], base)
 print(order)
 print(times)
-times = transform_data_into_dictionary_of_lines(times, order)
-save_lines(times, 'results')
+
+create_path(save_path, file_name_is_in_path=True)
+with open(save_path + '.txt', 'w') as f:
+    f.write(str(times))
