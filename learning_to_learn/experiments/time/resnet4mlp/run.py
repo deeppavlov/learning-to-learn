@@ -120,7 +120,7 @@ launch = dict(
     ),
 )
 
-times = env.optimizer_iter_time(
+times = env.iter_time(
     steps,
     base,
     pupil_build,

@@ -3370,7 +3370,20 @@ class Environment(object):
         time = self.train_optimizer(**launch)
         q.put(time)
 
-    def optimizer_iter_time(
+    def _pupil_train_process(
+            self,
+            q,
+            pupil_build,
+            optimizer_build,
+            launch,
+    ):
+        self.build_pupil(**pupil_build)
+        if optimizer_build is not None:
+            self.build_optimizer(**optimizer_build)
+        time = self.train(**launch)
+        q.put(time)
+
+    def iter_time(
             self,
             steps,
             base,    # time which is used to compute relative effectiveness
@@ -3380,6 +3393,7 @@ class Environment(object):
             pupil_varying,
             optimizer_varying,
             launch_varying,
+            model='optimizer',
     ):
         # print("(Environment.optimizer_iter_time)optimizer_build_kwargs:", optimizer_build_kwargs)
         result = list()
@@ -3388,20 +3402,30 @@ class Environment(object):
         insertions = form_combinations_from_dicts(
             [pupil_varying, optimizer_varying, launch_varying]
         )
-
+        if model =='optimizer':
+            func = self._optimizer_train_process
+        else:
+            func = self._pupil_train_process
         for insertion_list in insertions:
             queue_ = mp.Queue()
+
             pupil = construct(pupil_build_kwargs)
-            optimizer = construct(optimizer_build_kwargs)
-            launch = construct(launch_kwargs)
             for name, value in insertion_list[0].items():
                 pupil[name] = value
-            for name, value in insertion_list[1].items():
-                optimizer[name] = value
+
+            if optimizer_build_kwargs is None:
+                optimizer = None
+            else:
+                optimizer = construct(optimizer_build_kwargs)
+                for name, value in insertion_list[1].items():
+                    optimizer[name] = value
+
+            launch = construct(launch_kwargs)
             for name, value in insertion_list[2].items():
                 launch[name] = value
+
             p = mp.Process(
-                target=self._optimizer_train_process,
+                target=func,
                 args=(
                     queue_,
                     pupil,

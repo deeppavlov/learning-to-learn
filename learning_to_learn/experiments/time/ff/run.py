@@ -27,16 +27,17 @@ os.chdir(dname)
 
 with open(conf_file, 'r') as f:
     lines = f.read().split('\n')
-steps = int(lines[0])
-base = lines[1]
+model = lines[0]
+steps = int(lines[1])
+base = lines[2]
 if base == 'None':
     base = None
 else:
     base = float(base)
-names = lines[2].split()
-types = lines[3].split()
+names = lines[3].split()
+types = lines[4].split()
 optimizer_varying = dict()
-for name, type_, line in zip(names, types, lines[4:]):
+for name, type_, line in zip(names, types, lines[5:]):
     optimizer_varying[name] = [convert(v, type_) for v in line.split()]
 
 dataset_path = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'text8.txt']))
@@ -107,7 +108,7 @@ valid_add_feed = [
     {'placeholder': 'optimizer_dropout_keep_prob', 'value': 1.}
 ]
 
-launch = dict(
+optimizer_launch = dict(
     allow_growth=True,
     result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
     additions_to_feed_dict=train_opt_add_feed,
@@ -128,7 +129,35 @@ launch = dict(
     results_collect_interval=100,
 )
 
-times = env.optimizer_iter_time(
+pupil_launch = dict(
+    # gpu_memory=.3,
+    num_unrollings=NUM_UNROLLINGS,
+    vocabulary=vocabulary,
+    with_meta_optimizer=True,
+    # restore_path=the_only_pupil_restore_path,
+    save_path=os.path.join(base, 'loss_best', 'test', 'pupil_training'),
+    allow_growth=True,
+    batch_size=BATCH_SIZE,
+    checkpoint_steps=None,
+    result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
+    printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
+    stop=steps,
+    # stop=4000,
+    train_dataset_text=train_text,
+    results_collect_interval=1,
+    additions_to_feed_dict=opt_inf_add_feed,
+    validation_additions_to_feed_dict=valid_add_feed,
+    no_validation=True,
+)
+
+if model == 'optimizer':
+    launch = optimizer_launch
+elif model == 'pupil':
+    launch = pupil_launch
+else:
+    launch = None
+
+times = env.iter_time(
     steps,
     base,
     pupil_build,
