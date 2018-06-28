@@ -27,8 +27,9 @@ os.chdir(dname)
 
 with open(conf_file, 'r') as f:
     lines = f.read().split('\n')
-steps = int(lines[0])
-base = lines[1]
+model = lines[0]
+steps = int(lines[1])
+base = lines[2]
 if base == 'None':
     base = None
 else:
@@ -100,7 +101,7 @@ valid_add_feed = [
     {'placeholder': 'optimizer_dropout_keep_prob', 'value': 1.}
 ]
 
-launch = dict(
+optimizer_launch = dict(
     allow_growth=True,
     result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
     additions_to_feed_dict=train_opt_add_feed,
@@ -121,6 +122,33 @@ launch = dict(
     results_collect_interval=100,
 )
 
+pupil_launch = dict(
+    # gpu_memory=.3,
+    num_unrollings=NUM_UNROLLINGS,
+    vocabulary=vocabulary,
+    with_meta_optimizer=True,
+    # restore_path=the_only_pupil_restore_path,
+    allow_growth=True,
+    batch_size=BATCH_SIZE,
+    checkpoint_steps=None,
+    result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
+    printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
+    stop=steps,
+    # stop=4000,
+    train_dataset_text=train_text,
+    results_collect_interval=1000,
+    additions_to_feed_dict=opt_inf_add_feed,
+    validation_additions_to_feed_dict=valid_add_feed,
+    no_validation=True,
+)
+
+if model == 'optimizer':
+    launch = optimizer_launch
+elif model == 'pupil':
+    launch = pupil_launch
+else:
+    launch = None
+
 times = env.iter_time(
     steps,
     base,
@@ -130,6 +158,7 @@ times = env.iter_time(
     dict(),
     dict(),
     dict(),
+    model=model,
 )
 times = extend_for_relative(times)
 order = optimizer_time_measurement_save_order([], base)

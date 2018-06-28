@@ -135,7 +135,6 @@ pupil_launch = dict(
     vocabulary=vocabulary,
     with_meta_optimizer=True,
     # restore_path=the_only_pupil_restore_path,
-    save_path=os.path.join(base, 'loss_best', 'test', 'pupil_training'),
     allow_growth=True,
     batch_size=BATCH_SIZE,
     checkpoint_steps=None,
@@ -144,7 +143,7 @@ pupil_launch = dict(
     stop=steps,
     # stop=4000,
     train_dataset_text=train_text,
-    results_collect_interval=1,
+    results_collect_interval=1000,
     additions_to_feed_dict=opt_inf_add_feed,
     validation_additions_to_feed_dict=valid_add_feed,
     no_validation=True,
@@ -166,8 +165,13 @@ times = env.iter_time(
     dict(),
     optimizer_varying,
     dict(),
+    model=model,
 )
+print(times)
 times = extend_for_relative(times)
+print(times)
 order = optimizer_time_measurement_save_order(names, base)
+print(order)
 times = transform_data_into_dictionary_of_lines(times, order)
-save_lines(times, 'results')
+print(times)
+save_lines(times, save_path)

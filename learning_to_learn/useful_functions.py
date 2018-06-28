@@ -2913,7 +2913,7 @@ def extend_for_relative(data):
             )
         )
         res.append([specs, point[2]])
-        return res
+    return res
 
 
 def transform_data_into_dictionary_of_lines(data, order):
@@ -2962,6 +2962,10 @@ def save_lines(lines, dir_):
         with open(file_name, 'w') as f:
             num_points = len(lines[0])
             for p_idx, (x, y) in enumerate(zip(*lines)):
+                if isinstance(x, list):
+                    x = x[0]
+                if isinstance(y, list):
+                    y = y[0]
                 f.write('%s %s' % (x, y))
                 if p_idx < num_points - 1:
                     f.write('\n')
