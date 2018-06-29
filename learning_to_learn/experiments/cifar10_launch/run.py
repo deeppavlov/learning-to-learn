@@ -41,8 +41,8 @@ tf.set_random_seed(1)
 BATCH_SIZE = 32
 env.build_pupil(
     batch_size=BATCH_SIZE,
-    num_layers=1,
-    num_hidden_nodes=[],
+    num_layers=2,
+    num_hidden_nodes=[1000],
     input_shape=[3072],
     num_classes=10,
     init_parameter=ip,
@@ -57,12 +57,18 @@ print('building is finished')
 #     changing_parameter_name='learning_rate',
 #     path_to_target_metric_storage=('valid', 'loss')
 # )
+
+# learning_rate = dict(
+#     type='adaptive_change',
+#     max_no_progress_points=20,
+#     decay=.5,
+#     init=lr,
+#     path_to_target_metric_storage=('valid', 'loss')
+# )
+
 learning_rate = dict(
-    type='adaptive_change',
-    max_no_progress_points=20,
-    decay=.5,
-    init=lr,
-    path_to_target_metric_storage=('valid', 'loss')
+    type='fixed',
+    value=lr,
 )
 env.train(
     # gpu_memory=.3,

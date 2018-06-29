@@ -83,6 +83,20 @@ env.build_pupil(
     optimizer=optimizer,
 )
 
+# learning_rate = dict(
+#     type='adaptive_change',
+#     max_no_progress_points=20,
+#     decay=.5,
+#     init=lr,
+#     path_to_target_metric_storage=('valid', 'loss')
+# )
+
+learning_rate = dict(
+    type='fixed',
+    value=lr,
+)
+
+
 tf.set_random_seed(1)
 env.train(
     allow_growth=True,
