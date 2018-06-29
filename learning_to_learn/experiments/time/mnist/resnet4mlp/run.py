@@ -1,4 +1,4 @@
-ROOT_HEIGHT = 4
+ROOT_HEIGHT = 5
 import sys
 from pathlib import Path
 file = Path(__file__).resolve()

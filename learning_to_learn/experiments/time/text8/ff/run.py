@@ -1,4 +1,4 @@
-ROOT_HEIGHT = 4
+ROOT_HEIGHT = 5
 import sys
 from pathlib import Path
 file = Path(__file__).resolve()
@@ -14,7 +14,7 @@ from learning_to_learn.pupils.lstm_for_meta import Lstm, LstmFastBatchGenerator 
 from learning_to_learn.useful_functions import create_vocabulary, convert, transform_data_into_dictionary_of_lines, \
     optimizer_time_measurement_save_order, save_lines, extend_for_relative
 
-from learning_to_learn.optimizers.ffnoact import Ff
+from learning_to_learn.optimizers.ff import Ff
 
 import os
 
@@ -39,7 +39,6 @@ types = lines[4].split()
 optimizer_varying = dict()
 for name, type_, line in zip(names, types, lines[5:]):
     optimizer_varying[name] = [convert(v, type_) for v in line.split()]
-
 
 dataset_path = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'text8.txt']))
 with open(dataset_path, 'r') as f:
@@ -67,6 +66,7 @@ OPT_INF_RESTORE_PUPIL_PATHS = [
 PUPIL_RESTORE_PATHS = [
     None
 ]
+
 BATCH_SIZE = 32
 pupil_build = dict(
     batch_size=BATCH_SIZE,
@@ -167,9 +167,11 @@ times = env.iter_time(
     dict(),
     model=model,
 )
+print(times)
 times = extend_for_relative(times)
+print(times)
 order = optimizer_time_measurement_save_order(names, base)
 print(order)
-print(times)
 times = transform_data_into_dictionary_of_lines(times, order)
+print(times)
 save_lines(times, save_path)

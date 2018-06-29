@@ -1,4 +1,4 @@
-ROOT_HEIGHT = 4
+ROOT_HEIGHT = 5
 import sys
 from pathlib import Path
 file = Path(__file__).resolve()
@@ -12,9 +12,9 @@ except ValueError: # Already removed
 from learning_to_learn.environment import Environment
 from learning_to_learn.pupils.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
 from learning_to_learn.useful_functions import create_vocabulary, convert, transform_data_into_dictionary_of_lines, \
-    optimizer_time_measurement_save_order, save_lines, extend_for_relative, create_path
+    optimizer_time_measurement_save_order, save_lines, extend_for_relative
 
-from learning_to_learn.optimizers.stackallrnn import StackAllRnn
+from learning_to_learn.optimizers.ffnoact import Ff
 
 import os
 
@@ -34,6 +34,12 @@ if base == 'None':
     base = None
 else:
     base = float(base)
+names = lines[3].split()
+types = lines[4].split()
+optimizer_varying = dict()
+for name, type_, line in zip(names, types, lines[5:]):
+    optimizer_varying[name] = [convert(v, type_) for v in line.split()]
+
 
 dataset_path = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'text8.txt']))
 with open(dataset_path, 'r') as f:
@@ -47,25 +53,25 @@ print(vocabulary_size)
 
 env = Environment(
     pupil_class=Lstm,
-    meta_optimizer_class=StackAllRnn,
+    meta_optimizer_class=Ff,
     batch_generator_classes=BatchGenerator,
     vocabulary=vocabulary,
 )
 
 add_metrics = ['bpc', 'perplexity', 'accuracy']
-NUM_EXERCISES = 1
-NUM_UNROLLINGS = 1
+NUM_EXERCISES = 10
+NUM_UNROLLINGS = 10
 OPT_INF_RESTORE_PUPIL_PATHS = [
     ('COLD', None)
 ]
 PUPIL_RESTORE_PATHS = [
     None
 ]
-BATCH_SIZE = 2
+BATCH_SIZE = 32
 pupil_build = dict(
     batch_size=BATCH_SIZE,
     num_layers=1,
-    num_nodes=[10],
+    num_nodes=[100],
     num_output_layers=1,
     num_output_nodes=[],
     vocabulary_size=vocabulary_size,
@@ -149,6 +155,7 @@ elif model == 'pupil':
     launch = pupil_launch
 else:
     launch = None
+
 times = env.iter_time(
     steps,
     base,
@@ -156,15 +163,13 @@ times = env.iter_time(
     optimizer_build,
     launch,
     dict(),
-    dict(),
+    optimizer_varying,
     dict(),
     model=model,
 )
 times = extend_for_relative(times)
-order = optimizer_time_measurement_save_order([], base)
+order = optimizer_time_measurement_save_order(names, base)
 print(order)
 print(times)
-
-create_path(save_path, file_name_is_in_path=True)
-with open(save_path + '.txt', 'w') as f:
-    f.write(str(times))
+times = transform_data_into_dictionary_of_lines(times, order)
+save_lines(times, save_path)

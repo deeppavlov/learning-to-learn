@@ -1,4 +1,4 @@
-ROOT_HEIGHT = 4
+ROOT_HEIGHT = 5
 import sys
 from pathlib import Path
 file = Path(__file__).resolve()
@@ -12,9 +12,9 @@ except ValueError: # Already removed
 from learning_to_learn.environment import Environment
 from learning_to_learn.pupils.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
 from learning_to_learn.useful_functions import create_vocabulary, convert, transform_data_into_dictionary_of_lines, \
-    optimizer_time_measurement_save_order, save_lines, extend_for_relative
+    optimizer_time_measurement_save_order, save_lines, extend_for_relative, create_path
 
-from learning_to_learn.optimizers.res_net_opt import ResNet4Lstm
+from learning_to_learn.optimizers.indcoefnoact import IndCoefNoAct
 
 import os
 
@@ -34,11 +34,6 @@ if base == 'None':
     base = None
 else:
     base = float(base)
-names = lines[3].split()
-types = lines[4].split()
-optimizer_varying = dict()
-for name, type_, line in zip(names, types, lines[5:]):
-    optimizer_varying[name] = [convert(v, type_) for v in line.split()]
 
 dataset_path = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'text8.txt']))
 with open(dataset_path, 'r') as f:
@@ -52,14 +47,14 @@ print(vocabulary_size)
 
 env = Environment(
     pupil_class=Lstm,
-    meta_optimizer_class=ResNet4Lstm,
+    meta_optimizer_class=IndCoefNoAct,
     batch_generator_classes=BatchGenerator,
     vocabulary=vocabulary,
 )
 
 add_metrics = ['bpc', 'perplexity', 'accuracy']
-NUM_EXERCISES = 10
-NUM_UNROLLINGS = 10
+NUM_EXERCISES = 1
+NUM_UNROLLINGS = 1
 OPT_INF_RESTORE_PUPIL_PATHS = [
     ('COLD', None)
 ]
@@ -90,7 +85,6 @@ optimizer_build = dict(
     num_exercises=NUM_EXERCISES,
     additional_metrics=add_metrics,
     clip_norm=1000000.,
-    optimizer_init_parameter=.01
 )
 
 
@@ -162,13 +156,15 @@ times = env.iter_time(
     optimizer_build,
     launch,
     dict(),
-    optimizer_varying,
+    dict(),
     dict(),
     model=model,
 )
 times = extend_for_relative(times)
-order = optimizer_time_measurement_save_order(names, base)
+order = optimizer_time_measurement_save_order([], base)
 print(order)
 print(times)
-times = transform_data_into_dictionary_of_lines(times, order)
-save_lines(times, save_path)
+
+create_path(save_path, file_name_is_in_path=True)
+with open(save_path + '.txt', 'w') as f:
+    f.write(str(times))

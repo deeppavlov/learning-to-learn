@@ -1,4 +1,4 @@
-ROOT_HEIGHT = 4
+ROOT_HEIGHT = 5
 import sys
 from pathlib import Path
 file = Path(__file__).resolve()
@@ -10,11 +10,12 @@ except ValueError: # Already removed
     pass
 
 from learning_to_learn.environment import Environment
-from learning_to_learn.pupils.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
+from learning_to_learn.pupils.mlp_for_meta import MlpForMeta
 from learning_to_learn.useful_functions import create_vocabulary, convert, transform_data_into_dictionary_of_lines, \
     optimizer_time_measurement_save_order, save_lines, extend_for_relative
+from learning_to_learn.image_batch_gens import MnistBatchGenerator
 
-from learning_to_learn.optimizers.ffres import FfResOpt
+from learning_to_learn.optimizers.l2l import L2L
 
 import os
 
@@ -40,47 +41,36 @@ optimizer_varying = dict()
 for name, type_, line in zip(names, types, lines[5:]):
     optimizer_varying[name] = [convert(v, type_) for v in line.split()]
 
-dataset_path = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'text8.txt']))
-with open(dataset_path, 'r') as f:
-    text = f.read()
+optimizer_varying['num_lstm_nodes'] = [
+    [nn] * optimizer_varying['num_lstm_layers'][0] for nn in optimizer_varying['num_lstm_nodes']]
 
-train_text = text
-
-vocabulary = create_vocabulary(text)
-vocabulary_size = len(vocabulary)
-print(vocabulary_size)
+data_dir = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'mnist']))
 
 env = Environment(
-    pupil_class=Lstm,
-    meta_optimizer_class=FfResOpt,
-    batch_generator_classes=BatchGenerator,
-    vocabulary=vocabulary,
+    pupil_class=MlpForMeta,
+    meta_optimizer_class=L2L,
+    batch_generator_classes=MnistBatchGenerator,
 )
 
 add_metrics = ['bpc', 'perplexity', 'accuracy']
-NUM_EXERCISES = 10
-NUM_UNROLLINGS = 10
+NUM_EXERCISES = 1
+NUM_UNROLLINGS = 1
 OPT_INF_RESTORE_PUPIL_PATHS = [
     ('COLD', None)
 ]
 PUPIL_RESTORE_PATHS = [
     None
 ]
-BATCH_SIZE = 32
+BATCH_SIZE = 2
 pupil_build = dict(
     batch_size=BATCH_SIZE,
     num_layers=1,
-    num_nodes=[100],
-    num_output_layers=1,
-    num_output_nodes=[],
-    vocabulary_size=vocabulary_size,
-    embedding_size=150,
-    num_unrollings=NUM_UNROLLINGS,
+    num_hidden_nodes=[],
+    input_shape=[784],
+    num_classes=10,
     init_parameter=3.,
-    num_gpus=1,
-    regime='optimizer_training',
     additional_metrics=add_metrics,
-    going_to_limit_memory=True
+    optimizer='sgd'
 )
 
 optimizer_build = dict(
@@ -89,7 +79,6 @@ optimizer_build = dict(
     num_optimizer_unrollings=10,
     num_exercises=NUM_EXERCISES,
     additional_metrics=add_metrics,
-    clip_norm=1000000.,
     optimizer_init_parameter=.01
 )
 
@@ -111,41 +100,53 @@ optimizer_launch = dict(
     allow_growth=True,
     result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
     additions_to_feed_dict=train_opt_add_feed,
-    pupil_restore_paths=PUPIL_RESTORE_PATHS,
     # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
-    reset_period=1,
     num_exercises=NUM_EXERCISES,
-    train_dataset_texts=[train_text],
+    reset_period=1,
+    stop=steps,
+    train_datasets=[('train', 'train')],
     opt_inf_is_performed=False,
-    vocabulary=vocabulary,
+    validation_additions_to_feed_dict=valid_add_feed,
     batch_size=BATCH_SIZE,
     batch_gen_init_is_random=True,
-    num_unrollings=NUM_UNROLLINGS,
-    learning_rate={'type': 'exponential_decay',
-                   'init': 3e-4,
-                   'decay': .1,
-                   'period': 3500},
-    results_collect_interval=100,
+    results_collect_interval=2000,
+    permute=False,
+    summary=True,
+    add_graph_to_summary=True,
+    one_batch_gen=True,
+    train_batch_kwargs=dict(
+        data_dir=data_dir
+    ),
+    valid_batch_kwargs=dict(
+        data_dir=data_dir
+    ),
 )
 
 pupil_launch = dict(
     # gpu_memory=.3,
-    num_unrollings=NUM_UNROLLINGS,
-    vocabulary=vocabulary,
     with_meta_optimizer=True,
-    # restore_path=the_only_pupil_restore_path,
     allow_growth=True,
     batch_size=BATCH_SIZE,
-    checkpoint_steps=None,
     result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
     printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
     stop=steps,
     # stop=4000,
-    train_dataset_text=train_text,
-    results_collect_interval=1000,
+    train_dataset=dict(
+        train='train'
+    ),
+    validation_datasets=dict(
+        valid='validation'
+    ),
+    train_batch_kwargs=dict(
+        data_dir=data_dir
+    ),
+    valid_batch_kwargs=dict(
+        data_dir=data_dir
+    ),
+    results_collect_interval=1,
     additions_to_feed_dict=opt_inf_add_feed,
     validation_additions_to_feed_dict=valid_add_feed,
-    no_validation=True,
+    no_validation=False,
 )
 
 if model == 'optimizer':
@@ -154,6 +155,7 @@ elif model == 'pupil':
     launch = pupil_launch
 else:
     launch = None
+
 times = env.iter_time(
     steps,
     base,

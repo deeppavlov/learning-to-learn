@@ -1,4 +1,4 @@
-ROOT_HEIGHT = 4
+ROOT_HEIGHT = 5
 import sys
 from pathlib import Path
 file = Path(__file__).resolve()
@@ -14,7 +14,7 @@ from learning_to_learn.pupils.lstm_for_meta import Lstm, LstmFastBatchGenerator 
 from learning_to_learn.useful_functions import create_vocabulary, convert, transform_data_into_dictionary_of_lines, \
     optimizer_time_measurement_save_order, save_lines, extend_for_relative
 
-from learning_to_learn.optimizers.ff import Ff
+from learning_to_learn.optimizers.res_net_opt import ResNet4Lstm
 
 import os
 
@@ -52,7 +52,7 @@ print(vocabulary_size)
 
 env = Environment(
     pupil_class=Lstm,
-    meta_optimizer_class=Ff,
+    meta_optimizer_class=ResNet4Lstm,
     batch_generator_classes=BatchGenerator,
     vocabulary=vocabulary,
 )
@@ -66,7 +66,6 @@ OPT_INF_RESTORE_PUPIL_PATHS = [
 PUPIL_RESTORE_PATHS = [
     None
 ]
-
 BATCH_SIZE = 32
 pupil_build = dict(
     batch_size=BATCH_SIZE,
@@ -167,11 +166,9 @@ times = env.iter_time(
     dict(),
     model=model,
 )
-print(times)
 times = extend_for_relative(times)
-print(times)
 order = optimizer_time_measurement_save_order(names, base)
 print(order)
-times = transform_data_into_dictionary_of_lines(times, order)
 print(times)
+times = transform_data_into_dictionary_of_lines(times, order)
 save_lines(times, save_path)
