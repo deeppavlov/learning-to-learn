@@ -591,7 +591,7 @@ class ResNet4Mlp(Meta):
         # print("(Lstm.create_saver)var_dict:", var_dict)
         with tf.device('/cpu:0'):
             saved_vars = dict()
-            print(self._opt_trainable)
+            # print(self._opt_trainable)
             for res_idx, res_layer_vars in enumerate(self._opt_trainable['res_layers']):
                 for pupil_layer, pupil_layer_core in res_layer_vars.items():
                     for idx, (m, b) in enumerate(zip(pupil_layer_core[0], pupil_layer_core[1])):
@@ -599,6 +599,6 @@ class ResNet4Mlp(Meta):
                         saved_vars['res_layer_%s_core_%s_b_%s' % (res_idx, pupil_layer, idx)] = b
             saved_vars['lstm_matrix'] = self._opt_trainable['lstm_matrix']
             saved_vars['lstm_bias'] = self._opt_trainable['lstm_bias']
-            print(saved_vars)
+            # print(saved_vars)
             saver = tf.train.Saver(saved_vars, max_to_keep=None)
         return saver
