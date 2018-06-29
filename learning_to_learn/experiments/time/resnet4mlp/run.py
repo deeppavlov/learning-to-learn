@@ -108,7 +108,6 @@ optimizer_launch = dict(
     batch_size=BATCH_SIZE,
     batch_gen_init_is_random=True,
     results_collect_interval=2000,
-    opt_inf_results_collect_interval=10,
     permute=False,
     summary=True,
     add_graph_to_summary=True,
