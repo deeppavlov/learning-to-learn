@@ -35,8 +35,8 @@ tf.set_random_seed(1)
 BATCH_SIZE = 32
 env.build_pupil(
     batch_size=BATCH_SIZE,
-    num_layers=1,
-    num_hidden_nodes=[],
+    num_layers=2,
+    num_hidden_nodes=[1000],
     input_shape=[784],
     num_classes=10,
     init_parameter=3.,
