@@ -12,7 +12,7 @@ except ValueError: # Already removed
 from learning_to_learn.environment import Environment
 from learning_to_learn.pupils.mlp_for_meta import MlpForMeta
 from learning_to_learn.useful_functions import create_vocabulary, convert, transform_data_into_dictionary_of_lines, \
-    optimizer_time_measurement_save_order, save_lines, extend_for_relative
+    optimizer_time_measurement_save_order, save_lines, extend_for_relative, create_path
 from learning_to_learn.image_batch_gens import MnistBatchGenerator
 
 from learning_to_learn.optimizers.indcoefnoact import IndCoefNoAct
@@ -53,7 +53,7 @@ OPT_INF_RESTORE_PUPIL_PATHS = [
 PUPIL_RESTORE_PATHS = [
     None
 ]
-BATCH_SIZE = 2
+BATCH_SIZE = 32
 pupil_build = dict(
     batch_size=BATCH_SIZE,
     num_layers=1,
@@ -163,5 +163,6 @@ times = extend_for_relative(times)
 order = optimizer_time_measurement_save_order(names, base)
 print(order)
 print(times)
-times = transform_data_into_dictionary_of_lines(times, order)
-save_lines(times, save_path)
+create_path(save_path, file_name_is_in_path=True)
+with open(save_path + '.txt', 'w') as f:
+    f.write(str(times))

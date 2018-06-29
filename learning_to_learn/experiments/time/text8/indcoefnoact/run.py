@@ -53,8 +53,8 @@ env = Environment(
 )
 
 add_metrics = ['bpc', 'perplexity', 'accuracy']
-NUM_EXERCISES = 1
-NUM_UNROLLINGS = 1
+NUM_EXERCISES = 10
+NUM_UNROLLINGS = 10
 OPT_INF_RESTORE_PUPIL_PATHS = [
     ('COLD', None)
 ]
