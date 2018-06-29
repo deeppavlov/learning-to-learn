@@ -146,7 +146,7 @@ pupil_launch = dict(
     results_collect_interval=1,
     additions_to_feed_dict=opt_inf_add_feed,
     validation_additions_to_feed_dict=valid_add_feed,
-    no_validation=False,
+    no_validation=True,
 )
 
 if model == 'optimizer':

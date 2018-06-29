@@ -135,10 +135,10 @@ pupil_launch = dict(
     valid_batch_kwargs=dict(
         data_dir=data_dir
     ),
-    results_collect_interval=1,
+    results_collect_interval=10**6,
     additions_to_feed_dict=opt_inf_add_feed,
     validation_additions_to_feed_dict=valid_add_feed,
-    no_validation=False,
+    no_validation=True,
 )
 
 if model == 'optimizer':
@@ -160,8 +160,6 @@ times = env.iter_time(
     model=model,
 )
 times = extend_for_relative(times)
-order = optimizer_time_measurement_save_order(names, base)
-print(order)
 print(times)
 create_path(save_path, file_name_is_in_path=True)
 with open(save_path + '.txt', 'w') as f:
