@@ -39,9 +39,11 @@ dataset_path = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'text8.txt']))
 with open(dataset_path, 'r') as f:
     text = f.read()
 
-valid_size = 1000
-valid_text = text[:valid_size]
-train_text = text[valid_size:]
+test_size = 100000
+valid_size = 2000
+test_text = text[:test_size]
+valid_text = text[test_size:test_size+valid_size]
+train_text = text[test_size+valid_size:]
 
 vocabulary = create_vocabulary(text)
 vocabulary_size = len(vocabulary)

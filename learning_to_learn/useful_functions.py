@@ -1,5 +1,6 @@
 import itertools
 import importlib
+import math
 import numpy as np
 from functools import reduce
 import os
@@ -2449,19 +2450,30 @@ def get_metric_names_and_regimes_from_optimizer_eval_dir(eval_dir):
     return metric_names, regimes
 
 
-def search_hps_giving_min_and_max(data):
+def pass_filter(x, no_zeros):
+    if no_zeros and x == 0:
+        return False
+    elif math.isnan(x):
+        return False
+    elif math.isinf(x):
+        return False
+    else:
+        return True
+
+
+def search_hps_giving_min_and_max(data, no_zeros):
     min = None
     max = None
     for fixed_hps_tuple, fdata in data.items():
         for line_hp, ldata in fdata.items():
             for changing_hp, v, _ in zip(*ldata):
-                if max is None or v > max:
+                if (max is None or v > max) and pass_filter(v, no_zeros):
                     max = v
                     if line_hp is None:
                         max_res_hp = list(fixed_hps_tuple) + [changing_hp]
                     else:
                         max_res_hp = list(fixed_hps_tuple) + [line_hp, changing_hp]
-                if min is None or v < min:
+                if (min is None or v < min) and pass_filter(v, no_zeros):
                     min = v
                     if line_hp is None:
                         min_res_hp = list(fixed_hps_tuple) + [changing_hp]
@@ -2473,12 +2485,19 @@ def search_hps_giving_min_and_max(data):
     )
 
 
-def get_min_and_max(for_plotting, model):
+def zeros_wrapper(no_zeros):
+    def f(data):
+        return search_hps_giving_min_and_max(data, no_zeros)
+    return f
+
+
+def get_min_and_max(for_plotting, model, no_zeros=True):
     if model == 'pupil':
         depth = 2
     elif model == 'optimizer':
         depth = 3
-    return apply_to_nested_on_depth(for_plotting, search_hps_giving_min_and_max, depth)
+    f = zeros_wrapper(no_zeros)
+    return apply_to_nested_on_depth(for_plotting, f, depth)
 
 
 def apply_direction(minmax, metric):
@@ -2488,8 +2507,8 @@ def apply_direction(minmax, metric):
         return minmax['min']
 
 
-def get_best(for_plotting, model):
-    minmax = get_min_and_max(for_plotting, model)
+def get_best(for_plotting, model, no_zeros=True):
+    minmax = get_min_and_max(for_plotting, model, no_zeros=no_zeros)
     res = dict()
     if model == 'pupil':
         for dataset_name, dataset_res in minmax.items():
