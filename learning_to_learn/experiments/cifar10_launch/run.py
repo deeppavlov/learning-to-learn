@@ -20,6 +20,9 @@ with open(conf_file, 'r') as f:
     lines = f.read().split('\n')
 optimizer = lines[0]
 freq = int(lines[1])
+stop = int(lines[2])
+ip = float(lines[3])
+lr = float(lines[4])
 
 env = Environment(Mlp, CifarBatchGenerator)
 
@@ -42,7 +45,7 @@ env.build_pupil(
     num_hidden_nodes=[],
     input_shape=[3072],
     num_classes=10,
-    init_parameter=.1,
+    init_parameter=ip,
     additional_metrics=add_metrics,
     optimizer=optimizer
 )
@@ -58,7 +61,7 @@ learning_rate = dict(
     type='adaptive_change',
     max_no_progress_points=20,
     decay=.5,
-    init=0.0002,
+    init=lr,
     path_to_target_metric_storage=('valid', 'loss')
 )
 env.train(
@@ -71,7 +74,7 @@ env.train(
     checkpoint_steps=None,
     result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
     printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
-    stop=1000,
+    stop=stop,
     # stop=2000,
     train_dataset=dict(
         train='train'
