@@ -1,6 +1,7 @@
 import sys
 import os
 import matplotlib.pyplot as plt
+from matplotlib import rc
 
 from pathlib import Path  # if you haven't already done so
 file = Path(__file__).resolve()
@@ -16,6 +17,10 @@ from learning_to_learn.useful_functions import create_path, InvalidArgumentError
 COLORS = ['r', 'g', 'b', 'k', 'c', 'magenta', 'brown', 'darkviolet', 'pink', 'yellow', 'gray', 'orange', 'olive']
 DPI = 900
 FORMATS = ['pdf', 'png']
+
+FONT = {'family': 'Verdana',
+        'weight': 'normal'}
+rc('font', **FONT)
 
 save_path = sys.argv[1]  # no extension!
 create_path(save_path, file_name_is_in_path=True)
@@ -44,6 +49,8 @@ if len(plot_data) % 2 != 0:
 
 line_names = [plot_data[2*i] for i in range(len(plot_data) // 2)]
 file_names = [plot_data[2*i+1] for i in range(len(plot_data) // 2)]
+
+# print(line_names)
 
 data = list()
 for line_name, file_name in zip(line_names, file_names):

@@ -27,6 +27,7 @@ AVERAGING_NUMBER = 3
 
 FONT = {'family': 'Verdana',
         'weight': 'normal'}
+rc('font', **FONT)
 
 
 def fixed_hps_from_str(string):

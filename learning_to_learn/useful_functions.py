@@ -1,6 +1,7 @@
 import itertools
 import importlib
 import math
+import re
 import numpy as np
 from functools import reduce
 import os
@@ -845,6 +846,14 @@ def unite_nested_dicts(list_of_nested, depth):
 def is_int(s):
     try:
         int(s)
+        return True
+    except ValueError:
+        return False
+
+
+def is_float(s):
+    try:
+        float(s)
         return True
     except ValueError:
         return False
@@ -2450,30 +2459,87 @@ def get_metric_names_and_regimes_from_optimizer_eval_dir(eval_dir):
     return metric_names, regimes
 
 
-def pass_filter(x, no_zeros):
-    if no_zeros and x == 0:
-        return False
-    elif math.isnan(x):
-        return False
-    elif math.isinf(x):
-        return False
+def in_interval(x, interval):
+    bra = interval[0]
+    cket = interval[-1]
+    left, right = interval[1:-1].split(',')
+    if is_float(left):
+        left = float(left)
+        if bra == '[':
+            if x >= left:
+                left_ok = True
+            else:
+                left_ok = False
+        elif bra == '(':
+            if x > left:
+                left_ok = True
+            else:
+                left_ok = False
     else:
-        return True
+        left_ok = True
+
+    if is_float(right):
+        right = float(right)
+        if cket == ']':
+            if x <= right:
+                right_ok = True
+            else:
+                right_ok = False
+        elif cket == ')':
+            if x < right:
+                right_ok = True
+            else:
+                right_ok = False
+    else:
+        right_ok = True
+    return left_ok and right_ok
 
 
-def search_hps_giving_min_and_max(data, no_zeros):
+def split_by_brackets(value_filter):
+    splitted = re.split('([\]\)])', value_filter)
+    length = len(splitted)
+    intervals = list()
+    for i in range(length // 2):
+        intervals.append(
+            splitted[i*2] + splitted[i*2+1]
+        )
+    # print(intervals)
+    return intervals
+
+
+def pass_filter(x, value_filter):
+    if math.isnan(x):
+        return False
+    if math.isinf(x):
+        return False
+    value_filter = split_by_brackets(value_filter)
+    filter_is_passed = False
+    for interval in value_filter:
+        filter_is_passed = filter_is_passed or in_interval(x, interval)
+    return filter_is_passed
+
+
+def search_hps_giving_min_and_max(data, value_filter):
     min = None
     max = None
+    fixed_hps_num = len(list(data.keys())[0])
+    line_hp = list(list(data.values())[0].keys())[0]
+    if line_hp is None:
+        max_res_hp = [None] * fixed_hps_num + [None]
+        min_res_hp = [None] * fixed_hps_num + [None]
+    else:
+        max_res_hp = [None] * fixed_hps_num + [line_hp, None]
+        min_res_hp = [None] * fixed_hps_num + [line_hp, None]
     for fixed_hps_tuple, fdata in data.items():
         for line_hp, ldata in fdata.items():
             for changing_hp, v, _ in zip(*ldata):
-                if (max is None or v > max) and pass_filter(v, no_zeros):
+                if (max is None or v > max) and pass_filter(v, value_filter):
                     max = v
                     if line_hp is None:
                         max_res_hp = list(fixed_hps_tuple) + [changing_hp]
                     else:
                         max_res_hp = list(fixed_hps_tuple) + [line_hp, changing_hp]
-                if (min is None or v < min) and pass_filter(v, no_zeros):
+                if (min is None or v < min) and pass_filter(v, value_filter):
                     min = v
                     if line_hp is None:
                         min_res_hp = list(fixed_hps_tuple) + [changing_hp]
@@ -2485,18 +2551,18 @@ def search_hps_giving_min_and_max(data, no_zeros):
     )
 
 
-def zeros_wrapper(no_zeros):
+def filter_wrapper(value_filter):
     def f(data):
-        return search_hps_giving_min_and_max(data, no_zeros)
+        return search_hps_giving_min_and_max(data, value_filter)
     return f
 
 
-def get_min_and_max(for_plotting, model, no_zeros=True):
+def get_min_and_max(for_plotting, model, value_filter='[-inf,0)(0,+inf]'):
     if model == 'pupil':
         depth = 2
     elif model == 'optimizer':
         depth = 3
-    f = zeros_wrapper(no_zeros)
+    f = filter_wrapper(value_filter)
     return apply_to_nested_on_depth(for_plotting, f, depth)
 
 
@@ -2507,8 +2573,8 @@ def apply_direction(minmax, metric):
         return minmax['min']
 
 
-def get_best(for_plotting, model, no_zeros=True):
-    minmax = get_min_and_max(for_plotting, model, no_zeros=no_zeros)
+def get_best(for_plotting, model, value_filter='[-inf,0)(0,+inf]'):
+    minmax = get_min_and_max(for_plotting, model, value_filter=value_filter)
     res = dict()
     if model == 'pupil':
         for dataset_name, dataset_res in minmax.items():
