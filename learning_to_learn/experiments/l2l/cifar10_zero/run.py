@@ -107,6 +107,7 @@ MLP_SIZE = dict(
     num_hidden_nodes=[1000],
     input_shape=[3072],
     num_classes=10,
+    init_parameter=0.1,
 )
 OPTIMIZER_PARAMETERS = dict(
     regime='train',
