@@ -19,14 +19,9 @@ from learning_to_learn.optimizers.res_net_opt import ResNet4Lstm
 
 import os
 
-pretrain_step = sys.argv[1]
-parameter_set_file_name = sys.argv[2]
-if len(sys.argv) > 3:
-    chop_last_experiment = bool(sys.argv[3])
-else:
-    chop_last_experiment = False
+parameter_set_file_name = sys.argv[1]
 save_path = os.path.join(parameter_set_file_name.split('.')[0], 'evaluation')
-confs, _ = compose_hp_confs(parameter_set_file_name, save_path, chop_last_experiment=chop_last_experiment)
+confs, _ = compose_hp_confs(parameter_set_file_name, save_path, chop_last_experiment=False)
 confs.reverse()  # start with small configs
 print("confs:", confs)
 
@@ -67,14 +62,15 @@ valid_add_feed = [
 
 SHARE_TRAIN_DATA = True
 checkpoints_path = os.path.join(*(['..']*ROOT_HEIGHT + ['lstm', 'text8_pretrain', 'checkpoints']))
-the_only_pupil_restore_path = os.path.join(checkpoints_path, '%s') % pretrain_step
+the_only_pupil_restore_path = None
+PUPIL_NAME = 'COLD'
 NUM_EXERCISES = 10
 evaluation = dict(
     save_path=save_path,
     opt_inf_is_performed=True,
     opt_inf_stop=20,
     opt_inf_pupil_restore_paths={
-        ('pretrain%s' % pretrain_step, the_only_pupil_restore_path)
+        (PUPIL_NAME, the_only_pupil_restore_path)
     },
     opt_inf_additions_to_feed_dict=opt_inf_add_feed,
     opt_inf_validation_dataset_texts=[valid_text],
@@ -134,6 +130,7 @@ launch_kwargs = dict(
 
 for conf in confs:
     build_pupil_hyperparameters = dict(
+        init_parameter=conf['init_parameter'],
     )
     build_optimizer_hyperparameters = dict(
         optimizer_init_parameter=conf['optimizer_init_parameter'],
