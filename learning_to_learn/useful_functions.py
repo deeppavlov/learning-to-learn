@@ -1606,7 +1606,7 @@ def get_hp_names_from_conf_file(file_name):
     return hp_names
 
 
-def make_initial_grid(file_name, eval_dir_or_file, chop_last_experiment=False, model='optimizer'):
+def read_text_conf_file(file_name):
     init_conf = OrderedDict()
     init_grid_values = list()
     with open(file_name, 'r') as f:
@@ -1614,16 +1614,26 @@ def make_initial_grid(file_name, eval_dir_or_file, chop_last_experiment=False, m
     hp_names = lines[0].split()
     hp_types = lines[1].split()
     num_params = len(hp_names)
-    for hp_name, hp_type, line in zip(hp_names, hp_types, lines[2:2+num_params]):
+    for hp_name, hp_type, line in zip(hp_names, hp_types, lines[2:2 + num_params]):
         param_values = remove_repeats_from_list([convert(v, hp_type) for v in line.split()])
         init_conf[hp_name] = param_values
         init_grid_values.append(param_values)
-    if len(lines) > 2+num_params and len(lines[2+num_params]) > 0:
-        num_repeats = int(lines[2+num_params])
+    if len(lines) > 2 + num_params and len(lines[2 + num_params]) > 0:
+        num_repeats = int(lines[2 + num_params])
     else:
         num_repeats = 1
-    # print("(useful_functions.make_initial_grid)num_repeats:", num_repeats)
-    # print("(useful_functions.make_initial_grid)lines:", lines)
+    return hp_names, init_conf, init_grid_values, num_repeats
+
+
+def сreate_grids_after_file_parsing(
+        hp_names,
+        init_conf,
+        init_grid_values,
+        num_repeats,
+        eval_dir_or_file,
+        chop_last_experiment=False,
+        model='optimizer'
+):
     if model == 'optimizer':
         tested_combs, num_exps, last_exp_file_name = get_combs_and_num_exps(eval_dir_or_file, hp_names)
         # print("(useful_functions.make_initial_grid)tested_combs:", tested_combs)
@@ -1651,9 +1661,22 @@ def make_initial_grid(file_name, eval_dir_or_file, chop_last_experiment=False, m
                 print("(useful_functions.make_initial_grid)tested_comb:", tested_comb)
                 print("WARNING: UNKNOWN POINT")
         exp_counter_grid[tuple(indices)] += 1.
+    grids = slice_to_conf_grids(exp_counter_grid, num_repeats), init_conf, num_exps
+    return grids
 
-    # print("(useful_functions.make_initial_grid)exp_counter_grid:", exp_counter_grid)
-    return slice_to_conf_grids(exp_counter_grid, num_repeats), init_conf, num_exps
+
+def make_initial_grid(file_name, eval_dir_or_file, chop_last_experiment=False, model='optimizer'):
+    hp_names, init_conf, init_grid_values, num_repeats = read_text_conf_file(file_name)
+    grids = сreate_grids_after_file_parsing(
+        hp_names,
+        init_conf,
+        init_grid_values,
+        num_repeats,
+        eval_dir_or_file,
+        chop_last_experiment=chop_last_experiment,
+        model=model,
+    )
+    return grids
 
 
 def slice_to_conf_grids(exp_counter_grid, num_repeats):

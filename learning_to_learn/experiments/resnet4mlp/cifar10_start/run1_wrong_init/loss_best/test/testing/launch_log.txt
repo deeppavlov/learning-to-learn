@@ -1,0 +1,87 @@
+2018-07-02 05:09:59.262544
+
+launch regime: test
+
+build parameters:
+{
+    "regime": "train",
+    "num_optimizer_unrollings": 5,
+    "num_exercises": 10,
+    "res_size": 1000,
+    "num_res_layers": 4,
+    "permute": False,
+    "optimizer_for_opt_type": "adam",
+    "additional_metrics": [
+        "bpc",
+        "perplexity",
+        "accuracy"],
+    "clip_norm": 10000000.0,
+    "optimizer_init_parameter": 1e-06,
+    "pupil_learning_rate": 1e-05}
+
+launch parameters:
+{
+    "restore_path": VERY_LONG_STRING,
+    "save_path": "run1/loss_best/test/testing",
+    "additions_to_feed_dict": [
+        {
+            "placeholder": "dropout",
+            "value": 1.0},
+        {
+            "placeholder": "optimizer_dropout_keep_prob",
+            "value": 1.0}],
+    "validation_datasets": {
+        "test": "test"},
+    "valid_batch_kwargs": {
+        "valid_size": 1000},
+    "printed_result_types": [
+        "perplexity",
+        "loss",
+        "bpc",
+        "accuracy"]}
+
+default launch parameters:
+{
+    "session_specs": {
+        "allow_soft_placement": False,
+        "gpu_memory": None,
+        "allow_growth": False,
+        "log_device_placement": False,
+        "visible_device_list": ""},
+    "start_specs": {
+        "restore_path": None,
+        "save_path": None,
+        "print_results": True,
+        "result_types": [
+            "loss",
+            "perplexity",
+            "accuracy"],
+        "verbose": True,
+        "batch_generator_class": <class 'learning_to_learn.image_batch_gens.CifarBatchGenerator'>,
+        "vocabulary": None},
+    "work": {
+        "additions_to_feed_dict": [],
+        "debug": None,
+        "validation_datasets": None,
+        "validation_batch_size": 1,
+        "validate_tokens_by_chars": False,
+        "valid_batch_kwargs": {},
+        "printed_result_types": [
+            "loss"],
+        "fuses": None,
+        "fuse_tensors": {
+            "fuse_print_tensors": {},
+            "fuse_save_tensors": {}},
+        "fuse_file_name": None,
+        "example_length": None,
+        "example_tensors": {
+            "example_print_tensors": {},
+            "example_save_tensors": {}},
+        "replicas": None,
+        "random": {
+            "number_of_runs": 5,
+            "length": 80},
+        "validation_tensor_schedule": {
+            "valid_print_tensors": {},
+            "valid_save_text_tensors": {}}}}
+

@@ -1,0 +1,154 @@
+2018-07-02 04:50:51.413363
+
+launch regime: train_with_meta
+
+pupil build parameters:
+{
+    "regime": "train",
+    "num_optimizer_unrollings": 5,
+    "num_exercises": 10,
+    "res_size": 1000,
+    "num_res_layers": 4,
+    "permute": False,
+    "optimizer_for_opt_type": "adam",
+    "additional_metrics": [
+        "bpc",
+        "perplexity",
+        "accuracy"],
+    "clip_norm": 10000000.0,
+    "optimizer_init_parameter": 1e-06,
+    "pupil_learning_rate": 1e-05}
+
+pupil launch parameters:
+{
+    "args": (,),
+    "start_session": True,
+    "close_session": True,
+    "set_passed_parameters_as_default": False,
+    "kwargs": {
+        "with_meta_optimizer": True,
+        "restore_optimizer_path": "run1/loss_best/test/training/checkpoints/final",
+        "save_path": "run1/loss_best/test/pupil_training",
+        "allow_growth": True,
+        "batch_size": 32,
+        "checkpoint_steps": None,
+        "result_types": [
+            "perplexity",
+            "loss",
+            "bpc",
+            "accuracy"],
+        "printed_result_types": [
+            "perplexity",
+            "loss",
+            "bpc",
+            "accuracy"],
+        "stop": 500,
+        "train_dataset": {
+            "train": "train"},
+        "validation_datasets": {
+            "valid": "validation"},
+        "train_batch_kwargs": {
+            "valid_size": 1000},
+        "valid_batch_kwargs": {
+            "valid_size": 1000},
+        "results_collect_interval": 1,
+        "additions_to_feed_dict": [
+            {
+                "placeholder": "dropout",
+                "value": 0.9},
+            {
+                "placeholder": "optimizer_dropout_keep_prob",
+                "value": 1.0}],
+        "validation_additions_to_feed_dict": [
+            {
+                "placeholder": "dropout",
+                "value": 1.0},
+            {
+                "placeholder": "optimizer_dropout_keep_prob",
+                "value": 1.0}],
+        "no_validation": False}}
+
+default launch parameters:
+{
+    "session_specs": {
+        "allow_soft_placement": False,
+        "gpu_memory": None,
+        "allow_growth": False,
+        "log_device_placement": False,
+        "visible_device_list": ""},
+    "start_specs": {
+        "restore_path": None,
+        "with_meta_optimizer": False,
+        "restore_optimizer_path": None,
+        "save_path": None,
+        "result_types": [
+            "loss",
+            "perplexity",
+            "accuracy"],
+        "summary": False,
+        "add_graph_to_summary": False,
+        "batch_generator_class": <class 'learning_to_learn.image_batch_gens.CifarBatchGenerator'>,
+        "vocabulary": None},
+    "run": {
+        "train_specs": {
+            "learning_rate": {
+                "init": 0.002,
+                "decay": 0.8,
+                "period": 1000,
+                "type": "exponential_decay",
+                "name": "learning_rate"},
+            "additions_to_feed_dict": [],
+            "stop": {
+                "type": "limit_steps",
+                "limit": 10000,
+                "name": "stop"},
+            "train_dataset": None,
+            "batch_size": {
+                "type": "fixed",
+                "value": 64,
+                "name": "batch_size"},
+            "train_batch_kwargs": {},
+            "checkpoint_steps": None,
+            "debug": None,
+            "validation_datasets": None,
+            "validation_additions_to_feed_dict": [],
+            "validation_batch_size": 1,
+            "valid_batch_kwargs": {},
+            "validate_tokens_by_chars": False,
+            "no_validation": False},
+        "schedule": {
+            "to_be_collected_while_training": {
+                "results_collect_interval": 100,
+                "print_per_collected": 1,
+                "example_per_print": 1},
+            "printed_result_types": [
+                "loss"],
+            "printed_controllers": [
+                "learning_rate"],
+            "fuses": None,
+            "fuse_tensors": {
+                "fuse_print_tensors": {},
+                "fuse_save_tensors": {}},
+            "example_length": None,
+            "example_tensors": {
+                "example_print_tensors": {},
+                "example_save_tensors": {}},
+            "replicas": None,
+            "random": {
+                "number_of_runs": 5,
+                "length": 80},
+            "train_tensor_schedule": {
+                "train_print_tensors": {},
+                "train_save_tensors": {},
+                "train_print_text_tensors": {},
+                "train_save_text_tensors": {},
+                "train_summary_tensors": {}},
+            "validation_tensor_schedule": {
+                "valid_print_tensors": {},
+                "valid_save_text_tensors": {}}}}}
+
+optimizer build parameters:
+None
+
+
+finish time: 2018-07-02 05:09:57.053682
