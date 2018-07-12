@@ -20,3 +20,7 @@ subword_nmt/**
 **/hp_search_short/*/**
 **/*checkpoint*
 **/plots/
+*valid.txt
+*train.txt
+*default_0.txt
+*log.txt
