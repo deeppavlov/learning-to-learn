@@ -23,6 +23,8 @@ subword_nmt/**
 *valid.txt
 *train.txt
 *default_0.txt
+*default_1.txt
+*log[0-9].txt
 *log.txt
 *test.txt
 *log#*.txt
@@ -34,3 +36,4 @@ subword_nmt/**
 *accuracy.txt
 *loss.txt
 *perplexity.txt
+**/[0-9].txt
