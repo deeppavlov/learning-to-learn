@@ -1,1 +1,0 @@
-clip_norm learning_rate/init optimizer_init_parameter pupil_learning_rate

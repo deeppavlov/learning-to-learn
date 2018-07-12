@@ -1,2 +1,0 @@
-3.2e-05 0.63
-float float

@@ -1,2 +1,0 @@
-100000000.0 0.001 0.002 0.0003
-float float float float

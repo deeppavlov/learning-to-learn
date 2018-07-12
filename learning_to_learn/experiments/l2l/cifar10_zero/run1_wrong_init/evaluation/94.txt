@@ -1,2 +1,0 @@
-0.001 1.6
-float float

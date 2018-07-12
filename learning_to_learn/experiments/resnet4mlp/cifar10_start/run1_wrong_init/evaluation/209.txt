@@ -1,2 +1,0 @@
-10000000.0 4.6e-05 5e-05 0.0003
-float float float float
