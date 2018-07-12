@@ -1,0 +1,200 @@
+2018-06-07 22:54:01.687563
+
+launch regime: train
+
+build parameters:
+{
+    "going_to_limit_memory": True,
+    "num_nodes": [
+        100],
+    "additional_metrics": [
+        "bpc",
+        "perplexity",
+        "accuracy"],
+    "num_output_nodes": [],
+    "init_parameter": 3.0,
+    "optimizer": "sgd",
+    "num_output_layers": 1,
+    "num_unrollings": 10,
+    "vocabulary_size": 27,
+    "batch_size": 32,
+    "num_gpus": 1,
+    "embedding_size": 150,
+    "num_layers": 1}
+
+launch parameters:
+{
+    "start_session": True,
+    "close_session": True,
+    "set_passed_parameters_as_default": False,
+    "kwargs": {
+        "num_unrollings": 10,
+        "printed_result_types": [
+            "perplexity",
+            "loss",
+            "bpc",
+            "accuracy"],
+        "train_dataset_text": VERY_LONG_STRING,
+        "additions_to_feed_dict": [
+            {
+                "placeholder": "dropout",
+                "value": 0.9}],
+        "save_path": "debug_early_stop",
+        "no_validation": False,
+        "validation_dataset_texts": [
+            VERY_LONG_STRING],
+        "stop": 4000,
+        "allow_growth": True,
+        "vocabulary": [
+            " ",
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            "f",
+            "g",
+            "h",
+            "i",
+            "j",
+            "k",
+            "l",
+            "m",
+            "n",
+            "o",
+            "p",
+            "q",
+            "r",
+            "s",
+            "t",
+            "u",
+            "v",
+            "w",
+            "x",
+            "y",
+            "z"],
+        "batch_size": 32,
+        "checkpoint_steps": None,
+        "result_types": [
+            "perplexity",
+            "loss",
+            "bpc",
+            "accuracy"],
+        "validation_additions_to_feed_dict": [
+            {
+                "placeholder": "dropout",
+                "value": 1.0}],
+        "results_collect_interval": 100,
+        "learning_rate": {
+            "type": "adaptive_change",
+            "decay": 0.5,
+            "init_value": 4.0,
+            "max_no_progress_points": 10}},
+    "args": (,)}
+
+default launch parameters:
+{
+    "start_specs": {
+        "save_path": None,
+        "restore_path": None,
+        "with_meta_optimizer": False,
+        "vocabulary": [
+            " ",
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            "f",
+            "g",
+            "h",
+            "i",
+            "j",
+            "k",
+            "l",
+            "m",
+            "n",
+            "o",
+            "p",
+            "q",
+            "r",
+            "s",
+            "t",
+            "u",
+            "v",
+            "w",
+            "x",
+            "y",
+            "z"],
+        "result_types": [
+            "loss",
+            "perplexity",
+            "accuracy"],
+        "meta_optimizer_restore_path": None,
+        "batch_generator_class": <class 'learning_to_learn.lstm_for_meta.LstmFastBatchGenerator'>,
+        "summary": False,
+        "add_graph_to_summary": False},
+    "session_specs": {
+        "log_device_placement": False,
+        "allow_soft_placement": False,
+        "visible_device_list": "",
+        "gpu_memory": None,
+        "allow_growth": False},
+    "run": {
+        "train_specs": {
+            "valid_batch_kwargs": {},
+            "validation_datasets": None,
+            "additions_to_feed_dict": [],
+            "train_dataset": None,
+            "validation_additions_to_feed_dict": [],
+            "debug": None,
+            "validate_tokens_by_chars": False,
+            "learning_rate": {
+                "type": "exponential_decay",
+                "init": 0.002,
+                "decay": 0.8,
+                "name": "learning_rate",
+                "period": 1000},
+            "stop": {
+                "type": "limit_steps",
+                "limit": 10000,
+                "name": "stop"},
+            "batch_size": {
+                "type": "fixed",
+                "value": 64,
+                "name": "batch_size"},
+            "checkpoint_steps": None,
+            "train_batch_kwargs": {},
+            "no_validation": False,
+            "validation_batch_size": 1},
+        "schedule": {
+            "fuses": None,
+            "validation_tensor_schedule": {
+                "valid_save_text_tensors": {},
+                "valid_print_tensors": {}},
+            "printed_result_types": [
+                "loss"],
+            "example_tensors": {
+                "example_print_tensors": {},
+                "example_save_tensors": {}},
+            "train_tensor_schedule": {
+                "train_save_text_tensors": {},
+                "train_save_tensors": {},
+                "train_summary_tensors": {},
+                "train_print_text_tensors": {},
+                "train_print_tensors": {}},
+            "random": {
+                "length": 80,
+                "number_of_runs": 5},
+            "example_length": None,
+            "fuse_tensors": {
+                "fuse_print_tensors": {},
+                "fuse_save_tensors": {}},
+            "to_be_collected_while_training": {
+                "example_per_print": 1,
+                "print_per_collected": 1,
+                "results_collect_interval": 100},
+            "replicas": None,
+            "printed_controllers": [
+                "learning_rate"]}}}
+

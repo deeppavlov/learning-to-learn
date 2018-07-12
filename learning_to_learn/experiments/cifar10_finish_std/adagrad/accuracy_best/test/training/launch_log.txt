@@ -1,0 +1,139 @@
+2018-06-18 19:44:50.728193
+
+launch regime: train
+
+build parameters:
+{
+    "batch_size": 32,
+    "num_layers": 2,
+    "num_hidden_nodes": [
+        1000],
+    "input_shape": [
+        3072],
+    "num_classes": 10,
+    "additional_metrics": [
+        "bpc",
+        "perplexity",
+        "accuracy"],
+    "optimizer": "adagrad"}
+
+launch parameters:
+{
+    "args": (,),
+    "start_session": True,
+    "close_session": True,
+    "set_passed_parameters_as_default": False,
+    "kwargs": {
+        "allow_growth": True,
+        "result_types": [
+            "loss",
+            "bpc",
+            "perplexity",
+            "accuracy"],
+        "additions_to_feed_dict": [
+            {
+                "placeholder": "dropout",
+                "value": 0.9}],
+        "save_path": "adagrad/accuracy_best/test/training",
+        "restore_path": "../cifar10_max_train/adagrad/0/checkpoints/best",
+        "stop": 1000,
+        "results_collect_interval": 1000,
+        "summary": False,
+        "add_graph_to_summary": False,
+        "train_dataset": {
+            "train": "train"},
+        "train_batch_kwargs": {
+            "valid_size": 1000},
+        "valid_batch_kwargs": {
+            "valid_size": 1000},
+        "validation_datasets": {
+            "valid": "validation"},
+        "learning_rate": {
+            "init": 9.5e-07,
+            "decay": 1.0,
+            "period": 1000000.0,
+            "type": "exponential_decay"},
+        "batch_size": 32,
+        "no_validation": True}}
+
+default launch parameters:
+{
+    "session_specs": {
+        "allow_soft_placement": False,
+        "gpu_memory": None,
+        "allow_growth": False,
+        "log_device_placement": False,
+        "visible_device_list": ""},
+    "start_specs": {
+        "restore_path": None,
+        "with_meta_optimizer": False,
+        "meta_optimizer_restore_path": None,
+        "save_path": None,
+        "result_types": [
+            "loss",
+            "perplexity",
+            "accuracy"],
+        "summary": False,
+        "add_graph_to_summary": False,
+        "batch_generator_class": <class 'learning_to_learn.image_batch_gens.CifarBatchGenerator'>,
+        "vocabulary": None},
+    "run": {
+        "train_specs": {
+            "learning_rate": {
+                "init": 0.002,
+                "decay": 0.8,
+                "period": 1000,
+                "type": "exponential_decay",
+                "name": "learning_rate"},
+            "additions_to_feed_dict": [],
+            "stop": {
+                "type": "limit_steps",
+                "limit": 10000,
+                "name": "stop"},
+            "train_dataset": None,
+            "batch_size": {
+                "type": "fixed",
+                "value": 64,
+                "name": "batch_size"},
+            "train_batch_kwargs": {},
+            "checkpoint_steps": None,
+            "debug": None,
+            "validation_datasets": None,
+            "validation_additions_to_feed_dict": [],
+            "validation_batch_size": 1,
+            "valid_batch_kwargs": {},
+            "validate_tokens_by_chars": False,
+            "no_validation": False},
+        "schedule": {
+            "to_be_collected_while_training": {
+                "results_collect_interval": 100,
+                "print_per_collected": 1,
+                "example_per_print": 1},
+            "printed_result_types": [
+                "loss"],
+            "printed_controllers": [
+                "learning_rate"],
+            "fuses": None,
+            "fuse_tensors": {
+                "fuse_print_tensors": {},
+                "fuse_save_tensors": {}},
+            "example_length": None,
+            "example_tensors": {
+                "example_print_tensors": {},
+                "example_save_tensors": {}},
+            "replicas": None,
+            "random": {
+                "number_of_runs": 5,
+                "length": 80},
+            "train_tensor_schedule": {
+                "train_print_tensors": {},
+                "train_save_tensors": {},
+                "train_print_text_tensors": {},
+                "train_save_text_tensors": {},
+                "train_summary_tensors": {}},
+            "validation_tensor_schedule": {
+                "valid_print_tensors": {},
+                "valid_save_text_tensors": {}}}}}
+
+
+finish time: 2018-06-18 19:44:59.536023

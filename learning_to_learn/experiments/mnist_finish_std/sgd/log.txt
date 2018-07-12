@@ -1,0 +1,5257 @@
+confs: [OrderedDict([('learning_rate/init', [1e-08, 1.1e-08, 1.3e-08, 1.5e-08, 1.7e-08, 2e-08, 2.3e-08, 2.6e-08, 3e-08, 3.5e-08, 4e-08, 4.6e-08, 5.2e-08, 6e-08, 6.9e-08, 7.9e-08, 9.1e-08, 1e-07, 1.2e-07, 1.4e-07, 1.6e-07, 1.8e-07, 2.1e-07, 2.4e-07, 2.8e-07, 3.2e-07, 3.6e-07, 4.2e-07, 4.8e-07, 5.5e-07, 6.3e-07, 7.2e-07, 8.3e-07, 9.5e-07, 1.1e-06, 1.3e-06, 1.4e-06, 1.7e-06, 1.9e-06, 2.2e-06, 2.5e-06, 2.9e-06, 3.3e-06, 3.8e-06, 4.4e-06, 5e-06, 5.8e-06, 6.6e-06, 7.6e-06, 8.7e-06, 1e-05, 1.1e-05, 1.3e-05, 1.5e-05, 1.7e-05, 2e-05, 2.3e-05, 2.6e-05, 3e-05, 3.5e-05, 4e-05, 4.6e-05, 5.2e-05, 6e-05, 6.9e-05, 7.9e-05, 9.1e-05, 0.0001, 0.00012, 0.00014, 0.00016, 0.00018, 0.00021, 0.00024, 0.00028, 0.00032, 0.00036, 0.00042, 0.00048, 0.00055, 0.00063, 0.00072, 0.00083, 0.00095, 0.0011, 0.0013, 0.0014, 0.0017, 0.0019, 0.0022, 0.0025, 0.0029, 0.0033, 0.0038, 0.0044, 0.005, 0.0058, 0.0066, 0.0076, 0.0087, 0.01])])]
+using sgd optimizer
+
+
+learning_rate/init: 1e-08
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 1e-08
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 1e-08
+results on train dataset
+loss: 0.0034549623
+bpc: 0.004984457
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 1e-08
+results on train dataset
+loss: 0.008796101
+bpc: 0.0126900915
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 1e-08
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 1.1e-08
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 1.1e-08
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 1.1e-08
+results on train dataset
+loss: 0.0034549623
+bpc: 0.004984457
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 1.1e-08
+results on train dataset
+loss: 0.008796101
+bpc: 0.0126900915
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 1.1e-08
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 1.3e-08
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 1.3e-08
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 1.3e-08
+results on train dataset
+loss: 0.0034549623
+bpc: 0.004984457
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 1.3e-08
+results on train dataset
+loss: 0.008796101
+bpc: 0.0126900915
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 1.3e-08
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 1.5e-08
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 1.5e-08
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 1.5e-08
+results on train dataset
+loss: 0.0034549623
+bpc: 0.004984457
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 1.5e-08
+results on train dataset
+loss: 0.008796101
+bpc: 0.0126900915
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 1.5e-08
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 1.7e-08
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 1.7e-08
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 1.7e-08
+results on train dataset
+loss: 0.0034549623
+bpc: 0.004984457
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 1.7e-08
+results on train dataset
+loss: 0.008796101
+bpc: 0.0126900915
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 1.7e-08
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 2e-08
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 2e-08
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 2e-08
+results on train dataset
+loss: 0.0034549623
+bpc: 0.004984457
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 2e-08
+results on train dataset
+loss: 0.008796101
+bpc: 0.0126900915
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 2e-08
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 2.3e-08
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 2.3e-08
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 2.3e-08
+results on train dataset
+loss: 0.0034549623
+bpc: 0.004984457
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 2.3e-08
+results on train dataset
+loss: 0.008796101
+bpc: 0.0126900915
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 2.3e-08
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 2.6e-08
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 2.6e-08
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 2.6e-08
+results on train dataset
+loss: 0.0034549623
+bpc: 0.004984457
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 2.6e-08
+results on train dataset
+loss: 0.008796101
+bpc: 0.0126900915
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 2.6e-08
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 3e-08
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 3e-08
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 3e-08
+results on train dataset
+loss: 0.0034549623
+bpc: 0.004984457
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 3e-08
+results on train dataset
+loss: 0.008796101
+bpc: 0.0126900915
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 3e-08
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 3.5e-08
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 3.5e-08
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 3.5e-08
+results on train dataset
+loss: 0.0034549623
+bpc: 0.004984457
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 3.5e-08
+results on train dataset
+loss: 0.008796101
+bpc: 0.0126900915
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 3.5e-08
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 4e-08
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 4e-08
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 4e-08
+results on train dataset
+loss: 0.0034549623
+bpc: 0.004984457
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 4e-08
+results on train dataset
+loss: 0.008796101
+bpc: 0.0126900915
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 4e-08
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 4.6e-08
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 4.6e-08
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 4.6e-08
+results on train dataset
+loss: 0.0034549623
+bpc: 0.004984457
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 4.6e-08
+results on train dataset
+loss: 0.008796101
+bpc: 0.0126900915
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 4.6e-08
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 5.2e-08
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 5.2e-08
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 5.2e-08
+results on train dataset
+loss: 0.0034549623
+bpc: 0.004984457
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 5.2e-08
+results on train dataset
+loss: 0.008796101
+bpc: 0.0126900915
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 5.2e-08
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 6e-08
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 6e-08
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 6e-08
+results on train dataset
+loss: 0.0034549623
+bpc: 0.004984457
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 6e-08
+results on train dataset
+loss: 0.008796101
+bpc: 0.0126900915
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 6e-08
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 6.9e-08
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 6.9e-08
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 6.9e-08
+results on train dataset
+loss: 0.0034549623
+bpc: 0.004984457
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 6.9e-08
+results on train dataset
+loss: 0.008796101
+bpc: 0.0126900915
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 6.9e-08
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 7.9e-08
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 7.9e-08
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 7.9e-08
+results on train dataset
+loss: 0.0034549623
+bpc: 0.004984457
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 7.9e-08
+results on train dataset
+loss: 0.008796101
+bpc: 0.0126900915
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 7.9e-08
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 9.1e-08
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 9.1e-08
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 9.1e-08
+results on train dataset
+loss: 0.0034549623
+bpc: 0.004984457
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 9.1e-08
+results on train dataset
+loss: 0.008796101
+bpc: 0.0126900915
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 9.1e-08
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 1e-07
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 1e-07
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 1e-07
+results on train dataset
+loss: 0.0034549623
+bpc: 0.004984457
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 1e-07
+results on train dataset
+loss: 0.008796101
+bpc: 0.0126900915
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 1e-07
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 1.2e-07
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 1.2e-07
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 1.2e-07
+results on train dataset
+loss: 0.0034549623
+bpc: 0.004984457
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 1.2e-07
+results on train dataset
+loss: 0.008796101
+bpc: 0.0126900915
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 1.2e-07
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 1.4e-07
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 1.4e-07
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 1.4e-07
+results on train dataset
+loss: 0.0034549588
+bpc: 0.004984452
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 1.4e-07
+results on train dataset
+loss: 0.008796101
+bpc: 0.0126900915
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 1.4e-07
+results on valid dataset:
+loss: 0.060194093734025955
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684171736240387
+using sgd optimizer
+
+
+learning_rate/init: 1.6e-07
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 1.6e-07
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 1.6e-07
+results on train dataset
+loss: 0.0034549588
+bpc: 0.004984452
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 1.6e-07
+results on train dataset
+loss: 0.008796101
+bpc: 0.0126900915
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 1.6e-07
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 1.8e-07
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 1.8e-07
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 1.8e-07
+results on train dataset
+loss: 0.0034549588
+bpc: 0.004984452
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 1.8e-07
+results on train dataset
+loss: 0.008796105
+bpc: 0.012690097
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 1.8e-07
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 2.1e-07
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 2.1e-07
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 2.1e-07
+results on train dataset
+loss: 0.0034549623
+bpc: 0.004984457
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 2.1e-07
+results on train dataset
+loss: 0.008796105
+bpc: 0.012690097
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 2.1e-07
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 2.4e-07
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 2.4e-07
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 2.4e-07
+results on train dataset
+loss: 0.0034549588
+bpc: 0.004984452
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 2.4e-07
+results on train dataset
+loss: 0.008796105
+bpc: 0.012690097
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 2.4e-07
+results on valid dataset:
+loss: 0.060194093734025955
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684171736240387
+using sgd optimizer
+
+
+learning_rate/init: 2.8e-07
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 2.8e-07
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 2.8e-07
+results on train dataset
+loss: 0.0034549588
+bpc: 0.004984452
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 2.8e-07
+results on train dataset
+loss: 0.008796101
+bpc: 0.0126900915
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 2.8e-07
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 3.2e-07
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 3.2e-07
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 3.2e-07
+results on train dataset
+loss: 0.0034549588
+bpc: 0.004984452
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 3.2e-07
+results on train dataset
+loss: 0.008796104
+bpc: 0.012690096
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 3.2e-07
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 3.6e-07
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 3.6e-07
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 3.6e-07
+results on train dataset
+loss: 0.0034549588
+bpc: 0.004984452
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 3.6e-07
+results on train dataset
+loss: 0.008796104
+bpc: 0.012690096
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 3.6e-07
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 4.2e-07
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 4.2e-07
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 4.2e-07
+results on train dataset
+loss: 0.0034549588
+bpc: 0.004984452
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 4.2e-07
+results on train dataset
+loss: 0.008796107
+bpc: 0.0126901
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 4.2e-07
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 4.8e-07
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 4.8e-07
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 4.8e-07
+results on train dataset
+loss: 0.0034549588
+bpc: 0.004984452
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 4.8e-07
+results on train dataset
+loss: 0.008796107
+bpc: 0.0126901
+perplexity: 1.0471857
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 4.8e-07
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 5.5e-07
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 5.5e-07
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 5.5e-07
+results on train dataset
+loss: 0.0034549553
+bpc: 0.004984447
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 5.5e-07
+results on train dataset
+loss: 0.008796113
+bpc: 0.012690108
+perplexity: 1.0471858
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 5.5e-07
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 6.3e-07
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 6.3e-07
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 6.3e-07
+results on train dataset
+loss: 0.003454959
+bpc: 0.0049844524
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 6.3e-07
+results on train dataset
+loss: 0.00879612
+bpc: 0.0126901185
+perplexity: 1.0471858
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 6.3e-07
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 7.2e-07
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 7.2e-07
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 7.2e-07
+results on train dataset
+loss: 0.0034549518
+bpc: 0.0049844417
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 7.2e-07
+results on train dataset
+loss: 0.008796123
+bpc: 0.012690123
+perplexity: 1.0471858
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 7.2e-07
+results on valid dataset:
+loss: 0.06019410118460655
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684173226356506
+using sgd optimizer
+
+
+learning_rate/init: 8.3e-07
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 8.3e-07
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 8.3e-07
+results on train dataset
+loss: 0.0034549483
+bpc: 0.0049844366
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 8.3e-07
+results on train dataset
+loss: 0.008796136
+bpc: 0.012690142
+perplexity: 1.0471859
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 8.3e-07
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 9.5e-07
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 9.5e-07
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 9.5e-07
+results on train dataset
+loss: 0.003454952
+bpc: 0.004984442
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 9.5e-07
+results on train dataset
+loss: 0.008796152
+bpc: 0.012690164
+perplexity: 1.0471859
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 9.5e-07
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 1.1e-06
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 1.1e-06
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 1.1e-06
+results on train dataset
+loss: 0.0034549483
+bpc: 0.0049844366
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 1.1e-06
+results on train dataset
+loss: 0.0087961685
+bpc: 0.012690188
+perplexity: 1.0471859
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 1.1e-06
+results on valid dataset:
+loss: 0.060194097459316254
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684172481298447
+using sgd optimizer
+
+
+learning_rate/init: 1.3e-06
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 1.3e-06
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 1.3e-06
+results on train dataset
+loss: 0.0034549413
+bpc: 0.004984427
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 1.3e-06
+results on train dataset
+loss: 0.008796191
+bpc: 0.012690221
+perplexity: 1.0471861
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 1.3e-06
+results on valid dataset:
+loss: 0.06019410118460655
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684173226356506
+using sgd optimizer
+
+
+learning_rate/init: 1.4e-06
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 1.4e-06
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 1.4e-06
+results on train dataset
+loss: 0.0034549376
+bpc: 0.004984421
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 1.4e-06
+results on train dataset
+loss: 0.008796204
+bpc: 0.01269024
+perplexity: 1.0471861
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 1.4e-06
+results on valid dataset:
+loss: 0.06019410118460655
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684173226356506
+using sgd optimizer
+
+
+learning_rate/init: 1.7e-06
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 1.7e-06
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 1.7e-06
+results on train dataset
+loss: 0.0034549306
+bpc: 0.0049844114
+perplexity: 1.0202514
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 1.7e-06
+results on train dataset
+loss: 0.008796245
+bpc: 0.012690299
+perplexity: 1.0471864
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 1.7e-06
+results on valid dataset:
+loss: 0.06019410118460655
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684173226356506
+using sgd optimizer
+
+
+learning_rate/init: 1.9e-06
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 1.9e-06
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 1.9e-06
+results on train dataset
+loss: 0.0034549162
+bpc: 0.0049843905
+perplexity: 1.0202513
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 1.9e-06
+results on train dataset
+loss: 0.008796259
+bpc: 0.012690319
+perplexity: 1.0471865
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 1.9e-06
+results on valid dataset:
+loss: 0.06019410863518715
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684173971414566
+using sgd optimizer
+
+
+learning_rate/init: 2.2e-06
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 2.2e-06
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 2.2e-06
+results on train dataset
+loss: 0.0034549125
+bpc: 0.004984385
+perplexity: 1.0202513
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 2.2e-06
+results on train dataset
+loss: 0.008796298
+bpc: 0.012690376
+perplexity: 1.0471866
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 2.2e-06
+results on valid dataset:
+loss: 0.06019410490989685
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684173971414566
+using sgd optimizer
+
+
+learning_rate/init: 2.5e-06
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 2.5e-06
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 2.5e-06
+results on train dataset
+loss: 0.0034548983
+bpc: 0.0049843644
+perplexity: 1.0202513
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 2.5e-06
+results on train dataset
+loss: 0.008796332
+bpc: 0.012690425
+perplexity: 1.0471869
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 2.5e-06
+results on valid dataset:
+loss: 0.06019411236047745
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684174716472626
+using sgd optimizer
+
+
+learning_rate/init: 2.9e-06
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 2.9e-06
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 2.9e-06
+results on train dataset
+loss: 0.0034548806
+bpc: 0.0049843392
+perplexity: 1.0202512
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 2.9e-06
+results on train dataset
+loss: 0.00879639
+bpc: 0.012690509
+perplexity: 1.0471871
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 2.9e-06
+results on valid dataset:
+loss: 0.060194119811058044
+perplexity: 1.0468722581863403
+accuracy: 0.9823997020721436
+bpc: 0.08684175461530685
+using sgd optimizer
+
+
+learning_rate/init: 3.3e-06
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 3.3e-06
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 3.3e-06
+results on train dataset
+loss: 0.0034548696
+bpc: 0.0049843234
+perplexity: 1.020251
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 3.3e-06
+results on train dataset
+loss: 0.008796438
+bpc: 0.012690577
+perplexity: 1.0471874
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 3.3e-06
+results on valid dataset:
+loss: 0.06019412353634834
+perplexity: 1.0468723773956299
+accuracy: 0.9823997020721436
+bpc: 0.08684176206588745
+using sgd optimizer
+
+
+learning_rate/init: 3.8e-06
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 3.8e-06
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 3.8e-06
+results on train dataset
+loss: 0.0034548482
+bpc: 0.004984292
+perplexity: 1.020251
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 3.8e-06
+results on train dataset
+loss: 0.008796514
+bpc: 0.012690688
+perplexity: 1.0471878
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 3.8e-06
+results on valid dataset:
+loss: 0.06019413098692894
+perplexity: 1.0468722581863403
+accuracy: 0.9823997020721436
+bpc: 0.08684177696704865
+using sgd optimizer
+
+
+learning_rate/init: 4.4e-06
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 4.4e-06
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 4.4e-06
+results on train dataset
+loss: 0.0034548268
+bpc: 0.0049842615
+perplexity: 1.0202509
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 4.4e-06
+results on train dataset
+loss: 0.008796615
+bpc: 0.012690832
+perplexity: 1.0471883
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 4.4e-06
+results on valid dataset:
+loss: 0.06019413843750954
+perplexity: 1.0468722581863403
+accuracy: 0.9823997020721436
+bpc: 0.08684178441762924
+using sgd optimizer
+
+
+learning_rate/init: 5e-06
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 5e-06
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 5e-06
+results on train dataset
+loss: 0.003454798
+bpc: 0.0049842196
+perplexity: 1.0202507
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 5e-06
+results on train dataset
+loss: 0.0087967245
+bpc: 0.012690991
+perplexity: 1.0471889
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 5e-06
+results on valid dataset:
+loss: 0.06019414961338043
+perplexity: 1.0468721389770508
+accuracy: 0.9823997020721436
+bpc: 0.08684179931879044
+using sgd optimizer
+
+
+learning_rate/init: 5.8e-06
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 5.8e-06
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 5.8e-06
+results on train dataset
+loss: 0.0034547655
+bpc: 0.004984173
+perplexity: 1.0202507
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 5.8e-06
+results on train dataset
+loss: 0.008796826
+bpc: 0.012691137
+perplexity: 1.0471895
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 5.8e-06
+results on valid dataset:
+loss: 0.060194168239831924
+perplexity: 1.0468722581863403
+accuracy: 0.9823997020721436
+bpc: 0.08684182912111282
+using sgd optimizer
+
+
+learning_rate/init: 6.6e-06
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 6.6e-06
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 6.6e-06
+results on train dataset
+loss: 0.0034547406
+bpc: 0.004984137
+perplexity: 1.0202504
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 6.6e-06
+results on train dataset
+loss: 0.008796938
+bpc: 0.0126912985
+perplexity: 1.0471901
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 6.6e-06
+results on valid dataset:
+loss: 0.06019417196512222
+perplexity: 1.0468721389770508
+accuracy: 0.9823997020721436
+bpc: 0.08684183657169342
+using sgd optimizer
+
+
+learning_rate/init: 7.6e-06
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 7.6e-06
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 7.6e-06
+results on train dataset
+loss: 0.0034546945
+bpc: 0.0049840705
+perplexity: 1.0202503
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 7.6e-06
+results on train dataset
+loss: 0.008797102
+bpc: 0.012691535
+perplexity: 1.0471909
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 7.6e-06
+results on valid dataset:
+loss: 0.06019420176744461
+perplexity: 1.0468721389770508
+accuracy: 0.9823997020721436
+bpc: 0.0868418738245964
+using sgd optimizer
+
+
+learning_rate/init: 8.7e-06
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 8.7e-06
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 8.7e-06
+results on train dataset
+loss: 0.0034546442
+bpc: 0.004983998
+perplexity: 1.0202501
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 8.7e-06
+results on train dataset
+loss: 0.0087972805
+bpc: 0.012691793
+perplexity: 1.0471919
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 8.7e-06
+results on valid dataset:
+loss: 0.0601942241191864
+perplexity: 1.0468721389770508
+accuracy: 0.9823997020721436
+bpc: 0.08684191107749939
+using sgd optimizer
+
+
+learning_rate/init: 1e-05
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 1e-05
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 1e-05
+results on train dataset
+loss: 0.0034545972
+bpc: 0.0049839304
+perplexity: 1.0202498
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 1e-05
+results on train dataset
+loss: 0.00879747
+bpc: 0.012692066
+perplexity: 1.0471928
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 1e-05
+results on valid dataset:
+loss: 0.06019424647092819
+perplexity: 1.0468720197677612
+accuracy: 0.9823997020721436
+bpc: 0.08684194087982178
+using sgd optimizer
+
+
+learning_rate/init: 1.1e-05
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 1.1e-05
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 1.1e-05
+results on train dataset
+loss: 0.003454558
+bpc: 0.0049838736
+perplexity: 1.0202496
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 1.1e-05
+results on train dataset
+loss: 0.008797621
+bpc: 0.012692285
+perplexity: 1.0471936
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 1.1e-05
+results on valid dataset:
+loss: 0.06019427254796028
+perplexity: 1.0468720197677612
+accuracy: 0.9823997020721436
+bpc: 0.08684197813272476
+using sgd optimizer
+
+
+learning_rate/init: 1.3e-05
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 1.3e-05
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 1.3e-05
+results on train dataset
+loss: 0.003454472
+bpc: 0.0049837497
+perplexity: 1.0202491
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 1.3e-05
+results on train dataset
+loss: 0.008797919
+bpc: 0.012692715
+perplexity: 1.0471952
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 1.3e-05
+results on valid dataset:
+loss: 0.06019431725144386
+perplexity: 1.0468720197677612
+accuracy: 0.9823997020721436
+bpc: 0.08684204518795013
+using sgd optimizer
+
+
+learning_rate/init: 1.5e-05
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 1.5e-05
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 1.5e-05
+results on train dataset
+loss: 0.0034544002
+bpc: 0.004983646
+perplexity: 1.0202489
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 1.5e-05
+results on train dataset
+loss: 0.008798232
+bpc: 0.012693166
+perplexity: 1.0471969
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 1.5e-05
+results on valid dataset:
+loss: 0.06019436568021774
+perplexity: 1.0468719005584717
+accuracy: 0.9823997020721436
+bpc: 0.0868421122431755
+using sgd optimizer
+
+
+learning_rate/init: 1.7e-05
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 1.7e-05
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 1.7e-05
+results on train dataset
+loss: 0.0034543253
+bpc: 0.004983538
+perplexity: 1.0202485
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 1.7e-05
+results on train dataset
+loss: 0.008798541
+bpc: 0.012693611
+perplexity: 1.0471985
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 1.7e-05
+results on valid dataset:
+loss: 0.06019440293312073
+perplexity: 1.0468719005584717
+accuracy: 0.9823997020721436
+bpc: 0.08684216439723969
+using sgd optimizer
+
+
+learning_rate/init: 2e-05
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 2e-05
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 2e-05
+results on train dataset
+loss: 0.003454207
+bpc: 0.0049833674
+perplexity: 1.0202479
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 2e-05
+results on train dataset
+loss: 0.0087989615
+bpc: 0.012694218
+perplexity: 1.0472007
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 2e-05
+results on valid dataset:
+loss: 0.0601944699883461
+perplexity: 1.046871542930603
+accuracy: 0.9823997020721436
+bpc: 0.08684226125478745
+using sgd optimizer
+
+
+learning_rate/init: 2.3e-05
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 2.3e-05
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 2.3e-05
+results on train dataset
+loss: 0.0034540994
+bpc: 0.004983212
+perplexity: 1.0202473
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 2.3e-05
+results on train dataset
+loss: 0.0087994
+bpc: 0.012694851
+perplexity: 1.0472031
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 2.3e-05
+results on valid dataset:
+loss: 0.06019454449415207
+perplexity: 1.046871542930603
+accuracy: 0.9823997020721436
+bpc: 0.0868423730134964
+using sgd optimizer
+
+
+learning_rate/init: 2.6e-05
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 2.6e-05
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 2.6e-05
+results on train dataset
+loss: 0.0034539886
+bpc: 0.004983052
+perplexity: 1.0202469
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 2.6e-05
+results on train dataset
+loss: 0.008799828
+bpc: 0.012695468
+perplexity: 1.0472053
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 2.6e-05
+results on valid dataset:
+loss: 0.06019461527466774
+perplexity: 1.0468714237213135
+accuracy: 0.9823997020721436
+bpc: 0.08684246987104416
+using sgd optimizer
+
+
+learning_rate/init: 3e-05
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 3e-05
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 3e-05
+results on train dataset
+loss: 0.0034538307
+bpc: 0.0049828244
+perplexity: 1.020246
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 3e-05
+results on train dataset
+loss: 0.008800406
+bpc: 0.0126963025
+perplexity: 1.0472083
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 3e-05
+results on valid dataset:
+loss: 0.0601947046816349
+perplexity: 1.0468711853027344
+accuracy: 0.9823997020721436
+bpc: 0.0868426039814949
+using sgd optimizer
+
+
+learning_rate/init: 3.5e-05
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 3.5e-05
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 3.5e-05
+results on train dataset
+loss: 0.0034536591
+bpc: 0.0049825767
+perplexity: 1.0202451
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 3.5e-05
+results on train dataset
+loss: 0.008801099
+bpc: 0.012697302
+perplexity: 1.047212
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 3.5e-05
+results on valid dataset:
+loss: 0.060194842517375946
+perplexity: 1.0468709468841553
+accuracy: 0.9823997020721436
+bpc: 0.08684279769659042
+using sgd optimizer
+
+
+learning_rate/init: 4e-05
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 4e-05
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 4e-05
+results on train dataset
+loss: 0.0034534726
+bpc: 0.004982308
+perplexity: 1.0202442
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 4e-05
+results on train dataset
+loss: 0.008801801
+bpc: 0.012698315
+perplexity: 1.0472157
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 4e-05
+results on valid dataset:
+loss: 0.0601949617266655
+perplexity: 1.0468707084655762
+accuracy: 0.9823997020721436
+bpc: 0.08684296905994415
+using sgd optimizer
+
+
+learning_rate/init: 4.6e-05
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 4.6e-05
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 4.6e-05
+results on train dataset
+loss: 0.0034532435
+bpc: 0.0049819774
+perplexity: 1.0202432
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 4.6e-05
+results on train dataset
+loss: 0.00880265
+bpc: 0.012699539
+perplexity: 1.0472202
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 4.6e-05
+results on valid dataset:
+loss: 0.06019512191414833
+perplexity: 1.0468703508377075
+accuracy: 0.9823997020721436
+bpc: 0.08684320002794266
+using sgd optimizer
+
+
+learning_rate/init: 5.2e-05
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 5.2e-05
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 5.2e-05
+results on train dataset
+loss: 0.0034530247
+bpc: 0.0049816617
+perplexity: 1.020242
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 5.2e-05
+results on train dataset
+loss: 0.008803492
+bpc: 0.012700755
+perplexity: 1.0472248
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 5.2e-05
+results on valid dataset:
+loss: 0.06019527092576027
+perplexity: 1.0468701124191284
+accuracy: 0.9823997020721436
+bpc: 0.08684341609477997
+using sgd optimizer
+
+
+learning_rate/init: 6e-05
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 6e-05
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 6e-05
+results on train dataset
+loss: 0.0034527276
+bpc: 0.004981233
+perplexity: 1.0202405
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 6e-05
+results on train dataset
+loss: 0.008804594
+bpc: 0.012702344
+perplexity: 1.0472305
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 6e-05
+results on valid dataset:
+loss: 0.06019548326730728
+perplexity: 1.0468697547912598
+accuracy: 0.9823997020721436
+bpc: 0.08684372156858444
+using sgd optimizer
+
+
+learning_rate/init: 6.9e-05
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 6.9e-05
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 6.9e-05
+results on train dataset
+loss: 0.0034524198
+bpc: 0.004980789
+perplexity: 1.020239
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 6.9e-05
+results on train dataset
+loss: 0.008805852
+bpc: 0.012704159
+perplexity: 1.0472372
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 6.9e-05
+results on valid dataset:
+loss: 0.06019573658704758
+perplexity: 1.0468693971633911
+accuracy: 0.9823997020721436
+bpc: 0.08684409409761429
+using sgd optimizer
+
+
+learning_rate/init: 7.9e-05
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 7.9e-05
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 7.9e-05
+results on train dataset
+loss: 0.0034520654
+bpc: 0.0049802777
+perplexity: 1.0202372
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 7.9e-05
+results on train dataset
+loss: 0.0088072475
+bpc: 0.012706173
+perplexity: 1.0472445
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 7.9e-05
+results on valid dataset:
+loss: 0.06019598990678787
+perplexity: 1.0468688011169434
+accuracy: 0.9823997020721436
+bpc: 0.08684445917606354
+using sgd optimizer
+
+
+learning_rate/init: 9.1e-05
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 9.1e-05
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 9.1e-05
+results on train dataset
+loss: 0.0034516463
+bpc: 0.004979673
+perplexity: 1.0202351
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 9.1e-05
+results on train dataset
+loss: 0.008808932
+bpc: 0.0127086025
+perplexity: 1.0472534
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 9.1e-05
+results on valid dataset:
+loss: 0.06019628793001175
+perplexity: 1.046868085861206
+accuracy: 0.9823997020721436
+bpc: 0.08684488385915756
+using sgd optimizer
+
+
+learning_rate/init: 0.0001
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.0001
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.0001
+results on train dataset
+loss: 0.003451324
+bpc: 0.004979208
+perplexity: 1.0202334
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.0001
+results on train dataset
+loss: 0.008810176
+bpc: 0.012710396
+perplexity: 1.04726
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.0001
+results on valid dataset:
+loss: 0.060196537524461746
+perplexity: 1.0468676090240479
+accuracy: 0.9823997020721436
+bpc: 0.08684524893760681
+using sgd optimizer
+
+
+learning_rate/init: 0.00012
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.00012
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.00012
+results on train dataset
+loss: 0.0034506074
+bpc: 0.0049781743
+perplexity: 1.0202298
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.00012
+results on train dataset
+loss: 0.008812966
+bpc: 0.012714422
+perplexity: 1.0472748
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.00012
+results on valid dataset:
+loss: 0.06019705906510353
+perplexity: 1.0468666553497314
+accuracy: 0.9823997020721436
+bpc: 0.0868460014462471
+using sgd optimizer
+
+
+learning_rate/init: 0.00014
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.00014
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.00014
+results on train dataset
+loss: 0.0034499057
+bpc: 0.004977162
+perplexity: 1.0202264
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.00014
+results on train dataset
+loss: 0.008815752
+bpc: 0.012718442
+perplexity: 1.0472894
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.00014
+results on valid dataset:
+loss: 0.060197580605745316
+perplexity: 1.0468655824661255
+accuracy: 0.9823997020721436
+bpc: 0.08684675395488739
+using sgd optimizer
+
+
+learning_rate/init: 0.00016
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.00016
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.00016
+results on train dataset
+loss: 0.0034492111
+bpc: 0.00497616
+perplexity: 1.0202228
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.00016
+results on train dataset
+loss: 0.008818555
+bpc: 0.012722485
+perplexity: 1.0473043
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.00016
+results on valid dataset:
+loss: 0.0601981058716774
+perplexity: 1.046864628791809
+accuracy: 0.9823997020721436
+bpc: 0.08684750646352768
+using sgd optimizer
+
+
+learning_rate/init: 0.00018
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.00018
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.00018
+results on train dataset
+loss: 0.0034485017
+bpc: 0.0049751364
+perplexity: 1.0202193
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.00018
+results on train dataset
+loss: 0.008821361
+bpc: 0.012726533
+perplexity: 1.0473189
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.00018
+results on valid dataset:
+loss: 0.06019863486289978
+perplexity: 1.0468636751174927
+accuracy: 0.9823997020721436
+bpc: 0.08684827387332916
+using sgd optimizer
+
+
+learning_rate/init: 0.00021
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.00021
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.00021
+results on train dataset
+loss: 0.0034474633
+bpc: 0.0049736383
+perplexity: 1.0202141
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.00021
+results on train dataset
+loss: 0.008825549
+bpc: 0.012732576
+perplexity: 1.047341
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.00021
+results on valid dataset:
+loss: 0.060199424624443054
+perplexity: 1.0468621253967285
+accuracy: 0.9823997020721436
+bpc: 0.08684941381216049
+using sgd optimizer
+
+
+learning_rate/init: 0.00024
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.00024
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.00024
+results on train dataset
+loss: 0.003446428
+bpc: 0.0049721445
+perplexity: 1.0202088
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.00024
+results on train dataset
+loss: 0.008829679
+bpc: 0.012738534
+perplexity: 1.0473628
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.00024
+results on valid dataset:
+loss: 0.060200247913599014
+perplexity: 1.046860694885254
+accuracy: 0.9823997020721436
+bpc: 0.0868505984544754
+using sgd optimizer
+
+
+learning_rate/init: 0.00028
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.00028
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.00028
+results on train dataset
+loss: 0.0034450497
+bpc: 0.004970156
+perplexity: 1.0202019
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.00028
+results on train dataset
+loss: 0.008835223
+bpc: 0.0127465315
+perplexity: 1.0473919
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.00028
+results on valid dataset:
+loss: 0.06020130217075348
+perplexity: 1.046858787536621
+accuracy: 0.9823997020721436
+bpc: 0.08685211837291718
+using sgd optimizer
+
+
+learning_rate/init: 0.00032
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.00032
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.00032
+results on train dataset
+loss: 0.003443664
+bpc: 0.004968157
+perplexity: 1.0201949
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.00032
+results on train dataset
+loss: 0.008840762
+bpc: 0.012754523
+perplexity: 1.0474209
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.00032
+results on valid dataset:
+loss: 0.060202401131391525
+perplexity: 1.0468567609786987
+accuracy: 0.9823997020721436
+bpc: 0.08685370534658432
+using sgd optimizer
+
+
+learning_rate/init: 0.00036
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.00036
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.00036
+results on train dataset
+loss: 0.003442299
+bpc: 0.0049661878
+perplexity: 1.0201879
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.00036
+results on train dataset
+loss: 0.008846318
+bpc: 0.01276254
+perplexity: 1.0474501
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.00036
+results on valid dataset:
+loss: 0.06020347774028778
+perplexity: 1.0468549728393555
+accuracy: 0.9823997020721436
+bpc: 0.08685525506734848
+using sgd optimizer
+
+
+learning_rate/init: 0.00042
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.00042
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.00042
+results on train dataset
+loss: 0.0034402688
+bpc: 0.0049632587
+perplexity: 1.0201777
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.00042
+results on train dataset
+loss: 0.008854547
+bpc: 0.012774411
+perplexity: 1.0474931
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.00042
+results on valid dataset:
+loss: 0.0602051243185997
+perplexity: 1.0468519926071167
+accuracy: 0.9823997020721436
+bpc: 0.0868576318025589
+using sgd optimizer
+
+
+learning_rate/init: 0.00048
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.00048
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.00048
+results on train dataset
+loss: 0.0034382385
+bpc: 0.0049603297
+perplexity: 1.0201675
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.00048
+results on train dataset
+loss: 0.008862747
+bpc: 0.012786241
+perplexity: 1.0475359
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.00048
+results on valid dataset:
+loss: 0.06020675599575043
+perplexity: 1.046849250793457
+accuracy: 0.9823997020721436
+bpc: 0.08685998618602753
+using sgd optimizer
+
+
+learning_rate/init: 0.00055
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.00055
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.00055
+results on train dataset
+loss: 0.0034358816
+bpc: 0.0049569295
+perplexity: 1.0201557
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.00055
+results on train dataset
+loss: 0.008872272
+bpc: 0.012799984
+perplexity: 1.0475855
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.00055
+results on valid dataset:
+loss: 0.06020868197083473
+perplexity: 1.0468461513519287
+accuracy: 0.9823997020721436
+bpc: 0.08686276525259018
+using sgd optimizer
+
+
+learning_rate/init: 0.00063
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.00063
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.00063
+results on train dataset
+loss: 0.0034332387
+bpc: 0.0049531166
+perplexity: 1.0201423
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.00063
+results on train dataset
+loss: 0.008883026
+bpc: 0.012815498
+perplexity: 1.0476415
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.00063
+results on valid dataset:
+loss: 0.06021086499094963
+perplexity: 1.0468425750732422
+accuracy: 0.9823997020721436
+bpc: 0.08686591684818268
+using sgd optimizer
+
+
+learning_rate/init: 0.00072
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.00072
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.00072
+results on train dataset
+loss: 0.0034302445
+bpc: 0.0049487967
+perplexity: 1.0201272
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.00072
+results on train dataset
+loss: 0.008895065
+bpc: 0.012832866
+perplexity: 1.0477041
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.00072
+results on valid dataset:
+loss: 0.060213346034288406
+perplexity: 1.046838641166687
+accuracy: 0.9823997020721436
+bpc: 0.0868694931268692
+using sgd optimizer
+
+
+learning_rate/init: 0.00083
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.00083
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.00083
+results on train dataset
+loss: 0.0034266557
+bpc: 0.004943619
+perplexity: 1.0201092
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.00083
+results on train dataset
+loss: 0.008909689
+bpc: 0.012853964
+perplexity: 1.04778
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.00083
+results on valid dataset:
+loss: 0.06021637097001076
+perplexity: 1.0468339920043945
+accuracy: 0.9823997020721436
+bpc: 0.086873859167099
+using sgd optimizer
+
+
+learning_rate/init: 0.00095
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.00095
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.00095
+results on train dataset
+loss: 0.0034227737
+bpc: 0.0049380185
+perplexity: 1.0200894
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.00095
+results on train dataset
+loss: 0.0089254975
+bpc: 0.012876771
+perplexity: 1.0478617
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.00095
+results on valid dataset:
+loss: 0.060219671577215195
+perplexity: 1.0468292236328125
+accuracy: 0.9823997020721436
+bpc: 0.08687862008810043
+using sgd optimizer
+
+
+learning_rate/init: 0.0011
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.0011
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.0011
+results on train dataset
+loss: 0.0034180172
+bpc: 0.0049311565
+perplexity: 1.0200654
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.0011
+results on train dataset
+loss: 0.008945014
+bpc: 0.012904928
+perplexity: 1.0479624
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.0011
+results on valid dataset:
+loss: 0.0602237768471241
+perplexity: 1.0468233823776245
+accuracy: 0.9823997020721436
+bpc: 0.08688454329967499
+using sgd optimizer
+
+
+learning_rate/init: 0.0013
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.0013
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.0013
+results on train dataset
+loss: 0.0034118004
+bpc: 0.0049221874
+perplexity: 1.0200341
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.0013
+results on train dataset
+loss: 0.008970613
+bpc: 0.012941859
+perplexity: 1.0480938
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.0013
+results on valid dataset:
+loss: 0.06022917851805687
+perplexity: 1.0468158721923828
+accuracy: 0.9821997284889221
+bpc: 0.08689233660697937
+using sgd optimizer
+
+
+learning_rate/init: 0.0014
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.0014
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.0014
+results on train dataset
+loss: 0.0034088246
+bpc: 0.0049178945
+perplexity: 1.0200189
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.0014
+results on train dataset
+loss: 0.008983297
+bpc: 0.012960158
+perplexity: 1.0481586
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.0014
+results on valid dataset:
+loss: 0.060231950134038925
+perplexity: 1.0468124151229858
+accuracy: 0.9821997284889221
+bpc: 0.08689633756875992
+using sgd optimizer
+
+
+learning_rate/init: 0.0017
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.0017
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.0017
+results on train dataset
+loss: 0.003399858
+bpc: 0.0049049584
+perplexity: 1.0199735
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.0017
+results on train dataset
+loss: 0.009020578
+bpc: 0.013013943
+perplexity: 1.0483488
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.0017
+results on valid dataset:
+loss: 0.06024002283811569
+perplexity: 1.046802282333374
+accuracy: 0.9821997284889221
+bpc: 0.08690798282623291
+using sgd optimizer
+
+
+learning_rate/init: 0.0019
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.0019
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.0019
+results on train dataset
+loss: 0.003394063
+bpc: 0.004896598
+perplexity: 1.0199442
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.0019
+results on train dataset
+loss: 0.009044602
+bpc: 0.013048602
+perplexity: 1.0484705
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.0019
+results on valid dataset:
+loss: 0.06024538353085518
+perplexity: 1.0467958450317383
+accuracy: 0.9823997616767883
+bpc: 0.08691571652889252
+using sgd optimizer
+
+
+learning_rate/init: 0.0022
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.0022
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.0022
+results on train dataset
+loss: 0.003385641
+bpc: 0.0048844474
+perplexity: 1.0199013
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.0022
+results on train dataset
+loss: 0.009080321
+bpc: 0.013100133
+perplexity: 1.0486503
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.0022
+results on valid dataset:
+loss: 0.06025306135416031
+perplexity: 1.046786904335022
+accuracy: 0.9823997020721436
+bpc: 0.08692679554224014
+using sgd optimizer
+
+
+learning_rate/init: 0.0025
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.0025
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.0025
+results on train dataset
+loss: 0.0033774332
+bpc: 0.004872606
+perplexity: 1.0198594
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.0025
+results on train dataset
+loss: 0.0091147795
+bpc: 0.013149847
+perplexity: 1.0488226
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.0025
+results on valid dataset:
+loss: 0.06026065722107887
+perplexity: 1.046778678894043
+accuracy: 0.9823997616767883
+bpc: 0.08693774789571762
+using sgd optimizer
+
+
+learning_rate/init: 0.0029
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.0029
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.0029
+results on train dataset
+loss: 0.0033668736
+bpc: 0.004857372
+perplexity: 1.0198056
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.0029
+results on train dataset
+loss: 0.009159177
+bpc: 0.013213899
+perplexity: 1.0490429
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.0029
+results on valid dataset:
+loss: 0.06027041748166084
+perplexity: 1.0467684268951416
+accuracy: 0.9821997880935669
+bpc: 0.0869518294930458
+using sgd optimizer
+
+
+learning_rate/init: 0.0033
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.0033
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.0033
+results on train dataset
+loss: 0.0033567478
+bpc: 0.0048427633
+perplexity: 1.0197537
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.0033
+results on train dataset
+loss: 0.0092017865
+bpc: 0.013275372
+perplexity: 1.0492532
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.0033
+results on valid dataset:
+loss: 0.060279686003923416
+perplexity: 1.0467592477798462
+accuracy: 0.9821997880935669
+bpc: 0.08696520328521729
+using sgd optimizer
+
+
+learning_rate/init: 0.0038
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.0038
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.0038
+results on train dataset
+loss: 0.0033446779
+bpc: 0.0048253504
+perplexity: 1.019692
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.0038
+results on train dataset
+loss: 0.009252332
+bpc: 0.0133482935
+perplexity: 1.0495005
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.0038
+results on valid dataset:
+loss: 0.06029070168733597
+perplexity: 1.0467486381530762
+accuracy: 0.9823997616767883
+bpc: 0.08698109537363052
+using sgd optimizer
+
+
+learning_rate/init: 0.0044
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.0044
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.0044
+results on train dataset
+loss: 0.0033307988
+bpc: 0.004805327
+perplexity: 1.0196209
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.0044
+results on train dataset
+loss: 0.009309595
+bpc: 0.013430907
+perplexity: 1.0497777
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.0044
+results on valid dataset:
+loss: 0.060303300619125366
+perplexity: 1.0467369556427002
+accuracy: 0.982599675655365
+bpc: 0.08699927479028702
+using sgd optimizer
+
+
+learning_rate/init: 0.005
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.005
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.005
+results on train dataset
+loss: 0.003317759
+bpc: 0.004786514
+perplexity: 1.0195537
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.005
+results on train dataset
+loss: 0.009362258
+bpc: 0.013506883
+perplexity: 1.0500295
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.005
+results on valid dataset:
+loss: 0.06031506508588791
+perplexity: 1.0467264652252197
+accuracy: 0.9825997948646545
+bpc: 0.08701624721288681
+using sgd optimizer
+
+
+learning_rate/init: 0.0058
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.0058
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.0058
+results on train dataset
+loss: 0.0033014172
+bpc: 0.0047629382
+perplexity: 1.0194693
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.0058
+results on train dataset
+loss: 0.009426499
+bpc: 0.013599563
+perplexity: 1.050333
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.0058
+results on valid dataset:
+loss: 0.06032892316579819
+perplexity: 1.0467145442962646
+accuracy: 0.982599675655365
+bpc: 0.08703623712062836
+using sgd optimizer
+
+
+learning_rate/init: 0.0066
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.0066
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.0066
+results on train dataset
+loss: 0.0032861098
+bpc: 0.0047408543
+perplexity: 1.01939
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.0066
+results on train dataset
+loss: 0.0094839465
+bpc: 0.013682443
+perplexity: 1.0506008
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.0066
+results on valid dataset:
+loss: 0.06034134700894356
+perplexity: 1.0467040538787842
+accuracy: 0.9827997088432312
+bpc: 0.08705416321754456
+using sgd optimizer
+
+
+learning_rate/init: 0.0076
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.0076
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.0076
+results on train dataset
+loss: 0.003268649
+bpc: 0.004715664
+perplexity: 1.0192991
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.0076
+results on train dataset
+loss: 0.009549167
+bpc: 0.013776536
+perplexity: 1.0508984
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.0076
+results on valid dataset:
+loss: 0.060354530811309814
+perplexity: 1.04669189453125
+accuracy: 0.9827997088432312
+bpc: 0.0870731845498085
+using sgd optimizer
+
+
+learning_rate/init: 0.0087
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.0087
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.0087
+results on train dataset
+loss: 0.0032505724
+bpc: 0.0046895845
+perplexity: 1.0192049
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.0087
+results on train dataset
+loss: 0.00960822
+bpc: 0.013861732
+perplexity: 1.0511634
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.0087
+results on valid dataset:
+loss: 0.0603666678071022
+perplexity: 1.046679139137268
+accuracy: 0.9827997088432312
+bpc: 0.08709069341421127
+using sgd optimizer
+
+
+learning_rate/init: 0.01
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.01
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+
+step: 500
+learning_rate: 0.01
+results on train dataset
+loss: 0.0032312647
+bpc: 0.0046617296
+perplexity: 1.0191035
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.01
+results on train dataset
+loss: 0.009665459
+bpc: 0.01394431
+perplexity: 1.051412
+accuracy: 1.0
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+learning_rate/init: 0.01
+results on valid dataset:
+loss: 0.06037771701812744
+perplexity: 1.0466654300689697
+accuracy: 0.9827997088432312
+bpc: 0.0871066302061081
+using sgd optimizer
+dataset: valid
+  loss: 0.060194093734025955
+    learning_rate/init: 1.4e-07
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 1.4e-07
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+Creating checkpoint at sgd/loss_best/test/training/checkpoints/best
+
+
+step: 500
+learning_rate: 1.4e-07
+results on train dataset
+loss: 0.0034549588
+bpc: 0.004984452
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 1.4e-07
+results on train dataset
+loss: 0.008796101
+bpc: 0.0126900915
+perplexity: 1.0471857
+accuracy: 1.0
+
+Creating checkpoint at sgd/loss_best/test/training/checkpoints/final
+restoring pupil from sgd/loss_best/test/training/checkpoints/final
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+results on validation dataset test
+loss: 0.05416058748960495
+perplexity: 1.0495449304580688
+accuracy: 0.9843001365661621
+  perplexity: 1.0466654300689697
+    learning_rate/init: 0.01
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.01
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+Creating checkpoint at sgd/perplexity_best/test/training/checkpoints/best
+
+
+step: 500
+learning_rate: 0.01
+results on train dataset
+loss: 0.0032312647
+bpc: 0.0046617296
+perplexity: 1.0191035
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.01
+results on train dataset
+loss: 0.009665459
+bpc: 0.01394431
+perplexity: 1.051412
+accuracy: 1.0
+
+Creating checkpoint at sgd/perplexity_best/test/training/checkpoints/final
+restoring pupil from sgd/perplexity_best/test/training/checkpoints/final
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+results on validation dataset test
+loss: 0.05404640734195709
+perplexity: 1.049126148223877
+accuracy: 0.984200119972229
+  accuracy: 0.9827997088432312
+    learning_rate/init: 0.0066
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 0.0066
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+Creating checkpoint at sgd/accuracy_best/test/training/checkpoints/best
+
+
+step: 500
+learning_rate: 0.0066
+results on train dataset
+loss: 0.0032861098
+bpc: 0.0047408543
+perplexity: 1.01939
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 0.0066
+results on train dataset
+loss: 0.0094839465
+bpc: 0.013682443
+perplexity: 1.0506008
+accuracy: 1.0
+
+Creating checkpoint at sgd/accuracy_best/test/training/checkpoints/final
+restoring pupil from sgd/accuracy_best/test/training/checkpoints/final
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+results on validation dataset test
+loss: 0.05403805524110794
+perplexity: 1.049210786819458
+accuracy: 0.984200119972229
+  bpc: 0.08684171736240387
+    learning_rate/init: 1.4e-07
+restoring pupil from ../mnist_max_train/adagrad/8/checkpoints/best
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+
+step: 0
+learning_rate: 1.4e-07
+results on train dataset
+loss: 0.002264051
+bpc: 0.0032663352
+perplexity: 1.0127871
+accuracy: 1.0
+
+Creating checkpoint at sgd/bpc_best/test/training/checkpoints/best
+
+
+step: 500
+learning_rate: 1.4e-07
+results on train dataset
+loss: 0.0034549588
+bpc: 0.004984452
+perplexity: 1.0202515
+accuracy: 1.0
+
+
+step: 1000
+learning_rate: 1.4e-07
+results on train dataset
+loss: 0.008796101
+bpc: 0.0126900915
+perplexity: 1.0471857
+accuracy: 1.0
+
+Creating checkpoint at sgd/bpc_best/test/training/checkpoints/final
+restoring pupil from sgd/bpc_best/test/training/checkpoints/final
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/train-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/train-labels-idx1-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-images-idx3-ubyte.gz
+Extracting ../../../datasets/mnist/t10k-labels-idx1-ubyte.gz
+results on validation dataset test
+loss: 0.05416058748960495
+perplexity: 1.0495449304580688
+accuracy: 0.9843001365661621

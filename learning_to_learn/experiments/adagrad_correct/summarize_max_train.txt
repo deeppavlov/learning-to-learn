@@ -1,0 +1,40 @@
+adagrad_correct/cifar10/max_train/adagrad:
+  test:
+    perplexity:
+      mean: 3.490942907333374
+      stddev: 0.150371704103
+      max: 3.689708709716797(9)
+      min: 3.206573247909546(1)
+      number of experiments: 10
+    accuracy:
+      mean: 0.5465598821640014
+      stddev: 0.00357591806022
+      max: 0.5512999296188354(1)
+      min: 0.5409998893737793(3)
+      number of experiments: 10
+    loss:
+      mean: 1.3189064741134644
+      stddev: 0.00739128034706
+      max: 1.3310978412628174(1)
+      min: 1.3101389408111572(6)
+      number of experiments: 10
+adagrad_correct/mnist/max_train/adagrad:
+  test:
+    perplexity:
+      mean: 1.0587898731231689
+      stddev: 0.00631858974794
+      max: 1.0688345432281494(1)
+      min: 1.0503206253051758(9)
+      number of experiments: 10
+    accuracy:
+      mean: 0.9824601411819458
+      stddev: 0.000925237239953
+      max: 0.9839001893997192(6)
+      min: 0.9807000756263733(7)
+      number of experiments: 10
+    loss:
+      mean: 0.05858752429485321
+      stddev: 0.00181561373217
+      max: 0.06203851103782654(3)
+      min: 0.05616327375173569(6)
+      number of experiments: 10

@@ -1,0 +1,47 @@
+confs: []
+{'valid': {'loss': [(0.01,), 1.2788311389529845], 'perplexity': [(0.01,), 5.901746284008026], 'accuracy': [(0.01,), 0.609], 'bpc': [(0.01,), 1.8449633375596022]}}
+dataset: valid
+  loss: 1.2788311389529845
+    learning_rate/init: 0.01
+restoring pupil from ../text8_finish_std/momentum/loss_best/test/training/checkpoints/final
+Testing!
+Validation dataset name: default_0
+Validation dataset_size:
+100000
+results on validation dataset default_0
+loss: 1.4073956622383814
+perplexity: 6.052743529901504
+accuracy: 0.56322
+  perplexity: 5.901746284008026
+    learning_rate/init: 0.01
+restoring pupil from ../text8_finish_std/momentum/perplexity_best/test/training/checkpoints/final
+Testing!
+Validation dataset name: default_0
+Validation dataset_size:
+100000
+results on validation dataset default_0
+loss: 1.4079347989328037
+perplexity: 6.0466636689257625
+accuracy: 0.56268
+  accuracy: 0.609
+    learning_rate/init: 0.01
+restoring pupil from ../text8_finish_std/momentum/accuracy_best/test/training/checkpoints/final
+Testing!
+Validation dataset name: default_0
+Validation dataset_size:
+100000
+results on validation dataset default_0
+loss: 1.4082129841093582
+perplexity: 6.0507693312108515
+accuracy: 0.56198
+  bpc: 1.8449633375596022
+    learning_rate/init: 0.01
+restoring pupil from ../text8_finish_std/momentum/bpc_best/test/training/checkpoints/final
+Testing!
+Validation dataset name: default_0
+Validation dataset_size:
+100000
+results on validation dataset default_0
+loss: 1.407980828620499
+perplexity: 6.051775601168871
+accuracy: 0.56258

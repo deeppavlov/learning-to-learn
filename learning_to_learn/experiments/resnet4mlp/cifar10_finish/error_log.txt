@@ -1,0 +1,1154 @@
+confs: [OrderedDict([('clip_norm', [100000.0, 10000000.0]), ('optimizer_init_parameter', [1e-08, 0.001]), ('learning_rate/init', [1e-06, 0.001]), ('pupil_learning_rate', [1e-06, 0.001])])]
+2018-06-20 19:11:09.411218: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:09.411252: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:09.411258: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:09.411263: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:09.411268: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:09.482951: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:893] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-06-20 19:11:09.483213: I tensorflow/core/common_runtime/gpu/gpu_device.cc:955] Found device 0 with properties: 
+name: GeForce GTX 1080 Ti
+major: 6 minor: 1 memoryClockRate (GHz) 1.582
+pciBusID 0000:01:00.0
+Total memory: 10.91GiB
+Free memory: 1.09GiB
+2018-06-20 19:11:09.483228: I tensorflow/core/common_runtime/gpu/gpu_device.cc:976] DMA: 0 
+2018-06-20 19:11:09.483233: I tensorflow/core/common_runtime/gpu/gpu_device.cc:986] 0:   Y 
+2018-06-20 19:11:09.483244: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1045] Creating TensorFlow device (/gpu:0) -> (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:01:00.0)
+
+
+clip_norm: 100000.0
+learning_rate/init: 1e-06
+optimizer_init_parameter: 1e-08
+pupil_learning_rate: 1e-06
+
+
+step: 0
+learning_rate: 1e-06
+results on meta optimizer train op
+start_loss: 0.972444
+end_loss: 0.633963
+start_bpc: 1.40294
+end_bpc: 0.914616
+start_perplexity: 4.32492
+end_perplexity: 4.24436
+start_accuracy: 0.5
+end_accuracy: 1.0
+OPTIMIZER INFERENCE ON PUPIL adam_prep
+****************************************
+restoring pupil from ../../cifar10_max_train/adagrad/0/checkpoints/best
+step: 0
+results on train dataset
+loss: 0.216986
+bpc: 0.313044
+perplexity: 2.21979
+accuracy: 1.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 1.25616788864
+bpc: 1.81226718426
+perplexity: 3.44990730286
+accuracy: 0.591000020504
+
+
+step: 1
+results on train dataset
+loss: 0.658404
+bpc: 0.949876
+perplexity: 2.44933
+accuracy: 0.5
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 1.25610041618
+bpc: 1.81216979027
+perplexity: 3.44953250885
+accuracy: 0.589999973774
+****************************************
+2018-06-20 19:11:19.877594: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:19.877622: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:19.877627: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:19.877630: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:19.877633: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:19.941458: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:893] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-06-20 19:11:19.941696: I tensorflow/core/common_runtime/gpu/gpu_device.cc:955] Found device 0 with properties: 
+name: GeForce GTX 1080 Ti
+major: 6 minor: 1 memoryClockRate (GHz) 1.582
+pciBusID 0000:01:00.0
+Total memory: 10.91GiB
+Free memory: 1.09GiB
+2018-06-20 19:11:19.941710: I tensorflow/core/common_runtime/gpu/gpu_device.cc:976] DMA: 0 
+2018-06-20 19:11:19.941715: I tensorflow/core/common_runtime/gpu/gpu_device.cc:986] 0:   Y 
+2018-06-20 19:11:19.941724: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1045] Creating TensorFlow device (/gpu:0) -> (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:01:00.0)
+
+
+clip_norm: 100000.0
+learning_rate/init: 0.001
+optimizer_init_parameter: 1e-08
+pupil_learning_rate: 1e-06
+
+
+step: 0
+learning_rate: 0.001
+results on meta optimizer train op
+start_loss: 0.972444
+end_loss: 0.633963
+start_bpc: 1.40294
+end_bpc: 0.914616
+start_perplexity: 4.32492
+end_perplexity: 4.24436
+start_accuracy: 0.5
+end_accuracy: 1.0
+OPTIMIZER INFERENCE ON PUPIL adam_prep
+****************************************
+restoring pupil from ../../cifar10_max_train/adagrad/0/checkpoints/best
+step: 0
+results on train dataset
+loss: 0.216986
+bpc: 0.313044
+perplexity: 2.21979
+accuracy: 1.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 1.25616788864
+bpc: 1.81226718426
+perplexity: 3.44990730286
+accuracy: 0.591000020504
+
+
+step: 1
+results on train dataset
+loss: 0.658404
+bpc: 0.949876
+perplexity: 2.44933
+accuracy: 0.5
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 1.25610041618
+bpc: 1.81216979027
+perplexity: 3.44953250885
+accuracy: 0.589999973774
+****************************************
+2018-06-20 19:11:29.788396: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:29.788425: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:29.788429: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:29.788432: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:29.788435: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:29.857801: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:893] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-06-20 19:11:29.858003: I tensorflow/core/common_runtime/gpu/gpu_device.cc:955] Found device 0 with properties: 
+name: GeForce GTX 1080 Ti
+major: 6 minor: 1 memoryClockRate (GHz) 1.582
+pciBusID 0000:01:00.0
+Total memory: 10.91GiB
+Free memory: 1.09GiB
+2018-06-20 19:11:29.858013: I tensorflow/core/common_runtime/gpu/gpu_device.cc:976] DMA: 0 
+2018-06-20 19:11:29.858017: I tensorflow/core/common_runtime/gpu/gpu_device.cc:986] 0:   Y 
+2018-06-20 19:11:29.858025: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1045] Creating TensorFlow device (/gpu:0) -> (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:01:00.0)
+
+
+clip_norm: 100000.0
+learning_rate/init: 1e-06
+optimizer_init_parameter: 1e-08
+pupil_learning_rate: 0.001
+
+
+step: 0
+learning_rate: 1e-06
+results on meta optimizer train op
+start_loss: 0.972444
+end_loss: 19.1639
+start_bpc: 1.40294
+end_bpc: 27.6476
+start_perplexity: 4.32492
+end_perplexity: 1.47143
+start_accuracy: 0.5
+end_accuracy: 0.0
+OPTIMIZER INFERENCE ON PUPIL adam_prep
+****************************************
+restoring pupil from ../../cifar10_max_train/adagrad/0/checkpoints/best
+step: 0
+results on train dataset
+loss: 0.216986
+bpc: 0.313044
+perplexity: 2.21979
+accuracy: 1.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 4.58656787872
+bpc: 6.61701869965
+perplexity: 1.96911430359
+accuracy: 0.291000038385
+
+
+step: 1
+results on train dataset
+loss: 4.22553
+bpc: 6.09615
+perplexity: 2.47577
+accuracy: 0.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 33.84167099
+bpc: 48.8232116699
+perplexity: 1.00325882435
+accuracy: 0.10300000757
+****************************************
+2018-06-20 19:11:39.254545: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:39.254570: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:39.254574: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:39.254577: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:39.254580: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:39.329989: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:893] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-06-20 19:11:39.330205: I tensorflow/core/common_runtime/gpu/gpu_device.cc:955] Found device 0 with properties: 
+name: GeForce GTX 1080 Ti
+major: 6 minor: 1 memoryClockRate (GHz) 1.582
+pciBusID 0000:01:00.0
+Total memory: 10.91GiB
+Free memory: 1.09GiB
+2018-06-20 19:11:39.330216: I tensorflow/core/common_runtime/gpu/gpu_device.cc:976] DMA: 0 
+2018-06-20 19:11:39.330220: I tensorflow/core/common_runtime/gpu/gpu_device.cc:986] 0:   Y 
+2018-06-20 19:11:39.330228: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1045] Creating TensorFlow device (/gpu:0) -> (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:01:00.0)
+
+
+clip_norm: 100000.0
+learning_rate/init: 0.001
+optimizer_init_parameter: 1e-08
+pupil_learning_rate: 0.001
+
+
+step: 0
+learning_rate: 0.001
+results on meta optimizer train op
+start_loss: 0.972444
+end_loss: 19.1639
+start_bpc: 1.40294
+end_bpc: 27.6476
+start_perplexity: 4.32492
+end_perplexity: 1.47143
+start_accuracy: 0.5
+end_accuracy: 0.0
+OPTIMIZER INFERENCE ON PUPIL adam_prep
+****************************************
+restoring pupil from ../../cifar10_max_train/adagrad/0/checkpoints/best
+step: 0
+results on train dataset
+loss: 0.216986
+bpc: 0.313044
+perplexity: 2.21979
+accuracy: 1.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 4.58656740189
+bpc: 6.61701822281
+perplexity: 1.96911430359
+accuracy: 0.291000008583
+
+
+step: 1
+results on train dataset
+loss: 4.22553
+bpc: 6.09615
+perplexity: 2.47577
+accuracy: 0.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 33.84167099
+bpc: 48.8232116699
+perplexity: 1.00325882435
+accuracy: 0.103000000119
+****************************************
+2018-06-20 19:11:48.731423: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:48.731451: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:48.731456: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:48.731459: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:48.731462: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:48.796453: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:893] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-06-20 19:11:48.796690: I tensorflow/core/common_runtime/gpu/gpu_device.cc:955] Found device 0 with properties: 
+name: GeForce GTX 1080 Ti
+major: 6 minor: 1 memoryClockRate (GHz) 1.582
+pciBusID 0000:01:00.0
+Total memory: 10.91GiB
+Free memory: 1.09GiB
+2018-06-20 19:11:48.796703: I tensorflow/core/common_runtime/gpu/gpu_device.cc:976] DMA: 0 
+2018-06-20 19:11:48.796707: I tensorflow/core/common_runtime/gpu/gpu_device.cc:986] 0:   Y 
+2018-06-20 19:11:48.796716: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1045] Creating TensorFlow device (/gpu:0) -> (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:01:00.0)
+
+
+clip_norm: 100000.0
+learning_rate/init: 1e-06
+optimizer_init_parameter: 0.001
+pupil_learning_rate: 1e-06
+
+
+step: 0
+learning_rate: 1e-06
+results on meta optimizer train op
+start_loss: 0.972444
+end_loss: 0.633963
+start_bpc: 1.40294
+end_bpc: 0.914616
+start_perplexity: 4.32492
+end_perplexity: 4.24436
+start_accuracy: 0.5
+end_accuracy: 1.0
+OPTIMIZER INFERENCE ON PUPIL adam_prep
+****************************************
+restoring pupil from ../../cifar10_max_train/adagrad/0/checkpoints/best
+step: 0
+results on train dataset
+loss: 0.216986
+bpc: 0.313044
+perplexity: 2.21979
+accuracy: 1.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 1.25616788864
+bpc: 1.81226718426
+perplexity: 3.44990730286
+accuracy: 0.591000020504
+
+
+step: 1
+results on train dataset
+loss: 0.658404
+bpc: 0.949876
+perplexity: 2.44933
+accuracy: 0.5
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 1.25610041618
+bpc: 1.81216979027
+perplexity: 3.44953250885
+accuracy: 0.589999973774
+****************************************
+2018-06-20 19:11:58.028707: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:58.028731: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:58.028735: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:58.028738: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:58.028741: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:11:58.087295: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:893] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-06-20 19:11:58.087524: I tensorflow/core/common_runtime/gpu/gpu_device.cc:955] Found device 0 with properties: 
+name: GeForce GTX 1080 Ti
+major: 6 minor: 1 memoryClockRate (GHz) 1.582
+pciBusID 0000:01:00.0
+Total memory: 10.91GiB
+Free memory: 1.09GiB
+2018-06-20 19:11:58.087537: I tensorflow/core/common_runtime/gpu/gpu_device.cc:976] DMA: 0 
+2018-06-20 19:11:58.087541: I tensorflow/core/common_runtime/gpu/gpu_device.cc:986] 0:   Y 
+2018-06-20 19:11:58.087550: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1045] Creating TensorFlow device (/gpu:0) -> (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:01:00.0)
+
+
+clip_norm: 100000.0
+learning_rate/init: 0.001
+optimizer_init_parameter: 0.001
+pupil_learning_rate: 1e-06
+
+
+step: 0
+learning_rate: 0.001
+results on meta optimizer train op
+start_loss: 0.972444
+end_loss: 0.633963
+start_bpc: 1.40294
+end_bpc: 0.914616
+start_perplexity: 4.32492
+end_perplexity: 4.24436
+start_accuracy: 0.5
+end_accuracy: 1.0
+OPTIMIZER INFERENCE ON PUPIL adam_prep
+****************************************
+restoring pupil from ../../cifar10_max_train/adagrad/0/checkpoints/best
+step: 0
+results on train dataset
+loss: 0.216986
+bpc: 0.313044
+perplexity: 2.21979
+accuracy: 1.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 1.25616788864
+bpc: 1.81226718426
+perplexity: 3.44990730286
+accuracy: 0.591000020504
+
+
+step: 1
+results on train dataset
+loss: 0.658404
+bpc: 0.949876
+perplexity: 2.44933
+accuracy: 0.5
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 1.25610041618
+bpc: 1.81216979027
+perplexity: 3.44953250885
+accuracy: 0.590000033379
+****************************************
+2018-06-20 19:12:07.498374: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:07.498402: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:07.498407: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:07.498410: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:07.498413: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:07.572596: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:893] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-06-20 19:12:07.572868: I tensorflow/core/common_runtime/gpu/gpu_device.cc:955] Found device 0 with properties: 
+name: GeForce GTX 1080 Ti
+major: 6 minor: 1 memoryClockRate (GHz) 1.582
+pciBusID 0000:01:00.0
+Total memory: 10.91GiB
+Free memory: 1.09GiB
+2018-06-20 19:12:07.572881: I tensorflow/core/common_runtime/gpu/gpu_device.cc:976] DMA: 0 
+2018-06-20 19:12:07.572887: I tensorflow/core/common_runtime/gpu/gpu_device.cc:986] 0:   Y 
+2018-06-20 19:12:07.572899: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1045] Creating TensorFlow device (/gpu:0) -> (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:01:00.0)
+
+
+clip_norm: 100000.0
+learning_rate/init: 1e-06
+optimizer_init_parameter: 0.001
+pupil_learning_rate: 0.001
+
+
+step: 0
+learning_rate: 1e-06
+results on meta optimizer train op
+start_loss: 0.972444
+end_loss: 19.1639
+start_bpc: 1.40294
+end_bpc: 27.6476
+start_perplexity: 4.32492
+end_perplexity: 1.47143
+start_accuracy: 0.5
+end_accuracy: 0.0
+OPTIMIZER INFERENCE ON PUPIL adam_prep
+****************************************
+restoring pupil from ../../cifar10_max_train/adagrad/0/checkpoints/best
+step: 0
+results on train dataset
+loss: 0.216986
+bpc: 0.313044
+perplexity: 2.21979
+accuracy: 1.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 4.58656787872
+bpc: 6.61701869965
+perplexity: 1.96911430359
+accuracy: 0.291000038385
+
+
+step: 1
+results on train dataset
+loss: 4.22553
+bpc: 6.09615
+perplexity: 2.47577
+accuracy: 0.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 33.84167099
+bpc: 48.8232116699
+perplexity: 1.00325882435
+accuracy: 0.103000000119
+****************************************
+2018-06-20 19:12:18.223478: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:18.223508: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:18.223515: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:18.223520: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:18.223525: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:18.287337: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:893] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-06-20 19:12:18.287604: I tensorflow/core/common_runtime/gpu/gpu_device.cc:955] Found device 0 with properties: 
+name: GeForce GTX 1080 Ti
+major: 6 minor: 1 memoryClockRate (GHz) 1.582
+pciBusID 0000:01:00.0
+Total memory: 10.91GiB
+Free memory: 1.09GiB
+2018-06-20 19:12:18.287619: I tensorflow/core/common_runtime/gpu/gpu_device.cc:976] DMA: 0 
+2018-06-20 19:12:18.287626: I tensorflow/core/common_runtime/gpu/gpu_device.cc:986] 0:   Y 
+2018-06-20 19:12:18.287640: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1045] Creating TensorFlow device (/gpu:0) -> (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:01:00.0)
+
+
+clip_norm: 100000.0
+learning_rate/init: 0.001
+optimizer_init_parameter: 0.001
+pupil_learning_rate: 0.001
+
+
+step: 0
+learning_rate: 0.001
+results on meta optimizer train op
+start_loss: 0.972444
+end_loss: 19.1639
+start_bpc: 1.40294
+end_bpc: 27.6476
+start_perplexity: 4.32492
+end_perplexity: 1.47143
+start_accuracy: 0.5
+end_accuracy: 0.0
+OPTIMIZER INFERENCE ON PUPIL adam_prep
+****************************************
+restoring pupil from ../../cifar10_max_train/adagrad/0/checkpoints/best
+step: 0
+results on train dataset
+loss: 0.216986
+bpc: 0.313044
+perplexity: 2.21979
+accuracy: 1.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 4.58656740189
+bpc: 6.61701822281
+perplexity: 1.96911430359
+accuracy: 0.291000038385
+
+
+step: 1
+results on train dataset
+loss: 4.22553
+bpc: 6.09615
+perplexity: 2.47577
+accuracy: 0.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 33.84167099
+bpc: 48.8232116699
+perplexity: 1.00325882435
+accuracy: 0.102999992669
+****************************************
+2018-06-20 19:12:27.766414: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:27.766441: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:27.766446: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:27.766449: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:27.766452: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:27.830720: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:893] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-06-20 19:12:27.830939: I tensorflow/core/common_runtime/gpu/gpu_device.cc:955] Found device 0 with properties: 
+name: GeForce GTX 1080 Ti
+major: 6 minor: 1 memoryClockRate (GHz) 1.582
+pciBusID 0000:01:00.0
+Total memory: 10.91GiB
+Free memory: 1.09GiB
+2018-06-20 19:12:27.830951: I tensorflow/core/common_runtime/gpu/gpu_device.cc:976] DMA: 0 
+2018-06-20 19:12:27.830955: I tensorflow/core/common_runtime/gpu/gpu_device.cc:986] 0:   Y 
+2018-06-20 19:12:27.830964: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1045] Creating TensorFlow device (/gpu:0) -> (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:01:00.0)
+
+
+clip_norm: 10000000.0
+learning_rate/init: 1e-06
+optimizer_init_parameter: 1e-08
+pupil_learning_rate: 1e-06
+
+
+step: 0
+learning_rate: 1e-06
+results on meta optimizer train op
+start_loss: 0.972444
+end_loss: 0.633963
+start_bpc: 1.40294
+end_bpc: 0.914616
+start_perplexity: 4.32492
+end_perplexity: 4.24436
+start_accuracy: 0.5
+end_accuracy: 1.0
+OPTIMIZER INFERENCE ON PUPIL adam_prep
+****************************************
+restoring pupil from ../../cifar10_max_train/adagrad/0/checkpoints/best
+step: 0
+results on train dataset
+loss: 0.216986
+bpc: 0.313044
+perplexity: 2.21979
+accuracy: 1.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 1.25616788864
+bpc: 1.81226718426
+perplexity: 3.44990730286
+accuracy: 0.591000020504
+
+
+step: 1
+results on train dataset
+loss: 0.658404
+bpc: 0.949876
+perplexity: 2.44933
+accuracy: 0.5
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 1.25610041618
+bpc: 1.81216979027
+perplexity: 3.44953250885
+accuracy: 0.590000033379
+****************************************
+2018-06-20 19:12:36.962721: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:36.962750: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:36.962755: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:36.962758: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:36.962761: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:37.022261: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:893] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-06-20 19:12:37.022502: I tensorflow/core/common_runtime/gpu/gpu_device.cc:955] Found device 0 with properties: 
+name: GeForce GTX 1080 Ti
+major: 6 minor: 1 memoryClockRate (GHz) 1.582
+pciBusID 0000:01:00.0
+Total memory: 10.91GiB
+Free memory: 1.09GiB
+2018-06-20 19:12:37.022514: I tensorflow/core/common_runtime/gpu/gpu_device.cc:976] DMA: 0 
+2018-06-20 19:12:37.022518: I tensorflow/core/common_runtime/gpu/gpu_device.cc:986] 0:   Y 
+2018-06-20 19:12:37.022526: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1045] Creating TensorFlow device (/gpu:0) -> (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:01:00.0)
+
+
+clip_norm: 10000000.0
+learning_rate/init: 0.001
+optimizer_init_parameter: 1e-08
+pupil_learning_rate: 1e-06
+
+
+step: 0
+learning_rate: 0.001
+results on meta optimizer train op
+start_loss: 0.972444
+end_loss: 0.633963
+start_bpc: 1.40294
+end_bpc: 0.914616
+start_perplexity: 4.32492
+end_perplexity: 4.24436
+start_accuracy: 0.5
+end_accuracy: 1.0
+OPTIMIZER INFERENCE ON PUPIL adam_prep
+****************************************
+restoring pupil from ../../cifar10_max_train/adagrad/0/checkpoints/best
+step: 0
+results on train dataset
+loss: 0.216986
+bpc: 0.313044
+perplexity: 2.21979
+accuracy: 1.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 1.25616788864
+bpc: 1.81226718426
+perplexity: 3.44990730286
+accuracy: 0.591000020504
+
+
+step: 1
+results on train dataset
+loss: 0.658404
+bpc: 0.949876
+perplexity: 2.44933
+accuracy: 0.5
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 1.25610041618
+bpc: 1.81216979027
+perplexity: 3.44953250885
+accuracy: 0.590000033379
+****************************************
+2018-06-20 19:12:46.552025: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:46.552068: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:46.552072: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:46.552075: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:46.552078: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:46.631922: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:893] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-06-20 19:12:46.632137: I tensorflow/core/common_runtime/gpu/gpu_device.cc:955] Found device 0 with properties: 
+name: GeForce GTX 1080 Ti
+major: 6 minor: 1 memoryClockRate (GHz) 1.582
+pciBusID 0000:01:00.0
+Total memory: 10.91GiB
+Free memory: 1.09GiB
+2018-06-20 19:12:46.632149: I tensorflow/core/common_runtime/gpu/gpu_device.cc:976] DMA: 0 
+2018-06-20 19:12:46.632153: I tensorflow/core/common_runtime/gpu/gpu_device.cc:986] 0:   Y 
+2018-06-20 19:12:46.632161: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1045] Creating TensorFlow device (/gpu:0) -> (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:01:00.0)
+
+
+clip_norm: 10000000.0
+learning_rate/init: 1e-06
+optimizer_init_parameter: 1e-08
+pupil_learning_rate: 0.001
+
+
+step: 0
+learning_rate: 1e-06
+results on meta optimizer train op
+start_loss: 0.972444
+end_loss: 19.1639
+start_bpc: 1.40294
+end_bpc: 27.6476
+start_perplexity: 4.32492
+end_perplexity: 1.47143
+start_accuracy: 0.5
+end_accuracy: 0.0
+OPTIMIZER INFERENCE ON PUPIL adam_prep
+****************************************
+restoring pupil from ../../cifar10_max_train/adagrad/0/checkpoints/best
+step: 0
+results on train dataset
+loss: 0.216986
+bpc: 0.313044
+perplexity: 2.21979
+accuracy: 1.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 4.58656740189
+bpc: 6.61701822281
+perplexity: 1.96911430359
+accuracy: 0.291000038385
+
+
+step: 1
+results on train dataset
+loss: 4.22553
+bpc: 6.09615
+perplexity: 2.47577
+accuracy: 0.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 33.84167099
+bpc: 48.8232116699
+perplexity: 1.00325882435
+accuracy: 0.103000000119
+****************************************
+2018-06-20 19:12:55.877992: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:55.878016: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:55.878021: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:55.878024: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:55.878026: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:12:55.954089: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:893] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-06-20 19:12:55.954315: I tensorflow/core/common_runtime/gpu/gpu_device.cc:955] Found device 0 with properties: 
+name: GeForce GTX 1080 Ti
+major: 6 minor: 1 memoryClockRate (GHz) 1.582
+pciBusID 0000:01:00.0
+Total memory: 10.91GiB
+Free memory: 1.09GiB
+2018-06-20 19:12:55.954326: I tensorflow/core/common_runtime/gpu/gpu_device.cc:976] DMA: 0 
+2018-06-20 19:12:55.954330: I tensorflow/core/common_runtime/gpu/gpu_device.cc:986] 0:   Y 
+2018-06-20 19:12:55.954338: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1045] Creating TensorFlow device (/gpu:0) -> (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:01:00.0)
+
+
+clip_norm: 10000000.0
+learning_rate/init: 0.001
+optimizer_init_parameter: 1e-08
+pupil_learning_rate: 0.001
+
+
+step: 0
+learning_rate: 0.001
+results on meta optimizer train op
+start_loss: 0.972444
+end_loss: 19.1639
+start_bpc: 1.40294
+end_bpc: 27.6476
+start_perplexity: 4.32492
+end_perplexity: 1.47143
+start_accuracy: 0.5
+end_accuracy: 0.0
+OPTIMIZER INFERENCE ON PUPIL adam_prep
+****************************************
+restoring pupil from ../../cifar10_max_train/adagrad/0/checkpoints/best
+step: 0
+results on train dataset
+loss: 0.216986
+bpc: 0.313044
+perplexity: 2.21979
+accuracy: 1.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 4.58656787872
+bpc: 6.61701869965
+perplexity: 1.96911430359
+accuracy: 0.291000038385
+
+
+step: 1
+results on train dataset
+loss: 4.22553
+bpc: 6.09615
+perplexity: 2.47577
+accuracy: 0.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 33.8416671753
+bpc: 48.8232040405
+perplexity: 1.00325882435
+accuracy: 0.102999992669
+****************************************
+2018-06-20 19:13:05.384954: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:05.384986: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:05.384991: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:05.384994: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:05.384997: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:05.447068: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:893] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-06-20 19:13:05.447295: I tensorflow/core/common_runtime/gpu/gpu_device.cc:955] Found device 0 with properties: 
+name: GeForce GTX 1080 Ti
+major: 6 minor: 1 memoryClockRate (GHz) 1.582
+pciBusID 0000:01:00.0
+Total memory: 10.91GiB
+Free memory: 1.09GiB
+2018-06-20 19:13:05.447307: I tensorflow/core/common_runtime/gpu/gpu_device.cc:976] DMA: 0 
+2018-06-20 19:13:05.447315: I tensorflow/core/common_runtime/gpu/gpu_device.cc:986] 0:   Y 
+2018-06-20 19:13:05.447328: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1045] Creating TensorFlow device (/gpu:0) -> (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:01:00.0)
+
+
+clip_norm: 10000000.0
+learning_rate/init: 1e-06
+optimizer_init_parameter: 0.001
+pupil_learning_rate: 1e-06
+
+
+step: 0
+learning_rate: 1e-06
+results on meta optimizer train op
+start_loss: 0.972444
+end_loss: 0.633963
+start_bpc: 1.40294
+end_bpc: 0.914616
+start_perplexity: 4.32492
+end_perplexity: 4.24436
+start_accuracy: 0.5
+end_accuracy: 1.0
+OPTIMIZER INFERENCE ON PUPIL adam_prep
+****************************************
+restoring pupil from ../../cifar10_max_train/adagrad/0/checkpoints/best
+step: 0
+results on train dataset
+loss: 0.216986
+bpc: 0.313044
+perplexity: 2.21979
+accuracy: 1.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 1.25616788864
+bpc: 1.81226718426
+perplexity: 3.44990730286
+accuracy: 0.591000020504
+
+
+step: 1
+results on train dataset
+loss: 0.658404
+bpc: 0.949876
+perplexity: 2.44933
+accuracy: 0.5
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 1.25610041618
+bpc: 1.81216979027
+perplexity: 3.44953250885
+accuracy: 0.589999973774
+****************************************
+2018-06-20 19:13:15.126435: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:15.126461: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:15.126465: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:15.126468: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:15.126471: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:15.181668: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:893] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-06-20 19:13:15.181873: I tensorflow/core/common_runtime/gpu/gpu_device.cc:955] Found device 0 with properties: 
+name: GeForce GTX 1080 Ti
+major: 6 minor: 1 memoryClockRate (GHz) 1.582
+pciBusID 0000:01:00.0
+Total memory: 10.91GiB
+Free memory: 1.09GiB
+2018-06-20 19:13:15.181884: I tensorflow/core/common_runtime/gpu/gpu_device.cc:976] DMA: 0 
+2018-06-20 19:13:15.181888: I tensorflow/core/common_runtime/gpu/gpu_device.cc:986] 0:   Y 
+2018-06-20 19:13:15.181896: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1045] Creating TensorFlow device (/gpu:0) -> (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:01:00.0)
+
+
+clip_norm: 10000000.0
+learning_rate/init: 0.001
+optimizer_init_parameter: 0.001
+pupil_learning_rate: 1e-06
+
+
+step: 0
+learning_rate: 0.001
+results on meta optimizer train op
+start_loss: 0.972444
+end_loss: 0.633963
+start_bpc: 1.40294
+end_bpc: 0.914616
+start_perplexity: 4.32492
+end_perplexity: 4.24436
+start_accuracy: 0.5
+end_accuracy: 1.0
+OPTIMIZER INFERENCE ON PUPIL adam_prep
+****************************************
+restoring pupil from ../../cifar10_max_train/adagrad/0/checkpoints/best
+step: 0
+results on train dataset
+loss: 0.216986
+bpc: 0.313044
+perplexity: 2.21979
+accuracy: 1.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 1.25616788864
+bpc: 1.81226718426
+perplexity: 3.44990730286
+accuracy: 0.591000020504
+
+
+step: 1
+results on train dataset
+loss: 0.658404
+bpc: 0.949876
+perplexity: 2.44933
+accuracy: 0.5
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 1.25610041618
+bpc: 1.81216979027
+perplexity: 3.44953250885
+accuracy: 0.589999973774
+****************************************
+2018-06-20 19:13:24.458764: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:24.458788: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:24.458792: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:24.458795: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:24.458798: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:24.525892: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:893] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-06-20 19:13:24.526099: I tensorflow/core/common_runtime/gpu/gpu_device.cc:955] Found device 0 with properties: 
+name: GeForce GTX 1080 Ti
+major: 6 minor: 1 memoryClockRate (GHz) 1.582
+pciBusID 0000:01:00.0
+Total memory: 10.91GiB
+Free memory: 1.09GiB
+2018-06-20 19:13:24.526110: I tensorflow/core/common_runtime/gpu/gpu_device.cc:976] DMA: 0 
+2018-06-20 19:13:24.526115: I tensorflow/core/common_runtime/gpu/gpu_device.cc:986] 0:   Y 
+2018-06-20 19:13:24.526125: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1045] Creating TensorFlow device (/gpu:0) -> (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:01:00.0)
+
+
+clip_norm: 10000000.0
+learning_rate/init: 1e-06
+optimizer_init_parameter: 0.001
+pupil_learning_rate: 0.001
+
+
+step: 0
+learning_rate: 1e-06
+results on meta optimizer train op
+start_loss: 0.972444
+end_loss: 19.1639
+start_bpc: 1.40294
+end_bpc: 27.6476
+start_perplexity: 4.32492
+end_perplexity: 1.47143
+start_accuracy: 0.5
+end_accuracy: 0.0
+OPTIMIZER INFERENCE ON PUPIL adam_prep
+****************************************
+restoring pupil from ../../cifar10_max_train/adagrad/0/checkpoints/best
+step: 0
+results on train dataset
+loss: 0.216986
+bpc: 0.313044
+perplexity: 2.21979
+accuracy: 1.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 4.58656740189
+bpc: 6.61701822281
+perplexity: 1.96911430359
+accuracy: 0.291000008583
+
+
+step: 1
+results on train dataset
+loss: 4.22553
+bpc: 6.09615
+perplexity: 2.47577
+accuracy: 0.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 33.84167099
+bpc: 48.8232116699
+perplexity: 1.00325882435
+accuracy: 0.10300000757
+****************************************
+2018-06-20 19:13:34.208835: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:34.208861: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:34.208866: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:34.208869: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:34.208872: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:34.284962: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:893] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-06-20 19:13:34.285167: I tensorflow/core/common_runtime/gpu/gpu_device.cc:955] Found device 0 with properties: 
+name: GeForce GTX 1080 Ti
+major: 6 minor: 1 memoryClockRate (GHz) 1.582
+pciBusID 0000:01:00.0
+Total memory: 10.91GiB
+Free memory: 1.09GiB
+2018-06-20 19:13:34.285178: I tensorflow/core/common_runtime/gpu/gpu_device.cc:976] DMA: 0 
+2018-06-20 19:13:34.285182: I tensorflow/core/common_runtime/gpu/gpu_device.cc:986] 0:   Y 
+2018-06-20 19:13:34.285190: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1045] Creating TensorFlow device (/gpu:0) -> (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:01:00.0)
+
+
+clip_norm: 10000000.0
+learning_rate/init: 0.001
+optimizer_init_parameter: 0.001
+pupil_learning_rate: 0.001
+
+
+step: 0
+learning_rate: 0.001
+results on meta optimizer train op
+start_loss: 0.972444
+end_loss: 19.1639
+start_bpc: 1.40294
+end_bpc: 27.6476
+start_perplexity: 4.32492
+end_perplexity: 1.47143
+start_accuracy: 0.5
+end_accuracy: 0.0
+OPTIMIZER INFERENCE ON PUPIL adam_prep
+****************************************
+restoring pupil from ../../cifar10_max_train/adagrad/0/checkpoints/best
+step: 0
+results on train dataset
+loss: 0.216986
+bpc: 0.313044
+perplexity: 2.21979
+accuracy: 1.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 4.58656740189
+bpc: 6.61701822281
+perplexity: 1.96911430359
+accuracy: 0.291000008583
+
+
+step: 1
+results on train dataset
+loss: 4.22553
+bpc: 6.09615
+perplexity: 2.47577
+accuracy: 0.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 33.8416671753
+bpc: 48.8232040405
+perplexity: 1.00325882435
+accuracy: 0.102999992669
+****************************************
+2018-06-20 19:13:43.688887: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:43.688908: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:43.688913: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:43.688918: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:43.688923: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-20 19:13:43.769867: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:893] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-06-20 19:13:43.770080: I tensorflow/core/common_runtime/gpu/gpu_device.cc:955] Found device 0 with properties: 
+name: GeForce GTX 1080 Ti
+major: 6 minor: 1 memoryClockRate (GHz) 1.582
+pciBusID 0000:01:00.0
+Total memory: 10.91GiB
+Free memory: 1.09GiB
+2018-06-20 19:13:43.770092: I tensorflow/core/common_runtime/gpu/gpu_device.cc:976] DMA: 0 
+2018-06-20 19:13:43.770098: I tensorflow/core/common_runtime/gpu/gpu_device.cc:986] 0:   Y 
+2018-06-20 19:13:43.770106: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1045] Creating TensorFlow device (/gpu:0) -> (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:01:00.0)
+2018-06-20 19:13:53.902839: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1045] Creating TensorFlow device (/gpu:0) -> (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:01:00.0)
+2018-06-20 19:13:56.871287: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1045] Creating TensorFlow device (/gpu:0) -> (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:01:00.0)
+  loss: 1.2561453978200001
+    clip_norm: 100000.0
+    optimizer_init_parameter: 0.001
+    learning_rate/init: 1e-06
+    pupil_learning_rate: 1e-06
+
+
+step: 0
+learning_rate: 1e-06
+results on meta optimizer train op
+start_loss: 0.972444
+end_loss: 0.633963
+start_bpc: 1.40294
+end_bpc: 0.914616
+start_perplexity: 4.32492
+end_perplexity: 4.24436
+start_accuracy: 0.5
+end_accuracy: 1.0
+OPTIMIZER INFERENCE ON PUPIL adam_prep
+****************************************
+restoring pupil from ../../cifar10_max_train/adagrad/0/checkpoints/best
+step: 0
+results on train dataset
+loss: 0.202051
+bpc: 0.291497
+perplexity: 1.91306
+accuracy: 1.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 1.25638735294
+bpc: 1.81258380413
+perplexity: 3.44978260994
+accuracy: 0.590000033379
+
+
+step: 1
+results on train dataset
+loss: 0.340773
+bpc: 0.491631
+perplexity: 2.81234
+accuracy: 1.0
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset validation
+loss: 1.25636148453
+bpc: 1.81254649162
+perplexity: 3.45013976097
+accuracy: 0.591000020504
+****************************************
+
+Creating checkpoint at test/loss_best/test/training/checkpoints/final
+restoring pupil from ../../cifar10_max_train/adagrad/0/checkpoints/best
+{'valid': {'accuracy': [], 'loss': [], 'bpc': [], 'steps': [], 'perplexity': []}, 'step': 0, 'train': {'accuracy': [], 'loss': [], 'bpc': [], 'steps': [], 'perplexity': []}}
+
+
+step: 0
+results on train dataset
+loss: 1.27616
+bpc: 1.84111
+perplexity: 2.15124
+accuracy: 0.5
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (1000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (1000,)
+results on validation dataset valid
+loss: 1.25657761097
+bpc: 1.81285822392
+perplexity: 3.45012426376
+accuracy: 0.591000020504
+
+Creating checkpoint at test/loss_best/test/pupil_training/checkpoints/best
+
+Creating checkpoint at test/loss_best/test/pupil_training/checkpoints/final
+restoring pupil from test/loss_best/test/pupil_training/checkpoints/final
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (10000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (10000,)
+results on validation dataset test
+loss: 1.27969920635
+perplexity: 3.51793241501
+accuracy: 0.557299852371

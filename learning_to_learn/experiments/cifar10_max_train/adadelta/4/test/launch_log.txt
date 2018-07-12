@@ -1,0 +1,83 @@
+2018-06-18 15:26:36.550400
+
+launch regime: test
+
+build parameters:
+{
+    "init_parameter": 3e-05,
+    "optimizer": "adadelta",
+    "num_classes": 10,
+    "batch_size": 32,
+    "num_layers": 2,
+    "num_hidden_nodes": [
+        1000],
+    "input_shape": [
+        3072],
+    "additional_metrics": [
+        "bpc",
+        "perplexity",
+        "accuracy"]}
+
+launch parameters:
+{
+    "save_path": "adadelta/4/test",
+    "additions_to_feed_dict": [
+        {
+            "placeholder": "dropout",
+            "value": 1.0}],
+    "valid_batch_kwargs": {
+        "valid_size": 1000},
+    "validation_datasets": {
+        "test": "test"},
+    "restore_path": "adadelta/4/checkpoints/best",
+    "printed_result_types": [
+        "perplexity",
+        "loss",
+        "bpc",
+        "accuracy"]}
+
+default launch parameters:
+{
+    "session_specs": {
+        "visible_device_list": "",
+        "gpu_memory": None,
+        "allow_growth": False,
+        "log_device_placement": False,
+        "allow_soft_placement": False},
+    "work": {
+        "printed_result_types": [
+            "loss"],
+        "fuses": None,
+        "fuse_file_name": None,
+        "valid_batch_kwargs": {},
+        "additions_to_feed_dict": [],
+        "random": {
+            "length": 80,
+            "number_of_runs": 5},
+        "replicas": None,
+        "validate_tokens_by_chars": False,
+        "example_tensors": {
+            "example_print_tensors": {},
+            "example_save_tensors": {}},
+        "example_length": None,
+        "validation_datasets": None,
+        "fuse_tensors": {
+            "fuse_save_tensors": {},
+            "fuse_print_tensors": {}},
+        "validation_tensor_schedule": {
+            "valid_print_tensors": {},
+            "valid_save_text_tensors": {}},
+        "debug": None,
+        "validation_batch_size": 1},
+    "start_specs": {
+        "print_results": True,
+        "verbose": True,
+        "save_path": None,
+        "restore_path": None,
+        "vocabulary": None,
+        "batch_generator_class": <class 'learning_to_learn.image_batch_gens.CifarBatchGenerator'>,
+        "result_types": [
+            "loss",
+            "perplexity",
+            "accuracy"]}}
+

@@ -1,0 +1,47 @@
+confs: []
+{'valid': {'loss': [(0.01,), 1.2841158023810713], 'perplexity': [(0.00083,), 5.907051516890526], 'accuracy': [(0.00072,), 0.589], 'bpc': [(0.01,), 1.8525874950684373]}}
+dataset: valid
+  loss: 1.2841158023810713
+    learning_rate/init: 0.01
+restoring pupil from ../text8_finish_std/adagrad/loss_best/test/training/checkpoints/final
+Testing!
+Validation dataset name: default_0
+Validation dataset_size:
+100000
+results on validation dataset default_0
+loss: 1.401296069207218
+perplexity: 6.076833820545674
+accuracy: 0.56068
+  perplexity: 5.907051516890526
+    learning_rate/init: 0.00083
+restoring pupil from ../text8_finish_std/adagrad/perplexity_best/test/training/checkpoints/final
+Testing!
+Validation dataset name: default_0
+Validation dataset_size:
+100000
+results on validation dataset default_0
+loss: 1.4029022863069762
+perplexity: 6.0476263481545445
+accuracy: 0.56138
+  accuracy: 0.589
+    learning_rate/init: 0.00072
+restoring pupil from ../text8_finish_std/adagrad/accuracy_best/test/training/checkpoints/final
+Testing!
+Validation dataset name: default_0
+Validation dataset_size:
+100000
+results on validation dataset default_0
+loss: 1.4029913097531508
+perplexity: 6.0479002809679505
+accuracy: 0.56134
+  bpc: 1.8525874950684373
+    learning_rate/init: 0.01
+restoring pupil from ../text8_finish_std/adagrad/bpc_best/test/training/checkpoints/final
+Testing!
+Validation dataset name: default_0
+Validation dataset_size:
+100000
+results on validation dataset default_0
+loss: 1.4012523328297402
+perplexity: 6.0759681661617755
+accuracy: 0.56059

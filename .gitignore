@@ -1,4 +1,5 @@
 **/run[0-9]/**
+**/run1_wrong_init/
 **/ign[0-9]/**
 **/run[0-9]_incomplete/**
 **/ign[0-9]_incomplete/**

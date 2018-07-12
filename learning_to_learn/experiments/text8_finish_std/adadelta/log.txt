@@ -1,0 +1,4299 @@
+confs: [OrderedDict([('learning_rate/init', [1e-08, 1.1e-08, 1.3e-08, 1.5e-08, 1.7e-08, 2e-08, 2.3e-08, 2.6e-08, 3e-08, 3.5e-08, 4e-08, 4.6e-08, 5.2e-08, 6e-08, 6.9e-08, 7.9e-08, 9.1e-08, 1e-07, 1.2e-07, 1.4e-07, 1.6e-07, 1.8e-07, 2.1e-07, 2.4e-07, 2.8e-07, 3.2e-07, 3.6e-07, 4.2e-07, 4.8e-07, 5.5e-07, 6.3e-07, 7.2e-07, 8.3e-07, 9.5e-07, 1.1e-06, 1.3e-06, 1.4e-06, 1.7e-06, 1.9e-06, 2.2e-06, 2.5e-06, 2.9e-06, 3.3e-06, 3.8e-06, 4.4e-06, 5e-06, 5.8e-06, 6.6e-06, 7.6e-06, 8.7e-06, 1e-05, 1.1e-05, 1.3e-05, 1.5e-05, 1.7e-05, 2e-05, 2.3e-05, 2.6e-05, 3e-05, 3.5e-05, 4e-05, 4.6e-05, 5.2e-05, 6e-05, 6.9e-05, 7.9e-05, 9.1e-05, 0.0001, 0.00012, 0.00014, 0.00016, 0.00018, 0.00021, 0.00024, 0.00028, 0.00032, 0.00036, 0.00042, 0.00048, 0.00055, 0.00063, 0.00072, 0.00083, 0.00095, 0.0011, 0.0013, 0.0014, 0.0017, 0.0019, 0.0022, 0.0025, 0.0029, 0.0033, 0.0038, 0.0044, 0.005, 0.0058, 0.0066, 0.0076, 0.0087, 0.01])])]
+
+
+learning_rate/init: 1e-08
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1e-08
+results on train dataset
+loss: 2.132396
+bpc: 3.0763972
+perplexity: 8.194669
+accuracy: 0.39374998
+
+
+step: 500
+learning_rate: 1e-08
+results on train dataset
+loss: 1.4418365
+bpc: 2.0801303
+perplexity: 6.2178288
+accuracy: 0.56562495
+
+
+step: 1000
+learning_rate: 1e-08
+results on train dataset
+loss: 1.5124364
+bpc: 2.1819844
+perplexity: 6.594571
+accuracy: 0.53437495
+
+
+learning_rate/init: 1e-08
+results on valid dataset:
+loss: 1.2881740758275846
+perplexity: 5.907896007299423
+accuracy: 0.587
+bpc: 1.8584423434198252
+
+
+learning_rate/init: 1.1e-08
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.1e-08
+results on train dataset
+loss: 2.1376462
+bpc: 3.0839715
+perplexity: 8.1425
+accuracy: 0.37500003
+
+
+step: 500
+learning_rate: 1.1e-08
+results on train dataset
+loss: 1.4495572
+bpc: 2.091269
+perplexity: 6.2936726
+accuracy: 0.55625
+
+
+step: 1000
+learning_rate: 1.1e-08
+results on train dataset
+loss: 1.5217831
+bpc: 2.195469
+perplexity: 6.6007495
+accuracy: 0.525
+
+
+learning_rate/init: 1.1e-08
+results on valid dataset:
+loss: 1.2881740848819028
+perplexity: 5.907895928859711
+accuracy: 0.587
+bpc: 1.8584423592020176
+
+
+learning_rate/init: 1.3e-08
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.3e-08
+results on train dataset
+loss: 2.165575
+bpc: 3.1242642
+perplexity: 8.127348
+accuracy: 0.371875
+
+
+step: 500
+learning_rate: 1.3e-08
+results on train dataset
+loss: 1.437755
+bpc: 2.0742419
+perplexity: 6.178482
+accuracy: 0.565625
+
+
+step: 1000
+learning_rate: 1.3e-08
+results on train dataset
+loss: 1.5360053
+bpc: 2.2159872
+perplexity: 6.6148763
+accuracy: 0.50937504
+
+
+learning_rate/init: 1.3e-08
+results on valid dataset:
+loss: 1.2881740771910408
+perplexity: 5.9078959608078
+accuracy: 0.587
+bpc: 1.8584423480037948
+
+
+learning_rate/init: 1.5e-08
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.5e-08
+results on train dataset
+loss: 2.1661184
+bpc: 3.1250482
+perplexity: 8.159704
+accuracy: 0.375
+
+
+step: 500
+learning_rate: 1.5e-08
+results on train dataset
+loss: 1.446601
+bpc: 2.0870042
+perplexity: 6.2453375
+accuracy: 0.553125
+
+
+step: 1000
+learning_rate: 1.5e-08
+results on train dataset
+loss: 1.5164773
+bpc: 2.1878142
+perplexity: 6.6899505
+accuracy: 0.53125
+
+
+learning_rate/init: 1.5e-08
+results on valid dataset:
+loss: 1.28817407569068
+perplexity: 5.907895938277244
+accuracy: 0.587
+bpc: 1.858442346768861
+
+
+learning_rate/init: 1.7e-08
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.7e-08
+results on train dataset
+loss: 2.1551926
+bpc: 3.1092856
+perplexity: 8.125904
+accuracy: 0.39375
+
+
+step: 500
+learning_rate: 1.7e-08
+results on train dataset
+loss: 1.4477712
+bpc: 2.0886924
+perplexity: 6.1928835
+accuracy: 0.55625
+
+
+step: 1000
+learning_rate: 1.7e-08
+results on train dataset
+loss: 1.5109708
+bpc: 2.1798701
+perplexity: 6.5478787
+accuracy: 0.53125
+
+
+learning_rate/init: 1.7e-08
+results on valid dataset:
+loss: 1.2881740779603132
+perplexity: 5.907895937800407
+accuracy: 0.587
+bpc: 1.858442350674828
+
+
+learning_rate/init: 2e-08
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 2e-08
+results on train dataset
+loss: 2.1629815
+bpc: 3.1205227
+perplexity: 8.15901
+accuracy: 0.37499997
+
+
+step: 500
+learning_rate: 2e-08
+results on train dataset
+loss: 1.4327035
+bpc: 2.0669541
+perplexity: 6.2533693
+accuracy: 0.57500005
+
+
+step: 1000
+learning_rate: 2e-08
+results on train dataset
+loss: 1.5157106
+bpc: 2.1867082
+perplexity: 6.6451035
+accuracy: 0.528125
+
+
+learning_rate/init: 2e-08
+results on valid dataset:
+loss: 1.288174075413146
+perplexity: 5.907896042346954
+accuracy: 0.587
+bpc: 1.8584423433881603
+
+
+learning_rate/init: 2.3e-08
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 2.3e-08
+results on train dataset
+loss: 2.145832
+bpc: 3.0957813
+perplexity: 8.141541
+accuracy: 0.375
+
+
+step: 500
+learning_rate: 2.3e-08
+results on train dataset
+loss: 1.4580706
+bpc: 2.1035514
+perplexity: 6.2488832
+accuracy: 0.546875
+
+
+step: 1000
+learning_rate: 2.3e-08
+results on train dataset
+loss: 1.5116084
+bpc: 2.18079
+perplexity: 6.6190825
+accuracy: 0.51875
+
+
+learning_rate/init: 2.3e-08
+results on valid dataset:
+loss: 1.2881740736743668
+perplexity: 5.907896055340767
+accuracy: 0.587
+bpc: 1.858442342013528
+
+
+learning_rate/init: 2.6e-08
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 2.6e-08
+results on train dataset
+loss: 2.153879
+bpc: 3.1073904
+perplexity: 8.098199
+accuracy: 0.39375
+
+
+step: 500
+learning_rate: 2.6e-08
+results on train dataset
+loss: 1.4384423
+bpc: 2.0752337
+perplexity: 6.2347736
+accuracy: 0.5625
+
+
+step: 1000
+learning_rate: 2.6e-08
+results on train dataset
+loss: 1.5351303
+bpc: 2.2147248
+perplexity: 6.557753
+accuracy: 0.521875
+
+
+learning_rate/init: 2.6e-08
+results on valid dataset:
+loss: 1.2881740893475944
+perplexity: 5.907895976305008
+accuracy: 0.587
+bpc: 1.8584423620015733
+
+
+learning_rate/init: 3e-08
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 3e-08
+results on train dataset
+loss: 2.1497335
+bpc: 3.10141
+perplexity: 8.191657
+accuracy: 0.39062503
+
+
+step: 500
+learning_rate: 3e-08
+results on train dataset
+loss: 1.4473984
+bpc: 2.0881546
+perplexity: 6.2226343
+accuracy: 0.56249994
+
+
+step: 1000
+learning_rate: 3e-08
+results on train dataset
+loss: 1.5140404
+bpc: 2.1842985
+perplexity: 6.628898
+accuracy: 0.51874995
+
+
+learning_rate/init: 3e-08
+results on valid dataset:
+loss: 1.288174088572734
+perplexity: 5.907896009087563
+accuracy: 0.587
+bpc: 1.858442361262103
+
+
+learning_rate/init: 3.5e-08
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 3.5e-08
+results on train dataset
+loss: 2.1466613
+bpc: 3.0969775
+perplexity: 8.229508
+accuracy: 0.38437504
+
+
+step: 500
+learning_rate: 3.5e-08
+results on train dataset
+loss: 1.4368153
+bpc: 2.0728862
+perplexity: 6.1895986
+accuracy: 0.5625
+
+
+step: 1000
+learning_rate: 3.5e-08
+results on train dataset
+loss: 1.5072411
+bpc: 2.1744893
+perplexity: 6.6441445
+accuracy: 0.525
+
+
+learning_rate/init: 3.5e-08
+results on valid dataset:
+loss: 1.2881740893503884
+perplexity: 5.907895918726921
+accuracy: 0.587
+bpc: 1.8584423673119745
+
+
+learning_rate/init: 4e-08
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 4e-08
+results on train dataset
+loss: 2.1622498
+bpc: 3.119467
+perplexity: 8.231215
+accuracy: 0.390625
+
+
+step: 500
+learning_rate: 4e-08
+results on train dataset
+loss: 1.4316785
+bpc: 2.0654755
+perplexity: 6.252513
+accuracy: 0.56562495
+
+
+step: 1000
+learning_rate: 4e-08
+results on train dataset
+loss: 1.5312928
+bpc: 2.2091885
+perplexity: 6.6322117
+accuracy: 0.5375
+
+
+learning_rate/init: 4e-08
+results on valid dataset:
+loss: 1.288174077047617
+perplexity: 5.907896079421043
+accuracy: 0.587
+bpc: 1.858442347871547
+
+
+learning_rate/init: 4.6e-08
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 4.6e-08
+results on train dataset
+loss: 2.1663916
+bpc: 3.1254425
+perplexity: 8.252108
+accuracy: 0.38125002
+
+
+step: 500
+learning_rate: 4.6e-08
+results on train dataset
+loss: 1.4404304
+bpc: 2.0781019
+perplexity: 6.231573
+accuracy: 0.55625
+
+
+step: 1000
+learning_rate: 4.6e-08
+results on train dataset
+loss: 1.5367177
+bpc: 2.217015
+perplexity: 6.5569115
+accuracy: 0.515625
+
+
+learning_rate/init: 4.6e-08
+results on valid dataset:
+loss: 1.2881740827482426
+perplexity: 5.907895994901657
+accuracy: 0.587
+bpc: 1.858442354107683
+
+
+learning_rate/init: 5.2e-08
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 5.2e-08
+results on train dataset
+loss: 2.152639
+bpc: 3.1056015
+perplexity: 8.261344
+accuracy: 0.375
+
+
+step: 500
+learning_rate: 5.2e-08
+results on train dataset
+loss: 1.439335
+bpc: 2.0765214
+perplexity: 6.2009115
+accuracy: 0.553125
+
+
+step: 1000
+learning_rate: 5.2e-08
+results on train dataset
+loss: 1.5230802
+bpc: 2.1973403
+perplexity: 6.6272492
+accuracy: 0.51875
+
+
+learning_rate/init: 5.2e-08
+results on valid dataset:
+loss: 1.288174076555879
+perplexity: 5.907895959496498
+accuracy: 0.587
+bpc: 1.8584423435241333
+
+
+learning_rate/init: 6e-08
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 6e-08
+results on train dataset
+loss: 2.1516576
+bpc: 3.1041858
+perplexity: 8.172256
+accuracy: 0.375
+
+
+step: 500
+learning_rate: 6e-08
+results on train dataset
+loss: 1.4490968
+bpc: 2.0906048
+perplexity: 6.1890535
+accuracy: 0.559375
+
+
+step: 1000
+learning_rate: 6e-08
+results on train dataset
+loss: 1.5094961
+bpc: 2.1777425
+perplexity: 6.6004395
+accuracy: 0.52187496
+
+
+learning_rate/init: 6e-08
+results on valid dataset:
+loss: 1.2881740726610877
+perplexity: 5.907895987033844
+accuracy: 0.587
+bpc: 1.8584423409443698
+
+
+learning_rate/init: 6.9e-08
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 6.9e-08
+results on train dataset
+loss: 2.1597462
+bpc: 3.115855
+perplexity: 8.145375
+accuracy: 0.39375
+
+
+step: 500
+learning_rate: 6.9e-08
+results on train dataset
+loss: 1.4384854
+bpc: 2.0752957
+perplexity: 6.217347
+accuracy: 0.55625004
+
+
+step: 1000
+learning_rate: 6.9e-08
+results on train dataset
+loss: 1.5260361
+bpc: 2.2016048
+perplexity: 6.6039586
+accuracy: 0.525
+
+
+learning_rate/init: 6.9e-08
+results on valid dataset:
+loss: 1.28817407791561
+perplexity: 5.907895993471145
+accuracy: 0.587
+bpc: 1.8584423443474225
+
+
+learning_rate/init: 7.9e-08
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 7.9e-08
+results on train dataset
+loss: 2.1635115
+bpc: 3.1212873
+perplexity: 8.165218
+accuracy: 0.40312502
+
+
+step: 500
+learning_rate: 7.9e-08
+results on train dataset
+loss: 1.4652267
+bpc: 2.1138752
+perplexity: 6.211742
+accuracy: 0.56562495
+
+
+step: 1000
+learning_rate: 7.9e-08
+results on train dataset
+loss: 1.5150582
+bpc: 2.185767
+perplexity: 6.6148825
+accuracy: 0.53125
+
+
+learning_rate/init: 7.9e-08
+results on valid dataset:
+loss: 1.2881740798378596
+perplexity: 5.90789600110054
+accuracy: 0.587
+bpc: 1.8584423479590915
+
+
+learning_rate/init: 9.1e-08
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 9.1e-08
+results on train dataset
+loss: 2.1829891
+bpc: 3.1493876
+perplexity: 8.16628
+accuracy: 0.3875
+
+
+step: 500
+learning_rate: 9.1e-08
+results on train dataset
+loss: 1.4438012
+bpc: 2.0829647
+perplexity: 6.264923
+accuracy: 0.5625
+
+
+step: 1000
+learning_rate: 9.1e-08
+results on train dataset
+loss: 1.5172584
+bpc: 2.1889412
+perplexity: 6.561264
+accuracy: 0.53125
+
+
+learning_rate/init: 9.1e-08
+results on valid dataset:
+loss: 1.288174084229977
+perplexity: 5.907896050930023
+accuracy: 0.587
+bpc: 1.8584423588574281
+
+
+learning_rate/init: 1e-07
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1e-07
+results on train dataset
+loss: 2.1591003
+bpc: 3.1149232
+perplexity: 8.157902
+accuracy: 0.37812498
+
+
+step: 500
+learning_rate: 1e-07
+results on train dataset
+loss: 1.4474558
+bpc: 2.0882373
+perplexity: 6.271924
+accuracy: 0.53749996
+
+
+step: 1000
+learning_rate: 1e-07
+results on train dataset
+loss: 1.524354
+bpc: 2.199178
+perplexity: 6.623269
+accuracy: 0.515625
+
+
+learning_rate/init: 1e-07
+results on valid dataset:
+loss: 1.2881740712976315
+perplexity: 5.90789599776268
+accuracy: 0.587
+bpc: 1.8584423396367928
+
+
+learning_rate/init: 1.2e-07
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.2e-07
+results on train dataset
+loss: 2.1369884
+bpc: 3.0830226
+perplexity: 8.14568
+accuracy: 0.39999998
+
+
+step: 500
+learning_rate: 1.2e-07
+results on train dataset
+loss: 1.4400797
+bpc: 2.0775957
+perplexity: 6.1950197
+accuracy: 0.578125
+
+
+step: 1000
+learning_rate: 1.2e-07
+results on train dataset
+loss: 1.5121102
+bpc: 2.181514
+perplexity: 6.583435
+accuracy: 0.525
+
+
+learning_rate/init: 1.2e-07
+results on valid dataset:
+loss: 1.2881740916563431
+perplexity: 5.9078959525823596
+accuracy: 0.587
+bpc: 1.8584423701562336
+
+
+learning_rate/init: 1.4e-07
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.4e-07
+results on train dataset
+loss: 2.153241
+bpc: 3.1064699
+perplexity: 8.190322
+accuracy: 0.371875
+
+
+step: 500
+learning_rate: 1.4e-07
+results on train dataset
+loss: 1.4559174
+bpc: 2.1004448
+perplexity: 6.2120423
+accuracy: 0.5625
+
+
+step: 1000
+learning_rate: 1.4e-07
+results on train dataset
+loss: 1.5230415
+bpc: 2.1972845
+perplexity: 6.591975
+accuracy: 0.540625
+
+
+learning_rate/init: 1.4e-07
+results on valid dataset:
+loss: 1.288174072256894
+perplexity: 5.907896065235138
+accuracy: 0.587
+bpc: 1.8584423399795196
+
+
+learning_rate/init: 1.6e-07
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.6e-07
+results on train dataset
+loss: 2.181938
+bpc: 3.147871
+perplexity: 8.117976
+accuracy: 0.36875
+
+
+step: 500
+learning_rate: 1.6e-07
+results on train dataset
+loss: 1.4547794
+bpc: 2.098803
+perplexity: 6.220317
+accuracy: 0.559375
+
+
+step: 1000
+learning_rate: 1.6e-07
+results on train dataset
+loss: 1.5004746
+bpc: 2.1647272
+perplexity: 6.5619884
+accuracy: 0.5187501
+
+
+learning_rate/init: 1.6e-07
+results on valid dataset:
+loss: 1.28817409429478
+perplexity: 5.907895980477333
+accuracy: 0.587
+bpc: 1.858442371083831
+
+
+learning_rate/init: 1.8e-07
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.8e-07
+results on train dataset
+loss: 2.1358528
+bpc: 3.0813842
+perplexity: 8.175835
+accuracy: 0.37499997
+
+
+step: 500
+learning_rate: 1.8e-07
+results on train dataset
+loss: 1.4503632
+bpc: 2.0924318
+perplexity: 6.1947494
+accuracy: 0.54999995
+
+
+step: 1000
+learning_rate: 1.8e-07
+results on train dataset
+loss: 1.5049231
+bpc: 2.1711452
+perplexity: 6.5681686
+accuracy: 0.53125
+
+
+learning_rate/init: 1.8e-07
+results on valid dataset:
+loss: 1.2881740724869306
+perplexity: 5.907895904898644
+accuracy: 0.587
+bpc: 1.8584423398807994
+
+
+learning_rate/init: 2.1e-07
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 2.1e-07
+results on train dataset
+loss: 2.1581826
+bpc: 3.1135993
+perplexity: 8.197942
+accuracy: 0.375
+
+
+step: 500
+learning_rate: 2.1e-07
+results on train dataset
+loss: 1.4468822
+bpc: 2.0874097
+perplexity: 6.216387
+accuracy: 0.55625
+
+
+step: 1000
+learning_rate: 2.1e-07
+results on train dataset
+loss: 1.5233966
+bpc: 2.1977968
+perplexity: 6.5929885
+accuracy: 0.52500004
+
+
+learning_rate/init: 2.1e-07
+results on valid dataset:
+loss: 1.2881740809293696
+perplexity: 5.907896023273468
+accuracy: 0.587
+bpc: 1.858442351125588
+
+
+learning_rate/init: 2.4e-07
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 2.4e-07
+results on train dataset
+loss: 2.157915
+bpc: 3.1132135
+perplexity: 8.133031
+accuracy: 0.378125
+
+
+step: 500
+learning_rate: 2.4e-07
+results on train dataset
+loss: 1.4488093
+bpc: 2.09019
+perplexity: 6.2407594
+accuracy: 0.55625
+
+
+step: 1000
+learning_rate: 2.4e-07
+results on train dataset
+loss: 1.52156
+bpc: 2.195147
+perplexity: 6.532563
+accuracy: 0.525
+
+
+learning_rate/init: 2.4e-07
+results on valid dataset:
+loss: 1.2881740880400174
+perplexity: 5.907896060585975
+accuracy: 0.587
+bpc: 1.858442364862596
+
+
+learning_rate/init: 2.8e-07
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 2.8e-07
+results on train dataset
+loss: 2.1498766
+bpc: 3.1016164
+perplexity: 8.202302
+accuracy: 0.384375
+
+
+step: 500
+learning_rate: 2.8e-07
+results on train dataset
+loss: 1.4278315
+bpc: 2.0599256
+perplexity: 6.1936097
+accuracy: 0.565625
+
+
+step: 1000
+learning_rate: 2.8e-07
+results on train dataset
+loss: 1.5200243
+bpc: 2.1929314
+perplexity: 6.544002
+accuracy: 0.525
+
+
+learning_rate/init: 2.8e-07
+results on valid dataset:
+loss: 1.2881740900600562
+perplexity: 5.907895945906639
+accuracy: 0.587
+bpc: 1.858442365670984
+
+
+learning_rate/init: 3.2e-07
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 3.2e-07
+results on train dataset
+loss: 2.1407633
+bpc: 3.0884686
+perplexity: 8.198738
+accuracy: 0.378125
+
+
+step: 500
+learning_rate: 3.2e-07
+results on train dataset
+loss: 1.4503925
+bpc: 2.092474
+perplexity: 6.2471533
+accuracy: 0.55312496
+
+
+step: 1000
+learning_rate: 3.2e-07
+results on train dataset
+loss: 1.5211
+bpc: 2.1944835
+perplexity: 6.587941
+accuracy: 0.51875
+
+
+learning_rate/init: 3.2e-07
+results on valid dataset:
+loss: 1.2881740853503578
+perplexity: 5.907896030664444
+accuracy: 0.587
+bpc: 1.858442360600864
+
+
+learning_rate/init: 3.6e-07
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 3.6e-07
+results on train dataset
+loss: 2.1585603
+bpc: 3.114144
+perplexity: 8.204913
+accuracy: 0.371875
+
+
+step: 500
+learning_rate: 3.6e-07
+results on train dataset
+loss: 1.4612628
+bpc: 2.1081567
+perplexity: 6.2176795
+accuracy: 0.5625
+
+
+step: 1000
+learning_rate: 3.6e-07
+results on train dataset
+loss: 1.5366414
+bpc: 2.2169049
+perplexity: 6.5480986
+accuracy: 0.528125
+
+
+learning_rate/init: 3.6e-07
+results on valid dataset:
+loss: 1.2881740638656773
+perplexity: 5.907896046876908
+accuracy: 0.587
+bpc: 1.8584423293196015
+
+
+learning_rate/init: 4.2e-07
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 4.2e-07
+results on train dataset
+loss: 2.1628273
+bpc: 3.1203
+perplexity: 8.22472
+accuracy: 0.359375
+
+
+step: 500
+learning_rate: 4.2e-07
+results on train dataset
+loss: 1.4551643
+bpc: 2.0993583
+perplexity: 6.2065115
+accuracy: 0.575
+
+
+step: 1000
+learning_rate: 4.2e-07
+results on train dataset
+loss: 1.5100625
+bpc: 2.1785595
+perplexity: 6.6442227
+accuracy: 0.55
+
+
+learning_rate/init: 4.2e-07
+results on valid dataset:
+loss: 1.2881740827827015
+perplexity: 5.907896080613137
+accuracy: 0.587
+bpc: 1.8584423555903486
+
+
+learning_rate/init: 4.8e-07
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 4.8e-07
+results on train dataset
+loss: 2.1684828
+bpc: 3.1284595
+perplexity: 8.165206
+accuracy: 0.371875
+
+
+step: 500
+learning_rate: 4.8e-07
+results on train dataset
+loss: 1.4451013
+bpc: 2.0848405
+perplexity: 6.223808
+accuracy: 0.571875
+
+
+step: 1000
+learning_rate: 4.8e-07
+results on train dataset
+loss: 1.5141679
+bpc: 2.1844826
+perplexity: 6.534019
+accuracy: 0.521875
+
+
+learning_rate/init: 4.8e-07
+results on valid dataset:
+loss: 1.2881740838192637
+perplexity: 5.907896033644676
+accuracy: 0.587
+bpc: 1.858442358039727
+
+
+learning_rate/init: 5.5e-07
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 5.5e-07
+results on train dataset
+loss: 2.1723578
+bpc: 3.13405
+perplexity: 8.192036
+accuracy: 0.35625002
+
+
+step: 500
+learning_rate: 5.5e-07
+results on train dataset
+loss: 1.4480544
+bpc: 2.0891008
+perplexity: 6.2517366
+accuracy: 0.559375
+
+
+step: 1000
+learning_rate: 5.5e-07
+results on train dataset
+loss: 1.5210067
+bpc: 2.1943488
+perplexity: 6.604882
+accuracy: 0.528125
+
+
+learning_rate/init: 5.5e-07
+results on valid dataset:
+loss: 1.288174069343717
+perplexity: 5.907896002173424
+accuracy: 0.587
+bpc: 1.8584423380125663
+
+
+learning_rate/init: 6.3e-07
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 6.3e-07
+results on train dataset
+loss: 2.1262798
+bpc: 3.0675733
+perplexity: 8.200671
+accuracy: 0.36562496
+
+
+step: 500
+learning_rate: 6.3e-07
+results on train dataset
+loss: 1.4355599
+bpc: 2.0710752
+perplexity: 6.222409
+accuracy: 0.56875
+
+
+step: 1000
+learning_rate: 6.3e-07
+results on train dataset
+loss: 1.5072116
+bpc: 2.1744466
+perplexity: 6.562099
+accuracy: 0.534375
+
+
+learning_rate/init: 6.3e-07
+results on valid dataset:
+loss: 1.2881740792399505
+perplexity: 5.907896096467971
+accuracy: 0.587
+bpc: 1.8584423485402366
+
+
+learning_rate/init: 7.2e-07
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 7.2e-07
+results on train dataset
+loss: 2.151395
+bpc: 3.103807
+perplexity: 8.167193
+accuracy: 0.371875
+
+
+step: 500
+learning_rate: 7.2e-07
+results on train dataset
+loss: 1.4569342
+bpc: 2.1019118
+perplexity: 6.220215
+accuracy: 0.55625
+
+
+step: 1000
+learning_rate: 7.2e-07
+results on train dataset
+loss: 1.52335
+bpc: 2.1977296
+perplexity: 6.633896
+accuracy: 0.53125
+
+
+learning_rate/init: 7.2e-07
+results on valid dataset:
+loss: 1.2881740791738265
+perplexity: 5.907896023869514
+accuracy: 0.587
+bpc: 1.8584423471227638
+
+
+learning_rate/init: 8.3e-07
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 8.3e-07
+results on train dataset
+loss: 2.1559029
+bpc: 3.1103103
+perplexity: 8.202385
+accuracy: 0.39375
+
+
+step: 500
+learning_rate: 8.3e-07
+results on train dataset
+loss: 1.45997
+bpc: 2.1062915
+perplexity: 6.2264395
+accuracy: 0.55
+
+
+step: 1000
+learning_rate: 8.3e-07
+results on train dataset
+loss: 1.5278476
+bpc: 2.2042181
+perplexity: 6.566615
+accuracy: 0.51875
+
+
+learning_rate/init: 8.3e-07
+results on valid dataset:
+loss: 1.2881740761842813
+perplexity: 5.90789600276947
+accuracy: 0.587
+bpc: 1.8584423476107768
+
+
+learning_rate/init: 9.5e-07
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 9.5e-07
+results on train dataset
+loss: 2.1582813
+bpc: 3.1137419
+perplexity: 8.157168
+accuracy: 0.3875
+
+
+step: 500
+learning_rate: 9.5e-07
+results on train dataset
+loss: 1.438105
+bpc: 2.0747468
+perplexity: 6.1871643
+accuracy: 0.56874996
+
+
+step: 1000
+learning_rate: 9.5e-07
+results on train dataset
+loss: 1.5077732
+bpc: 2.175257
+perplexity: 6.6034384
+accuracy: 0.534375
+
+
+learning_rate/init: 9.5e-07
+results on valid dataset:
+loss: 1.2881740867175395
+perplexity: 5.907896058559418
+accuracy: 0.587
+bpc: 1.8584423640877357
+
+
+learning_rate/init: 1.1e-06
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.1e-06
+results on train dataset
+loss: 2.1711862
+bpc: 3.1323595
+perplexity: 8.160242
+accuracy: 0.371875
+
+
+step: 500
+learning_rate: 1.1e-06
+results on train dataset
+loss: 1.4393746
+bpc: 2.0765786
+perplexity: 6.2208767
+accuracy: 0.56249994
+
+
+step: 1000
+learning_rate: 1.1e-06
+results on train dataset
+loss: 1.5231835
+bpc: 2.1974893
+perplexity: 6.6096883
+accuracy: 0.53749996
+
+
+learning_rate/init: 1.1e-06
+results on valid dataset:
+loss: 1.2881740800995614
+perplexity: 5.907895931720733
+accuracy: 0.587
+bpc: 1.8584423513044022
+
+
+learning_rate/init: 1.3e-06
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.3e-06
+results on train dataset
+loss: 2.162984
+bpc: 3.120526
+perplexity: 8.184627
+accuracy: 0.37499997
+
+
+step: 500
+learning_rate: 1.3e-06
+results on train dataset
+loss: 1.4329094
+bpc: 2.0672512
+perplexity: 6.232061
+accuracy: 0.5625
+
+
+step: 1000
+learning_rate: 1.3e-06
+results on train dataset
+loss: 1.5269021
+bpc: 2.2028542
+perplexity: 6.5807176
+accuracy: 0.540625
+
+
+learning_rate/init: 1.3e-06
+results on valid dataset:
+loss: 1.2881740756329383
+perplexity: 5.907896048784256
+accuracy: 0.587
+bpc: 1.8584423430025927
+
+
+learning_rate/init: 1.4e-06
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.4e-06
+results on train dataset
+loss: 2.1506944
+bpc: 3.102796
+perplexity: 8.188236
+accuracy: 0.38437498
+
+
+step: 500
+learning_rate: 1.4e-06
+results on train dataset
+loss: 1.4519618
+bpc: 2.094738
+perplexity: 6.2384367
+accuracy: 0.565625
+
+
+step: 1000
+learning_rate: 1.4e-06
+results on train dataset
+loss: 1.5065649
+bpc: 2.1735137
+perplexity: 6.569554
+accuracy: 0.5375
+
+
+learning_rate/init: 1.4e-06
+results on valid dataset:
+loss: 1.2881740832530195
+perplexity: 5.9078961054086685
+accuracy: 0.587
+bpc: 1.8584423571195803
+
+
+learning_rate/init: 1.7e-06
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.7e-06
+results on train dataset
+loss: 2.13925
+bpc: 3.0862854
+perplexity: 8.186706
+accuracy: 0.378125
+
+
+step: 500
+learning_rate: 1.7e-06
+results on train dataset
+loss: 1.4239163
+bpc: 2.054277
+perplexity: 6.2307014
+accuracy: 0.5625
+
+
+step: 1000
+learning_rate: 1.7e-06
+results on train dataset
+loss: 1.5230932
+bpc: 2.197359
+perplexity: 6.601293
+accuracy: 0.52500004
+
+
+learning_rate/init: 1.7e-06
+results on valid dataset:
+loss: 1.2881740838499973
+perplexity: 5.907896126627922
+accuracy: 0.587
+bpc: 1.8584423567470512
+
+
+learning_rate/init: 1.9e-06
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.9e-06
+results on train dataset
+loss: 2.1747818
+bpc: 3.137547
+perplexity: 8.119959
+accuracy: 0.384375
+
+
+step: 500
+learning_rate: 1.9e-06
+results on train dataset
+loss: 1.4464757
+bpc: 2.0868235
+perplexity: 6.249751
+accuracy: 0.559375
+
+
+step: 1000
+learning_rate: 1.9e-06
+results on train dataset
+loss: 1.5254458
+bpc: 2.2007532
+perplexity: 6.5803227
+accuracy: 0.521875
+
+
+learning_rate/init: 1.9e-06
+results on valid dataset:
+loss: 1.2881740863878512
+perplexity: 5.907896036863327
+accuracy: 0.587
+bpc: 1.8584423602562747
+
+
+learning_rate/init: 2.2e-06
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 2.2e-06
+results on train dataset
+loss: 2.1536782
+bpc: 3.1071007
+perplexity: 8.185945
+accuracy: 0.36562502
+
+
+step: 500
+learning_rate: 2.2e-06
+results on train dataset
+loss: 1.4327496
+bpc: 2.067021
+perplexity: 6.247794
+accuracy: 0.571875
+
+
+step: 1000
+learning_rate: 2.2e-06
+results on train dataset
+loss: 1.5456586
+bpc: 2.229914
+perplexity: 6.590184
+accuracy: 0.5125
+
+
+learning_rate/init: 2.2e-06
+results on valid dataset:
+loss: 1.2881740704678233
+perplexity: 5.90789611184597
+accuracy: 0.587
+bpc: 1.8584423360959044
+
+
+learning_rate/init: 2.5e-06
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 2.5e-06
+results on train dataset
+loss: 2.138637
+bpc: 3.085401
+perplexity: 8.163413
+accuracy: 0.36562502
+
+
+step: 500
+learning_rate: 2.5e-06
+results on train dataset
+loss: 1.437601
+bpc: 2.0740197
+perplexity: 6.2808504
+accuracy: 0.55
+
+
+step: 1000
+learning_rate: 2.5e-06
+results on train dataset
+loss: 1.5234717
+bpc: 2.197905
+perplexity: 6.6365623
+accuracy: 0.52500004
+
+
+learning_rate/init: 2.5e-06
+results on valid dataset:
+loss: 1.2881740637194599
+perplexity: 5.907896195292473
+accuracy: 0.587
+bpc: 1.8584423288949183
+
+
+learning_rate/init: 2.9e-06
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 2.9e-06
+results on train dataset
+loss: 2.1379125
+bpc: 3.0843558
+perplexity: 8.24102
+accuracy: 0.38750002
+
+
+step: 500
+learning_rate: 2.9e-06
+results on train dataset
+loss: 1.4400884
+bpc: 2.0776083
+perplexity: 6.1919565
+accuracy: 0.54375
+
+
+step: 1000
+learning_rate: 2.9e-06
+results on train dataset
+loss: 1.5237982
+bpc: 2.1983762
+perplexity: 6.6251636
+accuracy: 0.52500004
+
+
+learning_rate/init: 2.9e-06
+results on valid dataset:
+loss: 1.288174052015529
+perplexity: 5.907896116137505
+accuracy: 0.587
+bpc: 1.8584423128724448
+
+
+learning_rate/init: 3.3e-06
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 3.3e-06
+results on train dataset
+loss: 2.1562343
+bpc: 3.1107886
+perplexity: 8.192438
+accuracy: 0.37812504
+
+
+step: 500
+learning_rate: 3.3e-06
+results on train dataset
+loss: 1.4536208
+bpc: 2.0971315
+perplexity: 6.2289143
+accuracy: 0.53749996
+
+
+step: 1000
+learning_rate: 3.3e-06
+results on train dataset
+loss: 1.50904
+bpc: 2.1770844
+perplexity: 6.5944614
+accuracy: 0.51875
+
+
+learning_rate/init: 3.3e-06
+results on valid dataset:
+loss: 1.288174043050618
+perplexity: 5.907896140575409
+accuracy: 0.587
+bpc: 1.8584422977719806
+
+
+learning_rate/init: 3.8e-06
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 3.8e-06
+results on train dataset
+loss: 2.1640143
+bpc: 3.1220129
+perplexity: 8.17208
+accuracy: 0.375
+
+
+step: 500
+learning_rate: 3.8e-06
+results on train dataset
+loss: 1.4448731
+bpc: 2.0845113
+perplexity: 6.294963
+accuracy: 0.55625
+
+
+step: 1000
+learning_rate: 3.8e-06
+results on train dataset
+loss: 1.5342276
+bpc: 2.2134225
+perplexity: 6.633016
+accuracy: 0.51562506
+
+
+learning_rate/init: 3.8e-06
+results on valid dataset:
+loss: 1.2881740323813864
+perplexity: 5.907896135091781
+accuracy: 0.587
+bpc: 1.8584422829658143
+
+
+learning_rate/init: 4.4e-06
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 4.4e-06
+results on train dataset
+loss: 2.1493917
+bpc: 3.1009166
+perplexity: 8.121864
+accuracy: 0.403125
+
+
+step: 500
+learning_rate: 4.4e-06
+results on train dataset
+loss: 1.44998
+bpc: 2.091879
+perplexity: 6.238759
+accuracy: 0.55625
+
+
+step: 1000
+learning_rate: 4.4e-06
+results on train dataset
+loss: 1.5058366
+bpc: 2.172463
+perplexity: 6.572891
+accuracy: 0.540625
+
+
+learning_rate/init: 4.4e-06
+results on valid dataset:
+loss: 1.2881740321709076
+perplexity: 5.907896181821823
+accuracy: 0.587
+bpc: 1.8584422833383432
+
+
+learning_rate/init: 5e-06
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 5e-06
+results on train dataset
+loss: 2.1534576
+bpc: 3.1067827
+perplexity: 8.161424
+accuracy: 0.3875
+
+
+step: 500
+learning_rate: 5e-06
+results on train dataset
+loss: 1.4484925
+bpc: 2.089733
+perplexity: 6.2101026
+accuracy: 0.55312496
+
+
+step: 1000
+learning_rate: 5e-06
+results on train dataset
+loss: 1.5276793
+bpc: 2.2039754
+perplexity: 6.5679913
+accuracy: 0.528125
+
+
+learning_rate/init: 5e-06
+results on valid dataset:
+loss: 1.2881740083430195
+perplexity: 5.907896237134933
+accuracy: 0.587
+bpc: 1.8584422482479712
+
+
+learning_rate/init: 5.8e-06
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 5.8e-06
+results on train dataset
+loss: 2.156773
+bpc: 3.1115658
+perplexity: 8.159048
+accuracy: 0.40000004
+
+
+step: 500
+learning_rate: 5.8e-06
+results on train dataset
+loss: 1.4335185
+bpc: 2.06813
+perplexity: 6.218925
+accuracy: 0.571875
+
+
+step: 1000
+learning_rate: 5.8e-06
+results on train dataset
+loss: 1.5377487
+bpc: 2.2185025
+perplexity: 6.563099
+accuracy: 0.521875
+
+
+learning_rate/init: 5.8e-06
+results on valid dataset:
+loss: 1.288173998842598
+perplexity: 5.907896401405335
+accuracy: 0.587
+bpc: 1.8584422339056037
+
+
+learning_rate/init: 6.6e-06
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 6.6e-06
+results on train dataset
+loss: 2.1537232
+bpc: 3.1071658
+perplexity: 8.221426
+accuracy: 0.37812498
+
+
+step: 500
+learning_rate: 6.6e-06
+results on train dataset
+loss: 1.4636221
+bpc: 2.1115603
+perplexity: 6.1874995
+accuracy: 0.55625
+
+
+step: 1000
+learning_rate: 6.6e-06
+results on train dataset
+loss: 1.511847
+bpc: 2.1811342
+perplexity: 6.5987334
+accuracy: 0.534375
+
+
+learning_rate/init: 6.6e-06
+results on valid dataset:
+loss: 1.28817398261989
+perplexity: 5.907896514177322
+accuracy: 0.587
+bpc: 1.8584422097377828
+
+
+learning_rate/init: 7.6e-06
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 7.6e-06
+results on train dataset
+loss: 2.148239
+bpc: 3.0992537
+perplexity: 8.156015
+accuracy: 0.384375
+
+
+step: 500
+learning_rate: 7.6e-06
+results on train dataset
+loss: 1.425049
+bpc: 2.055911
+perplexity: 6.2316465
+accuracy: 0.56875
+
+
+step: 1000
+learning_rate: 7.6e-06
+results on train dataset
+loss: 1.5118052
+bpc: 2.181074
+perplexity: 6.60238
+accuracy: 0.54062504
+
+
+learning_rate/init: 7.6e-06
+results on valid dataset:
+loss: 1.288173954813392
+perplexity: 5.9078966089487075
+accuracy: 0.587
+bpc: 1.858442168631067
+
+
+learning_rate/init: 8.7e-06
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 8.7e-06
+results on train dataset
+loss: 2.144238
+bpc: 3.0934815
+perplexity: 8.215237
+accuracy: 0.38125
+
+
+step: 500
+learning_rate: 8.7e-06
+results on train dataset
+loss: 1.4349803
+bpc: 2.0702388
+perplexity: 6.2500343
+accuracy: 0.565625
+
+
+step: 1000
+learning_rate: 8.7e-06
+results on train dataset
+loss: 1.5175657
+bpc: 2.1893845
+perplexity: 6.565278
+accuracy: 0.528125
+
+
+learning_rate/init: 8.7e-06
+results on valid dataset:
+loss: 1.288173916607746
+perplexity: 5.907896973490715
+accuracy: 0.587
+bpc: 1.8584421139531186
+
+
+learning_rate/init: 1e-05
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1e-05
+results on train dataset
+loss: 2.1564841
+bpc: 3.1111488
+perplexity: 8.165901
+accuracy: 0.384375
+
+
+step: 500
+learning_rate: 1e-05
+results on train dataset
+loss: 1.4395969
+bpc: 2.0768993
+perplexity: 6.224714
+accuracy: 0.56874996
+
+
+step: 1000
+learning_rate: 1e-05
+results on train dataset
+loss: 1.5181067
+bpc: 2.190165
+perplexity: 6.6247377
+accuracy: 0.5375
+
+
+learning_rate/init: 1e-05
+results on valid dataset:
+loss: 1.2881739133020165
+perplexity: 5.907897000312805
+accuracy: 0.587
+bpc: 1.8584421097356243
+
+
+learning_rate/init: 1.1e-05
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.1e-05
+results on train dataset
+loss: 2.1493368
+bpc: 3.1008375
+perplexity: 8.187323
+accuracy: 0.375
+
+
+step: 500
+learning_rate: 1.1e-05
+results on train dataset
+loss: 1.4485351
+bpc: 2.0897944
+perplexity: 6.2187414
+accuracy: 0.56875
+
+
+step: 1000
+learning_rate: 1.1e-05
+results on train dataset
+loss: 1.5141587
+bpc: 2.1844692
+perplexity: 6.6161833
+accuracy: 0.521875
+
+
+learning_rate/init: 1.1e-05
+results on valid dataset:
+loss: 1.2881738043192308
+perplexity: 5.907897114515305
+accuracy: 0.587
+bpc: 1.858441956241848
+
+
+learning_rate/init: 1.3e-05
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.3e-05
+results on train dataset
+loss: 2.14296
+bpc: 3.0916378
+perplexity: 8.186459
+accuracy: 0.38437498
+
+
+step: 500
+learning_rate: 1.3e-05
+results on train dataset
+loss: 1.44978
+bpc: 2.0915904
+perplexity: 6.243088
+accuracy: 0.55937505
+
+
+step: 1000
+learning_rate: 1.3e-05
+results on train dataset
+loss: 1.5380489
+bpc: 2.2189355
+perplexity: 6.6128736
+accuracy: 0.53125
+
+
+learning_rate/init: 1.3e-05
+results on valid dataset:
+loss: 1.2881737314497586
+perplexity: 5.907897340416908
+accuracy: 0.587
+bpc: 1.858441847237991
+
+
+learning_rate/init: 1.5e-05
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.5e-05
+results on train dataset
+loss: 2.1461756
+bpc: 3.096277
+perplexity: 8.165238
+accuracy: 0.3875
+
+
+step: 500
+learning_rate: 1.5e-05
+results on train dataset
+loss: 1.4522057
+bpc: 2.09509
+perplexity: 6.267808
+accuracy: 0.55625
+
+
+step: 1000
+learning_rate: 1.5e-05
+results on train dataset
+loss: 1.5214527
+bpc: 2.1949923
+perplexity: 6.582012
+accuracy: 0.534375
+
+
+learning_rate/init: 1.5e-05
+results on valid dataset:
+loss: 1.2881735691474752
+perplexity: 5.907897960662842
+accuracy: 0.587
+bpc: 1.8584416123896372
+
+
+learning_rate/init: 1.7e-05
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.7e-05
+results on train dataset
+loss: 2.1836717
+bpc: 3.1503723
+perplexity: 8.117565
+accuracy: 0.36875
+
+
+step: 500
+learning_rate: 1.7e-05
+results on train dataset
+loss: 1.4361458
+bpc: 2.0719204
+perplexity: 6.1956897
+accuracy: 0.55
+
+
+step: 1000
+learning_rate: 1.7e-05
+results on train dataset
+loss: 1.5042844
+bpc: 2.1702237
+perplexity: 6.5601783
+accuracy: 0.51875
+
+
+learning_rate/init: 1.7e-05
+results on valid dataset:
+loss: 1.2881734478059226
+perplexity: 5.90789814710617
+accuracy: 0.587
+bpc: 1.858441436582012
+
+
+learning_rate/init: 2e-05
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 2e-05
+results on train dataset
+loss: 2.1578007
+bpc: 3.1130483
+perplexity: 8.151833
+accuracy: 0.36875
+
+
+step: 500
+learning_rate: 2e-05
+results on train dataset
+loss: 1.434874
+bpc: 2.0700858
+perplexity: 6.2427797
+accuracy: 0.553125
+
+
+step: 1000
+learning_rate: 2e-05
+results on train dataset
+loss: 1.5187774
+bpc: 2.1911325
+perplexity: 6.556144
+accuracy: 0.52500004
+
+
+learning_rate/init: 2e-05
+results on valid dataset:
+loss: 1.28817314981902
+perplexity: 5.9078991500139235
+accuracy: 0.587
+bpc: 1.858441011404386
+
+
+learning_rate/init: 2.3e-05
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 2.3e-05
+results on train dataset
+loss: 2.164213
+bpc: 3.1222992
+perplexity: 8.211833
+accuracy: 0.38750002
+
+
+step: 500
+learning_rate: 2.3e-05
+results on train dataset
+loss: 1.4539931
+bpc: 2.0976686
+perplexity: 6.2730484
+accuracy: 0.546875
+
+
+step: 1000
+learning_rate: 2.3e-05
+results on train dataset
+loss: 1.5255357
+bpc: 2.2008827
+perplexity: 6.623719
+accuracy: 0.52500004
+
+
+learning_rate/init: 2.3e-05
+results on valid dataset:
+loss: 1.288172866539797
+perplexity: 5.907900131464005
+accuracy: 0.587
+bpc: 1.8584406008289662
+
+
+learning_rate/init: 2.6e-05
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 2.6e-05
+results on train dataset
+loss: 2.168148
+bpc: 3.1279764
+perplexity: 8.199038
+accuracy: 0.3875
+
+
+step: 500
+learning_rate: 2.6e-05
+results on train dataset
+loss: 1.4704189
+bpc: 2.121366
+perplexity: 6.2247996
+accuracy: 0.553125
+
+
+step: 1000
+learning_rate: 2.6e-05
+results on train dataset
+loss: 1.5166594
+bpc: 2.188077
+perplexity: 6.589173
+accuracy: 0.53125
+
+
+learning_rate/init: 2.6e-05
+results on valid dataset:
+loss: 1.2881727080917917
+perplexity: 5.907900855660438
+accuracy: 0.587
+bpc: 1.8584403715741356
+
+
+learning_rate/init: 3e-05
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 3e-05
+results on train dataset
+loss: 2.1370652
+bpc: 3.0831332
+perplexity: 8.179743
+accuracy: 0.39374998
+
+
+step: 500
+learning_rate: 3e-05
+results on train dataset
+loss: 1.4373612
+bpc: 2.073674
+perplexity: 6.1535254
+accuracy: 0.546875
+
+
+step: 1000
+learning_rate: 3e-05
+results on train dataset
+loss: 1.5277467
+bpc: 2.2040725
+perplexity: 6.598726
+accuracy: 0.521875
+
+
+learning_rate/init: 3e-05
+results on valid dataset:
+loss: 1.2881721681281924
+perplexity: 5.907901475310326
+accuracy: 0.587
+bpc: 1.858439592677867
+
+
+learning_rate/init: 3.5e-05
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 3.5e-05
+results on train dataset
+loss: 2.1612587
+bpc: 3.1180372
+perplexity: 8.14398
+accuracy: 0.390625
+
+
+step: 500
+learning_rate: 3.5e-05
+results on train dataset
+loss: 1.4488167
+bpc: 2.0902007
+perplexity: 6.2048645
+accuracy: 0.546875
+
+
+step: 1000
+learning_rate: 3.5e-05
+results on train dataset
+loss: 1.5223591
+bpc: 2.1963
+perplexity: 6.611216
+accuracy: 0.528125
+
+
+learning_rate/init: 3.5e-05
+results on valid dataset:
+loss: 1.2881719726882874
+perplexity: 5.907901237249375
+accuracy: 0.587
+bpc: 1.8584393149877432
+
+
+learning_rate/init: 4e-05
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 4e-05
+results on train dataset
+loss: 2.1522064
+bpc: 3.1049776
+perplexity: 8.203405
+accuracy: 0.4
+
+
+step: 500
+learning_rate: 4e-05
+results on train dataset
+loss: 1.4411545
+bpc: 2.0791464
+perplexity: 6.1932163
+accuracy: 0.553125
+
+
+step: 1000
+learning_rate: 4e-05
+results on train dataset
+loss: 1.5390491
+bpc: 2.2203786
+perplexity: 6.5916214
+accuracy: 0.515625
+
+
+learning_rate/init: 4e-05
+results on valid dataset:
+loss: 1.2881713179624639
+perplexity: 5.9079023340940475
+accuracy: 0.587
+bpc: 1.8584383635616395
+
+
+learning_rate/init: 4.6e-05
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 4.6e-05
+results on train dataset
+loss: 2.1637366
+bpc: 3.121612
+perplexity: 8.202045
+accuracy: 0.36875
+
+
+step: 500
+learning_rate: 4.6e-05
+results on train dataset
+loss: 1.4532167
+bpc: 2.0965486
+perplexity: 6.201374
+accuracy: 0.553125
+
+
+step: 1000
+learning_rate: 4.6e-05
+results on train dataset
+loss: 1.5048702
+bpc: 2.1710687
+perplexity: 6.594025
+accuracy: 0.534375
+
+
+learning_rate/init: 4.6e-05
+results on valid dataset:
+loss: 1.2881708567801398
+perplexity: 5.907903043746948
+accuracy: 0.587
+bpc: 1.85843770168419
+
+
+learning_rate/init: 5.2e-05
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 5.2e-05
+results on train dataset
+loss: 2.1623185
+bpc: 3.1195662
+perplexity: 8.2060795
+accuracy: 0.3875
+
+
+step: 500
+learning_rate: 5.2e-05
+results on train dataset
+loss: 1.4460753
+bpc: 2.0862458
+perplexity: 6.1961446
+accuracy: 0.5625
+
+
+step: 1000
+learning_rate: 5.2e-05
+results on train dataset
+loss: 1.5272521
+bpc: 2.203359
+perplexity: 6.6265674
+accuracy: 0.515625
+
+
+learning_rate/init: 5.2e-05
+results on valid dataset:
+loss: 1.2881700453698868
+perplexity: 5.9079060051441195
+accuracy: 0.587
+bpc: 1.8584365327832055
+
+
+learning_rate/init: 6e-05
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 6e-05
+results on train dataset
+loss: 2.1597762
+bpc: 3.1158984
+perplexity: 8.169298
+accuracy: 0.375
+
+
+step: 500
+learning_rate: 6e-05
+results on train dataset
+loss: 1.4560088
+bpc: 2.1005766
+perplexity: 6.2362614
+accuracy: 0.55625
+
+
+step: 1000
+learning_rate: 6e-05
+results on train dataset
+loss: 1.5147964
+bpc: 2.1853893
+perplexity: 6.6021047
+accuracy: 0.53125
+
+
+learning_rate/init: 6e-05
+results on valid dataset:
+loss: 1.2881693025891436
+perplexity: 5.907904528856277
+accuracy: 0.587
+bpc: 1.8584354608218419
+
+
+learning_rate/init: 6.9e-05
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 6.9e-05
+results on train dataset
+loss: 2.1687608
+bpc: 3.1288605
+perplexity: 8.179485
+accuracy: 0.384375
+
+
+step: 500
+learning_rate: 6.9e-05
+results on train dataset
+loss: 1.4378531
+bpc: 2.0743835
+perplexity: 6.1801434
+accuracy: 0.565625
+
+
+step: 1000
+learning_rate: 6.9e-05
+results on train dataset
+loss: 1.5242553
+bpc: 2.1990354
+perplexity: 6.588535
+accuracy: 0.5375
+
+
+learning_rate/init: 6.9e-05
+results on valid dataset:
+loss: 1.2881683439157205
+perplexity: 5.907904146909714
+accuracy: 0.587
+bpc: 1.8584340798276244
+
+
+learning_rate/init: 7.9e-05
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 7.9e-05
+results on train dataset
+loss: 2.158754
+bpc: 3.1144238
+perplexity: 8.2273245
+accuracy: 0.39687502
+
+
+step: 500
+learning_rate: 7.9e-05
+results on train dataset
+loss: 1.4573925
+bpc: 2.102573
+perplexity: 6.1965923
+accuracy: 0.55625004
+
+
+step: 1000
+learning_rate: 7.9e-05
+results on train dataset
+loss: 1.525545
+bpc: 2.2008963
+perplexity: 6.586339
+accuracy: 0.509375
+
+
+learning_rate/init: 7.9e-05
+results on valid dataset:
+loss: 1.2881672351456945
+perplexity: 5.9079058637619015
+accuracy: 0.587
+bpc: 1.85843247836933
+
+
+learning_rate/init: 9.1e-05
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 9.1e-05
+results on train dataset
+loss: 2.1577866
+bpc: 3.113028
+perplexity: 8.16624
+accuracy: 0.371875
+
+
+step: 500
+learning_rate: 9.1e-05
+results on train dataset
+loss: 1.4401518
+bpc: 2.0777
+perplexity: 6.1990604
+accuracy: 0.55
+
+
+step: 1000
+learning_rate: 9.1e-05
+results on train dataset
+loss: 1.5039389
+bpc: 2.1697252
+perplexity: 6.573248
+accuracy: 0.528125
+
+
+learning_rate/init: 9.1e-05
+results on valid dataset:
+loss: 1.2881662665022304
+perplexity: 5.907905129432678
+accuracy: 0.587
+bpc: 1.8584310776769417
+
+
+learning_rate/init: 0.0001
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0001
+results on train dataset
+loss: 2.1580343
+bpc: 3.1133854
+perplexity: 8.177262
+accuracy: 0.37500003
+
+
+step: 500
+learning_rate: 0.0001
+results on train dataset
+loss: 1.4465344
+bpc: 2.086908
+perplexity: 6.2259364
+accuracy: 0.559375
+
+
+step: 1000
+learning_rate: 0.0001
+results on train dataset
+loss: 1.511624
+bpc: 2.1808124
+perplexity: 6.6455483
+accuracy: 0.515625
+
+
+learning_rate/init: 0.0001
+results on valid dataset:
+loss: 1.2881651427141623
+perplexity: 5.907909240961075
+accuracy: 0.587
+bpc: 1.858429457202903
+
+
+learning_rate/init: 0.00012
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00012
+results on train dataset
+loss: 2.1445425
+bpc: 3.0939207
+perplexity: 8.187816
+accuracy: 0.396875
+
+
+step: 500
+learning_rate: 0.00012
+results on train dataset
+loss: 1.4559009
+bpc: 2.100421
+perplexity: 6.2134466
+accuracy: 0.54687506
+
+
+step: 1000
+learning_rate: 0.00012
+results on train dataset
+loss: 1.5335314
+bpc: 2.212418
+perplexity: 6.6545525
+accuracy: 0.525
+
+
+learning_rate/init: 0.00012
+results on valid dataset:
+loss: 1.2881632620496675
+perplexity: 5.907902432918549
+accuracy: 0.587
+bpc: 1.858426744202734
+
+
+learning_rate/init: 0.00014
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00014
+results on train dataset
+loss: 2.1588295
+bpc: 3.1145325
+perplexity: 8.209188
+accuracy: 0.39062503
+
+
+step: 500
+learning_rate: 0.00014
+results on train dataset
+loss: 1.4474856
+bpc: 2.0882802
+perplexity: 6.2276716
+accuracy: 0.540625
+
+
+step: 1000
+learning_rate: 0.00014
+results on train dataset
+loss: 1.5196239
+bpc: 2.1923537
+perplexity: 6.5824347
+accuracy: 0.53125
+
+
+learning_rate/init: 0.00014
+results on valid dataset:
+loss: 1.2881629470071057
+perplexity: 5.907909292459488
+accuracy: 0.587
+bpc: 1.8584262857763096
+
+
+learning_rate/init: 0.00016
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00016
+results on train dataset
+loss: 2.1760325
+bpc: 3.1393514
+perplexity: 8.20797
+accuracy: 0.38125002
+
+
+step: 500
+learning_rate: 0.00016
+results on train dataset
+loss: 1.4655339
+bpc: 2.1143184
+perplexity: 6.234972
+accuracy: 0.5625
+
+
+step: 1000
+learning_rate: 0.00016
+results on train dataset
+loss: 1.5209897
+bpc: 2.1943243
+perplexity: 6.646444
+accuracy: 0.53125
+
+
+learning_rate/init: 0.00016
+results on valid dataset:
+loss: 1.2881592754803715
+perplexity: 5.907909365415573
+accuracy: 0.587
+bpc: 1.858420992975647
+
+
+learning_rate/init: 0.00018
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00018
+results on train dataset
+loss: 2.136965
+bpc: 3.0829887
+perplexity: 8.188941
+accuracy: 0.390625
+
+
+step: 500
+learning_rate: 0.00018
+results on train dataset
+loss: 1.4546331
+bpc: 2.098592
+perplexity: 6.220811
+accuracy: 0.559375
+
+
+step: 1000
+learning_rate: 0.00018
+results on train dataset
+loss: 1.5233715
+bpc: 2.1977603
+perplexity: 6.591506
+accuracy: 0.540625
+
+
+learning_rate/init: 0.00018
+results on valid dataset:
+loss: 1.288157683023659
+perplexity: 5.907908930301666
+accuracy: 0.587
+bpc: 1.8584186985627167
+
+
+learning_rate/init: 0.00021
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00021
+results on train dataset
+loss: 2.161575
+bpc: 3.1184936
+perplexity: 8.192916
+accuracy: 0.38125002
+
+
+step: 500
+learning_rate: 0.00021
+results on train dataset
+loss: 1.4386848
+bpc: 2.0755835
+perplexity: 6.2837815
+accuracy: 0.575
+
+
+step: 1000
+learning_rate: 0.00021
+results on train dataset
+loss: 1.5075569
+bpc: 2.1749449
+perplexity: 6.629232
+accuracy: 0.53125006
+
+
+learning_rate/init: 0.00021
+results on valid dataset:
+loss: 1.2881542281173752
+perplexity: 5.907913196444511
+accuracy: 0.587
+bpc: 1.8584137114611803
+
+
+learning_rate/init: 0.00024
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00024
+results on train dataset
+loss: 2.1533527
+bpc: 3.1066313
+perplexity: 8.185455
+accuracy: 0.375
+
+
+step: 500
+learning_rate: 0.00024
+results on train dataset
+loss: 1.456469
+bpc: 2.1012406
+perplexity: 6.2257204
+accuracy: 0.55
+
+
+step: 1000
+learning_rate: 0.00024
+results on train dataset
+loss: 1.5269295
+bpc: 2.2028935
+perplexity: 6.620737
+accuracy: 0.52187496
+
+
+learning_rate/init: 0.00024
+results on valid dataset:
+loss: 1.2881531896765228
+perplexity: 5.907920934915543
+accuracy: 0.587
+bpc: 1.8584122158269747
+
+
+learning_rate/init: 0.00028
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00028
+results on train dataset
+loss: 2.156738
+bpc: 3.1115153
+perplexity: 8.2202
+accuracy: 0.396875
+
+
+step: 500
+learning_rate: 0.00028
+results on train dataset
+loss: 1.4473262
+bpc: 2.0880504
+perplexity: 6.223843
+accuracy: 0.559375
+
+
+step: 1000
+learning_rate: 0.00028
+results on train dataset
+loss: 1.5316693
+bpc: 2.2097316
+perplexity: 6.5347576
+accuracy: 0.51874995
+
+
+learning_rate/init: 0.00028
+results on valid dataset:
+loss: 1.2881497506368322
+perplexity: 5.907921275377274
+accuracy: 0.587
+bpc: 1.8584072497023154
+
+
+learning_rate/init: 0.00032
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00032
+results on train dataset
+loss: 2.168529
+bpc: 3.128526
+perplexity: 8.193452
+accuracy: 0.37187502
+
+
+step: 500
+learning_rate: 0.00032
+results on train dataset
+loss: 1.4555185
+bpc: 2.0998693
+perplexity: 6.2308702
+accuracy: 0.553125
+
+
+step: 1000
+learning_rate: 0.00032
+results on train dataset
+loss: 1.5111307
+bpc: 2.1801007
+perplexity: 6.6037974
+accuracy: 0.525
+
+
+learning_rate/init: 0.00032
+results on valid dataset:
+loss: 1.2881439476783272
+perplexity: 5.90791436123848
+accuracy: 0.587
+bpc: 1.858398877359461
+
+
+learning_rate/init: 0.00036
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00036
+results on train dataset
+loss: 2.1612241
+bpc: 3.1179874
+perplexity: 8.152016
+accuracy: 0.36875
+
+
+step: 500
+learning_rate: 0.00036
+results on train dataset
+loss: 1.4563706
+bpc: 2.1010985
+perplexity: 6.229414
+accuracy: 0.55625
+
+
+step: 1000
+learning_rate: 0.00036
+results on train dataset
+loss: 1.5286025
+bpc: 2.2053072
+perplexity: 6.6115284
+accuracy: 0.515625
+
+
+learning_rate/init: 0.00036
+results on valid dataset:
+loss: 1.288142162164848
+perplexity: 5.907903998374939
+accuracy: 0.587
+bpc: 1.858396304284106
+
+
+learning_rate/init: 0.00042
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00042
+results on train dataset
+loss: 2.1740198
+bpc: 3.1364477
+perplexity: 8.229465
+accuracy: 0.359375
+
+
+step: 500
+learning_rate: 0.00042
+results on train dataset
+loss: 1.4437114
+bpc: 2.0828352
+perplexity: 6.194593
+accuracy: 0.553125
+
+
+step: 1000
+learning_rate: 0.00042
+results on train dataset
+loss: 1.5445298
+bpc: 2.2282856
+perplexity: 6.5792804
+accuracy: 0.53125
+
+
+learning_rate/init: 0.00042
+results on valid dataset:
+loss: 1.2881354475364788
+perplexity: 5.907924084544182
+accuracy: 0.587
+bpc: 1.8583866173824062
+
+
+learning_rate/init: 0.00048
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00048
+results on train dataset
+loss: 2.142416
+bpc: 3.090853
+perplexity: 8.193543
+accuracy: 0.38750002
+
+
+step: 500
+learning_rate: 0.00048
+results on train dataset
+loss: 1.4426813
+bpc: 2.0813491
+perplexity: 6.1599135
+accuracy: 0.571875
+
+
+step: 1000
+learning_rate: 0.00048
+results on train dataset
+loss: 1.5329554
+bpc: 2.2115872
+perplexity: 6.603992
+accuracy: 0.525
+
+
+learning_rate/init: 0.00048
+results on valid dataset:
+loss: 1.288131357867911
+perplexity: 5.907911786794663
+accuracy: 0.587
+bpc: 1.8583807167346822
+
+
+learning_rate/init: 0.00055
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00055
+results on train dataset
+loss: 2.1407018
+bpc: 3.0883799
+perplexity: 8.198087
+accuracy: 0.39687502
+
+
+step: 500
+learning_rate: 0.00055
+results on train dataset
+loss: 1.438885
+bpc: 2.0758722
+perplexity: 6.2685876
+accuracy: 0.54999995
+
+
+step: 1000
+learning_rate: 0.00055
+results on train dataset
+loss: 1.5235671
+bpc: 2.1980426
+perplexity: 6.6163626
+accuracy: 0.528125
+
+
+learning_rate/init: 0.00055
+results on valid dataset:
+loss: 1.2881251339396695
+perplexity: 5.907929155230522
+accuracy: 0.587
+bpc: 1.8583717367765493
+
+
+learning_rate/init: 0.00063
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00063
+results on train dataset
+loss: 2.1603994
+bpc: 3.1167974
+perplexity: 8.167395
+accuracy: 0.40937498
+
+
+step: 500
+learning_rate: 0.00063
+results on train dataset
+loss: 1.4572937
+bpc: 2.1024303
+perplexity: 6.279917
+accuracy: 0.559375
+
+
+step: 1000
+learning_rate: 0.00063
+results on train dataset
+loss: 1.5454609
+bpc: 2.2296288
+perplexity: 6.5893493
+accuracy: 0.52812505
+
+
+learning_rate/init: 0.00063
+results on valid dataset:
+loss: 1.2881187975359498
+perplexity: 5.907951322197914
+accuracy: 0.587
+bpc: 1.8583626004039542
+
+
+learning_rate/init: 0.00072
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00072
+results on train dataset
+loss: 2.1699908
+bpc: 3.130635
+perplexity: 8.238211
+accuracy: 0.3875
+
+
+step: 500
+learning_rate: 0.00072
+results on train dataset
+loss: 1.4615217
+bpc: 2.1085303
+perplexity: 6.2276983
+accuracy: 0.53125
+
+
+step: 1000
+learning_rate: 0.00072
+results on train dataset
+loss: 1.522111
+bpc: 2.1959422
+perplexity: 6.5294733
+accuracy: 0.525
+
+
+learning_rate/init: 0.00072
+results on valid dataset:
+loss: 1.2881083970814362
+perplexity: 5.907943707466125
+accuracy: 0.587
+bpc: 1.8583475917463657
+
+
+learning_rate/init: 0.00083
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00083
+results on train dataset
+loss: 2.1405232
+bpc: 3.0881221
+perplexity: 8.216059
+accuracy: 0.36875004
+
+
+step: 500
+learning_rate: 0.00083
+results on train dataset
+loss: 1.4502125
+bpc: 2.0922143
+perplexity: 6.221652
+accuracy: 0.54375005
+
+
+step: 1000
+learning_rate: 0.00083
+results on train dataset
+loss: 1.5103903
+bpc: 2.1790326
+perplexity: 6.597756
+accuracy: 0.52500004
+
+
+learning_rate/init: 0.00083
+results on valid dataset:
+loss: 1.2880981640964746
+perplexity: 5.907941809296608
+accuracy: 0.587
+bpc: 1.8583328314471292
+
+
+learning_rate/init: 0.00095
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00095
+results on train dataset
+loss: 2.1496632
+bpc: 3.1013083
+perplexity: 8.169704
+accuracy: 0.36562502
+
+
+step: 500
+learning_rate: 0.00095
+results on train dataset
+loss: 1.4398441
+bpc: 2.077256
+perplexity: 6.236002
+accuracy: 0.55625004
+
+
+step: 1000
+learning_rate: 0.00095
+results on train dataset
+loss: 1.51254
+bpc: 2.182134
+perplexity: 6.5960507
+accuracy: 0.534375
+
+
+learning_rate/init: 0.00095
+results on valid dataset:
+loss: 1.2880883241328411
+perplexity: 5.907942051649093
+accuracy: 0.586
+bpc: 1.8583186373386997
+
+
+learning_rate/init: 0.0011
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0011
+results on train dataset
+loss: 2.158529
+bpc: 3.114099
+perplexity: 8.182731
+accuracy: 0.371875
+
+
+step: 500
+learning_rate: 0.0011
+results on train dataset
+loss: 1.4477949
+bpc: 2.0887265
+perplexity: 6.241962
+accuracy: 0.57187504
+
+
+step: 1000
+learning_rate: 0.0011
+results on train dataset
+loss: 1.5212358
+bpc: 2.1946793
+perplexity: 6.62255
+accuracy: 0.5187501
+
+
+learning_rate/init: 0.0011
+results on valid dataset:
+loss: 1.2880747694304446
+perplexity: 5.907935883283615
+accuracy: 0.586
+bpc: 1.858299072321388
+
+
+learning_rate/init: 0.0013
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0013
+results on train dataset
+loss: 2.158657
+bpc: 3.1142838
+perplexity: 8.185925
+accuracy: 0.384375
+
+
+step: 500
+learning_rate: 0.0013
+results on train dataset
+loss: 1.4569826
+bpc: 2.1019816
+perplexity: 6.193907
+accuracy: 0.565625
+
+
+step: 1000
+learning_rate: 0.0013
+results on train dataset
+loss: 1.5129544
+bpc: 2.1827316
+perplexity: 6.587338
+accuracy: 0.53125
+
+
+learning_rate/init: 0.0013
+results on valid dataset:
+loss: 1.2880607731736964
+perplexity: 5.907974147081375
+accuracy: 0.587
+bpc: 1.8582788833435624
+
+
+learning_rate/init: 0.0014
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0014
+results on train dataset
+loss: 2.1680005
+bpc: 3.1277635
+perplexity: 8.154642
+accuracy: 0.38750002
+
+
+step: 500
+learning_rate: 0.0014
+results on train dataset
+loss: 1.4448686
+bpc: 2.0845046
+perplexity: 6.215166
+accuracy: 0.56874996
+
+
+step: 1000
+learning_rate: 0.0014
+results on train dataset
+loss: 1.5129988
+bpc: 2.182796
+perplexity: 6.5729165
+accuracy: 0.54375
+
+
+learning_rate/init: 0.0014
+results on valid dataset:
+loss: 1.288047689892701
+perplexity: 5.90797358584404
+accuracy: 0.586
+bpc: 1.8582600126750186
+
+
+learning_rate/init: 0.0017
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0017
+results on train dataset
+loss: 2.1735067
+bpc: 3.1357074
+perplexity: 8.155361
+accuracy: 0.375
+
+
+step: 500
+learning_rate: 0.0017
+results on train dataset
+loss: 1.4586802
+bpc: 2.1044307
+perplexity: 6.25995
+accuracy: 0.571875
+
+
+step: 1000
+learning_rate: 0.0017
+results on train dataset
+loss: 1.5231638
+bpc: 2.197461
+perplexity: 6.5861545
+accuracy: 0.51562506
+
+
+learning_rate/init: 0.0017
+results on valid dataset:
+loss: 1.2880212991555455
+perplexity: 5.908005515933037
+accuracy: 0.586
+bpc: 1.8582219341275632
+
+
+learning_rate/init: 0.0019
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0019
+results on train dataset
+loss: 2.1587915
+bpc: 3.1144779
+perplexity: 8.22057
+accuracy: 0.365625
+
+
+step: 500
+learning_rate: 0.0019
+results on train dataset
+loss: 1.4469126
+bpc: 2.0874536
+perplexity: 6.2446084
+accuracy: 0.546875
+
+
+step: 1000
+learning_rate: 0.0019
+results on train dataset
+loss: 1.5223135
+bpc: 2.196234
+perplexity: 6.572559
+accuracy: 0.525
+
+
+learning_rate/init: 0.0019
+results on valid dataset:
+loss: 1.2880203649649047
+perplexity: 5.907978383541107
+accuracy: 0.586
+bpc: 1.8582205858658418
+
+
+learning_rate/init: 0.0022
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0022
+results on train dataset
+loss: 2.1442292
+bpc: 3.093469
+perplexity: 8.195031
+accuracy: 0.38437504
+
+
+step: 500
+learning_rate: 0.0022
+results on train dataset
+loss: 1.4395995
+bpc: 2.076903
+perplexity: 6.2263403
+accuracy: 0.55
+
+
+step: 1000
+learning_rate: 0.0022
+results on train dataset
+loss: 1.5020105
+bpc: 2.166943
+perplexity: 6.6117063
+accuracy: 0.546875
+
+
+learning_rate/init: 0.0022
+results on valid dataset:
+loss: 1.2879864219992887
+perplexity: 5.908040650367737
+accuracy: 0.586
+bpc: 1.8581716200489318
+
+
+learning_rate/init: 0.0025
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0025
+results on train dataset
+loss: 2.1424048
+bpc: 3.0908368
+perplexity: 8.229532
+accuracy: 0.3875
+
+
+step: 500
+learning_rate: 0.0025
+results on train dataset
+loss: 1.4572579
+bpc: 2.1023786
+perplexity: 6.224844
+accuracy: 0.55
+
+
+step: 1000
+learning_rate: 0.0025
+results on train dataset
+loss: 1.5310209
+bpc: 2.2087963
+perplexity: 6.5386963
+accuracy: 0.515625
+
+
+learning_rate/init: 0.0025
+results on valid dataset:
+loss: 1.2879510240569945
+perplexity: 5.907973538041115
+accuracy: 0.586
+bpc: 1.8581205490313004
+
+
+learning_rate/init: 0.0029
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0029
+results on train dataset
+loss: 2.1619282
+bpc: 3.119003
+perplexity: 8.227332
+accuracy: 0.359375
+
+
+step: 500
+learning_rate: 0.0029
+results on train dataset
+loss: 1.430112
+bpc: 2.0632155
+perplexity: 6.255269
+accuracy: 0.56562495
+
+
+step: 1000
+learning_rate: 0.0029
+results on train dataset
+loss: 1.5213875
+bpc: 2.1948981
+perplexity: 6.625745
+accuracy: 0.51875
+
+
+learning_rate/init: 0.0029
+results on valid dataset:
+loss: 1.2879365431781042
+perplexity: 5.908046856164932
+accuracy: 0.586
+bpc: 1.8580996609490248
+
+
+learning_rate/init: 0.0033
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0033
+results on train dataset
+loss: 2.1437855
+bpc: 3.0928288
+perplexity: 8.162461
+accuracy: 0.39374998
+
+
+step: 500
+learning_rate: 0.0033
+results on train dataset
+loss: 1.4534272
+bpc: 2.0968523
+perplexity: 6.2734556
+accuracy: 0.553125
+
+
+step: 1000
+learning_rate: 0.0033
+results on train dataset
+loss: 1.5217729
+bpc: 2.1954541
+perplexity: 6.5681906
+accuracy: 0.534375
+
+
+learning_rate/init: 0.0033
+results on valid dataset:
+loss: 1.2878994595760596
+perplexity: 5.908099952340126
+accuracy: 0.587
+bpc: 1.8580461574911022
+
+
+learning_rate/init: 0.0038
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0038
+results on train dataset
+loss: 2.1380706
+bpc: 3.0845838
+perplexity: 8.253909
+accuracy: 0.39375
+
+
+step: 500
+learning_rate: 0.0038
+results on train dataset
+loss: 1.4387827
+bpc: 2.0757246
+perplexity: 6.249997
+accuracy: 0.575
+
+
+step: 1000
+learning_rate: 0.0038
+results on train dataset
+loss: 1.5163096
+bpc: 2.1875725
+perplexity: 6.649344
+accuracy: 0.51875
+
+
+learning_rate/init: 0.0038
+results on valid dataset:
+loss: 1.2878493076572195
+perplexity: 5.908001475572586
+accuracy: 0.587
+bpc: 1.8579738070845488
+
+
+learning_rate/init: 0.0044
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0044
+results on train dataset
+loss: 2.1471252
+bpc: 3.097647
+perplexity: 8.217471
+accuracy: 0.375
+
+
+step: 500
+learning_rate: 0.0044
+results on train dataset
+loss: 1.4415172
+bpc: 2.0796697
+perplexity: 6.249747
+accuracy: 0.578125
+
+
+step: 1000
+learning_rate: 0.0044
+results on train dataset
+loss: 1.5235629
+bpc: 2.1980367
+perplexity: 6.616197
+accuracy: 0.5343751
+
+
+learning_rate/init: 0.0044
+results on valid dataset:
+loss: 1.2878017511536017
+perplexity: 5.907879606962204
+accuracy: 0.587
+bpc: 1.8579051962355735
+
+
+learning_rate/init: 0.005
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.005
+results on train dataset
+loss: 2.1649098
+bpc: 3.1233046
+perplexity: 8.154232
+accuracy: 0.38125002
+
+
+step: 500
+learning_rate: 0.005
+results on train dataset
+loss: 1.4637641
+bpc: 2.1117651
+perplexity: 6.2954044
+accuracy: 0.553125
+
+
+step: 1000
+learning_rate: 0.005
+results on train dataset
+loss: 1.5327202
+bpc: 2.211248
+perplexity: 6.5958943
+accuracy: 0.51875
+
+
+learning_rate/init: 0.005
+results on valid dataset:
+loss: 1.2877520127779571
+perplexity: 5.907917720556259
+accuracy: 0.587
+bpc: 1.857833434438915
+
+
+learning_rate/init: 0.0058
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0058
+results on train dataset
+loss: 2.1466436
+bpc: 3.0969522
+perplexity: 8.183161
+accuracy: 0.384375
+
+
+step: 500
+learning_rate: 0.0058
+results on train dataset
+loss: 1.4513631
+bpc: 2.0938742
+perplexity: 6.221917
+accuracy: 0.56249994
+
+
+step: 1000
+learning_rate: 0.0058
+results on train dataset
+loss: 1.51441
+bpc: 2.1848319
+perplexity: 6.5988355
+accuracy: 0.525
+
+
+learning_rate/init: 0.0058
+results on valid dataset:
+loss: 1.2876851645207499
+perplexity: 5.908350205183029
+accuracy: 0.587
+bpc: 1.8577369953099405
+
+
+learning_rate/init: 0.0066
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0066
+results on train dataset
+loss: 2.161561
+bpc: 3.1184733
+perplexity: 8.199656
+accuracy: 0.3625
+
+
+step: 500
+learning_rate: 0.0066
+results on train dataset
+loss: 1.4439253
+bpc: 2.0831437
+perplexity: 6.184623
+accuracy: 0.55312496
+
+
+step: 1000
+learning_rate: 0.0066
+results on train dataset
+loss: 1.5202203
+bpc: 2.1932142
+perplexity: 6.61627
+accuracy: 0.528125
+
+
+learning_rate/init: 0.0066
+results on valid dataset:
+loss: 1.2876568515985274
+perplexity: 5.908195543050766
+accuracy: 0.587
+bpc: 1.857696148702642
+
+
+learning_rate/init: 0.0076
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0076
+results on train dataset
+loss: 2.1896276
+bpc: 3.1589649
+perplexity: 8.190218
+accuracy: 0.359375
+
+
+step: 500
+learning_rate: 0.0076
+results on train dataset
+loss: 1.4354109
+bpc: 2.0708601
+perplexity: 6.2054424
+accuracy: 0.559375
+
+
+step: 1000
+learning_rate: 0.0076
+results on train dataset
+loss: 1.5219972
+bpc: 2.195778
+perplexity: 6.5679564
+accuracy: 0.528125
+
+
+learning_rate/init: 0.0076
+results on valid dataset:
+loss: 1.2875288031199599
+perplexity: 5.908300639510155
+accuracy: 0.587
+bpc: 1.8575114131817245
+
+
+learning_rate/init: 0.0087
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0087
+results on train dataset
+loss: 2.150986
+bpc: 3.1032166
+perplexity: 8.189986
+accuracy: 0.3875
+
+
+step: 500
+learning_rate: 0.0087
+results on train dataset
+loss: 1.4483728
+bpc: 2.0895603
+perplexity: 6.221648
+accuracy: 0.55625004
+
+
+step: 1000
+learning_rate: 0.0087
+results on train dataset
+loss: 1.4895066
+bpc: 2.1489038
+perplexity: 6.6610546
+accuracy: 0.55625
+
+
+learning_rate/init: 0.0087
+results on valid dataset:
+loss: 1.2874112834806437
+perplexity: 5.908178602933884
+accuracy: 0.586
+bpc: 1.8573418703440112
+
+
+learning_rate/init: 0.01
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.01
+results on train dataset
+loss: 2.1676323
+bpc: 3.1272323
+perplexity: 8.13714
+accuracy: 0.384375
+
+
+step: 500
+learning_rate: 0.01
+results on train dataset
+loss: 1.4496428
+bpc: 2.0913925
+perplexity: 6.3066573
+accuracy: 0.55625004
+
+
+step: 1000
+learning_rate: 0.01
+results on train dataset
+loss: 1.534235
+bpc: 2.2134333
+perplexity: 6.57955
+accuracy: 0.51250005
+
+
+learning_rate/init: 0.01
+results on valid dataset:
+loss: 1.2873730531012406
+perplexity: 5.908350522875786
+accuracy: 0.588
+bpc: 1.857286713224603
+dataset: valid
+  loss: 1.2873730531012406
+    learning_rate/init: 0.01
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+
+step: 0
+learning_rate: 0.01
+results on train dataset
+loss: 2.1599793
+bpc: 3.1161914
+perplexity: 8.142427
+accuracy: 0.371875
+
+Creating checkpoint at adadelta/loss_best/test/training/checkpoints/best
+
+
+step: 500
+learning_rate: 0.01
+results on train dataset
+loss: 1.4333535
+bpc: 2.067892
+perplexity: 6.191101
+accuracy: 0.56874996
+
+
+step: 1000
+learning_rate: 0.01
+results on train dataset
+loss: 1.5152644
+bpc: 2.1860645
+perplexity: 6.6278944
+accuracy: 0.5125
+
+Creating checkpoint at adadelta/loss_best/test/training/checkpoints/final
+restoring pupil from adadelta/loss_best/test/training/checkpoints/final
+results on validation dataset test
+loss: 1.8490058779716492
+perplexity: 8.624770700931549
+accuracy: 0.25
+  perplexity: 5.907879606962204
+    learning_rate/init: 0.0044
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+
+step: 0
+learning_rate: 0.0044
+results on train dataset
+loss: 2.1562667
+bpc: 3.1108353
+perplexity: 8.200295
+accuracy: 0.371875
+
+Creating checkpoint at adadelta/perplexity_best/test/training/checkpoints/best
+
+
+step: 500
+learning_rate: 0.0044
+results on train dataset
+loss: 1.4498031
+bpc: 2.0916238
+perplexity: 6.289718
+accuracy: 0.55937505
+
+
+step: 1000
+learning_rate: 0.0044
+results on train dataset
+loss: 1.512346
+bpc: 2.181854
+perplexity: 6.626272
+accuracy: 0.53125
+
+Creating checkpoint at adadelta/perplexity_best/test/training/checkpoints/final
+restoring pupil from adadelta/perplexity_best/test/training/checkpoints/final
+results on validation dataset test
+loss: 1.849121082574129
+perplexity: 8.626545786857605
+accuracy: 0.25
+  accuracy: 0.588
+    learning_rate/init: 0.01
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+
+step: 0
+learning_rate: 0.01
+results on train dataset
+loss: 2.1523726
+bpc: 3.1052172
+perplexity: 8.175283
+accuracy: 0.36562502
+
+Creating checkpoint at adadelta/accuracy_best/test/training/checkpoints/best
+
+
+step: 500
+learning_rate: 0.01
+results on train dataset
+loss: 1.4432548
+bpc: 2.0821767
+perplexity: 6.2612224
+accuracy: 0.55625004
+
+
+step: 1000
+learning_rate: 0.01
+results on train dataset
+loss: 1.5188848
+bpc: 2.1912875
+perplexity: 6.5455856
+accuracy: 0.528125
+
+Creating checkpoint at adadelta/accuracy_best/test/training/checkpoints/final
+restoring pupil from adadelta/accuracy_best/test/training/checkpoints/final
+results on validation dataset test
+loss: 1.8488280847668648
+perplexity: 8.624059945344925
+accuracy: 0.25
+  bpc: 1.857286713224603
+    learning_rate/init: 0.01
+restoring pupil from ../text8_max_train/adam/2/checkpoints/best
+
+
+step: 0
+learning_rate: 0.01
+results on train dataset
+loss: 2.1544797
+bpc: 3.1082573
+perplexity: 8.177093
+accuracy: 0.396875
+
+Creating checkpoint at adadelta/bpc_best/test/training/checkpoints/best
+
+
+step: 500
+learning_rate: 0.01
+results on train dataset
+loss: 1.4485483
+bpc: 2.0898135
+perplexity: 6.200463
+accuracy: 0.553125
+
+
+step: 1000
+learning_rate: 0.01
+results on train dataset
+loss: 1.5279645
+bpc: 2.2043867
+perplexity: 6.5587406
+accuracy: 0.52500004
+
+Creating checkpoint at adadelta/bpc_best/test/training/checkpoints/final
+restoring pupil from adadelta/bpc_best/test/training/checkpoints/final
+results on validation dataset test
+loss: 1.8489431403577328
+perplexity: 8.624925643205643
+accuracy: 0.25

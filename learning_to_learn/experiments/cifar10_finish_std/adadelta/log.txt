@@ -1,0 +1,3354 @@
+confs: [OrderedDict([('learning_rate/init', [1e-08, 1.1e-08, 1.3e-08, 1.5e-08, 1.7e-08, 2e-08, 2.3e-08, 2.6e-08, 3e-08, 3.5e-08, 4e-08, 4.6e-08, 5.2e-08, 6e-08, 6.9e-08, 7.9e-08, 9.1e-08, 1e-07, 1.2e-07, 1.4e-07, 1.6e-07, 1.8e-07, 2.1e-07, 2.4e-07, 2.8e-07, 3.2e-07, 3.6e-07, 4.2e-07, 4.8e-07, 5.5e-07, 6.3e-07, 7.2e-07, 8.3e-07, 9.5e-07, 1.1e-06, 1.3e-06, 1.4e-06, 1.7e-06, 1.9e-06, 2.2e-06, 2.5e-06, 2.9e-06, 3.3e-06, 3.8e-06, 4.4e-06, 5e-06, 5.8e-06, 6.6e-06, 7.6e-06, 8.7e-06, 1e-05, 1.1e-05, 1.3e-05, 1.5e-05, 1.7e-05, 2e-05, 2.3e-05, 2.6e-05, 3e-05, 3.5e-05, 4e-05, 4.6e-05, 5.2e-05, 6e-05, 6.9e-05, 7.9e-05, 9.1e-05, 0.0001, 0.00012, 0.00014, 0.00016, 0.00018, 0.00021, 0.00024, 0.00028, 0.00032, 0.00036, 0.00042, 0.00048, 0.00055, 0.00063, 0.00072, 0.00083, 0.00095, 0.0011, 0.0013, 0.0014, 0.0017, 0.0019, 0.0022, 0.0025, 0.0029, 0.0033, 0.0038, 0.0044, 0.005, 0.0058, 0.0066, 0.0076, 0.0087, 0.01])])]
+
+
+learning_rate/init: 1e-08
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1e-08
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 1e-08
+results on train dataset
+loss: 0.8951653
+bpc: 1.2914506
+perplexity: 3.8827775
+accuracy: 0.6875
+
+
+learning_rate/init: 1e-08
+results on valid dataset:
+loss: 1.2562720775604248
+perplexity: 3.450010299682617
+accuracy: 0.5900000333786011
+bpc: 1.8124175071716309
+
+
+learning_rate/init: 1.1e-08
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.1e-08
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 1.1e-08
+results on train dataset
+loss: 0.8951654
+bpc: 1.2914506
+perplexity: 3.8827777
+accuracy: 0.6875
+
+
+learning_rate/init: 1.1e-08
+results on valid dataset:
+loss: 1.2562720775604248
+perplexity: 3.4500105381011963
+accuracy: 0.5900000333786011
+bpc: 1.8124175071716309
+
+
+learning_rate/init: 1.3e-08
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.3e-08
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 1.3e-08
+results on train dataset
+loss: 0.8951653
+bpc: 1.2914506
+perplexity: 3.8827775
+accuracy: 0.6875
+
+
+learning_rate/init: 1.3e-08
+results on valid dataset:
+loss: 1.2562720775604248
+perplexity: 3.4500105381011963
+accuracy: 0.5900000333786011
+bpc: 1.8124175071716309
+
+
+learning_rate/init: 1.5e-08
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.5e-08
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 1.5e-08
+results on train dataset
+loss: 0.89516526
+bpc: 1.2914505
+perplexity: 3.8827777
+accuracy: 0.6875
+
+
+learning_rate/init: 1.5e-08
+results on valid dataset:
+loss: 1.2562720775604248
+perplexity: 3.4500105381011963
+accuracy: 0.5900000333786011
+bpc: 1.8124175071716309
+
+
+learning_rate/init: 1.7e-08
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.7e-08
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 1.7e-08
+results on train dataset
+loss: 0.89516526
+bpc: 1.2914505
+perplexity: 3.8827777
+accuracy: 0.6875
+
+
+learning_rate/init: 1.7e-08
+results on valid dataset:
+loss: 1.2562720775604248
+perplexity: 3.4500105381011963
+accuracy: 0.5900000333786011
+bpc: 1.8124175071716309
+
+
+learning_rate/init: 2e-08
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 2e-08
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 2e-08
+results on train dataset
+loss: 0.8951652
+bpc: 1.2914504
+perplexity: 3.8827782
+accuracy: 0.6875
+
+
+learning_rate/init: 2e-08
+results on valid dataset:
+loss: 1.2562720775604248
+perplexity: 3.4500107765197754
+accuracy: 0.5900000333786011
+bpc: 1.8124175071716309
+
+
+learning_rate/init: 2.3e-08
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 2.3e-08
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 2.3e-08
+results on train dataset
+loss: 0.89516515
+bpc: 1.2914503
+perplexity: 3.8827782
+accuracy: 0.6875
+
+
+learning_rate/init: 2.3e-08
+results on valid dataset:
+loss: 1.2562721967697144
+perplexity: 3.4500105381011963
+accuracy: 0.5900000333786011
+bpc: 1.8124176263809204
+
+
+learning_rate/init: 2.6e-08
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 2.6e-08
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 2.6e-08
+results on train dataset
+loss: 0.8951651
+bpc: 1.2914503
+perplexity: 3.8827784
+accuracy: 0.6875
+
+
+learning_rate/init: 2.6e-08
+results on valid dataset:
+loss: 1.2562720775604248
+perplexity: 3.4500110149383545
+accuracy: 0.5900000333786011
+bpc: 1.8124175071716309
+
+
+learning_rate/init: 3e-08
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 3e-08
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 3e-08
+results on train dataset
+loss: 0.895165
+bpc: 1.2914501
+perplexity: 3.8827786
+accuracy: 0.6875
+
+
+learning_rate/init: 3e-08
+results on valid dataset:
+loss: 1.2562720775604248
+perplexity: 3.4500110149383545
+accuracy: 0.5900000333786011
+bpc: 1.8124175071716309
+
+
+learning_rate/init: 3.5e-08
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 3.5e-08
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 3.5e-08
+results on train dataset
+loss: 0.89516485
+bpc: 1.2914499
+perplexity: 3.882779
+accuracy: 0.6875
+
+
+learning_rate/init: 3.5e-08
+results on valid dataset:
+loss: 1.2562719583511353
+perplexity: 3.4500112533569336
+accuracy: 0.5900000333786011
+bpc: 1.8124172687530518
+
+
+learning_rate/init: 4e-08
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 4e-08
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 4e-08
+results on train dataset
+loss: 0.8951647
+bpc: 1.2914497
+perplexity: 3.8827796
+accuracy: 0.6875
+
+
+learning_rate/init: 4e-08
+results on valid dataset:
+loss: 1.2562721967697144
+perplexity: 3.450011968612671
+accuracy: 0.5900000333786011
+bpc: 1.8124176263809204
+
+
+learning_rate/init: 4.6e-08
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 4.6e-08
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 4.6e-08
+results on train dataset
+loss: 0.8951646
+bpc: 1.2914495
+perplexity: 3.88278
+accuracy: 0.6875
+
+
+learning_rate/init: 4.6e-08
+results on valid dataset:
+loss: 1.2562720775604248
+perplexity: 3.45001220703125
+accuracy: 0.5900000333786011
+bpc: 1.8124175071716309
+
+
+learning_rate/init: 5.2e-08
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 5.2e-08
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 5.2e-08
+results on train dataset
+loss: 0.89516425
+bpc: 1.2914491
+perplexity: 3.8827806
+accuracy: 0.6875
+
+
+learning_rate/init: 5.2e-08
+results on valid dataset:
+loss: 1.2562719583511353
+perplexity: 3.4500133991241455
+accuracy: 0.5900000333786011
+bpc: 1.8124172687530518
+
+
+learning_rate/init: 6e-08
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 6e-08
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 6e-08
+results on train dataset
+loss: 0.895164
+bpc: 1.2914487
+perplexity: 3.8827815
+accuracy: 0.6875
+
+
+learning_rate/init: 6e-08
+results on valid dataset:
+loss: 1.2562720775604248
+perplexity: 3.450014114379883
+accuracy: 0.5900000333786011
+bpc: 1.8124175071716309
+
+
+learning_rate/init: 6.9e-08
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 6.9e-08
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 6.9e-08
+results on train dataset
+loss: 0.89516354
+bpc: 1.291448
+perplexity: 3.8827825
+accuracy: 0.6875
+
+
+learning_rate/init: 6.9e-08
+results on valid dataset:
+loss: 1.2562721967697144
+perplexity: 3.450015068054199
+accuracy: 0.5910000205039978
+bpc: 1.8124176263809204
+
+
+learning_rate/init: 7.9e-08
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 7.9e-08
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 7.9e-08
+results on train dataset
+loss: 0.89516306
+bpc: 1.2914473
+perplexity: 3.8827837
+accuracy: 0.6875
+
+
+learning_rate/init: 7.9e-08
+results on valid dataset:
+loss: 1.2562721967697144
+perplexity: 3.4500162601470947
+accuracy: 0.5910000205039978
+bpc: 1.8124176263809204
+
+
+learning_rate/init: 9.1e-08
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 9.1e-08
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 9.1e-08
+results on train dataset
+loss: 0.89516246
+bpc: 1.2914464
+perplexity: 3.882785
+accuracy: 0.6875
+
+
+learning_rate/init: 9.1e-08
+results on valid dataset:
+loss: 1.2562721967697144
+perplexity: 3.4500179290771484
+accuracy: 0.5910000205039978
+bpc: 1.8124176263809204
+
+
+learning_rate/init: 1e-07
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1e-07
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 1e-07
+results on train dataset
+loss: 0.89516205
+bpc: 1.2914459
+perplexity: 3.8827868
+accuracy: 0.6875
+
+
+learning_rate/init: 1e-07
+results on valid dataset:
+loss: 1.2562721967697144
+perplexity: 3.450018882751465
+accuracy: 0.5910000205039978
+bpc: 1.8124176263809204
+
+
+learning_rate/init: 1.2e-07
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.2e-07
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 1.2e-07
+results on train dataset
+loss: 0.89516103
+bpc: 1.2914444
+perplexity: 3.8827887
+accuracy: 0.6875
+
+
+learning_rate/init: 1.2e-07
+results on valid dataset:
+loss: 1.2562721967697144
+perplexity: 3.4500210285186768
+accuracy: 0.5910000205039978
+bpc: 1.8124176263809204
+
+
+learning_rate/init: 1.4e-07
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.4e-07
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 1.4e-07
+results on train dataset
+loss: 0.89515996
+bpc: 1.2914429
+perplexity: 3.882791
+accuracy: 0.6875
+
+
+learning_rate/init: 1.4e-07
+results on valid dataset:
+loss: 1.2562721967697144
+perplexity: 3.450023651123047
+accuracy: 0.5910000205039978
+bpc: 1.8124176263809204
+
+
+learning_rate/init: 1.6e-07
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.6e-07
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 1.6e-07
+results on train dataset
+loss: 0.8951588
+bpc: 1.2914412
+perplexity: 3.8827932
+accuracy: 0.6875
+
+
+learning_rate/init: 1.6e-07
+results on valid dataset:
+loss: 1.2562721967697144
+perplexity: 3.4500255584716797
+accuracy: 0.5910000205039978
+bpc: 1.8124176263809204
+
+
+learning_rate/init: 1.8e-07
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.8e-07
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 1.8e-07
+results on train dataset
+loss: 0.8951578
+bpc: 1.2914398
+perplexity: 3.8827958
+accuracy: 0.6875
+
+
+learning_rate/init: 1.8e-07
+results on valid dataset:
+loss: 1.256272315979004
+perplexity: 3.4500277042388916
+accuracy: 0.5910000205039978
+bpc: 1.8124178647994995
+
+
+learning_rate/init: 2.1e-07
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 2.1e-07
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 2.1e-07
+results on train dataset
+loss: 0.8951565
+bpc: 1.2914379
+perplexity: 3.8827982
+accuracy: 0.6875
+
+
+learning_rate/init: 2.1e-07
+results on valid dataset:
+loss: 1.256272315979004
+perplexity: 3.4500303268432617
+accuracy: 0.5910000205039978
+bpc: 1.8124178647994995
+
+
+learning_rate/init: 2.4e-07
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 2.4e-07
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 2.4e-07
+results on train dataset
+loss: 0.8951554
+bpc: 1.2914362
+perplexity: 3.8828006
+accuracy: 0.6875
+
+
+learning_rate/init: 2.4e-07
+results on valid dataset:
+loss: 1.2562721967697144
+perplexity: 3.4500322341918945
+accuracy: 0.5910000205039978
+bpc: 1.8124176263809204
+
+
+learning_rate/init: 2.8e-07
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 2.8e-07
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 2.8e-07
+results on train dataset
+loss: 0.895154
+bpc: 1.2914343
+perplexity: 3.8828037
+accuracy: 0.6875
+
+
+learning_rate/init: 2.8e-07
+results on valid dataset:
+loss: 1.2562720775604248
+perplexity: 3.4500346183776855
+accuracy: 0.5910000205039978
+bpc: 1.8124175071716309
+
+
+learning_rate/init: 3.2e-07
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 3.2e-07
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 3.2e-07
+results on train dataset
+loss: 0.8951528
+bpc: 1.2914325
+perplexity: 3.882806
+accuracy: 0.6875
+
+
+learning_rate/init: 3.2e-07
+results on valid dataset:
+loss: 1.2562720775604248
+perplexity: 3.4500370025634766
+accuracy: 0.5910000205039978
+bpc: 1.8124175071716309
+
+
+learning_rate/init: 3.6e-07
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 3.6e-07
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 3.6e-07
+results on train dataset
+loss: 0.8951515
+bpc: 1.2914306
+perplexity: 3.8828087
+accuracy: 0.6875
+
+
+learning_rate/init: 3.6e-07
+results on valid dataset:
+loss: 1.2562720775604248
+perplexity: 3.4500391483306885
+accuracy: 0.5910000205039978
+bpc: 1.8124175071716309
+
+
+learning_rate/init: 4.2e-07
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 4.2e-07
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 4.2e-07
+results on train dataset
+loss: 0.89514965
+bpc: 1.291428
+perplexity: 3.8828123
+accuracy: 0.6875
+
+
+learning_rate/init: 4.2e-07
+results on valid dataset:
+loss: 1.2562719583511353
+perplexity: 3.450042724609375
+accuracy: 0.5910000205039978
+bpc: 1.8124172687530518
+
+
+learning_rate/init: 4.8e-07
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 4.8e-07
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 4.8e-07
+results on train dataset
+loss: 0.8951476
+bpc: 1.291425
+perplexity: 3.8828163
+accuracy: 0.6875
+
+
+learning_rate/init: 4.8e-07
+results on valid dataset:
+loss: 1.2562720775604248
+perplexity: 3.4500458240509033
+accuracy: 0.5910000205039978
+bpc: 1.8124175071716309
+
+
+learning_rate/init: 5.5e-07
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 5.5e-07
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 5.5e-07
+results on train dataset
+loss: 0.8951454
+bpc: 1.2914219
+perplexity: 3.8828206
+accuracy: 0.6875
+
+
+learning_rate/init: 5.5e-07
+results on valid dataset:
+loss: 1.2562720775604248
+perplexity: 3.450049877166748
+accuracy: 0.5910000205039978
+bpc: 1.8124175071716309
+
+
+learning_rate/init: 6.3e-07
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 6.3e-07
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 6.3e-07
+results on train dataset
+loss: 0.8951428
+bpc: 1.2914181
+perplexity: 3.8828254
+accuracy: 0.6875
+
+
+learning_rate/init: 6.3e-07
+results on valid dataset:
+loss: 1.2562720775604248
+perplexity: 3.450054168701172
+accuracy: 0.5910000205039978
+bpc: 1.8124175071716309
+
+
+learning_rate/init: 7.2e-07
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 7.2e-07
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 7.2e-07
+results on train dataset
+loss: 0.89514
+bpc: 1.291414
+perplexity: 3.88283
+accuracy: 0.6875
+
+
+learning_rate/init: 7.2e-07
+results on valid dataset:
+loss: 1.2562720775604248
+perplexity: 3.450059175491333
+accuracy: 0.5910000205039978
+bpc: 1.8124175071716309
+
+
+learning_rate/init: 8.3e-07
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 8.3e-07
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 8.3e-07
+results on train dataset
+loss: 0.89513654
+bpc: 1.291409
+perplexity: 3.8828359
+accuracy: 0.6875
+
+
+learning_rate/init: 8.3e-07
+results on valid dataset:
+loss: 1.2562721967697144
+perplexity: 3.4500646591186523
+accuracy: 0.5910000205039978
+bpc: 1.8124176263809204
+
+
+learning_rate/init: 9.5e-07
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 9.5e-07
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 9.5e-07
+results on train dataset
+loss: 0.8951325
+bpc: 1.2914032
+perplexity: 3.8828418
+accuracy: 0.6875
+
+
+learning_rate/init: 9.5e-07
+results on valid dataset:
+loss: 1.256272315979004
+perplexity: 3.450070858001709
+accuracy: 0.5910000205039978
+bpc: 1.8124178647994995
+
+
+learning_rate/init: 1.1e-06
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.1e-06
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 1.1e-06
+results on train dataset
+loss: 0.8951278
+bpc: 1.2913964
+perplexity: 3.882849
+accuracy: 0.6875
+
+
+learning_rate/init: 1.1e-06
+results on valid dataset:
+loss: 1.2562721967697144
+perplexity: 3.4500784873962402
+accuracy: 0.5910000205039978
+bpc: 1.8124176263809204
+
+
+learning_rate/init: 1.3e-06
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.3e-06
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 1.3e-06
+results on train dataset
+loss: 0.8951216
+bpc: 1.2913874
+perplexity: 3.8828592
+accuracy: 0.6875
+
+
+learning_rate/init: 1.3e-06
+results on valid dataset:
+loss: 1.2562724351882935
+perplexity: 3.4500885009765625
+accuracy: 0.5910000205039978
+bpc: 1.812417984008789
+
+
+learning_rate/init: 1.4e-06
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.4e-06
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 1.4e-06
+results on train dataset
+loss: 0.8951182
+bpc: 1.2913826
+perplexity: 3.8828645
+accuracy: 0.6875
+
+
+learning_rate/init: 1.4e-06
+results on valid dataset:
+loss: 1.256272554397583
+perplexity: 3.450094223022461
+accuracy: 0.5910000205039978
+bpc: 1.8124182224273682
+
+
+learning_rate/init: 1.7e-06
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.7e-06
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 1.7e-06
+results on train dataset
+loss: 0.8951087
+bpc: 1.2913688
+perplexity: 3.8828807
+accuracy: 0.6875
+
+
+learning_rate/init: 1.7e-06
+results on valid dataset:
+loss: 1.256272792816162
+perplexity: 3.4501099586486816
+accuracy: 0.5910000205039978
+bpc: 1.8124185800552368
+
+
+learning_rate/init: 1.9e-06
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.9e-06
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 1.9e-06
+results on train dataset
+loss: 0.89510214
+bpc: 1.2913594
+perplexity: 3.8828912
+accuracy: 0.6875
+
+
+learning_rate/init: 1.9e-06
+results on valid dataset:
+loss: 1.256272792816162
+perplexity: 3.450120449066162
+accuracy: 0.5910000205039978
+bpc: 1.8124185800552368
+
+
+learning_rate/init: 2.2e-06
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 2.2e-06
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 2.2e-06
+results on train dataset
+loss: 0.8950925
+bpc: 1.2913455
+perplexity: 3.8829074
+accuracy: 0.6875
+
+
+learning_rate/init: 2.2e-06
+results on valid dataset:
+loss: 1.2562731504440308
+perplexity: 3.45013689994812
+accuracy: 0.5910000205039978
+bpc: 1.812419056892395
+
+
+learning_rate/init: 2.5e-06
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 2.5e-06
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 2.5e-06
+results on train dataset
+loss: 0.89508283
+bpc: 1.2913315
+perplexity: 3.8829246
+accuracy: 0.6875
+
+
+learning_rate/init: 2.5e-06
+results on valid dataset:
+loss: 1.2562732696533203
+perplexity: 3.450153112411499
+accuracy: 0.5910000205039978
+bpc: 1.8124191761016846
+
+
+learning_rate/init: 2.9e-06
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 2.9e-06
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 2.9e-06
+results on train dataset
+loss: 0.8950699
+bpc: 1.2913129
+perplexity: 3.882947
+accuracy: 0.6875
+
+
+learning_rate/init: 2.9e-06
+results on valid dataset:
+loss: 1.2562737464904785
+perplexity: 3.450174570083618
+accuracy: 0.5910000205039978
+bpc: 1.8124198913574219
+
+
+learning_rate/init: 3.3e-06
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 3.3e-06
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 3.3e-06
+results on train dataset
+loss: 0.8950571
+bpc: 1.2912945
+perplexity: 3.8829694
+accuracy: 0.6875
+
+
+learning_rate/init: 3.3e-06
+results on valid dataset:
+loss: 1.2562739849090576
+perplexity: 3.4501960277557373
+accuracy: 0.5910000205039978
+bpc: 1.8124202489852905
+
+
+learning_rate/init: 3.8e-06
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 3.8e-06
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 3.8e-06
+results on train dataset
+loss: 0.8950414
+bpc: 1.2912718
+perplexity: 3.8829978
+accuracy: 0.6875
+
+
+learning_rate/init: 3.8e-06
+results on valid dataset:
+loss: 1.2562743425369263
+perplexity: 3.450223445892334
+accuracy: 0.5910000205039978
+bpc: 1.8124207258224487
+
+
+learning_rate/init: 4.4e-06
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 4.4e-06
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 4.4e-06
+results on train dataset
+loss: 0.895023
+bpc: 1.2912452
+perplexity: 3.8830311
+accuracy: 0.6875
+
+
+learning_rate/init: 4.4e-06
+results on valid dataset:
+loss: 1.2562750577926636
+perplexity: 3.4502549171447754
+accuracy: 0.5910000205039978
+bpc: 1.8124217987060547
+
+
+learning_rate/init: 5e-06
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 5e-06
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 5e-06
+results on train dataset
+loss: 0.89500487
+bpc: 1.2912191
+perplexity: 3.8830643
+accuracy: 0.6875
+
+
+learning_rate/init: 5e-06
+results on valid dataset:
+loss: 1.2562755346298218
+perplexity: 3.450286865234375
+accuracy: 0.5910000205039978
+bpc: 1.812422513961792
+
+
+learning_rate/init: 5.8e-06
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 5.8e-06
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 5.8e-06
+results on train dataset
+loss: 0.8949809
+bpc: 1.2911845
+perplexity: 3.8831084
+accuracy: 0.6875
+
+
+learning_rate/init: 5.8e-06
+results on valid dataset:
+loss: 1.256276249885559
+perplexity: 3.4503285884857178
+accuracy: 0.5910000205039978
+bpc: 1.8124234676361084
+
+
+learning_rate/init: 6.6e-06
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 6.6e-06
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 6.6e-06
+results on train dataset
+loss: 0.8949571
+bpc: 1.2911502
+perplexity: 3.8831515
+accuracy: 0.6875
+
+
+learning_rate/init: 6.6e-06
+results on valid dataset:
+loss: 1.2562768459320068
+perplexity: 3.4503700733184814
+accuracy: 0.5910000205039978
+bpc: 1.8124244213104248
+
+
+learning_rate/init: 7.6e-06
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 7.6e-06
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 7.6e-06
+results on train dataset
+loss: 0.8949296
+bpc: 1.2911105
+perplexity: 3.883206
+accuracy: 0.6875
+
+
+learning_rate/init: 7.6e-06
+results on valid dataset:
+loss: 1.2562777996063232
+perplexity: 3.45042085647583
+accuracy: 0.5910000205039978
+bpc: 1.8124257326126099
+
+
+learning_rate/init: 8.7e-06
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 8.7e-06
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 8.7e-06
+results on train dataset
+loss: 0.894899
+bpc: 1.2910664
+perplexity: 3.8832655
+accuracy: 0.6875
+
+
+learning_rate/init: 8.7e-06
+results on valid dataset:
+loss: 1.2562789916992188
+perplexity: 3.4504759311676025
+accuracy: 0.5910000205039978
+bpc: 1.8124275207519531
+
+
+learning_rate/init: 1e-05
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1e-05
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 1e-05
+results on train dataset
+loss: 0.894865
+bpc: 1.2910173
+perplexity: 3.8833337
+accuracy: 0.6875
+
+
+learning_rate/init: 1e-05
+results on valid dataset:
+loss: 1.2562801837921143
+perplexity: 3.4505391120910645
+accuracy: 0.5910000205039978
+bpc: 1.8124291896820068
+
+
+learning_rate/init: 1.1e-05
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.1e-05
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 1.1e-05
+results on train dataset
+loss: 0.8948395
+bpc: 1.2909806
+perplexity: 3.8833866
+accuracy: 0.6875
+
+
+learning_rate/init: 1.1e-05
+results on valid dataset:
+loss: 1.2562814950942993
+perplexity: 3.450587749481201
+accuracy: 0.5910000205039978
+bpc: 1.8124310970306396
+
+
+learning_rate/init: 1.3e-05
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.3e-05
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 1.3e-05
+results on train dataset
+loss: 0.89479065
+bpc: 1.29091
+perplexity: 3.8834872
+accuracy: 0.6875
+
+
+learning_rate/init: 1.3e-05
+results on valid dataset:
+loss: 1.2562837600708008
+perplexity: 3.450680732727051
+accuracy: 0.5910000205039978
+bpc: 1.8124343156814575
+
+
+learning_rate/init: 1.5e-05
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.5e-05
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 1.5e-05
+results on train dataset
+loss: 0.89474416
+bpc: 1.290843
+perplexity: 3.8835864
+accuracy: 0.6875
+
+
+learning_rate/init: 1.5e-05
+results on valid dataset:
+loss: 1.256286382675171
+perplexity: 3.4507699012756348
+accuracy: 0.5910000205039978
+bpc: 1.8124381303787231
+
+
+learning_rate/init: 1.7e-05
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 1.7e-05
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 1.7e-05
+results on train dataset
+loss: 0.8946994
+bpc: 1.2907784
+perplexity: 3.8836837
+accuracy: 0.6875
+
+
+learning_rate/init: 1.7e-05
+results on valid dataset:
+loss: 1.2562896013259888
+perplexity: 3.450857162475586
+accuracy: 0.5910000205039978
+bpc: 1.8124427795410156
+
+
+learning_rate/init: 2e-05
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 2e-05
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 2e-05
+results on train dataset
+loss: 0.89463854
+bpc: 1.2906905
+perplexity: 3.8838234
+accuracy: 0.6875
+
+
+learning_rate/init: 2e-05
+results on valid dataset:
+loss: 1.2562943696975708
+perplexity: 3.4509825706481934
+accuracy: 0.5910000205039978
+bpc: 1.8124496936798096
+
+
+learning_rate/init: 2.3e-05
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 2.3e-05
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 2.3e-05
+results on train dataset
+loss: 0.89458334
+bpc: 1.2906109
+perplexity: 3.8839564
+accuracy: 0.6875
+
+
+learning_rate/init: 2.3e-05
+results on valid dataset:
+loss: 1.2562994956970215
+perplexity: 3.4511008262634277
+accuracy: 0.5910000205039978
+bpc: 1.8124570846557617
+
+
+learning_rate/init: 2.6e-05
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 2.6e-05
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 2.6e-05
+results on train dataset
+loss: 0.8945353
+bpc: 1.2905416
+perplexity: 3.8840928
+accuracy: 0.6875
+
+
+learning_rate/init: 2.6e-05
+results on valid dataset:
+loss: 1.2563042640686035
+perplexity: 3.4512128829956055
+accuracy: 0.5920000076293945
+bpc: 1.8124638795852661
+
+
+learning_rate/init: 3e-05
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 3e-05
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 3e-05
+results on train dataset
+loss: 0.8944807
+bpc: 1.2904629
+perplexity: 3.8842585
+accuracy: 0.6875
+
+
+learning_rate/init: 3e-05
+results on valid dataset:
+loss: 1.256311058998108
+perplexity: 3.4513514041900635
+accuracy: 0.5920000076293945
+bpc: 1.8124737739562988
+
+
+learning_rate/init: 3.5e-05
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 3.5e-05
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 3.5e-05
+results on train dataset
+loss: 0.8944204
+bpc: 1.2903758
+perplexity: 3.8844514
+accuracy: 0.6875
+
+
+learning_rate/init: 3.5e-05
+results on valid dataset:
+loss: 1.2563202381134033
+perplexity: 3.451508045196533
+accuracy: 0.5920000076293945
+bpc: 1.812487006187439
+
+
+learning_rate/init: 4e-05
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 4e-05
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 4e-05
+results on train dataset
+loss: 0.89437187
+bpc: 1.2903059
+perplexity: 3.8846378
+accuracy: 0.6875
+
+
+learning_rate/init: 4e-05
+results on valid dataset:
+loss: 1.256330132484436
+perplexity: 3.451648712158203
+accuracy: 0.5920000076293945
+bpc: 1.8125011920928955
+
+
+learning_rate/init: 4.6e-05
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 4.6e-05
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 4.6e-05
+results on train dataset
+loss: 0.89433134
+bpc: 1.2902473
+perplexity: 3.8848455
+accuracy: 0.6875
+
+
+learning_rate/init: 4.6e-05
+results on valid dataset:
+loss: 1.2563424110412598
+perplexity: 3.4518048763275146
+accuracy: 0.5920000076293945
+bpc: 1.8125189542770386
+
+
+learning_rate/init: 5.2e-05
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 5.2e-05
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 5.2e-05
+results on train dataset
+loss: 0.89429617
+bpc: 1.2901967
+perplexity: 3.8850336
+accuracy: 0.6875
+
+
+learning_rate/init: 5.2e-05
+results on valid dataset:
+loss: 1.2563557624816895
+perplexity: 3.4519426822662354
+accuracy: 0.5920000076293945
+bpc: 1.8125382661819458
+
+
+learning_rate/init: 6e-05
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 6e-05
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 6e-05
+results on train dataset
+loss: 0.89427954
+bpc: 1.2901727
+perplexity: 3.88525
+accuracy: 0.6875
+
+
+learning_rate/init: 6e-05
+results on valid dataset:
+loss: 1.2563737630844116
+perplexity: 3.4521005153656006
+accuracy: 0.5920000076293945
+bpc: 1.8125641345977783
+
+
+learning_rate/init: 6.9e-05
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 6.9e-05
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 6.9e-05
+results on train dataset
+loss: 0.8942713
+bpc: 1.2901608
+perplexity: 3.8854625
+accuracy: 0.6875
+
+
+learning_rate/init: 6.9e-05
+results on valid dataset:
+loss: 1.2563923597335815
+perplexity: 3.4522571563720703
+accuracy: 0.5920000076293945
+bpc: 1.8125910758972168
+
+
+learning_rate/init: 7.9e-05
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 7.9e-05
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 7.9e-05
+results on train dataset
+loss: 0.89429873
+bpc: 1.2902004
+perplexity: 3.8856616
+accuracy: 0.6875
+
+
+learning_rate/init: 7.9e-05
+results on valid dataset:
+loss: 1.2564140558242798
+perplexity: 3.4523963928222656
+accuracy: 0.5920000076293945
+bpc: 1.812622308731079
+
+
+learning_rate/init: 9.1e-05
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 9.1e-05
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 9.1e-05
+results on train dataset
+loss: 0.8943632
+bpc: 1.2902933
+perplexity: 3.8858566
+accuracy: 0.6875
+
+
+learning_rate/init: 9.1e-05
+results on valid dataset:
+loss: 1.2564399242401123
+perplexity: 3.4525182247161865
+accuracy: 0.5920000076293945
+bpc: 1.8126596212387085
+
+
+learning_rate/init: 0.0001
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0001
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.0001
+results on train dataset
+loss: 0.89442
+bpc: 1.2903754
+perplexity: 3.885966
+accuracy: 0.6875
+
+
+learning_rate/init: 0.0001
+results on valid dataset:
+loss: 1.2564581632614136
+perplexity: 3.4525961875915527
+accuracy: 0.5920000076293945
+bpc: 1.8126859664916992
+
+
+learning_rate/init: 0.00012
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00012
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.00012
+results on train dataset
+loss: 0.8945967
+bpc: 1.2906302
+perplexity: 3.8861246
+accuracy: 0.6875
+
+
+learning_rate/init: 0.00012
+results on valid dataset:
+loss: 1.2565027475357056
+perplexity: 3.4526898860931396
+accuracy: 0.5920000076293945
+bpc: 1.812750220298767
+
+
+learning_rate/init: 0.00014
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00014
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.00014
+results on train dataset
+loss: 0.894819
+bpc: 1.290951
+perplexity: 3.8861835
+accuracy: 0.6875
+
+
+learning_rate/init: 0.00014
+results on valid dataset:
+loss: 1.2565405368804932
+perplexity: 3.452723503112793
+accuracy: 0.5920000076293945
+bpc: 1.8128048181533813
+
+
+learning_rate/init: 0.00016
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00016
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.00016
+results on train dataset
+loss: 0.8950732
+bpc: 1.2913176
+perplexity: 3.8862083
+accuracy: 0.6875
+
+
+learning_rate/init: 0.00016
+results on valid dataset:
+loss: 1.256577491760254
+perplexity: 3.452723503112793
+accuracy: 0.5920000076293945
+bpc: 1.8128581047058105
+
+
+learning_rate/init: 0.00018
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00018
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.00018
+results on train dataset
+loss: 0.8953629
+bpc: 1.2917356
+perplexity: 3.8861022
+accuracy: 0.6875
+
+
+learning_rate/init: 0.00018
+results on valid dataset:
+loss: 1.256614327430725
+perplexity: 3.452686309814453
+accuracy: 0.5929999947547913
+bpc: 1.8129112720489502
+
+
+learning_rate/init: 0.00021
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00021
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.00021
+results on train dataset
+loss: 0.89579034
+bpc: 1.2923523
+perplexity: 3.885762
+accuracy: 0.6875
+
+
+learning_rate/init: 0.00021
+results on valid dataset:
+loss: 1.2566677331924438
+perplexity: 3.4526021480560303
+accuracy: 0.5920000076293945
+bpc: 1.81298828125
+
+
+learning_rate/init: 0.00024
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00024
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.00024
+results on train dataset
+loss: 0.8962347
+bpc: 1.2929933
+perplexity: 3.885365
+accuracy: 0.6875
+
+
+learning_rate/init: 0.00024
+results on valid dataset:
+loss: 1.2567241191864014
+perplexity: 3.452479600906372
+accuracy: 0.5920000076293945
+bpc: 1.8130697011947632
+
+
+learning_rate/init: 0.00028
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00028
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.00028
+results on train dataset
+loss: 0.8967644
+bpc: 1.2937576
+perplexity: 3.8847868
+accuracy: 0.6875
+
+
+learning_rate/init: 0.00028
+results on valid dataset:
+loss: 1.2568023204803467
+perplexity: 3.452352523803711
+accuracy: 0.5910000205039978
+bpc: 1.8131824731826782
+
+
+learning_rate/init: 0.00032
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00032
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.00032
+results on train dataset
+loss: 0.89728665
+bpc: 1.294511
+perplexity: 3.8840199
+accuracy: 0.6875
+
+
+learning_rate/init: 0.00032
+results on valid dataset:
+loss: 1.256883978843689
+perplexity: 3.4522459506988525
+accuracy: 0.5910000205039978
+bpc: 1.8133002519607544
+
+
+learning_rate/init: 0.00036
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00036
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.00036
+results on train dataset
+loss: 0.89779204
+bpc: 1.2952402
+perplexity: 3.8832352
+accuracy: 0.6875
+
+
+learning_rate/init: 0.00036
+results on valid dataset:
+loss: 1.2569684982299805
+perplexity: 3.4521121978759766
+accuracy: 0.5910000205039978
+bpc: 1.8134222030639648
+
+
+learning_rate/init: 0.00042
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00042
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.00042
+results on train dataset
+loss: 0.8984481
+bpc: 1.2961867
+perplexity: 3.8816874
+accuracy: 0.6875
+
+
+learning_rate/init: 0.00042
+results on valid dataset:
+loss: 1.2571042776107788
+perplexity: 3.451965093612671
+accuracy: 0.5900000333786011
+bpc: 1.8136180639266968
+
+
+learning_rate/init: 0.00048
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00048
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.00048
+results on train dataset
+loss: 0.899003
+bpc: 1.2969872
+perplexity: 3.880056
+accuracy: 0.6875
+
+
+learning_rate/init: 0.00048
+results on valid dataset:
+loss: 1.2572524547576904
+perplexity: 3.4518139362335205
+accuracy: 0.5899999737739563
+bpc: 1.8138319253921509
+
+
+learning_rate/init: 0.00055
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00055
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.00055
+results on train dataset
+loss: 0.8996605
+bpc: 1.2979357
+perplexity: 3.878283
+accuracy: 0.6875
+
+
+learning_rate/init: 0.00055
+results on valid dataset:
+loss: 1.2574328184127808
+perplexity: 3.451686382293701
+accuracy: 0.5900000333786011
+bpc: 1.8140920400619507
+
+
+learning_rate/init: 0.00063
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00063
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.00063
+results on train dataset
+loss: 0.9003854
+bpc: 1.2989815
+perplexity: 3.8761752
+accuracy: 0.6875
+
+
+learning_rate/init: 0.00063
+results on valid dataset:
+loss: 1.2576649188995361
+perplexity: 3.451456069946289
+accuracy: 0.5879999995231628
+bpc: 1.8144268989562988
+
+
+learning_rate/init: 0.00072
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00072
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.00072
+results on train dataset
+loss: 0.90131915
+bpc: 1.3003286
+perplexity: 3.8738923
+accuracy: 0.6875
+
+
+learning_rate/init: 0.00072
+results on valid dataset:
+loss: 1.2578734159469604
+perplexity: 3.451173782348633
+accuracy: 0.5880000591278076
+bpc: 1.814727783203125
+
+
+learning_rate/init: 0.00083
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00083
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.00083
+results on train dataset
+loss: 0.90217525
+bpc: 1.3015637
+perplexity: 3.870713
+accuracy: 0.6875
+
+
+learning_rate/init: 0.00083
+results on valid dataset:
+loss: 1.258139967918396
+perplexity: 3.450868844985962
+accuracy: 0.5870000123977661
+bpc: 1.8151122331619263
+
+
+learning_rate/init: 0.00095
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.00095
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.00095
+results on train dataset
+loss: 0.9033978
+bpc: 1.3033276
+perplexity: 3.8680422
+accuracy: 0.6875
+
+
+learning_rate/init: 0.00095
+results on valid dataset:
+loss: 1.2584182024002075
+perplexity: 3.450546979904175
+accuracy: 0.5849999785423279
+bpc: 1.8155137300491333
+
+
+learning_rate/init: 0.0011
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0011
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.0011
+results on train dataset
+loss: 0.9050541
+bpc: 1.305717
+perplexity: 3.864581
+accuracy: 0.6875
+
+
+learning_rate/init: 0.0011
+results on valid dataset:
+loss: 1.2587668895721436
+perplexity: 3.4499361515045166
+accuracy: 0.5849999785423279
+bpc: 1.8160167932510376
+
+
+learning_rate/init: 0.0013
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0013
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.0013
+results on train dataset
+loss: 0.90733683
+bpc: 1.3090104
+perplexity: 3.8601086
+accuracy: 0.6875
+
+
+learning_rate/init: 0.0013
+results on valid dataset:
+loss: 1.2592023611068726
+perplexity: 3.4490838050842285
+accuracy: 0.5860000252723694
+bpc: 1.8166450262069702
+
+
+learning_rate/init: 0.0014
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0014
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.0014
+results on train dataset
+loss: 0.908228
+bpc: 1.310296
+perplexity: 3.857689
+accuracy: 0.6875
+
+
+learning_rate/init: 0.0014
+results on valid dataset:
+loss: 1.259385347366333
+perplexity: 3.448744297027588
+accuracy: 0.5860000252723694
+bpc: 1.8169089555740356
+
+
+learning_rate/init: 0.0017
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0017
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.0017
+results on train dataset
+loss: 0.9115846
+bpc: 1.3151386
+perplexity: 3.8518507
+accuracy: 0.6875
+
+
+learning_rate/init: 0.0017
+results on valid dataset:
+loss: 1.2599339485168457
+perplexity: 3.4475131034851074
+accuracy: 0.5859999656677246
+bpc: 1.8177005052566528
+
+
+learning_rate/init: 0.0019
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0019
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.0019
+results on train dataset
+loss: 0.91417336
+bpc: 1.3188734
+perplexity: 3.8485913
+accuracy: 0.6875
+
+
+learning_rate/init: 0.0019
+results on valid dataset:
+loss: 1.260270118713379
+perplexity: 3.4463999271392822
+accuracy: 0.5870000123977661
+bpc: 1.8181854486465454
+
+
+learning_rate/init: 0.0022
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0022
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.0022
+results on train dataset
+loss: 0.9179386
+bpc: 1.3243054
+perplexity: 3.844914
+accuracy: 0.71875
+
+
+learning_rate/init: 0.0022
+results on valid dataset:
+loss: 1.260814905166626
+perplexity: 3.445779323577881
+accuracy: 0.5849999785423279
+bpc: 1.8189713954925537
+
+
+learning_rate/init: 0.0025
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0025
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.0025
+results on train dataset
+loss: 0.920964
+bpc: 1.3286701
+perplexity: 3.8391478
+accuracy: 0.71875
+
+
+learning_rate/init: 0.0025
+results on valid dataset:
+loss: 1.2615188360214233
+perplexity: 3.4448540210723877
+accuracy: 0.5849999785423279
+bpc: 1.8199869394302368
+
+
+learning_rate/init: 0.0029
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0029
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.0029
+results on train dataset
+loss: 0.92493045
+bpc: 1.3343925
+perplexity: 3.8359227
+accuracy: 0.71875
+
+
+learning_rate/init: 0.0029
+results on valid dataset:
+loss: 1.2621479034423828
+perplexity: 3.443359136581421
+accuracy: 0.5849999785423279
+bpc: 1.820894479751587
+
+
+learning_rate/init: 0.0033
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0033
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.0033
+results on train dataset
+loss: 0.9285549
+bpc: 1.3396215
+perplexity: 3.8324552
+accuracy: 0.6875
+
+
+learning_rate/init: 0.0033
+results on valid dataset:
+loss: 1.26298189163208
+perplexity: 3.441981554031372
+accuracy: 0.5839999914169312
+bpc: 1.822097659111023
+
+
+learning_rate/init: 0.0038
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0038
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.0038
+results on train dataset
+loss: 0.9332548
+bpc: 1.346402
+perplexity: 3.8255856
+accuracy: 0.6875
+
+
+learning_rate/init: 0.0038
+results on valid dataset:
+loss: 1.2634024620056152
+perplexity: 3.440598487854004
+accuracy: 0.5820000171661377
+bpc: 1.8227044343948364
+
+
+learning_rate/init: 0.0044
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0044
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.0044
+results on train dataset
+loss: 0.938195
+bpc: 1.3535292
+perplexity: 3.8155575
+accuracy: 0.6875
+
+
+learning_rate/init: 0.0044
+results on valid dataset:
+loss: 1.2646043300628662
+perplexity: 3.439396381378174
+accuracy: 0.5849999785423279
+bpc: 1.8244383335113525
+
+
+learning_rate/init: 0.005
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.005
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.005
+results on train dataset
+loss: 0.9440166
+bpc: 1.361928
+perplexity: 3.8089414
+accuracy: 0.6875
+
+
+learning_rate/init: 0.005
+results on valid dataset:
+loss: 1.265684962272644
+perplexity: 3.4377379417419434
+accuracy: 0.5830000042915344
+bpc: 1.8259974718093872
+
+
+learning_rate/init: 0.0058
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0058
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.0058
+results on train dataset
+loss: 0.9515846
+bpc: 1.3728464
+perplexity: 3.7981944
+accuracy: 0.6875
+
+
+learning_rate/init: 0.0058
+results on valid dataset:
+loss: 1.267897129058838
+perplexity: 3.436011791229248
+accuracy: 0.5809999704360962
+bpc: 1.8291889429092407
+
+
+learning_rate/init: 0.0066
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0066
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.0066
+results on train dataset
+loss: 0.9585947
+bpc: 1.3829598
+perplexity: 3.7913942
+accuracy: 0.6875
+
+
+learning_rate/init: 0.0066
+results on valid dataset:
+loss: 1.269402265548706
+perplexity: 3.4332494735717773
+accuracy: 0.5809999704360962
+bpc: 1.8313603401184082
+
+
+learning_rate/init: 0.0076
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0076
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.0076
+results on train dataset
+loss: 0.9698305
+bpc: 1.3991697
+perplexity: 3.7869024
+accuracy: 0.6875
+
+
+learning_rate/init: 0.0076
+results on valid dataset:
+loss: 1.271698236465454
+perplexity: 3.430384635925293
+accuracy: 0.5820000171661377
+bpc: 1.8346726894378662
+
+
+learning_rate/init: 0.0087
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.0087
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.0087
+results on train dataset
+loss: 0.9808686
+bpc: 1.4150943
+perplexity: 3.7746878
+accuracy: 0.6875
+
+
+learning_rate/init: 0.0087
+results on valid dataset:
+loss: 1.2745145559310913
+perplexity: 3.4275944232940674
+accuracy: 0.5799999833106995
+bpc: 1.838735818862915
+
+
+learning_rate/init: 0.01
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+Warning! Launch is not logged because save_path was not provided to Handler constructor
+
+
+step: 0
+learning_rate: 0.01
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+
+step: 1000
+learning_rate: 0.01
+results on train dataset
+loss: 0.99778223
+bpc: 1.4394954
+perplexity: 3.7660065
+accuracy: 0.6875
+
+
+learning_rate/init: 0.01
+results on valid dataset:
+loss: 1.277036428451538
+perplexity: 3.424363136291504
+accuracy: 0.578000009059906
+bpc: 1.8423740863800049
+dataset: valid
+  loss: 1.2562719583511353
+    learning_rate/init: 3.5e-08
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+
+step: 0
+learning_rate: 3.5e-08
+results on train dataset
+loss: 0.7500003
+bpc: 1.0820217
+perplexity: 3.3469684
+accuracy: 0.71875
+
+Creating checkpoint at adadelta/loss_best/test/training/checkpoints/best
+
+
+step: 1000
+learning_rate: 3.5e-08
+results on train dataset
+loss: 0.89516485
+bpc: 1.2914499
+perplexity: 3.882779
+accuracy: 0.6875
+
+Creating checkpoint at adadelta/loss_best/test/training/checkpoints/final
+restoring pupil from adadelta/loss_best/test/training/checkpoints/final
+results on validation dataset test
+loss: 1.279969573020935
+perplexity: 3.516348361968994
+accuracy: 0.5571998953819275
+  perplexity: 3.424363136291504
+    learning_rate/init: 0.01
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+
+step: 0
+learning_rate: 0.01
+results on train dataset
+loss: 0.86877227
+bpc: 1.2533734
+perplexity: 3.1506805
+accuracy: 0.71875
+
+Creating checkpoint at adadelta/perplexity_best/test/training/checkpoints/best
+
+
+step: 1000
+learning_rate: 0.01
+results on train dataset
+loss: 0.9083504
+bpc: 1.3104726
+perplexity: 3.30153
+accuracy: 0.65625
+
+Creating checkpoint at adadelta/perplexity_best/test/training/checkpoints/final
+restoring pupil from adadelta/perplexity_best/test/training/checkpoints/final
+results on validation dataset test
+loss: 1.3034718036651611
+perplexity: 3.4638235569000244
+accuracy: 0.55159991979599
+  accuracy: 0.5929999947547913
+    learning_rate/init: 0.00018
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+
+step: 0
+learning_rate: 0.00018
+results on train dataset
+loss: 0.6046124
+bpc: 0.8722713
+perplexity: 2.9117322
+accuracy: 0.84375
+
+Creating checkpoint at adadelta/accuracy_best/test/training/checkpoints/best
+
+
+step: 1000
+learning_rate: 0.00018
+results on train dataset
+loss: 0.77398825
+bpc: 1.116629
+perplexity: 3.4442172
+accuracy: 0.75
+
+Creating checkpoint at adadelta/accuracy_best/test/training/checkpoints/final
+restoring pupil from adadelta/accuracy_best/test/training/checkpoints/final
+results on validation dataset test
+loss: 1.2800545692443848
+perplexity: 3.513983964920044
+accuracy: 0.5577998757362366
+  bpc: 1.8124172687530518
+    learning_rate/init: 3.5e-08
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+
+step: 0
+learning_rate: 3.5e-08
+results on train dataset
+loss: 0.9380579
+bpc: 1.3533314
+perplexity: 3.7903218
+accuracy: 0.8125
+
+Creating checkpoint at adadelta/bpc_best/test/training/checkpoints/best
+
+
+step: 1000
+learning_rate: 3.5e-08
+results on train dataset
+loss: 0.6189389
+bpc: 0.8929401
+perplexity: 3.3388104
+accuracy: 0.8125
+
+Creating checkpoint at adadelta/bpc_best/test/training/checkpoints/final
+restoring pupil from adadelta/bpc_best/test/training/checkpoints/final
+results on validation dataset test
+loss: 1.279969573020935
+perplexity: 3.516348123550415
+accuracy: 0.5571998953819275

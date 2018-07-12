@@ -1,0 +1,146 @@
+2018-06-29 14:44:01.641219
+
+launch regime: train
+
+build parameters:
+{
+    "batch_size": 32,
+    "init_parameter": 0.1,
+    "num_hidden_nodes": [],
+    "additional_metrics": [
+        "bpc",
+        "perplexity",
+        "accuracy"],
+    "num_classes": 10,
+    "optimizer": "sgd",
+    "input_shape": [
+        3072],
+    "num_layers": 1}
+
+launch parameters:
+{
+    "set_passed_parameters_as_default": False,
+    "kwargs": {
+        "save_path": "sgd_dense",
+        "batch_size": 32,
+        "additions_to_feed_dict": [
+            {
+                "value": 0.9,
+                "placeholder": "dropout"}],
+        "checkpoint_steps": None,
+        "add_graph_to_summary": False,
+        "train_batch_kwargs": {
+            "valid_size": 1000},
+        "valid_batch_kwargs": {
+            "valid_size": 1000},
+        "printed_result_types": [
+            "perplexity",
+            "loss",
+            "bpc",
+            "accuracy"],
+        "train_dataset": {
+            "train": "train"},
+        "learning_rate": {
+            "value": 0.003,
+            "type": "fixed"},
+        "stop": 1000,
+        "summary": False,
+        "allow_growth": True,
+        "no_validation": False,
+        "result_types": [
+            "perplexity",
+            "loss",
+            "bpc",
+            "accuracy"],
+        "results_collect_interval": 200,
+        "validation_datasets": {
+            "valid": "validation"},
+        "validation_additions_to_feed_dict": [
+            {
+                "value": 1.0,
+                "placeholder": "dropout"}]},
+    "args": (,),
+    "start_session": True,
+    "close_session": True}
+
+default launch parameters:
+{
+    "start_specs": {
+        "save_path": None,
+        "batch_generator_class": <class 'learning_to_learn.image_batch_gens.CifarBatchGenerator'>,
+        "restore_path": None,
+        "add_graph_to_summary": False,
+        "summary": False,
+        "result_types": [
+            "loss",
+            "perplexity",
+            "accuracy"],
+        "with_meta_optimizer": False,
+        "vocabulary": None,
+        "restore_optimizer_path": None},
+    "session_specs": {
+        "log_device_placement": False,
+        "gpu_memory": None,
+        "visible_device_list": "",
+        "allow_soft_placement": False,
+        "allow_growth": False},
+    "run": {
+        "train_specs": {
+            "batch_size": {
+                "type": "fixed",
+                "value": 64,
+                "name": "batch_size"},
+            "checkpoint_steps": None,
+            "validate_tokens_by_chars": False,
+            "validation_batch_size": 1,
+            "additions_to_feed_dict": [],
+            "valid_batch_kwargs": {},
+            "train_dataset": None,
+            "debug": None,
+            "learning_rate": {
+                "period": 1000,
+                "type": "exponential_decay",
+                "init": 0.002,
+                "decay": 0.8,
+                "name": "learning_rate"},
+            "no_validation": False,
+            "train_batch_kwargs": {},
+            "stop": {
+                "type": "limit_steps",
+                "name": "stop",
+                "limit": 10000},
+            "validation_datasets": None,
+            "validation_additions_to_feed_dict": []},
+        "schedule": {
+            "fuse_tensors": {
+                "fuse_save_tensors": {},
+                "fuse_print_tensors": {}},
+            "example_length": None,
+            "to_be_collected_while_training": {
+                "print_per_collected": 1,
+                "results_collect_interval": 100,
+                "example_per_print": 1},
+            "random": {
+                "number_of_runs": 5,
+                "length": 80},
+            "fuses": None,
+            "validation_tensor_schedule": {
+                "valid_print_tensors": {},
+                "valid_save_text_tensors": {}},
+            "example_tensors": {
+                "example_print_tensors": {},
+                "example_save_tensors": {}},
+            "printed_controllers": [
+                "learning_rate"],
+            "train_tensor_schedule": {
+                "train_save_text_tensors": {},
+                "train_save_tensors": {},
+                "train_print_text_tensors": {},
+                "train_print_tensors": {},
+                "train_summary_tensors": {}},
+            "printed_result_types": [
+                "loss"],
+            "replicas": None}}}
+
+
+finish time: 2018-06-29 14:44:10.799386

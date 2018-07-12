@@ -1,0 +1,146 @@
+confs: []
+dataset: valid
+  loss: 1.2570195198059082
+    learning_rate/init: 1e-08
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+
+step: 0
+learning_rate: 1e-08
+results on train dataset
+loss: 0.7354671
+bpc: 1.0610547
+perplexity: 2.8628812
+accuracy: 0.6875
+
+Creating pupil checkpoint at nesterov/loss_best/test/training/checkpoints/best
+
+
+step: 1000
+learning_rate: 1e-08
+results on train dataset
+loss: 0.8679894
+bpc: 1.252244
+perplexity: 3.2184005
+accuracy: 0.6875
+
+Creating pupil checkpoint at nesterov/loss_best/test/training/checkpoints/final
+restoring pupil from nesterov/loss_best/test/training/checkpoints/final
+Testing!
+Validation dataset name: test
+Validation dataset_size:
+Either dataset is not text or dataset size is less than 100: 4
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (10000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (10000,)
+results on validation dataset test
+loss: 1.280119776725769
+perplexity: 3.5155885219573975
+accuracy: 0.5570998787879944
+  perplexity: 1.0000001192092896
+    learning_rate/init: 7.9e-05
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+
+step: 0
+learning_rate: 7.9e-05
+results on train dataset
+loss: 1.0416753
+bpc: 1.5028198
+perplexity: 3.4318585
+accuracy: 0.59375
+
+Creating pupil checkpoint at nesterov/perplexity_best/test/training/checkpoints/best
+
+
+step: 1000
+learning_rate: 7.9e-05
+results on train dataset
+loss: 24989.06
+bpc: 36051.594
+perplexity: 1.0
+accuracy: 0.3125
+
+Creating pupil checkpoint at nesterov/perplexity_best/test/training/checkpoints/final
+restoring pupil from nesterov/perplexity_best/test/training/checkpoints/final
+Testing!
+Validation dataset name: test
+Validation dataset_size:
+Either dataset is not text or dataset size is less than 100: 4
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (10000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (10000,)
+results on validation dataset test
+loss: 29480.716796875
+perplexity: 1.0000205039978027
+accuracy: 0.24189996719360352
+  accuracy: 0.5920000076293945
+    learning_rate/init: 1e-08
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+
+step: 0
+learning_rate: 1e-08
+results on train dataset
+loss: 0.9645982
+bpc: 1.391621
+perplexity: 3.9493194
+accuracy: 0.71875
+
+Creating pupil checkpoint at nesterov/accuracy_best/test/training/checkpoints/best
+
+
+step: 1000
+learning_rate: 1e-08
+results on train dataset
+loss: 0.75565624
+bpc: 1.0901815
+perplexity: 3.0326533
+accuracy: 0.8125
+
+Creating pupil checkpoint at nesterov/accuracy_best/test/training/checkpoints/final
+restoring pupil from nesterov/accuracy_best/test/training/checkpoints/final
+Testing!
+Validation dataset name: test
+Validation dataset_size:
+Either dataset is not text or dataset size is less than 100: 4
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (10000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (10000,)
+results on validation dataset test
+loss: 1.280127763748169
+perplexity: 3.515986680984497
+accuracy: 0.5577998757362366
+  bpc: 1.8134958744049072
+    learning_rate/init: 1e-08
+restoring pupil from ../cifar10_max_train/adagrad/0/checkpoints/best
+
+
+step: 0
+learning_rate: 1e-08
+results on train dataset
+loss: 1.07599
+bpc: 1.5523254
+perplexity: 3.6772041
+accuracy: 0.8125
+
+Creating pupil checkpoint at nesterov/bpc_best/test/training/checkpoints/best
+
+
+step: 1000
+learning_rate: 1e-08
+results on train dataset
+loss: 0.63347673
+bpc: 0.9139137
+perplexity: 3.104216
+accuracy: 0.8125
+
+Creating pupil checkpoint at nesterov/bpc_best/test/training/checkpoints/final
+restoring pupil from nesterov/bpc_best/test/training/checkpoints/final
+Testing!
+Validation dataset name: test
+Validation dataset_size:
+Either dataset is not text or dataset size is less than 100: 4
+(image_batch_gens.CifarBatchGenerator(test or valid))inp.shape: (10000, 3072)
+(image_batch_gens.CifarBatchGenerator(test or valid))lbl.shape: (10000,)
+results on validation dataset test
+loss: 1.2801077365875244
+perplexity: 3.5163724422454834
+accuracy: 0.5570998787879944

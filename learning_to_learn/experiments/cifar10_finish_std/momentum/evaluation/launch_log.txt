@@ -1,0 +1,263 @@
+2018-06-18 18:40:12.515944
+
+launch regime: several_launches
+
+all_parameters:
+{
+    "evaluation": {
+        "save_path": "momentum/evaluation",
+        "result_types": [
+            "perplexity",
+            "loss",
+            "bpc",
+            "accuracy"],
+        "datasets": [
+            (
+                "validation",
+                "valid")],
+        "batch_gen_class": <class 'learning_to_learn.image_batch_gens.CifarBatchGenerator'>,
+        "batch_kwargs": {
+            "valid_size": 1000},
+        "batch_size": None,
+        "additional_feed_dict": [
+            {
+                "placeholder": "dropout",
+                "value": 1.0}]},
+    "kwargs_for_building": {
+        "batch_size": 32,
+        "num_layers": 2,
+        "num_hidden_nodes": [
+            1000],
+        "input_shape": [
+            3072],
+        "num_classes": 10,
+        "init_parameter": 3.0,
+        "additional_metrics": [
+            "bpc",
+            "perplexity",
+            "accuracy"],
+        "regularization_rate": 1e-05,
+        "optimizer": "momentum"},
+    "build_hyperparameters": {},
+    "other_hyperparameters": {
+        "learning_rate": {
+            "varying": {
+                "init": [
+                    1e-08,
+                    1.1e-08,
+                    1.3e-08,
+                    1.5e-08,
+                    1.7e-08,
+                    2e-08,
+                    2.3e-08,
+                    2.6e-08,
+                    3e-08,
+                    3.5e-08,
+                    4e-08,
+                    4.6e-08,
+                    5.2e-08,
+                    6e-08,
+                    6.9e-08,
+                    7.9e-08,
+                    9.1e-08,
+                    1e-07,
+                    1.2e-07,
+                    1.4e-07,
+                    1.6e-07,
+                    1.8e-07,
+                    2.1e-07,
+                    2.4e-07,
+                    2.8e-07,
+                    3.2e-07,
+                    3.6e-07,
+                    4.2e-07,
+                    4.8e-07,
+                    5.5e-07,
+                    6.3e-07,
+                    7.2e-07,
+                    8.3e-07,
+                    9.5e-07,
+                    1.1e-06,
+                    1.3e-06,
+                    1.4e-06,
+                    1.7e-06,
+                    1.9e-06,
+                    2.2e-06,
+                    2.5e-06,
+                    2.9e-06,
+                    3.3e-06,
+                    3.8e-06,
+                    4.4e-06,
+                    5e-06,
+                    5.8e-06,
+                    6.6e-06,
+                    7.6e-06,
+                    8.7e-06,
+                    1e-05,
+                    1.1e-05,
+                    1.3e-05,
+                    1.5e-05,
+                    1.7e-05,
+                    2e-05,
+                    2.3e-05,
+                    2.6e-05,
+                    3e-05,
+                    3.5e-05,
+                    4e-05,
+                    4.6e-05,
+                    5.2e-05,
+                    6e-05,
+                    6.9e-05,
+                    7.9e-05,
+                    9.1e-05,
+                    0.0001,
+                    0.00012,
+                    0.00014,
+                    0.00016,
+                    0.00018,
+                    0.00021,
+                    0.00024,
+                    0.00028,
+                    0.00032,
+                    0.00036,
+                    0.00042,
+                    0.00048,
+                    0.00055,
+                    0.00063,
+                    0.00072,
+                    0.00083,
+                    0.00095,
+                    0.0011,
+                    0.0013,
+                    0.0014,
+                    0.0017,
+                    0.0019,
+                    0.0022,
+                    0.0025,
+                    0.0029,
+                    0.0033,
+                    0.0038,
+                    0.0044,
+                    0.005,
+                    0.0058,
+                    0.0066,
+                    0.0076,
+                    0.0087,
+                    0.01]},
+            "fixed": {
+                "decay": 1.0,
+                "period": 1000000.0},
+            "hp_type": "built-in",
+            "type": "exponential_decay"}},
+    "initial_experiment_counter_value": 0,
+    "kwargs": {
+        "allow_growth": True,
+        "result_types": [
+            "loss",
+            "bpc",
+            "perplexity",
+            "accuracy"],
+        "additions_to_feed_dict": [
+            {
+                "placeholder": "dropout",
+                "value": 0.9},
+            {
+                "placeholder": "momentum",
+                "value": 0.98}],
+        "restore_path": "../cifar10_max_train/adagrad/0/checkpoints/best",
+        "stop": 1000,
+        "results_collect_interval": 1000,
+        "summary": False,
+        "add_graph_to_summary": False,
+        "train_dataset": {
+            "train": "train"},
+        "train_batch_kwargs": {
+            "valid_size": 1000},
+        "valid_batch_kwargs": {
+            "valid_size": 1000},
+        "validation_datasets": {
+            "valid": "validation"},
+        "batch_size": 32,
+        "no_validation": True}}
+
+train method default parameters:
+{
+    "session_specs": {
+        "allow_soft_placement": False,
+        "gpu_memory": None,
+        "allow_growth": False,
+        "log_device_placement": False,
+        "visible_device_list": ""},
+    "start_specs": {
+        "restore_path": None,
+        "with_meta_optimizer": False,
+        "meta_optimizer_restore_path": None,
+        "save_path": None,
+        "result_types": [
+            "loss",
+            "perplexity",
+            "accuracy"],
+        "summary": False,
+        "add_graph_to_summary": False,
+        "batch_generator_class": <class 'learning_to_learn.image_batch_gens.CifarBatchGenerator'>,
+        "vocabulary": None},
+    "run": {
+        "train_specs": {
+            "learning_rate": {
+                "init": 0.002,
+                "decay": 0.8,
+                "period": 1000,
+                "type": "exponential_decay",
+                "name": "learning_rate"},
+            "additions_to_feed_dict": [],
+            "stop": {
+                "type": "limit_steps",
+                "limit": 10000,
+                "name": "stop"},
+            "train_dataset": None,
+            "batch_size": {
+                "type": "fixed",
+                "value": 64,
+                "name": "batch_size"},
+            "train_batch_kwargs": {},
+            "checkpoint_steps": None,
+            "debug": None,
+            "validation_datasets": None,
+            "validation_additions_to_feed_dict": [],
+            "validation_batch_size": 1,
+            "valid_batch_kwargs": {},
+            "validate_tokens_by_chars": False,
+            "no_validation": False},
+        "schedule": {
+            "to_be_collected_while_training": {
+                "results_collect_interval": 100,
+                "print_per_collected": 1,
+                "example_per_print": 1},
+            "printed_result_types": [
+                "loss"],
+            "printed_controllers": [
+                "learning_rate"],
+            "fuses": None,
+            "fuse_tensors": {
+                "fuse_print_tensors": {},
+                "fuse_save_tensors": {}},
+            "example_length": None,
+            "example_tensors": {
+                "example_print_tensors": {},
+                "example_save_tensors": {}},
+            "replicas": None,
+            "random": {
+                "number_of_runs": 5,
+                "length": 80},
+            "train_tensor_schedule": {
+                "train_print_tensors": {},
+                "train_save_tensors": {},
+                "train_print_text_tensors": {},
+                "train_save_text_tensors": {},
+                "train_summary_tensors": {}},
+            "validation_tensor_schedule": {
+                "valid_print_tensors": {},
+                "valid_save_text_tensors": {}}}}}
+
+
+finish time: 2018-06-18 19:46:22.899349

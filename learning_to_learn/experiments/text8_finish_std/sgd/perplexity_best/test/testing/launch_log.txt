@@ -1,0 +1,141 @@
+2018-06-18 20:11:44.677266
+
+launch regime: test
+
+build parameters:
+{
+    "batch_size": 32,
+    "num_layers": 1,
+    "num_nodes": [
+        100],
+    "num_output_layers": 1,
+    "num_output_nodes": [],
+    "vocabulary_size": 27,
+    "embedding_size": 150,
+    "num_unrollings": 10,
+    "num_gpus": 1,
+    "regime": "autonomous_training",
+    "additional_metrics": [
+        "bpc",
+        "perplexity",
+        "accuracy"],
+    "going_to_limit_memory": True,
+    "optimizer": "sgd"}
+
+launch parameters:
+{
+    "restore_path": VERY_LONG_STRING,
+    "save_path": "sgd/perplexity_best/test/testing",
+    "additions_to_feed_dict": [
+        {
+            "placeholder": "dropout",
+            "value": 1.0}],
+    "validation_datasets": {
+        "test": "test"},
+    "valid_batch_kwargs": {
+        "vocabulary": [
+            " ",
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            "f",
+            "g",
+            "h",
+            "i",
+            "j",
+            "k",
+            "l",
+            "m",
+            "n",
+            "o",
+            "p",
+            "q",
+            "r",
+            "s",
+            "t",
+            "u",
+            "v",
+            "w",
+            "x",
+            "y",
+            "z"]},
+    "printed_result_types": [
+        "perplexity",
+        "loss",
+        "bpc",
+        "accuracy"]}
+
+default launch parameters:
+{
+    "session_specs": {
+        "allow_soft_placement": False,
+        "gpu_memory": None,
+        "allow_growth": False,
+        "log_device_placement": False,
+        "visible_device_list": ""},
+    "start_specs": {
+        "restore_path": None,
+        "save_path": None,
+        "print_results": True,
+        "result_types": [
+            "loss",
+            "perplexity",
+            "accuracy"],
+        "verbose": True,
+        "batch_generator_class": <class 'learning_to_learn.pupils.lstm_for_meta.LstmFastBatchGenerator'>,
+        "vocabulary": [
+            " ",
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            "f",
+            "g",
+            "h",
+            "i",
+            "j",
+            "k",
+            "l",
+            "m",
+            "n",
+            "o",
+            "p",
+            "q",
+            "r",
+            "s",
+            "t",
+            "u",
+            "v",
+            "w",
+            "x",
+            "y",
+            "z"]},
+    "work": {
+        "additions_to_feed_dict": [],
+        "debug": None,
+        "validation_datasets": None,
+        "validation_batch_size": 1,
+        "validate_tokens_by_chars": False,
+        "valid_batch_kwargs": {},
+        "printed_result_types": [
+            "loss"],
+        "fuses": None,
+        "fuse_tensors": {
+            "fuse_print_tensors": {},
+            "fuse_save_tensors": {}},
+        "fuse_file_name": None,
+        "example_length": None,
+        "example_tensors": {
+            "example_print_tensors": {},
+            "example_save_tensors": {}},
+        "replicas": None,
+        "random": {
+            "number_of_runs": 5,
+            "length": 80},
+        "validation_tensor_schedule": {
+            "valid_print_tensors": {},
+            "valid_save_text_tensors": {}}}}
+

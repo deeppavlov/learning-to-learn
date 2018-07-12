@@ -1,0 +1,47 @@
+confs: []
+{'valid': {'loss': [(0.00055,), 1.2696988391460327], 'perplexity': [(0.0019,), 5.863883113503456], 'accuracy': [(0.00055,), 0.613], 'bpc': [(0.00055,), 1.831788213250984]}}
+dataset: valid
+  loss: 1.2696988391460327
+    learning_rate/init: 0.00055
+restoring pupil from ../text8_finish_std/rmsprop/loss_best/test/training/checkpoints/final
+Testing!
+Validation dataset name: default_0
+Validation dataset_size:
+100000
+results on validation dataset default_0
+loss: 1.4054410933222112
+perplexity: 6.069386549569368
+accuracy: 0.56343
+  perplexity: 5.863883113503456
+    learning_rate/init: 0.0019
+restoring pupil from ../text8_finish_std/rmsprop/perplexity_best/test/training/checkpoints/final
+Testing!
+Validation dataset name: default_0
+Validation dataset_size:
+100000
+results on validation dataset default_0
+loss: 1.4372790144759797
+perplexity: 6.099066659675836
+accuracy: 0.55399
+  accuracy: 0.613
+    learning_rate/init: 0.00055
+restoring pupil from ../text8_finish_std/rmsprop/accuracy_best/test/training/checkpoints/final
+Testing!
+Validation dataset name: default_0
+Validation dataset_size:
+100000
+results on validation dataset default_0
+loss: 1.4053147549645437
+perplexity: 6.076190987160206
+accuracy: 0.56424
+  bpc: 1.831788213250984
+    learning_rate/init: 0.00055
+restoring pupil from ../text8_finish_std/rmsprop/bpc_best/test/training/checkpoints/final
+Testing!
+Validation dataset name: default_0
+Validation dataset_size:
+100000
+results on validation dataset default_0
+loss: 1.4054000725819191
+perplexity: 6.070611214479208
+accuracy: 0.56445

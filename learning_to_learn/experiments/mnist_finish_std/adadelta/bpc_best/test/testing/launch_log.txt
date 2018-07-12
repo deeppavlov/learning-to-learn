@@ -1,0 +1,82 @@
+2018-06-18 19:35:42.274833
+
+launch regime: test
+
+build parameters:
+{
+    "batch_size": 32,
+    "num_layers": 2,
+    "num_hidden_nodes": [
+        1000],
+    "input_shape": [
+        784],
+    "num_classes": 10,
+    "additional_metrics": [
+        "bpc",
+        "perplexity",
+        "accuracy"],
+    "optimizer": "adadelta"}
+
+launch parameters:
+{
+    "restore_path": "adadelta/bpc_best/test/training/checkpoints/final",
+    "save_path": "adadelta/bpc_best/test/testing",
+    "additions_to_feed_dict": [
+        {
+            "placeholder": "dropout",
+            "value": 1.0}],
+    "validation_datasets": {
+        "test": "test"},
+    "valid_batch_kwargs": {
+        "data_dir": "../../../datasets/mnist"},
+    "printed_result_types": [
+        "perplexity",
+        "loss",
+        "bpc",
+        "accuracy"]}
+
+default launch parameters:
+{
+    "session_specs": {
+        "allow_soft_placement": False,
+        "gpu_memory": None,
+        "allow_growth": False,
+        "log_device_placement": False,
+        "visible_device_list": ""},
+    "start_specs": {
+        "restore_path": None,
+        "save_path": None,
+        "print_results": True,
+        "result_types": [
+            "loss",
+            "perplexity",
+            "accuracy"],
+        "verbose": True,
+        "batch_generator_class": <class 'learning_to_learn.image_batch_gens.MnistBatchGenerator'>,
+        "vocabulary": None},
+    "work": {
+        "additions_to_feed_dict": [],
+        "debug": None,
+        "validation_datasets": None,
+        "validation_batch_size": 1,
+        "validate_tokens_by_chars": False,
+        "valid_batch_kwargs": {},
+        "printed_result_types": [
+            "loss"],
+        "fuses": None,
+        "fuse_tensors": {
+            "fuse_print_tensors": {},
+            "fuse_save_tensors": {}},
+        "fuse_file_name": None,
+        "example_length": None,
+        "example_tensors": {
+            "example_print_tensors": {},
+            "example_save_tensors": {}},
+        "replicas": None,
+        "random": {
+            "number_of_runs": 5,
+            "length": 80},
+        "validation_tensor_schedule": {
+            "valid_print_tensors": {},
+            "valid_save_text_tensors": {}}}}
+

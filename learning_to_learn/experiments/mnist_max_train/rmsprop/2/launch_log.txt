@@ -1,0 +1,156 @@
+2018-06-18 15:00:58.765784
+
+launch regime: train
+
+build parameters:
+{
+    "init_parameter": 1.5,
+    "input_shape": [
+        784],
+    "num_layers": 2,
+    "batch_size": 32,
+    "num_classes": 10,
+    "optimizer": "rmsprop",
+    "num_hidden_nodes": [
+        1000],
+    "additional_metrics": [
+        "bpc",
+        "perplexity",
+        "accuracy"]}
+
+launch parameters:
+{
+    "kwargs": {
+        "additions_to_feed_dict": [
+            {
+                "value": 0.9,
+                "placeholder": "dropout"}],
+        "no_validation": False,
+        "printed_result_types": [
+            "perplexity",
+            "loss",
+            "bpc",
+            "accuracy"],
+        "allow_growth": True,
+        "stop": {
+            "path_to_target_metric_storage": (
+                "valid",
+                "loss"),
+            "max_no_progress_points": 20,
+            "type": "while_progress",
+            "changing_parameter_name": "learning_rate"},
+        "save_path": "rmsprop/2",
+        "batch_size": 32,
+        "learning_rate": {
+            "decay": 0.5,
+            "path_to_target_metric_storage": (
+                "valid",
+                "loss"),
+            "init": 0.002,
+            "type": "adaptive_change",
+            "max_no_progress_points": 20},
+        "result_types": [
+            "perplexity",
+            "loss",
+            "bpc",
+            "accuracy"],
+        "checkpoint_steps": None,
+        "validation_datasets": {
+            "valid": "validation"},
+        "valid_batch_kwargs": {
+            "data_dir": "../../../datasets/mnist"},
+        "train_batch_kwargs": {
+            "data_dir": "../../../datasets/mnist"},
+        "results_collect_interval": 100,
+        "train_dataset": {
+            "train": "train"},
+        "validation_additions_to_feed_dict": [
+            {
+                "value": 1.0,
+                "placeholder": "dropout"}]},
+    "args": (,),
+    "start_session": True,
+    "set_passed_parameters_as_default": False,
+    "close_session": True}
+
+default launch parameters:
+{
+    "start_specs": {
+        "batch_generator_class": <class 'learning_to_learn.image_batch_gens.MnistBatchGenerator'>,
+        "meta_optimizer_restore_path": None,
+        "with_meta_optimizer": False,
+        "summary": False,
+        "save_path": None,
+        "add_graph_to_summary": False,
+        "vocabulary": None,
+        "result_types": [
+            "loss",
+            "perplexity",
+            "accuracy"],
+        "restore_path": None},
+    "session_specs": {
+        "log_device_placement": False,
+        "gpu_memory": None,
+        "allow_soft_placement": False,
+        "allow_growth": False,
+        "visible_device_list": ""},
+    "run": {
+        "train_specs": {
+            "additions_to_feed_dict": [],
+            "valid_batch_kwargs": {},
+            "debug": None,
+            "stop": {
+                "type": "limit_steps",
+                "name": "stop",
+                "limit": 10000},
+            "validate_tokens_by_chars": False,
+            "batch_size": {
+                "value": 64,
+                "type": "fixed",
+                "name": "batch_size"},
+            "learning_rate": {
+                "decay": 0.8,
+                "init": 0.002,
+                "type": "exponential_decay",
+                "name": "learning_rate",
+                "period": 1000},
+            "validation_datasets": None,
+            "checkpoint_steps": None,
+            "no_validation": False,
+            "validation_batch_size": 1,
+            "train_batch_kwargs": {},
+            "train_dataset": None,
+            "validation_additions_to_feed_dict": []},
+        "schedule": {
+            "to_be_collected_while_training": {
+                "print_per_collected": 1,
+                "results_collect_interval": 100,
+                "example_per_print": 1},
+            "printed_result_types": [
+                "loss"],
+            "fuses": None,
+            "train_tensor_schedule": {
+                "train_save_text_tensors": {},
+                "train_print_tensors": {},
+                "train_summary_tensors": {},
+                "train_print_text_tensors": {},
+                "train_save_tensors": {}},
+            "example_tensors": {
+                "example_save_tensors": {},
+                "example_print_tensors": {}},
+            "printed_controllers": [
+                "learning_rate"],
+            "random": {
+                "length": 80,
+                "number_of_runs": 5},
+            "fuse_tensors": {
+                "fuse_print_tensors": {},
+                "fuse_save_tensors": {}},
+            "example_length": None,
+            "validation_tensor_schedule": {
+                "valid_print_tensors": {},
+                "valid_save_text_tensors": {}},
+            "replicas": None}}}
+
+
+finish time: 2018-06-18 15:02:36.757515
