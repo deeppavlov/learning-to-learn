@@ -24,3 +24,13 @@ subword_nmt/**
 *train.txt
 *default_0.txt
 *log.txt
+*test.txt
+*log#*.txt
+*.pyc
+*.png
+*.pdf
+*.jpg
+*bpc.txt
+*accuracy.txt
+*loss.txt
+*perplexity.txt
