@@ -91,6 +91,12 @@ class DatasetSizeError(Exception):
         self.message = message
 
 
+class HPLayoutMissingError(Exception):
+    def __init__(self, eval_dir, message):
+        self.eval_dir = eval_dir
+        self.message = message
+
+
 def create_vocabulary(text):
     all_characters = list()
     for char in text:
@@ -2068,7 +2074,12 @@ def add_stddev(data):
 
 def get_optimizer_evaluation_results(eval_dir, hp_order, averaging_number):
     eval_dir_contents = os.listdir(eval_dir)
-    eval_dir_contents.remove('hp_layout.txt')
+    try:
+        eval_dir_contents.remove('hp_layout.txt')
+    except ValueError:
+        raise HPLayoutMissingError(eval_dir, "File 'hp_layout.txt' is missing in dir '%s'" % eval_dir)
+    except:
+        raise
     edc = construct(eval_dir_contents)
     for entry in edc:
         if 'launch_log' in entry:
