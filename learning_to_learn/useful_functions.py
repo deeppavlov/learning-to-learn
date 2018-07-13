@@ -201,8 +201,8 @@ def create_and_save_vocabulary(input_file_name,
 
 
 def load_vocabulary_from_file(vocabulary_file_name):
-    input_f = open(vocabulary_file_name, 'r', encoding='utf-8')
-    vocabulary_string = input_f.read()
+    with open(vocabulary_file_name, 'r') as f:
+        vocabulary_string = f.read()
     return list(vocabulary_string)
 
 
@@ -306,41 +306,6 @@ def write_elem_in_obj_by_path(obj, path, elem):
     for k in path[:-1]:
         obj = obj[k]
     obj[path[-1]] = elem
-
-
-def maybe_download(filename, expected_bytes):
-    # Download a file if not present, and make sure it's the right size.
-    if not os.path.exists(filename):
-        filename, _ = urlretrieve(url + filename, filename)
-    statinfo = os.stat(filename)
-    if statinfo.st_size == expected_bytes:
-        print('Found and verified %s' % filename)
-    else:
-        print(statinfo.st_size)
-        raise Exception(
-            'Failed to verify ' + filename + '. Can you get to it with a browser?')
-    return filename
-
-
-def read_data(filename):
-    if not os.path.exists('enwik8'):
-        f = zipfile.ZipFile(filename)
-        for name in f.namelist():
-            full_text = tf.compat.as_str(f.read(name))
-        f.close()
-        """f = open('enwik8', 'w')
-        f.write(text.encode('utf8'))
-        f.close()"""
-    else:
-        f = open('enwik8', 'r')
-        full_text = f.read().decode('utf8')
-        f.close()
-    return full_text
-
-    f = codecs.open('enwik8', encoding='utf-8')
-    text = f.read()
-    f.close()
-    return text
 
 
 def flatten(nested):
