@@ -62,11 +62,17 @@ valid_add_feed = [
 SHARE_TRAIN_DATA = True
 checkpoints_path = os.path.join(*(['..']*ROOT_HEIGHT + ['lstm', 'text8_pretrain', 'checkpoints']))
 the_only_pupil_restore_path = os.path.join(checkpoints_path, '%s') % pretrain_step
-NUM_EXERCISES = 10
+NUM_EXERCISES = 1
+BATCH_SIZE = 32
+NUM_UNROLLINGS = 4
+NUM_OPTIMIZER_UNROLLINGS = 1
+RESET_PERIOD = 1
+OPTIMIZER_LEARNING_STEPS = 10000
+RESULTS_COLLECT_INTERVAL = 1
 evaluation = dict(
     save_path=save_path,
     opt_inf_is_performed=True,
-    opt_inf_stop=20,
+    opt_inf_stop=1,
     opt_inf_pupil_restore_paths={
         ('pretrain%s' % pretrain_step, the_only_pupil_restore_path)
     },
@@ -78,14 +84,14 @@ evaluation = dict(
 )
 
 kwargs_for_pupil_building = dict(
-    batch_size=32,
+    batch_size=BATCH_SIZE,
     num_layers=1,
     num_nodes=[100],
     num_output_layers=1,
     num_output_nodes=[],
     vocabulary_size=vocabulary_size,
     embedding_size=150,
-    num_unrollings=4,
+    num_unrollings=NUM_UNROLLINGS,
     init_parameter=3.,
     num_gpus=1,
     regime='training_with_meta_optimizer',
@@ -96,7 +102,7 @@ kwargs_for_pupil_building = dict(
 kwargs_for_optimizer_building = dict(
     regime='train',
     # regime='inference',
-    num_optimizer_unrollings=10,
+    num_optimizer_unrollings=NUM_OPTIMIZER_UNROLLINGS,
     num_exercises=NUM_EXERCISES,
     res_size=2000,
     permute=False,
@@ -111,19 +117,20 @@ launch_kwargs = dict(
         additions_to_feed_dict=train_opt_add_feed,
         pupil_restore_paths=[the_only_pupil_restore_path],
         # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
-        reset_period=1,
-        stop=1000,
+        reset_period=RESET_PERIOD,
+        stop=OPTIMIZER_LEARNING_STEPS,
         train_dataset_texts=[train_text],
         opt_inf_is_performed=False,
         num_exercises=NUM_EXERCISES,
         vocabulary=vocabulary,
-        batch_size=32,
-        num_unrollings=4,
-        results_collect_interval=200,
+        batch_size=BATCH_SIZE,
+        num_unrollings=NUM_UNROLLINGS,
+        results_collect_interval=RESULTS_COLLECT_INTERVAL,
         # opt_inf_results_collect_interval=1,
         permute=False,
     )
 
+tf.set_random_seed(1)
 for conf in confs:
     build_pupil_hyperparameters = dict(
     )
@@ -147,8 +154,6 @@ for conf in confs:
         )
     )
 
-
-    tf.set_random_seed(1)
     _, biggest_idx, _ = get_num_exps_and_res_files(save_path)
     if biggest_idx is None:
         initial_experiment_counter_value = 0
