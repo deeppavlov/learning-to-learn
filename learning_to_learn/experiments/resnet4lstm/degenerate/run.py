@@ -20,14 +20,9 @@ from learning_to_learn.optimizers.res_net_opt import ResNet4Lstm
 
 import os
 
-pretrain_step = sys.argv[1]
-parameter_set_file_name = sys.argv[2]
-if len(sys.argv) > 3:
-    chop_last_experiment = bool(sys.argv[3])
-else:
-    chop_last_experiment = False
+parameter_set_file_name = sys.argv[1]
 save_path = os.path.join(parameter_set_file_name.split('.')[0], 'evaluation')
-confs, _ = compose_hp_confs(parameter_set_file_name, save_path, chop_last_experiment=chop_last_experiment)
+confs, _ = compose_hp_confs(parameter_set_file_name, save_path, chop_last_experiment=False)
 confs.reverse()  # start with small configs
 print("confs:", confs)
 
@@ -60,21 +55,21 @@ valid_add_feed = [
 ]
 
 SHARE_TRAIN_DATA = True
-checkpoints_path = os.path.join(*(['..']*ROOT_HEIGHT + ['lstm', 'text8_pretrain', 'checkpoints']))
-the_only_pupil_restore_path = os.path.join(checkpoints_path, '%s') % pretrain_step
+the_only_pupil_restore_path = None
+PUPIL_NAME = 'COLD'
 NUM_EXERCISES = 1
 BATCH_SIZE = 32
 NUM_UNROLLINGS = 4
 NUM_OPTIMIZER_UNROLLINGS = 1
 RESET_PERIOD = 1
 OPTIMIZER_LEARNING_STEPS = 10000
-RESULTS_COLLECT_INTERVAL = 1
+RESULTS_COLLECT_INTERVAL = 1000
 evaluation = dict(
     save_path=save_path,
     opt_inf_is_performed=True,
     opt_inf_stop=1,
     opt_inf_pupil_restore_paths={
-        ('pretrain%s' % pretrain_step, the_only_pupil_restore_path)
+        (PUPIL_NAME, the_only_pupil_restore_path)
     },
     opt_inf_additions_to_feed_dict=opt_inf_add_feed,
     opt_inf_validation_dataset_texts=[valid_text],
@@ -111,24 +106,25 @@ kwargs_for_optimizer_building = dict(
 )
 
 launch_kwargs = dict(
-        allow_growth=True,
-        # save_path='debug_grid_search',
-        result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
-        additions_to_feed_dict=train_opt_add_feed,
-        pupil_restore_paths=[the_only_pupil_restore_path],
-        # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
-        reset_period=RESET_PERIOD,
-        stop=OPTIMIZER_LEARNING_STEPS,
-        train_dataset_texts=[train_text],
-        opt_inf_is_performed=False,
-        num_exercises=NUM_EXERCISES,
-        vocabulary=vocabulary,
-        batch_size=BATCH_SIZE,
-        num_unrollings=NUM_UNROLLINGS,
-        results_collect_interval=RESULTS_COLLECT_INTERVAL,
-        # opt_inf_results_collect_interval=1,
-        permute=False,
-    )
+    allow_growth=True,
+    # save_path='debug_grid_search',
+    result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
+    additions_to_feed_dict=train_opt_add_feed,
+    pupil_restore_paths=[the_only_pupil_restore_path],
+    # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
+    reset_period=RESET_PERIOD,
+    stop=OPTIMIZER_LEARNING_STEPS,
+    train_dataset_texts=[train_text],
+    opt_inf_is_performed=False,
+    num_exercises=NUM_EXERCISES,
+    vocabulary=vocabulary,
+    batch_size=BATCH_SIZE,
+    num_unrollings=NUM_UNROLLINGS,
+    results_collect_interval=RESULTS_COLLECT_INTERVAL,
+    batch_gen_init_is_random=False,
+    # opt_inf_results_collect_interval=1,
+    permute=False,
+)
 
 tf.set_random_seed(1)
 for conf in confs:
@@ -143,7 +139,7 @@ for conf in confs:
     other_hyperparameters = dict(
         learning_rate=dict(
             varying=dict(
-                init=conf['learning_rate']
+                init=conf['learning_rate/init']
             ),
             fixed=dict(
                 decay=.1,
