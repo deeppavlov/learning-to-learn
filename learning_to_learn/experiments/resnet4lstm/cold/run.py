@@ -61,8 +61,8 @@ valid_add_feed = [
 ]
 
 SHARE_TRAIN_DATA = True
-checkpoints_path = os.path.join(*(['..']*ROOT_HEIGHT + ['lstm', 'text8_pretrain', 'checkpoints']))
-the_only_pupil_restore_path = None
+checkpoints_path = os.path.join(*(['..']*ROOT_HEIGHT + ['lstm', 'start', 'checkpoints']))
+the_only_pupil_restore_path = os.path.join(checkpoints_path, 'start')
 PUPIL_NAME = 'COLD'
 NUM_EXERCISES = 10
 evaluation = dict(

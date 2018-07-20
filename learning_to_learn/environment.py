@@ -1552,6 +1552,8 @@ class Environment(object):
         init_step = 0
         # if 'reset_pupil_train_state' in self._hooks:
         #     self._session.run(self._hooks['reset_pupil_train_state'])
+        if checkpoints_path is not None:
+            self._create_checkpoint('start', checkpoints_path)
         t1 = time.clock()
         for run_specs in run_specs_set:
             init_step = self._train(run_specs,
@@ -1702,8 +1704,14 @@ class Environment(object):
                     pupil_grad_eval_batch_gens
             ):
                 if isinstance(inp_placeholder, list):
-                    for inp_plhld, lbl_plhld in zip(inp_placeholder, lbl_placeholder):
+                    for idx, (inp_plhld, lbl_plhld) in enumerate(zip(inp_placeholder, lbl_placeholder)):
                         inp, lbl = b_gen.next()
+                        # print(
+                        #     "\n\npupil grad eval\n"
+                        #     "(Environment._fill_train_meta_optimizer_feed_dict_with_inputs_and_labels)inp:\n",
+                        #     inp
+                        # )
+                        # print("(Environment._fill_train_meta_optimizer_feed_dict_with_inputs_and_labels)lbl:\n", lbl)
                         feed_dict[inp_plhld] = inp
                         feed_dict[lbl_plhld] = lbl
                 else:
@@ -1716,8 +1724,14 @@ class Environment(object):
                     optimizer_grad_batch_gens
             ):
                 if isinstance(inp_placeholder, list):
-                    for inp_plhld, lbl_plhld in zip(inp_placeholder, lbl_placeholder):
+                    for idx, (inp_plhld, lbl_plhld) in enumerate(zip(inp_placeholder, lbl_placeholder)):
                         inp, lbl = b_gen.next()
+                        # print(
+                        #     "\n\noptimizer grad eval\n"
+                        #     "(Environment._fill_train_meta_optimizer_feed_dict_with_inputs_and_labels)inp:\n",
+                        #     inp
+                        # )
+                        # print("(Environment._fill_train_meta_optimizer_feed_dict_with_inputs_and_labels)lbl:\n", lbl)
                         feed_dict[inp_plhld] = inp
                         feed_dict[lbl_plhld] = lbl
                 else:
@@ -2124,6 +2138,7 @@ class Environment(object):
             evaluation,
             meta_optimizer_build_kwargs
     ):
+        tf.set_random_seed(1)
         self._build_pupil(kwargs_for_building)
         if meta_optimizer_build_kwargs is not None:
             self.build_optimizer(**meta_optimizer_build_kwargs)

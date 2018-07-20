@@ -31,7 +31,7 @@ dname = os.path.dirname(abspath)
 os.chdir(dname)
 dataset_path = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'text8.txt']))
 valid_size = 500
-vocabulary, train_text, valid_text, _ = load_text_dataset('text8.txt', valid_size, None)
+vocabulary, train_text, valid_text, _ = load_text_dataset('text8.txt', None, valid_size, None)
 vocabulary_size = len(vocabulary)
 
 env = Environment(
@@ -55,15 +55,16 @@ valid_add_feed = [
 ]
 
 SHARE_TRAIN_DATA = True
-the_only_pupil_restore_path = None
+checkpoints_path = os.path.join(*(['..']*ROOT_HEIGHT + ['lstm', 'start', 'checkpoints']))
+the_only_pupil_restore_path = os.path.join(checkpoints_path, 'start')
 PUPIL_NAME = 'COLD'
 NUM_EXERCISES = 1
-BATCH_SIZE = 32
-NUM_UNROLLINGS = 4
+BATCH_SIZE = 1
+NUM_UNROLLINGS = 3
 NUM_OPTIMIZER_UNROLLINGS = 1
 RESET_PERIOD = 1
 OPTIMIZER_LEARNING_STEPS = 10000
-RESULTS_COLLECT_INTERVAL = 1000
+RESULTS_COLLECT_INTERVAL = 100
 evaluation = dict(
     save_path=save_path,
     opt_inf_is_performed=True,
@@ -107,7 +108,7 @@ kwargs_for_optimizer_building = dict(
 
 launch_kwargs = dict(
     allow_growth=True,
-    # save_path='debug_grid_search',
+    save_path='training',
     result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
     additions_to_feed_dict=train_opt_add_feed,
     pupil_restore_paths=[the_only_pupil_restore_path],
