@@ -2,7 +2,7 @@ import os
 from learning_to_learn.useful_functions import create_vocabulary
 
 
-def load_text_dataset(path, test_size, valid_size, train_size):
+def load_text_dataset(path, train_size, valid_size, test_size):
     file_name = os.path.join('..', 'datasets', path)
     old_dir = os.getcwd()
     abspath = os.path.abspath(__file__)

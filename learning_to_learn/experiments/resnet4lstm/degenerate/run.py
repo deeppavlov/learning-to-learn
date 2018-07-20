@@ -54,12 +54,12 @@ NUM_EXERCISES = 1
 BATCH_SIZE = 32
 NUM_UNROLLINGS = 10
 train_size = BATCH_SIZE * NUM_UNROLLINGS
-vocabulary, train_text, valid_text, _ = load_text_dataset('text8.txt', None, valid_size, None)
+vocabulary, train_text, valid_text, _ = load_text_dataset('text8.txt', train_size, valid_size, None)
 vocabulary_size = len(vocabulary)
 NUM_OPTIMIZER_UNROLLINGS = 1
 RESET_PERIOD = 1
 OPTIMIZER_LEARNING_STEPS = 5000
-RESULTS_COLLECT_INTERVAL = 5
+RESULTS_COLLECT_INTERVAL = 1
 
 env = Environment(
     pupil_class=Lstm,

@@ -3053,3 +3053,10 @@ def save_lines(lines, dir_):
                 f.write('%s %s' % (x, y))
                 if p_idx < num_points - 1:
                     f.write('\n')
+
+
+def shift_list(l, sh):
+    ll = list()
+    for v in l:
+        ll.append(v+sh)
+    return ll

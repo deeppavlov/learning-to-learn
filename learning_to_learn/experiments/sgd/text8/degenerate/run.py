@@ -13,6 +13,7 @@ except ValueError:  # Already removed
 from learning_to_learn.environment import Environment
 from learning_to_learn.pupils.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
 from learning_to_learn.useful_functions import create_vocabulary
+from learning_to_learn.launch_helpers import load_text_dataset
 
 import os
 
@@ -36,12 +37,9 @@ RESULTS_COLLECT_INTERVAL = 1
 NUM_TRAIN_ITERATIONS = 10
 LEARNING_RATE = 1.
 INIT_PARAMETER = 3.
-valid_size = 1
+valid_size = 500
 train_size = BATCH_SIZE * NUM_UNROLLINGS
-valid_text = text[:valid_size]
-train_text = text[valid_size:valid_size+train_size]
-
-vocabulary = create_vocabulary(text)
+vocabulary, train_text, valid_text, _ = load_text_dataset('text8.txt', train_size, valid_size, None)
 vocabulary_size = len(vocabulary)
 print(vocabulary_size)
 
@@ -81,12 +79,36 @@ env.build_pupil(
 env.train(
     allow_growth=True,
     restore_path=os.path.join(*(['..']*ROOT_HEIGHT + ['lstm', 'start', 'checkpoints', 'start'])),
-    # save_path='debug_grid_search',
+    save_path='after_1_step',
     result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
     additions_to_feed_dict=train_add_feed,
     # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
     # stop=stop_specs,
-    stop=NUM_TRAIN_ITERATIONS,
+    stop=0,
+    vocabulary=vocabulary,
+    num_unrollings=NUM_UNROLLINGS,
+    results_collect_interval=RESULTS_COLLECT_INTERVAL,
+    learning_rate=dict(
+        type='exponential_decay',
+        decay=1.,
+        init=LEARNING_RATE,
+        period=1e+6,
+    ),
+    # opt_inf_results_collect_interval=1,
+    summary=False,
+    add_graph_to_summary=False,
+    train_dataset_text=train_text,
+    validation_datasets=dict(valid=valid_text),
+    batch_size=BATCH_SIZE
+)
+env.train(
+    allow_growth=True,
+    restore_path='after_1_step/checkpoints/final',
+    result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
+    additions_to_feed_dict=train_add_feed,
+    # pupil_restore_paths=['debug_empty_meta_optimizer/not_learning_issue_es20_nn20/checkpoints/0'],
+    # stop=stop_specs,
+    stop=1,
     vocabulary=vocabulary,
     num_unrollings=NUM_UNROLLINGS,
     results_collect_interval=RESULTS_COLLECT_INTERVAL,
