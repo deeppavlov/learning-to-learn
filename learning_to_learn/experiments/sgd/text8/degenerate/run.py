@@ -52,7 +52,7 @@ env = Environment(
 
 add_metrics = ['bpc', 'perplexity', 'accuracy']
 train_add_feed = [
-    {'placeholder': 'dropout', 'value': .9}
+    {'placeholder': 'dropout', 'value': 1.}
 ]
 valid_add_feed = [
     {'placeholder': 'dropout', 'value': 1.}
@@ -78,10 +78,9 @@ env.build_pupil(
     going_to_limit_memory=True,
     optimizer='sgd'
 )
-
-tf.set_random_seed(1)
 env.train(
     allow_growth=True,
+    restore_path=os.path.join(*(['..']*ROOT_HEIGHT + ['lstm', 'start', 'checkpoints', 'start'])),
     # save_path='debug_grid_search',
     result_types=['loss', 'bpc', 'perplexity', 'accuracy'],
     additions_to_feed_dict=train_add_feed,
