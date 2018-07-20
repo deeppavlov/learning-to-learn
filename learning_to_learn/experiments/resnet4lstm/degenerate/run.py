@@ -31,14 +31,6 @@ dname = os.path.dirname(abspath)
 os.chdir(dname)
 dataset_path = os.path.join(*(['..']*ROOT_HEIGHT + ['datasets', 'text8.txt']))
 valid_size = 500
-vocabulary, train_text, valid_text, _ = load_text_dataset('text8.txt', None, valid_size, None)
-vocabulary_size = len(vocabulary)
-
-env = Environment(
-    pupil_class=Lstm,
-    meta_optimizer_class=ResNet4Lstm,
-    batch_generator_classes=BatchGenerator,
-    vocabulary=vocabulary)
 
 add_metrics = ['bpc', 'perplexity', 'accuracy']
 train_opt_add_feed = [
@@ -61,10 +53,20 @@ PUPIL_NAME = 'COLD'
 NUM_EXERCISES = 1
 BATCH_SIZE = 32
 NUM_UNROLLINGS = 10
+train_size = BATCH_SIZE * NUM_UNROLLINGS
+vocabulary, train_text, valid_text, _ = load_text_dataset('text8.txt', None, valid_size, None)
+vocabulary_size = len(vocabulary)
 NUM_OPTIMIZER_UNROLLINGS = 1
 RESET_PERIOD = 1
 OPTIMIZER_LEARNING_STEPS = 20000
 RESULTS_COLLECT_INTERVAL = 50
+
+env = Environment(
+    pupil_class=Lstm,
+    meta_optimizer_class=ResNet4Lstm,
+    batch_generator_classes=BatchGenerator,
+    vocabulary=vocabulary)
+
 evaluation = dict(
     save_path=save_path,
     opt_inf_is_performed=True,
