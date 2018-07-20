@@ -42,11 +42,11 @@ env = Environment(
 
 add_metrics = ['bpc', 'perplexity', 'accuracy']
 train_opt_add_feed = [
-    {'placeholder': 'dropout', 'value': .9},
-    {'placeholder': 'optimizer_dropout_keep_prob', 'value': .9}
+    {'placeholder': 'dropout', 'value': 1.},
+    {'placeholder': 'optimizer_dropout_keep_prob', 'value': 1.}
 ]
 opt_inf_add_feed = [
-    {'placeholder': 'dropout', 'value': .9},
+    {'placeholder': 'dropout', 'value': 1.},
     {'placeholder': 'optimizer_dropout_keep_prob', 'value': 1.}
 ]
 valid_add_feed = [
@@ -59,12 +59,12 @@ checkpoints_path = os.path.join(*(['..']*ROOT_HEIGHT + ['lstm', 'start', 'checkp
 the_only_pupil_restore_path = os.path.join(checkpoints_path, 'start')
 PUPIL_NAME = 'COLD'
 NUM_EXERCISES = 1
-BATCH_SIZE = 1
-NUM_UNROLLINGS = 3
+BATCH_SIZE = 32
+NUM_UNROLLINGS = 10
 NUM_OPTIMIZER_UNROLLINGS = 1
 RESET_PERIOD = 1
-OPTIMIZER_LEARNING_STEPS = 10000
-RESULTS_COLLECT_INTERVAL = 100
+OPTIMIZER_LEARNING_STEPS = 20000
+RESULTS_COLLECT_INTERVAL = 50
 evaluation = dict(
     save_path=save_path,
     opt_inf_is_performed=True,
