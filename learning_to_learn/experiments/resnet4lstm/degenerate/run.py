@@ -58,8 +58,8 @@ vocabulary, train_text, valid_text, _ = load_text_dataset('text8.txt', None, val
 vocabulary_size = len(vocabulary)
 NUM_OPTIMIZER_UNROLLINGS = 1
 RESET_PERIOD = 1
-OPTIMIZER_LEARNING_STEPS = 20000
-RESULTS_COLLECT_INTERVAL = 50
+OPTIMIZER_LEARNING_STEPS = 5000
+RESULTS_COLLECT_INTERVAL = 5
 
 env = Environment(
     pupil_class=Lstm,
