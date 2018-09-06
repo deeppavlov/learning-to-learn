@@ -8,7 +8,7 @@ datasets/**
 datasets.zip
 debug_empty_meta_optimizer/**
 debug_grid_search/**
-learning_to_learn/__pycache__/**
+**/__pycache__/**
 lstm/**
 reports/**
 res_net_relu/**
