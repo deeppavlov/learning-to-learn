@@ -60,4 +60,5 @@ def continue_dialog(fuse, n):
     dialog_continuation = [replica for replica in dialog_continuation if len(replica) > 0]
     return dialog_continuation[:n]
 
-print(continue_dialog('Ты кто?', 3))
+if __name__ == '__main__':
+    print(continue_dialog('Ты кто?', 10))
