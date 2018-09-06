@@ -18,3 +18,5 @@ subword_nmt/**
 **/hp_search_short/*/**
 **/*checkpoint*
 **/plots/
+**/launch_log*.txt
+**/launch_log.txt
