@@ -53,9 +53,9 @@ env.build_pupil(
     num_output_layers=1,
     num_output_nodes=[],
     vocabulary_size=vocabulary_size,
-    embedding_size=1000,
+    embedding_size=500,
     num_unrollings=NUM_UNROLLINGS,
-    init_parameter=3.,
+    init_parameter=1.,
     # character_positions_in_vocabulary=cpiv,
     num_gpus=1,
     additional_metrics=add_metrics,
@@ -74,7 +74,7 @@ learning_rate = dict(
     type='adaptive_change',
     max_no_progress_points=10,
     decay=.5,
-    init=4.,
+    init=2.,
     path_to_target_metric_storage=('default_1', 'loss')
 )
 env.train(

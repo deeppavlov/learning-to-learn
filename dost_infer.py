@@ -57,25 +57,11 @@ learning_rate = dict(
     init=4.,
     path_to_target_metric_storage=('default_1', 'loss')
 )
-env.train(
-    # gpu_memory=.3,
-    allow_growth=True,
-    save_path='dostoevsky/train',
-    # restore_path='dostoevsky/train/checkpoints/best',
-    learning_rate=learning_rate,
-    batch_size=BATCH_SIZE,
-    num_unrollings=NUM_UNROLLINGS,
+env.test(
+    restore_path='dostoevsky/train/checkpoints/best',
+    save_path='lstm/text8_pretrain/validation200',
     vocabulary=vocabulary,
-    checkpoint_steps=None,
-    result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
-    printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy'],
-    stop=stop_specs,
-    # stop=4000,
-    train_dataset_text=train_text,
-    # train_dataset_text='abc',
+    additions_to_feed_dict=valid_add_feed,
     validation_dataset_texts=[valid_text],
-    results_collect_interval=1000,
-    additions_to_feed_dict=add_feed,
-    validation_additions_to_feed_dict=valid_add_feed,
-    no_validation=False
+    printed_result_types=['perplexity', 'loss', 'bpc', 'accuracy']
 )
