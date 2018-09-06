@@ -1000,11 +1000,17 @@ class Lstm(Pupil):
         if not going_to_limit_memory:
             gpu_names = get_available_gpus()
             self._gpu_names = ['/gpu:%s' % i for i in range(len(gpu_names))]
+            num_available_gpus = len(self._gpu_names)
+            if num_available_gpus == 0:
+                print(
+                    "WARNING: no gpus were found by method tensorflow.python.client.device_lib.list_local_devices()")
         else:
+            num_available_gpus = -1
+        if going_to_limit_memory or num_available_gpus == 0:
             self._gpu_names = ['/gpu:%s' % i for i in range(num_gpus)]
-        num_available_gpus = len(self._gpu_names)
+        num_gpus_at_work = len(self._gpu_names)
         num_gpus, self._batch_sizes_on_gpus = get_num_gpus_and_bs_on_gpus(
-            self._batch_size, num_gpus, num_available_gpus)
+            self._batch_size, num_gpus, num_gpus_at_work)
         self._num_gpus = num_gpus
 
         self._vec_dim = self._vocabulary_size

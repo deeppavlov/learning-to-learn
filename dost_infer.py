@@ -22,6 +22,7 @@ env.build_pupil(
     embedding_size=500,
     num_gpus=1,
     regime='inference',
+    going_to_limit_memory=True,
 )
 
 
