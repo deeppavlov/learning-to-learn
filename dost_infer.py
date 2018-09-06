@@ -57,6 +57,7 @@ def continue_dialog(fuse, n):
     )
 
     dialog_continuation = fuse_res[0]['results'][0].split('\n')
+    dialog_continuation = [replica for replica in dialog_continuation if len(replica) > 0]
     return dialog_continuation[:n]
 
 print(continue_dialog('Ты кто?', 3))
