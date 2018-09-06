@@ -811,7 +811,8 @@ class Environment(object):
 
         validation_datasets = work['validation_datasets']
         # print("(Environment.test)work['valid_batch_kwargs']:", work['valid_batch_kwargs'])
-        print("Testing!")
+        if len(validation_datasets) > 0:
+            print("Testing!")
         for validation_dataset in validation_datasets:
             print("Validation dataset name:", validation_dataset[1])
             print("Validation dataset_size:")
@@ -855,7 +856,7 @@ class Environment(object):
             additional_feed_dict = dict()
         for fuse_idx, fuse in enumerate(fuses):
             if fuse_idx % 100 == 0:
-                print('Number of processed fuses:', fuse_idx)
+                print('Number of processed fuse:', fuse_idx)
             self._handler.set_processed_fuse_index(fuse_idx)
             for repeat_idx in range(fuse['num_repeats']):
                 if 'randomize_sample_state' in self._hooks:
