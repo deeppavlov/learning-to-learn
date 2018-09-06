@@ -61,4 +61,4 @@ def continue_dialog(fuse, n):
     return dialog_continuation[:n]
 
 if __name__ == '__main__':
-    print(continue_dialog('Ты кто?', 10))
+    print(continue_dialog('- Ты кто?\n', 10))
