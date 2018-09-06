@@ -5,27 +5,12 @@ from learning_to_learn.environment import Environment
 from learning_to_learn.pupils.lstm_for_meta import Lstm, LstmFastBatchGenerator as BatchGenerator
 from learning_to_learn.useful_functions import create_vocabulary, get_positions_in_vocabulary
 
-with open('../../skorokhodov/neuro_dostoevsky/data/subs/subs.ru', 'r') as f:
-    text = f.read()
-# with open('datasets/text8.txt', 'r') as f:
-#     text = f.read()
-
-valid_size = 1000
-valid_text = text[:valid_size]
-train_text = text[valid_size:]
 
 voc_name = 'dost_voc.txt'
-if os.path.isfile(voc_name):
-    with open(voc_name, 'r') as f:
-        vocabulary = list(f.read())
-else:
-    vocabulary = create_vocabulary(train_text + valid_text)
-    with open(voc_name, 'w') as f:
-        f.write(''.join(vocabulary))
+with open(voc_name, 'r') as f:
+    vocabulary = list(f.read())
 
 vocabulary_size = len(vocabulary)
-
-print('vocabulary_size:', vocabulary_size)
 
 env = Environment(Lstm, BatchGenerator, vocabulary=vocabulary)
 
@@ -49,18 +34,13 @@ BATCH_SIZE = 32
 env.build_pupil(
     batch_size=BATCH_SIZE,
     num_layers=2,
-    num_nodes=[1500, 1500],
+    num_nodes=[2000, 2000],
     num_output_layers=1,
     num_output_nodes=[],
     vocabulary_size=vocabulary_size,
     embedding_size=1000,
-    num_unrollings=NUM_UNROLLINGS,
-    init_parameter=3.,
-    # character_positions_in_vocabulary=cpiv,
     num_gpus=1,
-    additional_metrics=add_metrics,
-    going_to_limit_memory=True,
-    optimizer='sgd'
+    regime='inference',
 )
 
 print('building is finished')
