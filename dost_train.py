@@ -78,8 +78,8 @@ learning_rate = dict(
 env.train(
     # gpu_memory=.3,
     allow_growth=True,
-    save_path='lstm/start',
-    # restore_path='lstm_sample_test/scipop3_1000_bs256_11.12/checkpoints/2000',
+    save_path='dostoevsky/train',
+    # restore_path='dostoevsky/train/checkpoints/best',
     learning_rate=learning_rate,
     batch_size=BATCH_SIZE,
     num_unrollings=NUM_UNROLLINGS,
