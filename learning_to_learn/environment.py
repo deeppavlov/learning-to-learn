@@ -539,7 +539,8 @@ class Environment(object):
                 replicas=None,
                 random={'number_of_runs': 5,
                         'length': 80},
-                validation_tensor_schedule=construct(valid_tensor_schedule)
+                validation_tensor_schedule=construct(valid_tensor_schedule),
+                verbose=True,
             )
         )
         # This attribute is used solely for controlling learning parameters (learning rate, additions_to_feed_dict)
@@ -805,13 +806,14 @@ class Environment(object):
         if work['fuses'] is not None:
             fuse_res = self._on_fuses(empty_batch_gen,
                                       work['fuses'],
-                                      additional_feed_dict=add_feed_dict)
+                                      additional_feed_dict=add_feed_dict,
+                                      verbose=kwargs['verbose'])
         else:
             fuse_res = None
 
         validation_datasets = work['validation_datasets']
         # print("(Environment.test)work['valid_batch_kwargs']:", work['valid_batch_kwargs'])
-        if len(validation_datasets) > 0:
+        if len(validation_datasets) > 0 and kwargs['verbose']:
             print("Testing!")
         for validation_dataset in validation_datasets:
             print("Validation dataset name:", validation_dataset[1])
@@ -851,11 +853,12 @@ class Environment(object):
                   batch_generator,
                   fuses,
                   training_step=None,
-                  additional_feed_dict=None):
+                  additional_feed_dict=None,
+                  verbose=True):
         if additional_feed_dict is None:
             additional_feed_dict = dict()
         for fuse_idx, fuse in enumerate(fuses):
-            if fuse_idx % 100 == 0:
+            if fuse_idx % 100 == 0 and verbose:
                 print('Number of processed fuse:', fuse_idx)
             self._handler.set_processed_fuse_index(fuse_idx)
             for repeat_idx in range(fuse['num_repeats']):
