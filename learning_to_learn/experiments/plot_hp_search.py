@@ -13,7 +13,7 @@ except ValueError:  # Already removed
 from learning_to_learn.experiments.plot_helpers import get_parameter_names, plot_hp_search_optimizer, \
     plot_hp_search_pupil, parse_metric_scales_str
 from learning_to_learn.useful_functions import MissingHPError, HeaderLineError, ExtraHPError, BadFormattingError, \
-    parse_x_select, parse_line_select, create_path, parse_path_comb
+    parse_x_select, parse_line_select, create_path, parse_path_comb, HPLayoutMissingError
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -158,6 +158,12 @@ for eval_dir in eval_dirs:
             print(
                 "WARNING: can not plot results in '%s' because "
                 "formatting does not allow put labels in legend\n" % eval_dir,
+                e.message
+            )
+        except HPLayoutMissingError as e:
+            print(
+                "WARNING: can not plot results in '%s' because "
+                "'hp_layout.txt' is missing\n" % eval_dir,
                 e.message
             )
         except:

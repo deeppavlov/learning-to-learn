@@ -53,6 +53,13 @@ parser.add_argument(
     help="Examined datasets. Default is all available.",
     default=None
 )
+parser.add_argument(
+    '-vf',
+    '--value_filter',
+    help="Value filter for excluding obviously excess values. Provide filter as intervals separated by colon. '-inf'"
+         " and '+inf' are allowed",
+    default='[-inf,0):(0,+inf]',
+)
 args = parser.parse_args()
 
 
@@ -79,7 +86,7 @@ elif model == 'optimizer':
 if args.target_metrics is not None:
     metrics = args.target_metrics.split(',')
 
-best = get_best(for_plotting, model)
+best = get_best(for_plotting, model, value_filter=args.value_filter)
 indents = [4, 8, 12]
 print(best)
 if model == 'pupil':

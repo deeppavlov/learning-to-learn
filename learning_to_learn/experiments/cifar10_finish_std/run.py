@@ -14,7 +14,8 @@ except ValueError:  # Already removed
 from learning_to_learn.environment import Environment
 from learning_to_learn.pupils.mlp_for_meta import MlpForMeta as Mlp
 from learning_to_learn.image_batch_gens import CifarBatchGenerator
-from learning_to_learn.useful_functions import compose_hp_confs, get_best, get_pupil_evaluation_results, print_hps
+from learning_to_learn.useful_functions import compose_hp_confs, get_best, get_pupil_evaluation_results, print_hps, \
+    get_hp_names_from_conf_file
 
 import os
 
@@ -144,7 +145,7 @@ for conf in confs:
         **launch_kwargs
     )
 
-hp_names = list(confs[0].keys())
+hp_names = get_hp_names_from_conf_file(parameter_set_file_name)
 for_plotting = get_pupil_evaluation_results(save_path, hp_names)
 
 best = get_best(for_plotting, 'pupil')

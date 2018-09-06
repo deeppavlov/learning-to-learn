@@ -15,7 +15,7 @@ except ValueError:  # Already removed
 
 from learning_to_learn.useful_functions import synchronous_sort, create_path, get_pupil_evaluation_results, \
     BadFormattingError, all_combs, get_optimizer_evaluation_results, select_for_plot, convert, retrieve_lines, \
-    add_index_to_filename_if_needed, nested2string, isnumber
+    add_index_to_filename_if_needed, nested2string, isnumber, shift_list
 
 COLORS = [
     'r', 'g', 'b', 'k', 'c', 'magenta', 'brown',
@@ -27,6 +27,18 @@ AVERAGING_NUMBER = 3
 
 FONT = {'family': 'Verdana',
         'weight': 'normal'}
+rc('font', **FONT)
+
+
+def get_parameter_name(plot_parameter_names, key):
+    try:
+        v = plot_parameter_names[key]
+    except KeyError:
+        print("WARNING: no '%s' entry parameter names file" % key)
+        v = key
+    except:
+        raise
+    return v
 
 
 def fixed_hps_from_str(string):
@@ -74,7 +86,19 @@ def get_linthreshx(lines):
     return thresh
 
 
-def plot_outer_legend(plot_data, description, xlabel, ylabel, xscale, yscale, file_name_without_ext, style):
+def plot_outer_legend(
+        plot_data,
+        description,
+        xlabel,
+        ylabel,
+        xscale,
+        yscale,
+        file_name_without_ext,
+        style,
+        shifts=None,
+):
+    if shifts is None:
+        shifts = [0, 0]
     # print("(plot_helpers.plot_outer_legend)xlabel:", xlabel)
     # print("(plot_helpers.plot_outer_legend)plot_data:", plot_data)
     rc('font', **FONT)
@@ -128,8 +152,8 @@ def plot_outer_legend(plot_data, description, xlabel, ylabel, xscale, yscale, fi
         # print("(plot_helpers.plot_outer_legend)line_data:", line_data)
         lines.append(
             plt.errorbar(
-                line_data[0],
-                line_data[1],
+                shift_list(line_data[0], shifts[0]),
+                shift_list(line_data[1], shifts[1]),
                 yerr=yerr,
                 marker=style['marker'],
                 color=color,
@@ -237,10 +261,7 @@ def create_plot_hp_layout(plot_dir, hp_plot_order, changing_hp):
 
 
 def get_y_specs(res_type, plot_parameter_names, metric_scales):
-    if res_type in plot_parameter_names:
-        ylabel = plot_parameter_names[res_type]
-    else:
-        ylabel = res_type
+    ylabel = get_parameter_name(plot_parameter_names, res_type)
     if res_type in metric_scales:
         yscale = metric_scales[res_type]
     else:
@@ -300,7 +321,7 @@ def plot_hp_search_optimizer(
     regimes = sorted(list(for_plotting[pupil_names[0]][result_types[0]].keys()))
     fixed_hp_tmpl = create_plot_hp_layout(plot_dir, hp_plot_order, changing_hp)
     # print("(plot_hp_search)plot_parameter_names:", plot_parameter_names)
-    xlabel = plot_parameter_names[changing_hp]
+    xlabel = get_parameter_name(plot_parameter_names, changing_hp)
 
     for pupil_name in pupil_names:
         for res_type in result_types:
@@ -330,7 +351,7 @@ def plot_hp_search_pupil(
     dataset_names = sorted(list(for_plotting.keys()))
     result_types = sorted(list(for_plotting[dataset_names[0]].keys()))
     fixed_hp_tmpl = create_plot_hp_layout(plot_dir, hp_plot_order, changing_hp)
-    xlabel = plot_parameter_names[changing_hp]
+    xlabel = get_parameter_name(plot_parameter_names, changing_hp)
     for dataset_name in dataset_names:
         for res_type in result_types:
             ylabel, yscale = get_y_specs(res_type, plot_parameter_names, metric_scales)
@@ -355,7 +376,7 @@ def plot_lines_from_diff_hp_searches(
 ):
     # print(line_retrieve_inf)
     lines = retrieve_lines(line_retrieve_inf, x_select, model, AVERAGING_NUMBER)
-    xlabel = plot_parameter_names[changing_hp]
+    xlabel = get_parameter_name(plot_parameter_names, changing_hp)
     create_path(plot_dir)
     plot_description_file = os.path.join(plot_dir, 'description.txt')
     with open(plot_description_file, 'w') as f:

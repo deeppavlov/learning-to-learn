@@ -11,7 +11,7 @@ except ValueError:  # Already removed
     pass
 
 from learning_to_learn.experiments.plot_helpers import get_parameter_names, plot_hp_search_optimizer, \
-    plot_hp_search_pupil, parse_metric_scales_str, plot_outer_legend
+    plot_hp_search_pupil, parse_metric_scales_str, plot_outer_legend, get_parameter_name
 from learning_to_learn.useful_functions import MissingHPError, HeaderLineError, ExtraHPError, BadFormattingError, \
     parse_x_select, parse_line_select, create_path, parse_path_comb, parse_1_line_dir, keys_from_list_in_dict, \
     extract_line_from_file, select_by_x, nested2string
@@ -23,7 +23,13 @@ parser.add_argument(
 )
 parser.add_argument(
     'labels',
-    help="labels for lines in corresponding directories"
+    help="Labels for lines in corresponding directories"
+)
+parser.add_argument(
+    'xshift',
+    help="Shift of values of horizontal parameters. If horizontal axis used for step than step values from collected "
+         "data are likely start from zero whereas in fact it is better for understanding when they start from 1."
+         " It is also useful if log scale is used."
 )
 
 parser.add_argument(
@@ -135,7 +141,7 @@ metric_scales = parse_metric_scales_str(args.metric_scales)
 create_path(args.plot_name, file_name_is_in_path=True)
 for metric, lines_for_metric in lines_by_metrics.items():
     file_name = args.plot_name + '_' + metric
-    ylabel = plot_parameter_names[metric]
+    ylabel = get_parameter_name(plot_parameter_names, metric)
     if metric in metric_scales:
         yscale = metric_scales[metric]
     else:
@@ -151,5 +157,6 @@ for metric, lines_for_metric in lines_by_metrics.items():
         yscale,
         file_name,
         style,
+        shifts=[int(args.xshift), 0]
     )
 

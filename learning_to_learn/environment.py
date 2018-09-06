@@ -1552,6 +1552,8 @@ class Environment(object):
         init_step = 0
         # if 'reset_pupil_train_state' in self._hooks:
         #     self._session.run(self._hooks['reset_pupil_train_state'])
+        if checkpoints_path is not None:
+            self._create_checkpoint('start', checkpoints_path)
         t1 = time.clock()
         for run_specs in run_specs_set:
             init_step = self._train(run_specs,
@@ -1581,12 +1583,14 @@ class Environment(object):
             close_session=close_session,
             set_passed_parameters_as_default=set_passed_parameters_as_default,
             kwargs=kwargs)
+        # print("\n\n(Environment.train_optimizer)kwargs:", kwargs)
         tmp_output = parse_train_optimizer_method_arguments(
             self,
             args,
             kwargs,
             set_passed_parameters_as_default=set_passed_parameters_as_default
         )
+        # print("\n\n(Environment.train_optimizer)tmp_output:", tmp_output)
         session_specs = tmp_output['session_specs']
         start_specs = tmp_output['start_specs']
         run_specs_set = tmp_output['run']
@@ -1637,6 +1641,9 @@ class Environment(object):
         init_step = 0
         t1 = time.clock()
         for run_specs in run_specs_set:
+            # print("(Environment._train_optimizer_repeatedly)"
+            #       "run_specs",
+            #       run_specs)
             # print("(Environment._train_optimizer_repeatedly)"
             #       "run_specs['optimizer_inference']['opt_inf_train_datasets'][0][1]",
             #       run_specs['optimizer_inference']['opt_inf_train_datasets'][0][1])
@@ -1697,8 +1704,14 @@ class Environment(object):
                     pupil_grad_eval_batch_gens
             ):
                 if isinstance(inp_placeholder, list):
-                    for inp_plhld, lbl_plhld in zip(inp_placeholder, lbl_placeholder):
+                    for idx, (inp_plhld, lbl_plhld) in enumerate(zip(inp_placeholder, lbl_placeholder)):
                         inp, lbl = b_gen.next()
+                        # print(
+                        #     "\n\npupil grad eval\n"
+                        #     "(Environment._fill_train_meta_optimizer_feed_dict_with_inputs_and_labels)inp:\n",
+                        #     inp
+                        # )
+                        # print("(Environment._fill_train_meta_optimizer_feed_dict_with_inputs_and_labels)lbl:\n", lbl)
                         feed_dict[inp_plhld] = inp
                         feed_dict[lbl_plhld] = lbl
                 else:
@@ -1711,8 +1724,14 @@ class Environment(object):
                     optimizer_grad_batch_gens
             ):
                 if isinstance(inp_placeholder, list):
-                    for inp_plhld, lbl_plhld in zip(inp_placeholder, lbl_placeholder):
+                    for idx, (inp_plhld, lbl_plhld) in enumerate(zip(inp_placeholder, lbl_placeholder)):
                         inp, lbl = b_gen.next()
+                        # print(
+                        #     "\n\noptimizer grad eval\n"
+                        #     "(Environment._fill_train_meta_optimizer_feed_dict_with_inputs_and_labels)inp:\n",
+                        #     inp
+                        # )
+                        # print("(Environment._fill_train_meta_optimizer_feed_dict_with_inputs_and_labels)lbl:\n", lbl)
                         feed_dict[inp_plhld] = inp
                         feed_dict[lbl_plhld] = lbl
                 else:
@@ -1737,6 +1756,7 @@ class Environment(object):
     ):
         # print("EXERCISES RESET!")
         # print('(Environment._reset_exercises)restore_paths_datasets_map:', restore_paths_datasets_map)
+        # print('(Environment._reset_exercises)datasets:', datasets)
         num_paths = len(pupil_restore_paths)
         # print("(Environment._reset_exercises)num_paths:", num_paths)
         # print("(Environment._reset_exercises)num_exercises:", num_exercises)
@@ -2118,6 +2138,7 @@ class Environment(object):
             evaluation,
             meta_optimizer_build_kwargs
     ):
+        tf.set_random_seed(1)
         self._build_pupil(kwargs_for_building)
         if meta_optimizer_build_kwargs is not None:
             self.build_optimizer(**meta_optimizer_build_kwargs)
@@ -3358,12 +3379,26 @@ class Environment(object):
             optimizer_build,
             launch
     ):
+        # print("(Environment._optimizer_train_process)launch:", launch)
         self.build_pupil(**pupil_build)
         self.build_optimizer(**optimizer_build)
         time = self.train_optimizer(**launch)
         q.put(time)
 
-    def optimizer_iter_time(
+    def _pupil_train_process(
+            self,
+            q,
+            pupil_build,
+            optimizer_build,
+            launch,
+    ):
+        self.build_pupil(**pupil_build)
+        if optimizer_build is not None:
+            self.build_optimizer(**optimizer_build)
+        time = self.train(**launch)
+        q.put(time)
+
+    def iter_time(
             self,
             steps,
             base,    # time which is used to compute relative effectiveness
@@ -3373,6 +3408,7 @@ class Environment(object):
             pupil_varying,
             optimizer_varying,
             launch_varying,
+            model='optimizer',
     ):
         # print("(Environment.optimizer_iter_time)optimizer_build_kwargs:", optimizer_build_kwargs)
         result = list()
@@ -3381,20 +3417,30 @@ class Environment(object):
         insertions = form_combinations_from_dicts(
             [pupil_varying, optimizer_varying, launch_varying]
         )
-
+        if model =='optimizer':
+            func = self._optimizer_train_process
+        else:
+            func = self._pupil_train_process
         for insertion_list in insertions:
             queue_ = mp.Queue()
+
             pupil = construct(pupil_build_kwargs)
-            optimizer = construct(optimizer_build_kwargs)
-            launch = construct(launch_kwargs)
             for name, value in insertion_list[0].items():
                 pupil[name] = value
-            for name, value in insertion_list[1].items():
-                optimizer[name] = value
+
+            if optimizer_build_kwargs is None:
+                optimizer = None
+            else:
+                optimizer = construct(optimizer_build_kwargs)
+                for name, value in insertion_list[1].items():
+                    optimizer[name] = value
+
+            launch = construct(launch_kwargs)
             for name, value in insertion_list[2].items():
                 launch[name] = value
+
             p = mp.Process(
-                target=self._optimizer_train_process,
+                target=func,
                 args=(
                     queue_,
                     pupil,

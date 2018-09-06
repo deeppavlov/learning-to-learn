@@ -141,11 +141,13 @@ class Meta(object):
         stacked_tmpl = construct(trainable[0])
         stacked_by_gpu = [construct(trainable[0]) for _ in gpu_borders]
         for ok, ov in stacked_tmpl.items():
-            for ik in ov.keys():
-                for gpu_idx, borders in enumerate(gpu_borders):
-                    with tf.device('/gpu:%s' % gpu_idx):
-                        stacked_by_gpu[gpu_idx][ok][ik] = tf.stack(
-                            [tr[ok][ik] for tr in trainable[borders[0]:borders[1]]])
+            with tf.name_scope(ok):
+                for ik in ov.keys():
+                    with tf.name_scope(ik):
+                        for gpu_idx, borders in enumerate(gpu_borders):
+                            with tf.device('/gpu:%s' % gpu_idx):
+                                stacked_by_gpu[gpu_idx][ok][ik] = tf.stack(
+                                    [tr[ok][ik] for tr in trainable[borders[0]:borders[1]]])
         return stacked_by_gpu
 
     @staticmethod
@@ -189,11 +191,12 @@ class Meta(object):
         for path in paths:
             for gpu_idx, borders in enumerate(gpu_borders):
                 with tf.device('/gpu:%s' % gpu_idx):
-                    write_elem_in_obj_by_path(
-                        stacked_by_gpu[gpu_idx], path,
-                        tf.stack(
-                            [get_obj_elem_by_path(stor, path) for stor in storages])
-                    )
+                    with tf.name_scope('/'.join([str(el) for el in path])):
+                        write_elem_in_obj_by_path(
+                            stacked_by_gpu[gpu_idx], path,
+                            tf.stack(
+                                [get_obj_elem_by_path(stor, path) for stor in storages])
+                        )
         return stacked_by_gpu
 
     # @staticmethod
@@ -238,13 +241,20 @@ class Meta(object):
             pupil_grad_eval_pupil_storage,
             optimizer_grad_pupil_storage
     ):
-        pupil_grad_eval_inputs = cls._stack_placeholders(gpu_borders, pupil_grad_eval_inputs)
-        pupil_grad_eval_labels = cls._stack_placeholders(gpu_borders, pupil_grad_eval_labels)
-        optimizer_grad_inputs = cls._stack_placeholders(gpu_borders, optimizer_grad_inputs)
-        optimizer_grad_labels = cls._stack_placeholders(gpu_borders, optimizer_grad_labels)
-        pupil_trainable_variables = cls._stack_trainable_variables(gpu_borders, pupil_trainable_variables)
-        pupil_grad_eval_pupil_storage = cls._stack_storages(gpu_borders, pupil_grad_eval_pupil_storage)
-        optimizer_grad_pupil_storage = cls._stack_storages(gpu_borders, optimizer_grad_pupil_storage)
+        with tf.name_scope('pupil_grad_eval_inputs'):
+            pupil_grad_eval_inputs = cls._stack_placeholders(gpu_borders, pupil_grad_eval_inputs)
+        with tf.name_scope('pupil_grad_eval_labels'):
+            pupil_grad_eval_labels = cls._stack_placeholders(gpu_borders, pupil_grad_eval_labels)
+        with tf.name_scope('optimizer_grad_inputs'):
+            optimizer_grad_inputs = cls._stack_placeholders(gpu_borders, optimizer_grad_inputs)
+        with tf.name_scope('optimizer_grad_labels'):
+            optimizer_grad_labels = cls._stack_placeholders(gpu_borders, optimizer_grad_labels)
+        with tf.name_scope('pupil_trainable_variables'):
+            pupil_trainable_variables = cls._stack_trainable_variables(gpu_borders, pupil_trainable_variables)
+        with tf.name_scope('pupil_grad_eval_pupil_storage'):
+            pupil_grad_eval_pupil_storage = cls._stack_storages(gpu_borders, pupil_grad_eval_pupil_storage)
+        with tf.name_scope('optimizer_grad_pupil_storage'):
+            optimizer_grad_pupil_storage = cls._stack_storages(gpu_borders, optimizer_grad_pupil_storage)
         return pupil_grad_eval_inputs, pupil_grad_eval_labels, optimizer_grad_inputs, optimizer_grad_labels, \
             pupil_trainable_variables, pupil_grad_eval_pupil_storage, optimizer_grad_pupil_storage
 

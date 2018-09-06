@@ -2,7 +2,7 @@ from tensorflow.examples.tutorials.mnist import input_data
 import learning_to_learn.cifar_helpers as cifar_helpers
 from learning_to_learn.useful_functions import DatasetSizeError
 import numpy as np
-
+np.set_printoptions(threshold=np.nan)
 
 class MnistBatchGenerator:
     def __init__(self, dataset_type, batch_size, data_dir=None, random_batch_initiation=None):
@@ -12,8 +12,10 @@ class MnistBatchGenerator:
 
     def next(self):
         if self._dataset_type == 'train':
-            nbatch = self._mnist.train.next_batch(self._batch_size)
+            nbatch = self.\
+                _mnist.train.next_batch(self._batch_size)
             # print(np.mean(nbatch[0]))
+            print(nbatch[0])
             return nbatch
         elif self._dataset_type == 'validation':
             return self._mnist.validation.images, self._mnist.validation.labels

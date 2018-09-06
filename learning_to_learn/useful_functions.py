@@ -1,5 +1,7 @@
 import itertools
 import importlib
+import math
+import re
 import numpy as np
 from functools import reduce
 import os
@@ -86,6 +88,12 @@ class DatasetSizeError(Exception):
     def __init__(self, provided_size, required_size, message):
         self.provided_size = provided_size
         self.required_size = required_size
+        self.message = message
+
+
+class HPLayoutMissingError(Exception):
+    def __init__(self, eval_dir, message):
+        self.eval_dir = eval_dir
         self.message = message
 
 
@@ -193,8 +201,8 @@ def create_and_save_vocabulary(input_file_name,
 
 
 def load_vocabulary_from_file(vocabulary_file_name):
-    input_f = open(vocabulary_file_name, 'r', encoding='utf-8')
-    vocabulary_string = input_f.read()
+    with open(vocabulary_file_name, 'r') as f:
+        vocabulary_string = f.read()
     return list(vocabulary_string)
 
 
@@ -298,41 +306,6 @@ def write_elem_in_obj_by_path(obj, path, elem):
     for k in path[:-1]:
         obj = obj[k]
     obj[path[-1]] = elem
-
-
-def maybe_download(filename, expected_bytes):
-    # Download a file if not present, and make sure it's the right size.
-    if not os.path.exists(filename):
-        filename, _ = urlretrieve(url + filename, filename)
-    statinfo = os.stat(filename)
-    if statinfo.st_size == expected_bytes:
-        print('Found and verified %s' % filename)
-    else:
-        print(statinfo.st_size)
-        raise Exception(
-            'Failed to verify ' + filename + '. Can you get to it with a browser?')
-    return filename
-
-
-def read_data(filename):
-    if not os.path.exists('enwik8'):
-        f = zipfile.ZipFile(filename)
-        for name in f.namelist():
-            full_text = tf.compat.as_str(f.read(name))
-        f.close()
-        """f = open('enwik8', 'w')
-        f.write(text.encode('utf8'))
-        f.close()"""
-    else:
-        f = open('enwik8', 'r')
-        full_text = f.read().decode('utf8')
-        f.close()
-    return full_text
-
-    f = codecs.open('enwik8', encoding='utf-8')
-    text = f.read()
-    f.close()
-    return text
 
 
 def flatten(nested):
@@ -844,6 +817,14 @@ def unite_nested_dicts(list_of_nested, depth):
 def is_int(s):
     try:
         int(s)
+        return True
+    except ValueError:
+        return False
+
+
+def is_float(s):
+    try:
+        float(s)
         return True
     except ValueError:
         return False
@@ -1596,7 +1577,7 @@ def get_hp_names_from_conf_file(file_name):
     return hp_names
 
 
-def make_initial_grid(file_name, eval_dir_or_file, chop_last_experiment=False, model='optimizer'):
+def read_text_conf_file(file_name):
     init_conf = OrderedDict()
     init_grid_values = list()
     with open(file_name, 'r') as f:
@@ -1604,16 +1585,26 @@ def make_initial_grid(file_name, eval_dir_or_file, chop_last_experiment=False, m
     hp_names = lines[0].split()
     hp_types = lines[1].split()
     num_params = len(hp_names)
-    for hp_name, hp_type, line in zip(hp_names, hp_types, lines[2:2+num_params]):
+    for hp_name, hp_type, line in zip(hp_names, hp_types, lines[2:2 + num_params]):
         param_values = remove_repeats_from_list([convert(v, hp_type) for v in line.split()])
         init_conf[hp_name] = param_values
         init_grid_values.append(param_values)
-    if len(lines) > 2+num_params and len(lines[2+num_params]) > 0:
-        num_repeats = int(lines[2+num_params])
+    if len(lines) > 2 + num_params and len(lines[2 + num_params]) > 0:
+        num_repeats = int(lines[2 + num_params])
     else:
         num_repeats = 1
-    # print("(useful_functions.make_initial_grid)num_repeats:", num_repeats)
-    # print("(useful_functions.make_initial_grid)lines:", lines)
+    return hp_names, init_conf, init_grid_values, num_repeats
+
+
+def сreate_grids_after_file_parsing(
+        hp_names,
+        init_conf,
+        init_grid_values,
+        num_repeats,
+        eval_dir_or_file,
+        chop_last_experiment=False,
+        model='optimizer'
+):
     if model == 'optimizer':
         tested_combs, num_exps, last_exp_file_name = get_combs_and_num_exps(eval_dir_or_file, hp_names)
         # print("(useful_functions.make_initial_grid)tested_combs:", tested_combs)
@@ -1641,9 +1632,22 @@ def make_initial_grid(file_name, eval_dir_or_file, chop_last_experiment=False, m
                 print("(useful_functions.make_initial_grid)tested_comb:", tested_comb)
                 print("WARNING: UNKNOWN POINT")
         exp_counter_grid[tuple(indices)] += 1.
+    grids = slice_to_conf_grids(exp_counter_grid, num_repeats), init_conf, num_exps
+    return grids
 
-    # print("(useful_functions.make_initial_grid)exp_counter_grid:", exp_counter_grid)
-    return slice_to_conf_grids(exp_counter_grid, num_repeats), init_conf, num_exps
+
+def make_initial_grid(file_name, eval_dir_or_file, chop_last_experiment=False, model='optimizer'):
+    hp_names, init_conf, init_grid_values, num_repeats = read_text_conf_file(file_name)
+    grids = сreate_grids_after_file_parsing(
+        hp_names,
+        init_conf,
+        init_grid_values,
+        num_repeats,
+        eval_dir_or_file,
+        chop_last_experiment=chop_last_experiment,
+        model=model,
+    )
+    return grids
 
 
 def slice_to_conf_grids(exp_counter_grid, num_repeats):
@@ -2035,7 +2039,12 @@ def add_stddev(data):
 
 def get_optimizer_evaluation_results(eval_dir, hp_order, averaging_number):
     eval_dir_contents = os.listdir(eval_dir)
-    eval_dir_contents.remove('hp_layout.txt')
+    try:
+        eval_dir_contents.remove('hp_layout.txt')
+    except ValueError:
+        raise HPLayoutMissingError(eval_dir, "File 'hp_layout.txt' is missing in dir '%s'" % eval_dir)
+    except:
+        raise
     edc = construct(eval_dir_contents)
     for entry in edc:
         if 'launch_log' in entry:
@@ -2449,19 +2458,87 @@ def get_metric_names_and_regimes_from_optimizer_eval_dir(eval_dir):
     return metric_names, regimes
 
 
-def search_hps_giving_min_and_max(data):
+def in_interval(x, interval):
+    bra = interval[0]
+    cket = interval[-1]
+    left, right = interval[1:-1].split(',')
+    if is_float(left):
+        left = float(left)
+        if bra == '[':
+            if x >= left:
+                left_ok = True
+            else:
+                left_ok = False
+        elif bra == '(':
+            if x > left:
+                left_ok = True
+            else:
+                left_ok = False
+    else:
+        left_ok = True
+
+    if is_float(right):
+        right = float(right)
+        if cket == ']':
+            if x <= right:
+                right_ok = True
+            else:
+                right_ok = False
+        elif cket == ')':
+            if x < right:
+                right_ok = True
+            else:
+                right_ok = False
+    else:
+        right_ok = True
+    return left_ok and right_ok
+
+
+def split_by_brackets(value_filter):
+    splitted = re.split('([\]\)])', value_filter)
+    length = len(splitted)
+    intervals = list()
+    for i in range(length // 2):
+        intervals.append(
+            splitted[i*2] + splitted[i*2+1]
+        )
+    # print(intervals)
+    return intervals
+
+
+def pass_filter(x, value_filter):
+    if math.isnan(x):
+        return False
+    if math.isinf(x):
+        return False
+    value_filter = split_by_brackets(value_filter)
+    filter_is_passed = False
+    for interval in value_filter:
+        filter_is_passed = filter_is_passed or in_interval(x, interval)
+    return filter_is_passed
+
+
+def search_hps_giving_min_and_max(data, value_filter):
     min = None
     max = None
+    fixed_hps_num = len(list(data.keys())[0])
+    line_hp = list(list(data.values())[0].keys())[0]
+    if line_hp is None:
+        max_res_hp = [None] * fixed_hps_num + [None]
+        min_res_hp = [None] * fixed_hps_num + [None]
+    else:
+        max_res_hp = [None] * fixed_hps_num + [line_hp, None]
+        min_res_hp = [None] * fixed_hps_num + [line_hp, None]
     for fixed_hps_tuple, fdata in data.items():
         for line_hp, ldata in fdata.items():
             for changing_hp, v, _ in zip(*ldata):
-                if max is None or v > max:
+                if (max is None or v > max) and pass_filter(v, value_filter):
                     max = v
                     if line_hp is None:
                         max_res_hp = list(fixed_hps_tuple) + [changing_hp]
                     else:
                         max_res_hp = list(fixed_hps_tuple) + [line_hp, changing_hp]
-                if min is None or v < min:
+                if (min is None or v < min) and pass_filter(v, value_filter):
                     min = v
                     if line_hp is None:
                         min_res_hp = list(fixed_hps_tuple) + [changing_hp]
@@ -2473,12 +2550,19 @@ def search_hps_giving_min_and_max(data):
     )
 
 
-def get_min_and_max(for_plotting, model):
+def filter_wrapper(value_filter):
+    def f(data):
+        return search_hps_giving_min_and_max(data, value_filter)
+    return f
+
+
+def get_min_and_max(for_plotting, model, value_filter='[-inf,0)(0,+inf]'):
     if model == 'pupil':
         depth = 2
     elif model == 'optimizer':
         depth = 3
-    return apply_to_nested_on_depth(for_plotting, search_hps_giving_min_and_max, depth)
+    f = filter_wrapper(value_filter)
+    return apply_to_nested_on_depth(for_plotting, f, depth)
 
 
 def apply_direction(minmax, metric):
@@ -2488,8 +2572,8 @@ def apply_direction(minmax, metric):
         return minmax['min']
 
 
-def get_best(for_plotting, model):
-    minmax = get_min_and_max(for_plotting, model)
+def get_best(for_plotting, model, value_filter='[-inf,0)(0,+inf]'):
+    minmax = get_min_and_max(for_plotting, model, value_filter=value_filter)
     res = dict()
     if model == 'pupil':
         for dataset_name, dataset_res in minmax.items():
@@ -2913,7 +2997,7 @@ def extend_for_relative(data):
             )
         )
         res.append([specs, point[2]])
-        return res
+    return res
 
 
 def transform_data_into_dictionary_of_lines(data, order):
@@ -2962,6 +3046,17 @@ def save_lines(lines, dir_):
         with open(file_name, 'w') as f:
             num_points = len(lines[0])
             for p_idx, (x, y) in enumerate(zip(*lines)):
+                if isinstance(x, list):
+                    x = x[0]
+                if isinstance(y, list):
+                    y = y[0]
                 f.write('%s %s' % (x, y))
                 if p_idx < num_points - 1:
                     f.write('\n')
+
+
+def shift_list(l, sh):
+    ll = list()
+    for v in l:
+        ll.append(v+sh)
+    return ll

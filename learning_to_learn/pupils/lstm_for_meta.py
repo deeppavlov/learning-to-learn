@@ -196,15 +196,34 @@ class Lstm(Pupil):
         return dict()
 
     def _lstm_layer(self, inp, state, layer_idx, matr, bias):
+        # state = list(state)
+        # with tf.device('/cpu:0'):
+        #     state[0] = tf.Print(
+        #         state[0],
+        #         [state[0]],
+        #         message="\n\n(Lstm.loss_and_opt_ins)state[0]:\n",
+        #         summarize=20,
+        #     )
+
         with tf.name_scope('lstm_layer_%s' % layer_idx):
             nn = self._num_nodes[layer_idx]
+            inp = tf.nn.dropout(
+                inp,
+                self._dropout_keep_prob
+            )
             x = tf.concat(
-                [tf.nn.dropout(
-                    inp,
-                    self._dropout_keep_prob),
+                [inp,
                  state[0]],
                 -1,
-                name='X')
+                name='X'
+            )
+            # with tf.device('/cpu:0'):
+            #     x = tf.Print(
+            #         x,
+            #         [x],
+            #         message="\n\n(%s)\n(Lstm.loss_and_opt_ins)embeddings:\n" % x.name,
+            #         summarize=20,
+            #     )
             s = custom_matmul(x, matr)
             linear_res = custom_add(
                 s, bias, name='linear_res')
@@ -255,11 +274,17 @@ class Lstm(Pupil):
             o = tf.unstack(inputs, axis=unstack_dim, name='o_embedding_layer')
             inputs = tf.stack(o, axis=unstack_dim)
             embeddings = custom_matmul(inputs, matrix, base_ndims=[3, 2])
-
+            # with tf.device('/cpu:0'):
+            #     embeddings = tf.Print(
+            #         embeddings,
+            #         [embeddings],
+            #         message="\n\n(%s)\n(Lstm.loss_and_opt_ins)embeddings:\n" % embeddings.name,
+            #         summarize=20,
+            #     )
             unstacked_embeddings = tf.unstack(embeddings, axis=unstack_dim, name='embeddings')
             optimizer_ins = {'embedding_layer': {'o': o,
                                                  's': unstacked_embeddings}}
-            return unstacked_embeddings, optimizer_ins
+        return unstacked_embeddings, optimizer_ins
 
     def _output_module(self, rnn_outputs, output_matrices, output_biases):
         optimizer_ins = dict()
@@ -294,6 +319,13 @@ class Lstm(Pupil):
                         name='res_of_%s_output_layer' % layer_idx)
                     if layer_idx < self._num_output_layers - 1:
                         hs = tf.nn.relu(hs)
+        # with tf.device('/cpu:0'):
+        #     hs = tf.Print(
+        #         hs,
+        #         [hs],
+        #         message="\n\n(Lstm.loss_and_opt_ins)(%s)hs:\n" % hs.name,
+        #         summarize=20,
+        #     )
         return hs, optimizer_ins
 
     def _compute_lstm_matrix_parameters(self, idx):
@@ -374,7 +406,6 @@ class Lstm(Pupil):
                     'opt_ins in optimizer_ins format and trainable_variables structure is explained in loss_and_opt_ins'
                     'implementation'
                 )
-
             embedding_matrix = trainable['embedding_matrix']
             lstm_matrices = trainable['lstm_matrices']
             lstm_biases = trainable['lstm_biases']
@@ -383,22 +414,50 @@ class Lstm(Pupil):
 
             # with tf.device('/cpu:0'):
             #     embedding_matrix = tf.Print(
-            #         embedding_matrix, [embedding_matrix], message="\nembedding_matrix: ", summarize=10)
+            #         embedding_matrix,
+            #         [embedding_matrix],
+            #         message="\n\n(Lstm.loss_and_opt_ins)embedding_matrix:\n",
+            #         summarize=20,
+            #     )
+
+            # with tf.device('/cpu:0'):
+            #     embedding_matrix = tf.Print(
+            #         embedding_matrix, [embedding_matrix],
+            #         message="\n\n(%s)\nembedding_matrix:\n" % embedding_matrix.name, summarize=10
+            #     )
             #     n_lstm_matrices = list()
             #     for lstm_matrix in lstm_matrices:
-            #         n_lstm_matrices.append(tf.Print(
-            #             lstm_matrix, [lstm_matrix], message="lstm_matrix: ", summarize=10))
+            #         n_lstm_matrices.append(
+            #             tf.Print(
+            #                 lstm_matrix, [lstm_matrix],
+            #                 message="\n\n(%s)\nlstm_matrix:\n" % lstm_matrix.name,
+            #                 summarize=10,
+            #             )
+            #         )
             #     n_output_matrices = list()
             #     for output_matrix in output_matrices:
-            #         n_output_matrices.append(tf.Print(
-            #             output_matrix, [output_matrix], message="output_matrix: ", summarize=10))
+            #         n_output_matrices.append(
+            #             tf.Print(
+            #                 output_matrix, [output_matrix],
+            #                 message="\n\n(%s)\noutput_matrix:\n" % output_matrix.name,
+            #                 summarize=10
+            #             )
+            #         )
             #     lstm_matrices = n_lstm_matrices
             #     output_matrices = n_output_matrices
             #     n_saved_states = list()
             #     for layer_saved_states in saved_states:
             #         n_saved_states.append([
-            #             tf.Print(layer_saved_states[0], [layer_saved_states[0]], message="h: ", summarize=10),
-            #             tf.Print(layer_saved_states[1], [layer_saved_states[1]], message="c: ", summarize=10)
+            #             tf.Print(
+            #                 layer_saved_states[0], [layer_saved_states[0]],
+            #                 message="\n\n(%s)\nh:\n" % layer_saved_states[0].name,
+            #                 summarize=10
+            #             ),
+            #             tf.Print(
+            #                 layer_saved_states[1], [layer_saved_states[1]],
+            #                 message="\n\n(%s)\nc:\n" % layer_saved_states[1].name,
+            #                 summarize=10
+            #             )
             #         ])
             #     saved_states = n_saved_states
 
