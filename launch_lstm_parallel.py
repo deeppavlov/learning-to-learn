@@ -1,3 +1,4 @@
+import os
 import tensorflow as tf
 
 from learning_to_learn.environment import Environment
@@ -11,7 +12,14 @@ valid_size = 500
 valid_text = text[:valid_size]
 train_text = text[valid_size:]
 
-vocabulary = create_vocabulary(train_text + valid_text)
+voc_name = 'text8_voc.txt'
+if os.path.isfile(voc_name):
+    with open(voc_name, 'r') as f:
+        vocabulary = list(f.read())
+else:
+    vocabulary = create_vocabulary(text)
+    with open(voc_name, 'w') as f:
+        f.write(''.join(vocabulary))
 vocabulary_size = len(vocabulary)
 
 env = Environment(Lstm, BatchGenerator, vocabulary=vocabulary)

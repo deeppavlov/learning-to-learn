@@ -19,7 +19,7 @@ if os.path.isfile(voc_name):
     with open(voc_name, 'r') as f:
         vocabulary = list(f.read())
 else:
-    vocabulary = create_vocabulary(train_text + valid_text)
+    vocabulary = create_vocabulary(text)
     with open(voc_name, 'w') as f:
         f.write(''.join(vocabulary))
 
@@ -28,8 +28,6 @@ vocabulary_size = len(vocabulary)
 print('vocabulary_size:', vocabulary_size)
 
 env = Environment(Lstm, BatchGenerator, vocabulary=vocabulary)
-
-cpiv = get_positions_in_vocabulary(vocabulary)
 
 add_feed = [{'placeholder': 'dropout', 'value': 0.9} #,
             # {'placeholder': 'sampling_prob',
@@ -56,7 +54,6 @@ env.build_pupil(
     embedding_size=500,
     num_unrollings=NUM_UNROLLINGS,
     init_parameter=1.,
-    # character_positions_in_vocabulary=cpiv,
     num_gpus=1,
     additional_metrics=add_metrics,
     going_to_limit_memory=True,

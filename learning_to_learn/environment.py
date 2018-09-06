@@ -864,8 +864,11 @@ class Environment(object):
                     self._session.run(self._hooks['reset_validation_state'])
                 # print("fuse['text']:", [fuse['text']])
                 for char_idx, char in enumerate(fuse['text']):
-                    vec = batch_generator.char2vec(char, batch_generator.character_positions_in_vocabulary)
-                    feed_dict = {self._hooks['validation_inputs']: vec}
+                    vec = batch_generator.char2vec(char, batch_generator.character_positions_in_vocabulary, None, None)
+                    feed_dict = {
+                        self._hooks['validation_inputs']: np.reshape(
+                            vec, self._hooks['validation_inputs'].get_shape().as_list())
+                    }
                     feed_dict.update(additional_feed_dict)
                     fuse_operations = self._handler.get_tensors('fuse', char_idx)
                     # print('(_on_fuses)feed_dict:', feed_dict)
@@ -876,7 +879,7 @@ class Environment(object):
                 # self._handler.start_fuse_accumulation()
                 if fuse['fuse_stop'] == 'limit':
                     for char_idx in range(len(fuse['text']), len(fuse['text']) + fuse['max_num_of_chars'] - 1):
-                        vec = batch_generator.pred2vec(fuse_res[0])
+                        vec = batch_generator.pred2vec(fuse_res[0], None, None, None)
                         feed_dict = {self._hooks['validation_inputs']: vec}
                         feed_dict.update(additional_feed_dict)
                         fuse_operations = self._handler.get_tensors('fuse', char_idx)
@@ -887,7 +890,7 @@ class Environment(object):
                     counter = 0
                     char_idx = len(fuse['text'])
                     while char != '\n' and counter < fuse['max_num_of_chars'] - 1:
-                        vec = batch_generator.pred2vec(fuse_res[0])
+                        vec = batch_generator.pred2vec(fuse_res[0], None, None, None)
                         feed_dict = {self._hooks['validation_inputs']: vec}
                         feed_dict.update(additional_feed_dict)
                         fuse_operations = self._handler.get_tensors('fuse', char_idx)

@@ -595,7 +595,7 @@ def sample(array, axis):
 def get_available_gpus():
     local_device_protos = device_lib.list_local_devices()
     gpu_names = [x.name for x in local_device_protos if x.device_type == 'GPU']
-    gpu_names = sorted(gpu_names, key=lambda elem: int(elem[5:]))
+    gpu_names = sorted(gpu_names, key=lambda elem: int(elem.split(':')[-1]))
     return gpu_names
 
 
