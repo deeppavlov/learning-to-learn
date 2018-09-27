@@ -335,7 +335,7 @@ class Lstm(Pupil):
         else:
             input_dim = self._num_nodes[idx - 1] + self._num_nodes[idx]
         output_dim = 4 * self._num_nodes[idx]
-        stddev = self._init_parameter * np.sqrt(1. / input_dim)
+        stddev = self._init_parameter * np.sqrt(1. / (input_dim + self._num_nodes[idx]))
         return input_dim, output_dim, stddev
 
     def _compute_output_matrix_parameters(self, idx):
@@ -348,7 +348,7 @@ class Lstm(Pupil):
             output_dim = self._vec_dim
         else:
             output_dim = self._num_output_nodes[idx]
-        stddev = self._init_parameter * np.sqrt(1. / input_dim)
+        stddev = self._init_parameter * np.sqrt(1. / (input_dim + output_dim))
         return input_dim, output_dim, stddev
 
     def _l2_loss(self, matrices):
@@ -652,6 +652,17 @@ class Lstm(Pupil):
                 with tf.name_scope(device_name_scope(self._base_device) + '_gradients'):
                     # print('(Lstm._train_graph)tower_grads:', tower_grads)
                     grads_and_vars = average_gradients(tower_grads)
+                    # with tf.device('/cpu:0'):
+                    #     grads_and_vars = [
+                    #         (
+                    #             tf.Print(
+                    #                 grad, [tf.nn.l2_loss(grad), tf.nn.l2_loss(var)],
+                    #                 message="l2_loss(grad(%s)) and l2_loss(%s):\n" % (var.name, var.name)
+                    #             ),
+                    #             var
+                    #         )
+                    #         for grad, var in grads_and_vars
+                    #     ]
                     grads, v = zip(*grads_and_vars)
                     # grads, _ = tf.clip_by_global_norm(grads, 1.)
                     self.train_op = opt.apply_gradients(zip(grads, v))
@@ -759,8 +770,10 @@ class Lstm(Pupil):
         with tf.device(device):
             with tf.name_scope(name_scope):
                 embedding_matrix = tf.Variable(
-                    tf.truncated_normal([self._vec_dim, self._embedding_size],
-                                        stddev=self._init_parameter * np.sqrt(1. / self._vec_dim)),
+                    tf.truncated_normal(
+                        [self._vec_dim, self._embedding_size],
+                        stddev=self._init_parameter * np.sqrt(1. / (self._vec_dim + self._embedding_size))
+                    ),
                     name='embedding_matrix')
                 lstm_matrices = list()
                 lstm_biases = list()
