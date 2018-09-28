@@ -10,6 +10,14 @@ def choose_biggest(a, b, name_scope):
         return mask * a + (1. - mask) * b
 
 
+def metrics_reduce_mean(metrics, keep_first_dim, metrics_name):
+    reduce_axes = tf.range(1, tf.shape(tf.shape(metrics))[0], delta=1, dtype=tf.int32)
+    accuracy = tf.reduce_mean(metrics, axis=reduce_axes, name='%s_keep_first_dim' % metrics_name)
+    if not keep_first_dim:
+        metrics = tf.reduce_mean(accuracy, name=metrics_name)
+    return metrics
+
+
 def perplexity_tensor(probabilities=None, keep_first_dim=False):
     with tf.name_scope('computing_perplexity'):
         ln2 = np.log(2, dtype=np.float32)
@@ -22,12 +30,7 @@ def perplexity_tensor(probabilities=None, keep_first_dim=False):
         log_probabilities = tf.divide(tf.log(probabilities), ln2, name='log2_probs')
         entropy = tf.reduce_sum(- probabilities * log_probabilities, axis=-1, name='entropy_not_mean')
         perplexity = tf.exp(ln2 * entropy, name='perplexity_not_aver')
-        all_dims = [i for i in range(len(perplexity.get_shape().as_list()))]
-        if keep_first_dim:
-            red_dims = all_dims[1:]
-        else:
-            red_dims = all_dims
-        return tf.reduce_mean(perplexity, axis=red_dims, name="perplexity")
+        return metrics_reduce_mean(perplexity, keep_first_dim, 'perplexity')
 
 
 def loss_tensor(predictions=None, labels=None, keep_first_dim=False):
@@ -41,12 +44,7 @@ def loss_tensor(predictions=None, labels=None, keep_first_dim=False):
         log_predictions = tf.log(predictions, name='log_pred')
 
         loss_on_characters = tf.reduce_sum(-labels * log_predictions, axis=-1, name='loss_not_mean')
-        all_dims = [i for i in range(len(loss_on_characters.get_shape().as_list()))]
-        if keep_first_dim:
-            red_dims = all_dims[1:]
-        else:
-            red_dims = all_dims
-        return tf.reduce_mean(loss_on_characters, axis=red_dims, name='loss')
+        return metrics_reduce_mean(loss_on_characters, keep_first_dim, 'loss_on_characters')
 
 
 def bpc_tensor(loss=None):
@@ -66,12 +64,7 @@ def accuracy_tensor(predictions=None, labels=None, keep_first_dim=False):
         # labels = tf.Print(labels, [labels], message='labels_in_accuracy:', summarize=1200)
 
         accuracy = tf.to_float(tf.equal(predictions, labels), name='accuracy_not_averaged')
-        all_dims = [i for i in range(len(accuracy.get_shape().as_list()))]
-        if keep_first_dim:
-            red_dims = all_dims[1:]
-        else:
-            red_dims = all_dims
-        return tf.reduce_mean(accuracy, axis=red_dims, name='accuracy')
+        return metrics_reduce_mean(accuracy, keep_first_dim, 'accuracy')
 
 
 def identity_tensor(**kwargs):
