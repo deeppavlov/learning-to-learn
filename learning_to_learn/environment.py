@@ -733,11 +733,24 @@ class Environment(object):
     def dataset_in_storage(self, dataset_name):
         return dataset_name in self._current_place_for_result_saving
 
-    def _create_checkpoint(self, step, checkpoints_path, model_type='pupil'):
-        path = checkpoints_path + '/' + str(step)
+    def _create_checkpoint(self, name, checkpoints_path, model_type='pupil'):
+        if isinstance(checkpoints_path, str):
+            path = os.path.join(checkpoints_path, str(name))
+        elif isinstance(checkpoints_path, list):
+            path = [os.path.join(checkpoints_path[0], str(name))]
+            subgraph_paths = dict()
+            for gr_name, p in checkpoints_path.items():
+                subgraph_paths[gr_name] = [os.path.join(p, str(name))]
+            path.append(subgraph_paths)
         print('\nCreating %s checkpoint at %s' % (model_type, path))
         if model_type == 'pupil':
-            self._hooks['saver'].save(self._session, path)
+            if isinstance(path, str):
+                self._hooks['saver'].save(self._session, path)
+            elif isinstance(path, list):
+                self._hooks['saver'].save(self._session, path[0])
+                for gr_name, p in path[1].items():
+                    self._hooks['subgraph_savers'][gr_name].save(self._session, p)
+
         elif model_type == 'optimizer':
             # print("(Environment._create_checkpoint)self._hooks['meta_optimizer_saver']:",
             #       self._hooks['meta_optimizer_saver'])
@@ -748,7 +761,11 @@ class Environment(object):
         if restore_path is not None:
             if verbose:
                 print('restoring pupil from %s' % restore_path)
-            self._hooks['saver'].restore(self._session, restore_path)
+            if isinstance(restore_path, dict):
+                for saver_name, path in restore_path.items():
+                    self._hooks['subgraph_savers'][saver_name].restore(self._session, path)
+            else:
+                self._hooks['saver'].restore(self._session, restore_path)
 
     def _restore_meta_optimizer(self, restore_path):
         if restore_path is not None:
