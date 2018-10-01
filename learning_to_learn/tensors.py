@@ -115,6 +115,13 @@ def compute_metrics(metrics, predictions=None, labels=None, loss=None, keep_firs
         return res
 
 
+def compute_metrics_raw_lbls(metrics, predictions=None, labels=None, loss=None, keep_first_dim=False):
+    voc_size = tf.shape(predictions)[-1]
+    labels = tf.one_hot(labels, voc_size)
+    labels = tf.reshape(labels, tf.shape(predictions))
+    return compute_metrics(metrics, predictions=predictions, labels=labels, loss=loss, keep_first_dim=keep_first_dim)
+
+
 def log_and_sign(inp, p):
     edge = np.exp(-p)
     mask1 = tf.to_float(tf.abs(inp) > edge)
