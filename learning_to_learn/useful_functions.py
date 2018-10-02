@@ -39,11 +39,10 @@ EPSILON = 1e-10
 
 class InvalidArgumentError(Exception):
     def __init__(self, msg, value, name, allowed_values):
-        super(InvalidArgumentError, self).__init__(msg)
-        self._msg = msg
-        self._value = value
-        self._name = name
-        self._allowed_values = allowed_values
+        self.message = msg
+        self.value = value
+        self.name = name
+        self.allowed_values = allowed_values
 
 
 class WrongMethodCallError(Exception):
