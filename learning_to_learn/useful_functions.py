@@ -964,7 +964,7 @@ def compose_save_list(*pairs, name_scope='save_list'):
             # new_values = flatten(pair[1])
             for variable, value in zip(variables, new_values):
                 name = extract_op_name(variable.name)
-                save_list.append(tf.assign(variable, value, name='assign_save_%s' % name))
+                save_list.append(tf.assign(variable, value, validate_shape=False, name='assign_save_%s' % name))
         return save_list
 
 
