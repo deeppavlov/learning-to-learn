@@ -635,7 +635,7 @@ class Lstm(Pupil):
                             concat_pred = tf.nn.softmax(logits)
 
                             add_metrics = compute_metrics(
-                                additional_metrics, predictions=concat_pred,
+                                self._additional_metrics, predictions=concat_pred,
                                 labels=device_labels, loss=loss, keep_first_dim=False
                             )
 
