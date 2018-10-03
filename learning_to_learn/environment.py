@@ -1378,7 +1378,7 @@ class Environment(object):
 
             train_operations = self._handler.get_tensors('train', step, with_meta_optimizer=with_meta_optimizer)
             # print('train_operations:', train_operations)
-            # print('feed_dict:', feed_dict)
+            # print('(Environment._train)feed_dict:', feed_dict)
 
             train_res = self._session.run(train_operations, feed_dict=feed_dict)
             # here loss is given in bits per input (BPI)
