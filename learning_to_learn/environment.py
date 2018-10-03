@@ -390,6 +390,7 @@ class Environment(object):
                 with_meta_optimizer=False,
                 restore_optimizer_path=None,
                 save_path=None,
+                subgraphs_to_save=None,
                 result_types=self.put_result_types_in_correct_order(
                     ['loss', 'perplexity', 'accuracy']),
                 summary=False,
@@ -733,25 +734,23 @@ class Environment(object):
     def dataset_in_storage(self, dataset_name):
         return dataset_name in self._current_place_for_result_saving
 
-    def _create_checkpoint(self, name, checkpoints_path, model_type='pupil'):
-        if isinstance(checkpoints_path, str):
-            path = os.path.join(checkpoints_path, str(name))
-        elif isinstance(checkpoints_path, list):
-            path = [os.path.join(checkpoints_path[0], str(name))]
-            subgraph_paths = dict()
-            for gr_name, p in checkpoints_path.items():
-                subgraph_paths[gr_name] = [os.path.join(p, str(name))]
-            path.append(subgraph_paths)
-        print('\nCreating %s checkpoint at %s' % (model_type, path))
+    def _create_checkpoint(self, name, path, subgraph_names=None, model_type='pupil'):
         if model_type == 'pupil':
-            if isinstance(path, str):
+            if subgraph_names is not None:
+                all_vars_path = os.path.join(path, 'all_vars', name)
+                print('\nCreating %s %s checkpoint at %s' % (model_type, 'all_vars', all_vars_path))
+                self._hooks['saver'].save(self._session, all_vars_path)
+                for subgraph_name in subgraph_names:
+                    subgraph_path = os.path.join(path, subgraph_name, name)
+                    print('\nCreating %s %s subgraph checkpoint at %s' % (model_type, subgraph_name, subgraph_path))
+                    self._hooks['subraph_savers'][subgraph_name].save(
+                        self._session, subgraph_path)
+            else:
+                path = os.path.join(path, name)
+                print('\nCreating %s checkpoint at %s' % (model_type, path))
                 self._hooks['saver'].save(self._session, path)
-            elif isinstance(path, list):
-                self._hooks['saver'].save(self._session, path[0])
-                for gr_name, p in path[1].items():
-                    self._hooks['subgraph_savers'][gr_name].save(self._session, p)
-
         elif model_type == 'optimizer':
+            print('\nCreating %s checkpoint at %s' % (model_type, path))
             # print("(Environment._create_checkpoint)self._hooks['meta_optimizer_saver']:",
             #       self._hooks['meta_optimizer_saver'])
             self._hooks['meta_optimizer_saver'].save(self._session, path)
@@ -1165,6 +1164,7 @@ class Environment(object):
             batch_generator_class,
             with_meta_optimizer,
             init_step=0,
+            subgraphs_to_save=None,
             # storage=None,
     ):
         """It is a method that does actual training and responsible for one training pass through dataset. It is called
@@ -1352,7 +1352,7 @@ class Environment(object):
                 train_batches.change_specs(**tb_kwargs)
 
             if it_is_time_to_create_checkpoint.get():
-                self._create_checkpoint(step, checkpoints_path)
+                self._create_checkpoint(step, checkpoints_path, subgraph_names=subgraphs_to_save)
             train_inputs, train_labels = train_batches.next()
 
             if not with_meta_optimizer:
@@ -1419,7 +1419,7 @@ class Environment(object):
                             training_step=step,
                             additional_feed_dict=valid_add_feed_dict)
             if it_is_time_to_create_best_checkpoint.get():
-                self._create_checkpoint('best', checkpoints_path)
+                self._create_checkpoint('best', checkpoints_path, subgraph_names=subgraphs_to_save)
             step += 1
             storage['step'] = step
         return step
@@ -1580,17 +1580,18 @@ class Environment(object):
         # if 'reset_pupil_train_state' in self._hooks:
         #     self._session.run(self._hooks['reset_pupil_train_state'])
         if checkpoints_path is not None:
-            self._create_checkpoint('start', checkpoints_path)
+            self._create_checkpoint('start', checkpoints_path, subgraph_names=start_specs['subgraphs_to_save'])
         t1 = time.clock()
         for run_specs in run_specs_set:
             init_step = self._train(run_specs,
                                     checkpoints_path,
                                     start_specs['batch_generator_class'],
                                     start_specs['with_meta_optimizer'],
-                                    init_step=init_step)
+                                    init_step=init_step,
+                                    subgraphs_to_save=None)
         train_time = time.clock() - t1
         if checkpoints_path is not None:
-            self._create_checkpoint('final', checkpoints_path)
+            self._create_checkpoint('final', checkpoints_path, subgraph_names=start_specs['subgraphs_to_save'])
         self._handler.log_finish_time()
         self._handler.close()
         return train_time
