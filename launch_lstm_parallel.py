@@ -81,7 +81,7 @@ env.train(
     # gpu_memory=.3,
     allow_growth=True,
     save_path='lstm/start',
-    restore_path='lstm/start/checkpoints/best',
+    # restore_path='lstm/start/checkpoints/best',
     learning_rate=learning_rate,
     batch_size=BATCH_SIZE,
     num_unrollings=NUM_UNROLLINGS,

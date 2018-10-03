@@ -973,7 +973,7 @@ def compose_reset_list(*args, name_scope='reset_list'):
         reset_list = list()
         flattened = flatten(args)
         for variable in flattened:
-            shape = variable.get_shape().as_list()
+            shape = tf.shape(variable)
             name = extract_op_name(variable.name)
             reset_list.append(tf.assign(variable, tf.zeros(shape), name='assign_reset_%s' % name))
         return reset_list
@@ -984,7 +984,7 @@ def compose_randomize_list(*args, name_scope='randomize_list'):
         randomize_list = list()
         flattened = flatten(args)
         for variable in flattened:
-            shape = variable.get_shape().as_list()
+            shape = tf.shape(variable)
             name = extract_op_name(variable.name)
             assign_tensor = tf.truncated_normal(shape, stddev=1.)
             # assign_tensor = tf.Print(assign_tensor, [assign_tensor], message='assign tensor:')
@@ -1332,12 +1332,14 @@ def append_to_nested(result, to_append):
 
 
 def get_average_with_weights_func(weights):
-    sum_ = float(sum(weights))
+    if not isinstance(weights, (list, tuple)):
+        weights = tf.unstack(weights)
+    sum_ = tf.reduce_sum(weights)
     prep_weights = [w / sum_ for w in weights]
     def average_func(values):
         res = 0
         for w, v in zip(prep_weights, values):
-            res += w * v
+            res += tf.to_float(w) * tf.to_float(v)
         return res
     return average_func
 

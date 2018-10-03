@@ -55,6 +55,7 @@ def bpc_tensor(loss=None):
 def accuracy_tensor(predictions=None, labels=None, keep_first_dim=False):
     with tf.name_scope('computing_accuracy'):
         predictions = tf.argmax(predictions, axis=-1, name='predictions')
+        # print("(learning_to_learn.useful_functions.accuracy_tensor)labels:", labels)
         labels = tf.argmax(labels, axis=-1, name='labels')
 
         # predictions = tf.Print(
@@ -117,8 +118,10 @@ def compute_metrics(metrics, predictions=None, labels=None, loss=None, keep_firs
 
 def compute_metrics_raw_lbls(metrics, predictions=None, labels=None, loss=None, keep_first_dim=False):
     voc_size = tf.shape(predictions)[-1]
-    labels = tf.one_hot(labels, voc_size)
+    labels = tf.one_hot(labels, voc_size, dtype=tf.float32)
+    # print("(learning_to_learn.useful_functions.compute_metrics_raw_lbls)labels:", labels)
     labels = tf.reshape(labels, tf.shape(predictions))
+    # print("(learning_to_learn.useful_functions.compute_metrics_raw_lbls)labels:", labels)
     return compute_metrics(metrics, predictions=predictions, labels=labels, loss=loss, keep_first_dim=keep_first_dim)
 
 

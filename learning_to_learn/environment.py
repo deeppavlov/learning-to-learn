@@ -973,13 +973,13 @@ class Environment(object):
             self._session.run(self._hooks['reset_validation_state'])
         # print('batch_generator_class:', batch_generator_class)
         valid_batches = batch_generator_class(validation_dataset[0], validation_batch_size, **valid_batch_kwargs)
-        length = valid_batches.get_num_batches()
+        num_batches = valid_batches.get_num_batches()
         inputs, labels = valid_batches.next()
         step = 0
         self._handler.start_accumulation(validation_dataset[1], training_step=training_step)
         # print("(Environment._validate/before loop)self._current_place_for_result_saving:",
         #       self._current_place_for_result_saving)
-        while step < length:
+        while step < num_batches:
             validation_operations = self._handler.get_tensors('validation', step)
             feed_dict = {self._hooks['validation_inputs']: inputs,
                          self._hooks['validation_labels']: labels}
@@ -990,7 +990,7 @@ class Environment(object):
             valid_res = self._session.run(validation_operations, feed_dict=feed_dict)
             self._handler.process_results(training_step, valid_res, regime='validation')
             step += 1
-            if step < length:
+            if step < num_batches:
                 inputs, labels = valid_batches.next()
 
         # print("(Environment._validate/after loop)self._current_place_for_result_saving:",
@@ -1550,6 +1550,9 @@ class Environment(object):
     def _train_repeatedly(self, start_specs, run_specs_set):
         # initializing model
         self.flush_storage()
+        # print("(Environment._train_repeatedly)tf.trainable_variables():\n", tf.trainable_variables())
+        # print("(Environment._train_repeatedly)tf.global_variables():\n", tf.global_variables())
+        # print("(Environment._train_repeatedly)tf.local_variables():\n", tf.local_variables())
         self._session.run(tf.global_variables_initializer())
         self._restore_pupil(start_specs['restore_path'])
         if start_specs['with_meta_optimizer']:
