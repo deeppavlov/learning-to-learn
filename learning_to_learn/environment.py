@@ -735,6 +735,7 @@ class Environment(object):
         return dataset_name in self._current_place_for_result_saving
 
     def _create_checkpoint(self, name, path, subgraph_names=None, model_type='pupil'):
+        name = str(name)
         if model_type == 'pupil':
             if subgraph_names is not None:
                 all_vars_path = os.path.join(path, 'all_vars', name)
