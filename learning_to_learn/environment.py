@@ -735,16 +735,20 @@ class Environment(object):
         return dataset_name in self._current_place_for_result_saving
 
     def _create_checkpoint(self, name, path, subgraph_names=None, model_type='pupil'):
-        name = str(name)
         if model_type == 'pupil':
             if subgraph_names is not None:
-                all_vars_path = os.path.join(path, 'all_vars', name)
+                subgraph_names = dict(subgraph_names)
+                if 'all_vars' in subgraph_names:
+                    all_vars_path = os.path.join(path, subgraph_names['all_vars'], name)
+                    del subgraph_names['all_vars']
+                else:
+                    all_vars_path = os.path.join(path, 'all_vars', name)
                 print('\nCreating %s %s checkpoint at %s' % (model_type, 'all_vars', all_vars_path))
                 self._hooks['saver'].save(self._session, all_vars_path)
-                for subgraph_name in subgraph_names:
-                    subgraph_path = os.path.join(path, subgraph_name, name)
+                for subgraph_name, subgraph_dir in subgraph_names.items():
+                    subgraph_path = os.path.join(path, subgraph_dir, name)
                     print('\nCreating %s %s subgraph checkpoint at %s' % (model_type, subgraph_name, subgraph_path))
-                    self._hooks['subraph_savers'][subgraph_name].save(
+                    self._hooks['subgraph_savers'][subgraph_name].save(
                         self._session, subgraph_path)
             else:
                 path = os.path.join(path, name)
@@ -1353,7 +1357,7 @@ class Environment(object):
                 train_batches.change_specs(**tb_kwargs)
 
             if it_is_time_to_create_checkpoint.get():
-                self._create_checkpoint(step, checkpoints_path, subgraph_names=subgraphs_to_save)
+                self._create_checkpoint(str(step), checkpoints_path, subgraph_names=subgraphs_to_save)
             train_inputs, train_labels = train_batches.next()
 
             if not with_meta_optimizer:
@@ -1589,7 +1593,7 @@ class Environment(object):
                                     start_specs['batch_generator_class'],
                                     start_specs['with_meta_optimizer'],
                                     init_step=init_step,
-                                    subgraphs_to_save=None)
+                                    subgraphs_to_save=start_specs['subgraphs_to_save'])
         train_time = time.clock() - t1
         if checkpoints_path is not None:
             self._create_checkpoint('final', checkpoints_path, subgraph_names=start_specs['subgraphs_to_save'])
@@ -2111,7 +2115,7 @@ class Environment(object):
                 self._session.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
 
             if it_is_time_to_create_checkpoint.get():
-                self._create_checkpoint(step, checkpoints_path, model_type='optimizer')
+                self._create_checkpoint(str(step), checkpoints_path, model_type='optimizer')
 
             feed_dict = self._fill_train_meta_optimizer_feed_dict_with_inputs_and_labels(
                 feed_dict, pupil_grad_eval_batch_gens, optimizer_grad_batch_gens, train_specs['share_train_data'])
