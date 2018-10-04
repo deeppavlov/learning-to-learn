@@ -1005,11 +1005,16 @@ class Handler(object):
         # print("(Handler.print_hyper_parameters)self._processing_type:", self._processing_type)
         if indent != 0:
             print('\n' * (indent - 1))
+        # print("(Handler.print_hyper_parameters)order:", order)
         for key in order:
-            if key in hp:
-                print('%s: %s' % (hyperparameter_name_string(key), hp[key]))
+            if any([list(key[1:]) == list(k[1:]) for k in hp.keys()]):
+                for k in hp.keys():
+                    if list(key[1:]) == list(k[1:]):
+                        matching_key = k
+                print('%s: %s' % (hyperparameter_name_string(matching_key), hp[matching_key]))
 
     def _print_launch_results(self, results, hp, idx=None, indent=2):
+        # print("(Handler._print_launch_results)hp:", hp)
         self.print_hyper_parameters(hp, self._order, indent=indent)
         for dataset_name, res in results.items():
             print('results on %s dataset:' % dataset_name)

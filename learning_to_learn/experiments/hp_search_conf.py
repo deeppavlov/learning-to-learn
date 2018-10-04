@@ -16,9 +16,10 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument(
     "confs",
-    help="Path to configs used for hp search. \nTo process several configs"
+    help="Paths to created configs used for hp search. \nTo process several configs"
          " use following format '<path1>,<path2>,...<pathi>:<pathi+1>,..:..'.\nAll possible combinations of sets"
-         " separated by colons (in specified order) will be processed. \nYou have to provide paths relative to "
+         " separated by colons (in specified order) will be processed. Combinations are formed in the following way: "
+         "from each set one name is chosen\nYou have to provide paths relative to "
          "script. Edge characters of <path> can't be '/'"
 )
 parser.add_argument(

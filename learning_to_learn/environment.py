@@ -2171,7 +2171,7 @@ class Environment(object):
             evaluation,
             meta_optimizer_build_kwargs
     ):
-        tf.set_random_seed(1)
+        # tf.set_random_seed(1)
         self._build_pupil(kwargs_for_building)
         if meta_optimizer_build_kwargs is not None:
             self.build_optimizer(**meta_optimizer_build_kwargs)

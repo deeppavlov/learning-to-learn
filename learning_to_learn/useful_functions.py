@@ -1598,16 +1598,18 @@ def сreate_grids_after_file_parsing(
     # print("(useful_functions.make_initial_grid)init_grid_values:", init_grid_values)
     # print("(useful_functions.make_initial_grid)hp_names:", hp_names)
     for tested_comb in tested_combs:
+        # print("(useful_functions.сreate_grids_after_file_parsing)tested_comb:", tested_comb)
+        # print("(useful_functions.сreate_grids_after_file_parsing)exp_counter_grid:\n", exp_counter_grid)
         indices = list()
-        for p_idx, v in enumerate(tested_comb):
+        for param_idx, v in enumerate(tested_comb):
             try:
-                indices.append(init_grid_values[p_idx].index(v))
+                indices.append(init_grid_values[param_idx].index(v))
             except ValueError:
-                print("(useful_functions.make_initial_grid)init_grid_values:", init_grid_values)
-                print("(useful_functions.make_initial_grid)p_idx:", p_idx)
-                print("(useful_functions.make_initial_grid)tested_comb:", tested_comb)
-                print("WARNING: UNKNOWN POINT")
-        exp_counter_grid[tuple(indices)] += 1.
+                print("WARNING: UNKNOWN POINT:", tested_comb)
+                break
+        if len(indices) == len(init_grid_values):
+            exp_counter_grid[tuple(indices)] += 1.
+            # print("(useful_functions.сreate_grids_after_file_parsing)tested_comb:", tested_comb)
     grids = slice_to_conf_grids(exp_counter_grid, num_repeats), init_conf, num_exps
     return grids
 
