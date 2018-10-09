@@ -119,12 +119,12 @@ def process_batch_kwargs_shortcuts(set_of_kwargs, method_name):
     if method_name == 'test':
         if 'valid_batch_kwargs' not in set_of_kwargs:
             set_of_kwargs['valid_batch_kwargs'] = dict()
-            if 'num_unrollings' in set_of_kwargs:
-                set_of_kwargs['valid_batch_kwargs']['num_unrollings'] = {'num_unrollings': 1}
-                del set_of_kwargs['num_unrollings']
-            if 'vocabulary' in set_of_kwargs:
-                set_of_kwargs['valid_batch_kwargs']['vocabulary'] = list(set_of_kwargs['vocabulary'])
-                del set_of_kwargs['vocabulary']
+        if 'num_unrollings' in set_of_kwargs:
+            set_of_kwargs['valid_batch_kwargs']['num_unrollings'] = {'num_unrollings': 1}
+            del set_of_kwargs['num_unrollings']
+        if 'vocabulary' in set_of_kwargs:
+            set_of_kwargs['valid_batch_kwargs']['vocabulary'] = list(set_of_kwargs['vocabulary'])
+            del set_of_kwargs['vocabulary']
     if method_name == 'train_optimizer':
         if 'train_batch_kwargs' not in set_of_kwargs:
             set_of_kwargs['train_batch_kwargs'] = dict()

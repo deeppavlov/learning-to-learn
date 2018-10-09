@@ -20,7 +20,8 @@ from learning_to_learn.tensors import identity_tensor
 from learning_to_learn.useful_functions import InvalidArgumentError
 from learning_to_learn.useful_functions import construct, add_index_to_filename_if_needed, match_two_dicts, \
     create_path, check_if_key_in_nested_dict, add_missing_to_list, print_and_log, apply_temperature, sample, is_int, \
-    create_distribute_map, nth_element_of_sequence_of_sequences, get_elem_from_nested, form_combinations_from_dicts
+    create_distribute_map, nth_element_of_sequence_of_sequences, get_elem_from_nested, form_combinations_from_dicts, \
+    expand_or_reduce_dims
 
 from learning_to_learn.handler import Handler
 from subword_nmt.apply_bpe import BPE
@@ -541,7 +542,6 @@ class Environment(object):
                 random={'number_of_runs': 5,
                         'length': 80},
                 validation_tensor_schedule=construct(valid_tensor_schedule),
-                verbose=True,
             )
         )
         # This attribute is used solely for controlling learning parameters (learning rate, additions_to_feed_dict)
@@ -822,19 +822,20 @@ class Environment(object):
                                 fuse_file_name=work['fuse_file_name'],
                                 verbose=start_specs['verbose'])
         # print('(Environment.test)self._storage:', self._storage)
+        # print("(Environment.test)work['valid_batch_kwargs']:", work['valid_batch_kwargs'])
         self._handler.log_launch()
         empty_batch_gen = batch_generator_class('', 1, **work['valid_batch_kwargs'])
         if work['fuses'] is not None:
             fuse_res = self._on_fuses(empty_batch_gen,
                                       work['fuses'],
                                       additional_feed_dict=add_feed_dict,
-                                      verbose=kwargs['verbose'])
+                                      verbose=start_specs['verbose'])
         else:
             fuse_res = None
 
         validation_datasets = work['validation_datasets']
         # print("(Environment.test)work['valid_batch_kwargs']:", work['valid_batch_kwargs'])
-        if len(validation_datasets) > 0 and kwargs['verbose']:
+        if len(validation_datasets) > 0 and start_specs['verbose']:
             print("Testing!")
         for validation_dataset in validation_datasets:
             print("Validation dataset name:", validation_dataset[1])
@@ -2994,7 +2995,7 @@ class Environment(object):
                             allow_growth,
                             visible_device_list)
         if restore_path is None:
-            print_and_log('Skipping variables restoring. Continuing on current variables values', fn=log_path)
+            print('Skipping variables restoring. Continue on current variables values')
         else:
             self._session.run(tf.global_variables_initializer())
             self._restore_pupil(restore_path)
@@ -3008,6 +3009,7 @@ class Environment(object):
 
         sample_prediction = self._hooks['validation_predictions']
         sample_input = self._hooks['validation_inputs']
+        sample_ndims = sample_input.shape.ndims
         while not self._build_replica(human_replica) == 'FINISH':
             # print('(Environment.inference)human_replica:', human_replica)
             # print('(Environment.inference)self._build_replica(human_replica):', self._build_replica(human_replica))
@@ -3019,13 +3021,14 @@ class Environment(object):
                     feed_char = batch_generator_class.vec2char_fast(np.reshape(feed, (1, -1)), vocabulary)[0]
                     # print('feed.shape:', feed.shape)
                     feed_dict = dict(feed_dict_base.items())
-                    feed_dict[sample_input] = feed
+                    feed_dict[sample_input] = expand_or_reduce_dims(feed, sample_ndims)
                     excess_pred = sample_prediction.eval(feed_dict=feed_dict, session=self._session)
                     excess_char = batch_generator_class.vec2char(np.reshape(excess_pred, (1, -1)), vocabulary)[0]
-                    print('char:%s|||feed_char:%s|||excess_char:%s|||' % (char, feed_char, excess_char))
+                    # print('char:%s|||feed_char:%s|||excess_char:%s|||' % (char, feed_char, excess_char))
             feed = batch_generator_class.char2vec('\n', character_positions_in_vocabulary, 0, 2)
             feed_dict = dict(feed_dict_base.items())
-            feed_dict[sample_input] = feed
+            feed_dict[sample_input] = expand_or_reduce_dims(feed, sample_ndims)
+            # print('(Environment.inference)feed_dict[sample_input]:\n', feed_dict[sample_input])
             prediction = sample_prediction.eval(feed_dict=feed_dict, session=self._session)
             if temperature != 0.:
                 prediction = apply_temperature(prediction, -1, temperature)
@@ -3040,14 +3043,17 @@ class Environment(object):
             while char != '\n' and counter < 500:
                 # print('char:', repr(char))
                 # print('prediction:\n', prediction)
+                # print('(Environment.inference)before call prediction.shape:\n', prediction.shape)
                 feed = batch_generator_class.pred2vec(prediction, 1, 2, batch_gen_args)
+                # print('(Environment.inference)feed.shape:\n', feed.shape)
                 # print('feed:\n', feed)
                 # print('prediction after sampling:', prediction)
                 # print('feed:', feed)
                 feed_dict = dict(feed_dict_base.items())
-                feed_dict[sample_input] = feed
+                feed_dict[sample_input] = expand_or_reduce_dims(feed, sample_ndims)
                 prediction = sample_prediction.eval(feed_dict=feed_dict, session=self._session)
                 # print('prediction before sampling:', prediction)
+                # print('(Environment.inference)after call prediction.shape:\n', prediction.shape)
                 if temperature != 0.:
                     prediction = apply_temperature(prediction, -1, temperature)
                     # print('prediction after temperature:', prediction)
@@ -3061,13 +3067,13 @@ class Environment(object):
             print_and_log('Bot: ' + self._build_replica(bot_replica), fn=log_path)
             feed = batch_generator_class.char2vec('\n', character_positions_in_vocabulary, 1, 2)
             feed_dict = dict(feed_dict_base.items())
-            feed_dict[sample_input] = feed
+            feed_dict[sample_input] = expand_or_reduce_dims(feed, sample_ndims)
             _ = sample_prediction.eval(feed_dict=feed_dict, session=self._session)
 
             human_replica = input('Human: ')
             human_replica = self._prepare_replica(human_replica, batch_generator_class, bpe_codes, batch_gen_args)
         with open(log_path, 'a') as fd:
-            fd.write('\n*********************')
+            fd.write('*********************\n\n\n')
         self._close_session()
 
     def _feed_replica(self, replica, batch_generator_class,
@@ -3080,15 +3086,16 @@ class Environment(object):
             flag = 0
         sample_input = self._hooks['validation_inputs']
         sample_prediction = self._hooks['validation_predictions']
+        sample_ndims = sample_input.shape.ndims
         for char in replica:
             feed = batch_generator_class.char2vec(char, character_positions_in_vocabulary, flag, 2)
             # print('feed.shape:', feed.shape)
             feed_dict = dict(feed_dict_base.items())
-            feed_dict[sample_input] = feed
+            feed_dict[sample_input] = expand_or_reduce_dims(feed, sample_ndims)
             _ = sample_prediction.eval(feed_dict=feed_dict, session=self._session)
         feed = batch_generator_class.char2vec('\n', character_positions_in_vocabulary, flag, 2)
         feed_dict = dict(feed_dict_base.items())
-        feed_dict[sample_input] = feed
+        feed_dict[sample_input] = expand_or_reduce_dims(feed, sample_ndims)
         prediction = sample_prediction.eval(feed_dict=feed_dict, session=self._session)
         if temperature != 0.:
             prediction = apply_temperature(prediction, -1, temperature)
@@ -3106,13 +3113,14 @@ class Environment(object):
         bot_replica = ""
         sample_input = self._hooks['validation_inputs']
         sample_prediction = self._hooks['validation_predictions']
+        sample_ndims = sample_input.shape.ndims
         # print('ord(\'\\n\'):', ord('\n'))
         while char != '\n' and counter < 250:
             feed = batch_generator_class.pred2vec(prediction, flag, 2, batch_gen_args)
             # print('prediction after sampling:', prediction)
             # print('feed:', feed)
             feed_dict = dict(feed_dict_base.items())
-            feed_dict[sample_input] = feed
+            feed_dict[sample_input] = expand_or_reduce_dims(feed, sample_ndims)
             prediction = sample_prediction.eval(feed_dict=feed_dict, session=self._session)
             # print('prediction before sampling:', prediction)
             if temperature != 0.:

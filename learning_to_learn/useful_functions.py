@@ -1,6 +1,7 @@
 import itertools
 import importlib
 import math
+import json
 import re
 import numpy as np
 from functools import reduce
@@ -155,7 +156,7 @@ def pred2vec(pred):
 
 
 def pred2vec_fast(pred):
-    ids = np.argmax(pred, 1)
+    ids = np.argmax(pred, -1)
     return ids
 
 
@@ -1556,19 +1557,35 @@ def get_hp_names_from_conf_file(file_name):
 def read_text_conf_file(file_name):
     init_conf = OrderedDict()
     init_grid_values = list()
-    with open(file_name, 'r') as f:
-        lines = f.read().split('\n')
-    hp_names = lines[0].split()
-    hp_types = lines[1].split()
-    num_params = len(hp_names)
-    for hp_name, hp_type, line in zip(hp_names, hp_types, lines[2:2 + num_params]):
-        param_values = remove_repeats_from_list([convert(v, hp_type) for v in line.split()])
+    if file_name[-5:] == '.json':
+        hp_names = list()
+        hp_types = list()
+        hp_values = list()
+        with open(file_name, 'r') as f:
+            config = json.load(f)
+        for key in ['other_hyperparameters', 'build_hyperparameters']:
+            for hp_name, values_and_type in config[key].items():
+                hp_names.append(hp_name)
+                hp_types.append(values_and_type['dtype'])
+                hp_values.append(values_and_type['values'])
+        num_repeats = config['num_repeats']
+    else:
+        with open(file_name, 'r') as f:
+            lines = f.read().split('\n')
+        hp_names = lines[0].split()
+        hp_types = lines[1].split()
+        hp_values = list()
+        num_params = len(hp_names)
+        for line in lines[2:2 + num_params]:
+            hp_values.append(line.split())
+        if len(lines) > 2 + num_params and len(lines[2 + num_params]) > 0:
+            num_repeats = int(lines[2 + num_params])
+        else:
+            num_repeats = 1
+    for hp_name, hp_type, one_hp_values in zip(hp_names, hp_types, hp_values):
+        param_values = remove_repeats_from_list([convert(v, hp_type) for v in one_hp_values])
         init_conf[hp_name] = param_values
         init_grid_values.append(param_values)
-    if len(lines) > 2 + num_params and len(lines[2 + num_params]) > 0:
-        num_repeats = int(lines[2 + num_params])
-    else:
-        num_repeats = 1
     return hp_names, init_conf, init_grid_values, num_repeats
 
 
@@ -1583,20 +1600,20 @@ def сreate_grids_after_file_parsing(
 ):
     if model == 'optimizer':
         tested_combs, num_exps, last_exp_file_name = get_combs_and_num_exps(eval_dir_or_file, hp_names)
-        # print("(useful_functions.make_initial_grid)tested_combs:", tested_combs)
+        # print("(useful_functions.сreate_grids_after_file_parsing)tested_combs:", tested_combs)
     else:
         tested_combs, num_exps = get_combs_and_num_exps_pupil(eval_dir_or_file, hp_names)
         last_exp_file_name = None
-        # print("(useful_functions.make_initial_grid)tested_combs:", tested_combs)
+        # print("(useful_functions.сreate_grids_after_file_parsing)tested_combs:", tested_combs)
     if num_exps > 0 and chop_last_experiment and model == 'optimizer':
         os.remove(os.path.join(eval_dir_or_file, last_exp_file_name))
         shutil.rmtree(os.path.join(eval_dir_or_file, last_exp_file_name[:-4]))
         tested_combs = tested_combs[:-1]
         num_exps -= 1
-    # print("(useful_functions.make_initial_grid)tested_combs:", tested_combs)
+    # print("(useful_functions.сreate_grids_after_file_parsing)tested_combs:", tested_combs)
     exp_counter_grid = np.zeros(tuple([len(v) for v in init_conf.values()]))
-    # print("(useful_functions.make_initial_grid)init_grid_values:", init_grid_values)
-    # print("(useful_functions.make_initial_grid)hp_names:", hp_names)
+    # print("(useful_functions.сreate_grids_after_file_parsing)init_grid_values:", init_grid_values)
+    # print("(useful_functions.сreate_grids_after_file_parsing)hp_names:", hp_names)
     for tested_comb in tested_combs:
         # print("(useful_functions.сreate_grids_after_file_parsing)tested_comb:", tested_comb)
         # print("(useful_functions.сreate_grids_after_file_parsing)exp_counter_grid:\n", exp_counter_grid)
@@ -3038,3 +3055,12 @@ def shift_list(l, sh):
     for v in l:
         ll.append(v+sh)
     return ll
+
+
+def expand_or_reduce_dims(nparr, req_ndims):
+    if nparr.ndim < req_ndims:
+        for _ in range(nparr.ndim, req_ndims):
+            nparr = np.expand_dims(nparr, axis=0)
+    else:
+        nparr = np.reshape(nparr, nparr.shape[-req_ndims:])
+    return nparr
