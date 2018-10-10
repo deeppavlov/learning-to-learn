@@ -21,7 +21,7 @@ from learning_to_learn.useful_functions import InvalidArgumentError
 from learning_to_learn.useful_functions import construct, add_index_to_filename_if_needed, match_two_dicts, \
     create_path, check_if_key_in_nested_dict, add_missing_to_list, print_and_log, apply_temperature, sample, is_int, \
     create_distribute_map, nth_element_of_sequence_of_sequences, get_elem_from_nested, form_combinations_from_dicts, \
-    expand_or_reduce_dims
+    expand_or_reduce_dims, vec2char_with_temperature
 
 from learning_to_learn.handler import Handler
 from subword_nmt.apply_bpe import BPE
@@ -2972,7 +2972,7 @@ class Environment(object):
             allow_soft_placement,
             log_device_placement,
             visible_device_list,
-            appending,
+            append_logs,
             randomize,
     ):
         if additions_to_feed_dict is None:
@@ -2983,7 +2983,7 @@ class Environment(object):
                 feed_dict_base[self._hooks[addition['placeholder']]] = addition['value']
 
         create_path(save_path, file_name_is_in_path=True)
-        if not appending:
+        if not append_logs:
             save_path = add_index_to_filename_if_needed(save_path)
         self._start_session(allow_soft_placement,
                             log_device_placement,
@@ -2996,66 +2996,74 @@ class Environment(object):
             self._session.run(tf.global_variables_initializer())
             self._restore_pupil(restore_path)
         if randomize:
-            self._hooks['randomize_validation_state'].run(session=self._session)
+            reset_op = self._hooks['randomize_sample_state']
         else:
-            self._hooks['reset_sample_state'].run(session=self._session)
+            reset_op = self._hooks['reset_validation_state']
+        reset_op.run(session=self._session)
         sample_prediction = self._hooks['validation_predictions']
         sample_input = self._hooks['validation_inputs']
         sample_ndims = sample_input.shape.ndims
-        return feed_dict_base, save_path, sample_prediction, sample_input, sample_ndims
+        return feed_dict_base, save_path, sample_prediction, sample_input, sample_ndims, reset_op
 
     def _run_on_char(
             self,
-            batch_generator_class,
-            batch_gen_args,
-            feed_dict_base,
-            sample_input,
-            sample_ndims,
-            sample_prediction,
+            ld,  # launch parameters (launch dictionary)
             prediction=None,
             char=None,
-            character_positions_in_vocabulary=None,
     ):
         if prediction is not None:
-            feed = batch_generator_class.pred2vec(prediction, 1, 2, batch_gen_args)
+            feed = ld['batch_generator_class'].pred2vec(prediction, 1, 2, ld['batch_gen_args'])
         elif char is not None:
-            feed = batch_generator_class.char2vec(char, character_positions_in_vocabulary, 0, 2)
-        feed_dict = feed_dict_base.copy()
-        feed_dict[sample_input] = expand_or_reduce_dims(feed, sample_ndims)
-        prediction = sample_prediction.eval(feed_dict=feed_dict, session=self._session)
+            feed = ld['batch_generator_class'].char2vec(char, ld['character_positions_in_vocabulary'], 0, 2)
+        feed_dict = ld['feed_dict_base'].copy()
+        feed_dict[ld['sample_input']] = expand_or_reduce_dims(feed, ld['sample_ndims'])
+        prediction = ld['sample_prediction'].eval(feed_dict=feed_dict, session=self._session)
         return prediction
 
-    def dialog(
+    def cli_dialog(
             self,
             restore_path,
-            log_path,
+            log_file,
             vocabulary,
             character_positions_in_vocabulary,
             batch_generator_class,
+            reset_state_after_model_answer,
             additions_to_feed_dict=None,
             gpu_memory=None,
             allow_growth=False,
             allow_soft_placement=False,
             log_device_placement=False,
             visible_device_list='',
-            appending=True,
+            append_logs=True,
             temperature=0.,
             first_speaker='human',
             bpe_codes=None,
             batch_gen_args=None,
             randomize=False,
+            answer_len_limit=500.,
     ):
-        feed_dict_base, save_path, sample_prediction, sample_input, sample_ndims = self._start_inference(
+        feed_dict_base, log_file, sample_prediction, sample_input, sample_ndims, reset_op = self._start_inference(
             restore_path,
-            log_path,
+            log_file,
             additions_to_feed_dict,
             gpu_memory,
             allow_growth,
             allow_soft_placement,
             log_device_placement,
             visible_device_list,
-            appending,
+            append_logs,
             randomize,
+        )
+
+        # launch dictionary
+        ld = dict(
+            batch_generator_class=batch_generator_class,
+            batch_gen_args=batch_gen_args,
+            feed_dict_base=feed_dict_base,
+            sample_input=sample_input,
+            sample_ndims=sample_ndims,
+            sample_prediction=sample_prediction,
+            character_positions_in_vocabulary=character_positions_in_vocabulary
         )
 
         if first_speaker == 'human':
@@ -3066,79 +3074,123 @@ class Environment(object):
 
         while not self._build_replica(human_replica) == 'FINISH':
             if len(human_replica) > 0:
-                print_and_log('Human: ' + self._build_replica(human_replica), _print=False, fn=log_path)
+                print_and_log('Human: ' + self._build_replica(human_replica), _print=False, fn=log_file)
                 for char in human_replica:
-                    _ = self._run_on_char(
-                        batch_generator_class,
-                        batch_gen_args,
-                        feed_dict_base,
-                        sample_input,
-                        sample_ndims,
-                        sample_prediction,
-                        char=char,
-                        character_positions_in_vocabulary=character_positions_in_vocabulary,
-                    )
+                    _ = self._run_on_char(ld, char=char)
                     # feed = batch_generator_class.char2vec(char, character_positions_in_vocabulary, 0, 2)
                     # feed_char = batch_generator_class.vec2char_fast(np.reshape(feed, (1, -1)), vocabulary)[0]
                     # feed_dict = dict(feed_dict_base.items())
                     # feed_dict[sample_input] = expand_or_reduce_dims(feed, sample_ndims)
                     # excess_pred = sample_prediction.eval(feed_dict=feed_dict, session=self._session)
                     # excess_char = batch_generator_class.vec2char(np.reshape(excess_pred, (1, -1)), vocabulary)[0]
-            feed = batch_generator_class.char2vec('\n', character_positions_in_vocabulary, 0, 2)
-            feed_dict = dict(feed_dict_base.items())
-            feed_dict[sample_input] = expand_or_reduce_dims(feed, sample_ndims)
-            prediction = sample_prediction.eval(feed_dict=feed_dict, session=self._session)
-            if temperature != 0.:
-                prediction = apply_temperature(prediction, -1, temperature)
-                prediction = sample(prediction, -1)
-            char = batch_generator_class.vec2char(np.reshape(prediction, (1, -1)), vocabulary)[0]
+            prediction = self._run_on_char(ld, char='\n')
+            # feed = batch_generator_class.char2vec('\n', character_positions_in_vocabulary, 0, 2)
+            # feed_dict = dict(feed_dict_base.items())
+            # feed_dict[sample_input] = expand_or_reduce_dims(feed, sample_ndims)
+            # prediction = sample_prediction.eval(feed_dict=feed_dict, session=self._session)
+
+            # if temperature != 0.:
+            #     prediction = apply_temperature(prediction, -1, temperature)
+            #     prediction = sample(prediction, -1)
+            # char = batch_generator_class.vec2char(np.reshape(prediction, (1, -1)), vocabulary)[0]
+            char = vec2char_with_temperature(prediction, batch_generator_class, vocabulary, temperature)
             bot_replica = ''
             if char != '\n':
                 bot_replica += char
             counter = 0
-            while char != '\n' and counter < 500:
-                feed = batch_generator_class.pred2vec(prediction, 1, 2, batch_gen_args)
-                feed_dict = feed_dict_base.copy()
-                feed_dict[sample_input] = expand_or_reduce_dims(feed, sample_ndims)
-                prediction = sample_prediction.eval(feed_dict=feed_dict, session=self._session)
-                if temperature != 0.:
-                    prediction = apply_temperature(prediction, -1, temperature)
-                    prediction = sample(prediction, -1)
-                char = batch_generator_class.vec2char(np.reshape(prediction, (1, -1)), vocabulary)[0]
+            while char != '\n' and counter < answer_len_limit:
+                prediction = self._run_on_char(ld, prediction=prediction)
+                # if temperature != 0.:
+                #     prediction = apply_temperature(prediction, -1, temperature)
+                #     prediction = sample(prediction, -1)
+                # char = batch_generator_class.vec2char(np.reshape(prediction, (1, -1)), vocabulary)[0]
+                char = vec2char_with_temperature(prediction, batch_generator_class, vocabulary, temperature)
                 if char != '\n':
                     bot_replica += char
                 counter += 1
-            print_and_log('Bot: ' + self._build_replica(bot_replica), fn=log_path)
-            feed = batch_generator_class.char2vec('\n', character_positions_in_vocabulary, 1, 2)
-            feed_dict = dict(feed_dict_base.items())
-            feed_dict[sample_input] = expand_or_reduce_dims(feed, sample_ndims)
-            _ = sample_prediction.eval(feed_dict=feed_dict, session=self._session)
-
-            human_replica = input('Human: ')
-            human_replica = self._prepare_replica(human_replica, batch_generator_class, bpe_codes, batch_gen_args)
-        with open(log_path, 'a') as fd:
+            print_and_log('Bot: ' + self._build_replica(bot_replica), fn=log_file)
+            if reset_state_after_model_answer:
+                reset_op.run(session=self._session)
+            _ = self._run_on_char(ld, char='\n')
+            # feed = batch_generator_class.char2vec('\n', character_positions_in_vocabulary, 1, 2)
+            # feed_dict = dict(feed_dict_base.items())
+            # feed_dict[sample_input] = expand_or_reduce_dims(feed, sample_ndims)
+            # _ = sample_prediction.eval(feed_dict=feed_dict, session=self._session)
+            human_replica = self._prepare_replica(input('Human: '), batch_generator_class, bpe_codes, batch_gen_args)
+        with open(log_file, 'a') as fd:
             fd.write('*********************\n\n\n')
         self._close_session()
 
-    def infer(
+    def file_dialog(
         self,
         restore_path,
-        log_path,
+        input_replica_file,
+        result_file,
         vocabulary,
         character_positions_in_vocabulary,
         batch_generator_class,
+        reset_state_after_model_answer,
         additions_to_feed_dict=None,
         gpu_memory=None,
         allow_growth=False,
         allow_soft_placement=False,
         log_device_placement=False,
         visible_device_list='',
-        appending=False,
         temperature=0.,
         bpe_codes=None,
-        batch_gen_args=None
+        batch_gen_args=None,
+        randomize=False,
+        answer_len_limit=500.,
     ):
-        pass
+        feed_dict_base, result_file, sample_prediction, sample_input, sample_ndims, reset_op = self._start_inference(
+            restore_path,
+            result_file,
+            additions_to_feed_dict,
+            gpu_memory,
+            allow_growth,
+            allow_soft_placement,
+            log_device_placement,
+            visible_device_list,
+            False,
+            randomize,
+        )
+        # launch dictionary
+        ld = dict(
+            batch_generator_class=batch_generator_class,
+            batch_gen_args=batch_gen_args,
+            feed_dict_base=feed_dict_base,
+            sample_input=sample_input,
+            sample_ndims=sample_ndims,
+            sample_prediction=sample_prediction,
+            character_positions_in_vocabulary=character_positions_in_vocabulary
+        )
+        with open(input_replica_file, 'r') as f:
+            text = f.read()
+        input_replicas = text.split('\n')
+        while len(input_replicas[-1]) == 0:
+            del input_replicas[-1]
+        for ridx, replica in enumerate(input_replicas):
+            for char in self._prepare_replica(replica, batch_generator_class, bpe_codes, batch_gen_args):
+                _ = self._run_on_char(ld, char=char)
+            prediction = self._run_on_char(ld, char='\n')
+            char = vec2char_with_temperature(prediction, batch_generator_class, vocabulary, temperature)
+            bot_replica = ''
+            if char != '\n':
+                bot_replica += char
+            counter = 0
+            while char != '\n' and counter < answer_len_limit:
+                prediction = self._run_on_char(ld, prediction=prediction)
+                char = vec2char_with_temperature(prediction, batch_generator_class, vocabulary, temperature)
+                if char != '\n':
+                    bot_replica += char
+                counter += 1
+            print("Environment.file_dialog)bot_replica:", bot_replica)
+            mode = 'w' if ridx == 0 else 'a'
+            with open(result_file, mode) as f:
+                f.write(bot_replica + '\n')
+            if reset_state_after_model_answer:
+                reset_op.run(session=self._session)
+        self._close_session()
 
     def _feed_replica(self, replica, batch_generator_class,
                       character_positions_in_vocabulary, temperature,

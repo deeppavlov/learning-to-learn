@@ -593,6 +593,14 @@ def sample(array, axis):
     return answer
 
 
+def vec2char_with_temperature(predictions, bgencls, vocabulary, temperature):
+    if temperature != 0.:
+        predictions = apply_temperature(predictions, -1, temperature)
+        predictions = sample(predictions, -1)
+    return bgencls.vec2char(np.reshape(predictions, (1, -1)), vocabulary)[0]
+
+
+
 def get_available_gpus():
     local_device_protos = device_lib.list_local_devices()
     gpu_names = [x.name for x in local_device_protos if x.device_type == 'GPU']
