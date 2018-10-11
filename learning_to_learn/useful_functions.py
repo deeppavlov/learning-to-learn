@@ -98,12 +98,15 @@ class HPLayoutMissingError(Exception):
         self.message = message
 
 
-def create_vocabulary(text):
+def create_vocabulary(text, with_unk=False):
     all_characters = list()
-    for char in text:
-        if char not in all_characters:
-            all_characters.append(char)
-    return sorted(all_characters, key=lambda dot: ord(dot))
+    for c in text:
+        if c not in all_characters:
+            all_characters.append(c)
+    all_characters = sorted(all_characters)
+    if with_unk:
+        return ['<UNK>'] + all_characters
+    return all_characters
 
 
 def get_positions_in_vocabulary(vocabulary):
@@ -116,6 +119,8 @@ def get_positions_in_vocabulary(vocabulary):
 def char2id(char, character_positions_in_vocabulary):
     if char in character_positions_in_vocabulary:
         return character_positions_in_vocabulary[char]
+    elif '<UNK>' in character_positions_in_vocabulary:
+        return character_positions_in_vocabulary['<UNK>']
     else:
         print(u'Unexpected character: %s\nUnexpected character number: %s\n' %
               (repr(char), str([ord(c) for c in char])))

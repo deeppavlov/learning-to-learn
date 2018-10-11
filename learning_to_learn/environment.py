@@ -838,12 +838,8 @@ class Environment(object):
         if len(validation_datasets) > 0 and start_specs['verbose']:
             print("Testing!")
         for validation_dataset in validation_datasets:
-            print("Validation dataset name:", validation_dataset[1])
-            print("Validation dataset_size:")
-            if len(validation_dataset[0]) > 100:
-                print(len(validation_dataset[0]))
-            else:
-                print('Either dataset is not text or dataset size is less than 100:', len(validation_dataset[0]))
+            print("Dataset name:", validation_dataset[1])
+            print("Dataset_size:", len(validation_dataset[0]))
             if work['validate_tokens_by_chars']:
                 _ = self._validate_by_chars(
                     batch_generator_class, validation_dataset, work['validation_batch_size'],
@@ -3077,22 +3073,7 @@ class Environment(object):
                 print_and_log('Human: ' + self._build_replica(human_replica), _print=False, fn=log_file)
                 for char in human_replica:
                     _ = self._run_on_char(ld, char=char)
-                    # feed = batch_generator_class.char2vec(char, character_positions_in_vocabulary, 0, 2)
-                    # feed_char = batch_generator_class.vec2char_fast(np.reshape(feed, (1, -1)), vocabulary)[0]
-                    # feed_dict = dict(feed_dict_base.items())
-                    # feed_dict[sample_input] = expand_or_reduce_dims(feed, sample_ndims)
-                    # excess_pred = sample_prediction.eval(feed_dict=feed_dict, session=self._session)
-                    # excess_char = batch_generator_class.vec2char(np.reshape(excess_pred, (1, -1)), vocabulary)[0]
             prediction = self._run_on_char(ld, char='\n')
-            # feed = batch_generator_class.char2vec('\n', character_positions_in_vocabulary, 0, 2)
-            # feed_dict = dict(feed_dict_base.items())
-            # feed_dict[sample_input] = expand_or_reduce_dims(feed, sample_ndims)
-            # prediction = sample_prediction.eval(feed_dict=feed_dict, session=self._session)
-
-            # if temperature != 0.:
-            #     prediction = apply_temperature(prediction, -1, temperature)
-            #     prediction = sample(prediction, -1)
-            # char = batch_generator_class.vec2char(np.reshape(prediction, (1, -1)), vocabulary)[0]
             char = vec2char_with_temperature(prediction, batch_generator_class, vocabulary, temperature)
             bot_replica = ''
             if char != '\n':
@@ -3100,10 +3081,6 @@ class Environment(object):
             counter = 0
             while char != '\n' and counter < answer_len_limit:
                 prediction = self._run_on_char(ld, prediction=prediction)
-                # if temperature != 0.:
-                #     prediction = apply_temperature(prediction, -1, temperature)
-                #     prediction = sample(prediction, -1)
-                # char = batch_generator_class.vec2char(np.reshape(prediction, (1, -1)), vocabulary)[0]
                 char = vec2char_with_temperature(prediction, batch_generator_class, vocabulary, temperature)
                 if char != '\n':
                     bot_replica += char
@@ -3112,10 +3089,6 @@ class Environment(object):
             if reset_state_after_model_answer:
                 reset_op.run(session=self._session)
             _ = self._run_on_char(ld, char='\n')
-            # feed = batch_generator_class.char2vec('\n', character_positions_in_vocabulary, 1, 2)
-            # feed_dict = dict(feed_dict_base.items())
-            # feed_dict[sample_input] = expand_or_reduce_dims(feed, sample_ndims)
-            # _ = sample_prediction.eval(feed_dict=feed_dict, session=self._session)
             human_replica = self._prepare_replica(input('Human: '), batch_generator_class, bpe_codes, batch_gen_args)
         with open(log_file, 'a') as fd:
             fd.write('*********************\n\n\n')
@@ -3184,7 +3157,6 @@ class Environment(object):
                 if char != '\n':
                     bot_replica += char
                 counter += 1
-            print("Environment.file_dialog)bot_replica:", bot_replica)
             mode = 'w' if ridx == 0 else 'a'
             with open(result_file, mode) as f:
                 f.write(bot_replica + '\n')
