@@ -387,6 +387,7 @@ class Environment(object):
                 visible_device_list=""
             ),
             start_specs=dict(
+                log_launch=False,
                 restore_path=None,
                 with_meta_optimizer=False,
                 restore_optimizer_path=None,
@@ -442,6 +443,7 @@ class Environment(object):
                 visible_device_list=""
             ),
             start_specs=dict(
+                log_launch=False,
                 restore_optimizer_path=None,
                 save_path=None,
                 result_types=self.put_result_types_in_correct_order(
@@ -515,6 +517,7 @@ class Environment(object):
                 visible_device_list=""
             ),
             start_specs=dict(
+                log_launch=False,
                 restore_path=None,
                 save_path=None,
                 print_results=True,
@@ -823,7 +826,8 @@ class Environment(object):
                                 verbose=start_specs['verbose'])
         # print('(Environment.test)self._storage:', self._storage)
         # print("(Environment.test)work['valid_batch_kwargs']:", work['valid_batch_kwargs'])
-        self._handler.log_launch()
+        if start_specs['log_launch']:
+            self._handler.log_launch()
         empty_batch_gen = batch_generator_class('', 1, **work['valid_batch_kwargs'])
         if work['fuses'] is not None:
             fuse_res = self._on_fuses(empty_batch_gen,
@@ -837,18 +841,20 @@ class Environment(object):
         # print("(Environment.test)work['valid_batch_kwargs']:", work['valid_batch_kwargs'])
         if len(validation_datasets) > 0 and start_specs['verbose']:
             print("Testing!")
+        valid_res = dict()
         for validation_dataset in validation_datasets:
             print("Dataset name:", validation_dataset[1])
             print("Dataset_size:", len(validation_dataset[0]))
             if work['validate_tokens_by_chars']:
-                _ = self._validate_by_chars(
+                mean_metrics = self._validate_by_chars(
                     batch_generator_class, validation_dataset, work['validation_batch_size'],
                     work['valid_batch_kwargs'], additional_feed_dict=add_feed_dict)
             else:
                 # print('(Environment.test)self._storage:', self._storage)
-                _ = self._validate(
+                mean_metrics = self._validate(
                     batch_generator_class, validation_dataset, work['validation_batch_size'],
                     work['valid_batch_kwargs'], additional_feed_dict=add_feed_dict)
+            valid_res[validation_dataset[1]] = mean_metrics
         if work['example_length'] is not None:
             example_res = list()
             for validation_dataset in validation_datasets:
@@ -865,7 +871,7 @@ class Environment(object):
         else:
             example_res = None
         self._close_session()
-        return fuse_res, example_res
+        return fuse_res, example_res, valid_res
 
     def _on_fuses(self,
                   batch_generator,
@@ -1572,7 +1578,8 @@ class Environment(object):
                                 add_graph_to_summary=start_specs['add_graph_to_summary'],
                                 batch_generator_class=start_specs['batch_generator_class'],
                                 vocabulary=start_specs['vocabulary'])
-        self._handler.log_launch()
+        if start_specs['log_launch']:
+            self._handler.log_launch()
         if start_specs['save_path'] is not None:
             checkpoints_path = start_specs['save_path'] + '/checkpoints'
             create_path(checkpoints_path)
@@ -3463,7 +3470,7 @@ class Environment(object):
         fuses_fd.close()
         correct_answers_fd.close()
 
-        fuse_results, _ = self.test(
+        fuse_results, _, _ = self.test(
             restore_path=restore_path,
             print_results=False,
             vocabulary=vocabulary,

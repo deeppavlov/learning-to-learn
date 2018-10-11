@@ -46,7 +46,7 @@ def continue_dialog(fuse, n):
         fuse_stop='limit',
     )
 
-    fuse_res, _ = env.test(
+    fuse_res, _, _ = env.test(
         allow_growth=True,
         restore_path='dostoevsky/train/checkpoints/best',
         # restore_path='lstm/start/checkpoints/best',
