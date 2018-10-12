@@ -1389,7 +1389,7 @@ class Environment(object):
 
             train_res = self._session.run(train_operations, feed_dict=feed_dict)
             # here loss is given in bits per input (BPI)
-            self._handler.process_results(step, train_res, regime='train')
+            self._handler.process_results(step, train_res, time.clock() - train_start_time, regime='train')
             # print("(Environment._train)train_specs['valid_batch_kwargs']:", train_specs['valid_batch_kwargs'])
             if it_is_time_for_validation.get():
                 if len(train_specs['validation_datasets']) > 0:
@@ -1590,7 +1590,8 @@ class Environment(object):
         #     self._session.run(self._hooks['reset_pupil_train_state'])
         if checkpoints_path is not None:
             self._create_checkpoint('start', checkpoints_path, subgraph_names=start_specs['subgraphs_to_save'])
-        t1 = time.clock()
+        global train_start_time
+        train_start_time = time.clock()
         for run_specs in run_specs_set:
             init_step = self._train(run_specs,
                                     checkpoints_path,
@@ -1598,7 +1599,7 @@ class Environment(object):
                                     start_specs['with_meta_optimizer'],
                                     init_step=init_step,
                                     subgraphs_to_save=start_specs['subgraphs_to_save'])
-        train_time = time.clock() - t1
+        train_time = time.clock() - train_start_time
         if checkpoints_path is not None:
             self._create_checkpoint('final', checkpoints_path, subgraph_names=start_specs['subgraphs_to_save'])
         self._handler.log_finish_time()

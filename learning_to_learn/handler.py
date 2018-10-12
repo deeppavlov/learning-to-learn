@@ -1057,7 +1057,9 @@ class Handler(object):
         if indents is None:
             indents = [0, 0]
         for _ in range(indents[0]):
-            print('')
+            print()
+        if 'time_elapsed' in kwargs:
+            print("time elapsed:", kwargs['time_elapsed'])
         if regime == 'train':
             if 'step' in kwargs:
                 print('step:', kwargs['step'])
@@ -1065,11 +1067,12 @@ class Handler(object):
         if 'message' in kwargs:
             print(kwargs['message'])
         for key, value in kwargs.items():
-            if key != 'tensors' and\
-                            key != 'step' and \
-                            key != 'message' and \
-                            key in self._printed_result_types and \
-                            key not in self._print_order:
+            if key != 'tensors' \
+                    and key != 'step' \
+                    and key != 'message' \
+                    and key != 'time_elapsed' \
+                    and key in self._printed_result_types \
+                    and key not in self._print_order:
                 print('%s:' % key, value)
         for key in self._print_order:
             if key in kwargs:
@@ -1141,6 +1144,7 @@ class Handler(object):
                                result_types,
                                results_collect_interval,
                                print_per_collected,
+                               time_elapsed,
                                msg='results on train dataset'):
         # print('step:', step)
         # print('train_res:', train_res)
@@ -1149,7 +1153,8 @@ class Handler(object):
         tmp = train_res[basic_borders[0]+1:basic_borders[1]]
         # print("(Handler._process_train_results)result_types:", result_types)
         res_dict = self._toss_train_results(tmp, result_types)
-
+        to_print = res_dict.copy()
+        to_print['time_elapsed'] = time_elapsed
         if self._printed_result_types is not None:
             if results_collect_interval is not None:
                 if step % (results_collect_interval * print_per_collected) == 0:
@@ -1164,7 +1169,7 @@ class Handler(object):
                         indents=indents,
                         step=step,
                         message=msg,
-                        **res_dict
+                        **to_print
                     )
         if results_collect_interval is not None:
             if step % results_collect_interval == 0:
@@ -1295,9 +1300,10 @@ class Handler(object):
         if regime == 'train':
             step = args[0]
             res = args[1]
+            time_elapsed = args[2]
             # print("(Handler.process_results/train)self._save_path:", self._save_path)
             self._process_train_results(
-                step, res, self._result_types, self._results_collect_interval, self._print_per_collected)
+                step, res, self._result_types, self._results_collect_interval, self._print_per_collected, time_elapsed)
         if regime == 'validation':
             step = args[0]
             res = args[1]
