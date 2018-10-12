@@ -3069,7 +3069,8 @@ class Environment(object):
             sample_prediction=sample_prediction,
             character_positions_in_vocabulary=character_positions_in_vocabulary
         )
-
+        sys.stdout.flush()
+        sys.stdin.flush()
         if first_speaker == 'human':
             human_replica = input('Human: ')
         else:
@@ -3097,6 +3098,8 @@ class Environment(object):
             if reset_state_after_model_answer:
                 reset_op.run(session=self._session)
             _ = self._run_on_char(ld, char='\n')
+            sys.stdout.flush()
+            sys.stdin.flush()
             human_replica = self._prepare_replica(input('Human: '), batch_generator_class, bpe_codes, batch_gen_args)
         with open(log_file, 'a') as fd:
             fd.write('*********************\n\n\n')
