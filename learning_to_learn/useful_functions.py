@@ -989,7 +989,14 @@ def compose_reset_list(*args, name_scope='reset_list'):
         for variable in flattened:
             shape = tf.shape(variable)
             name = extract_op_name(variable.name)
-            reset_list.append(tf.assign(variable, tf.zeros(shape), name='assign_reset_%s' % name))
+            assign_op = tf.assign(variable, tf.zeros(shape), name='assign_reset_%s' % name)
+            # with tf.device('/cpu:0'):
+            #     assign_op = tf.Print(
+            #         assign_op,
+            #         list(tensor_stats(tf.zeros(shape), ['mean', 'variance', 'min', 'max']).values()),
+            #         message="\n\n(useful_functions.compose_reset_list)tf.zeros(shape) mean, variance, min, max:\n",
+            #     )
+            reset_list.append(assign_op)
         return reset_list
 
 
@@ -1001,9 +1008,16 @@ def compose_randomize_list(*args, name_scope='randomize_list'):
             shape = tf.shape(variable)
             name = extract_op_name(variable.name)
             assign_tensor = tf.truncated_normal(shape, stddev=1.)
-            # assign_tensor = tf.Print(assign_tensor, [assign_tensor], message='assign tensor:')
-            assign = tf.assign(variable, assign_tensor, name='assign_reset_%s' % name)
-            randomize_list.append(assign)
+            assign_op = tf.assign(variable, assign_tensor, name='assign_randomize_%s' % name)
+            # with tf.device('/cpu:0'):
+            #     assign_op = tf.Print(
+            #         assign_op,
+            #         list(tensor_stats(assign_tensor, ['mean', 'variance', 'min', 'max']).values()),
+            #         message="\n\n(useful_functions.compose_randomize_list)assign tensor mean, variance, min, max:\n",
+            #     )
+            
+            randomize_list.append(assign_op)
+        # print("(useful_functions.compose_randomize_list)randomize_list:", randomize_list)
         return randomize_list
 
 
@@ -1900,42 +1914,50 @@ def get_substitution_tensor(tensor, substitution_way, **kwargs):
     return s
 
 
-def vsum(var, summary_types):
+def tensor_stats(tensor, stat_types):
+    mean, variance = tf.nn.moments(tf.reshape(tensor, [-1]), axes=[0])
+    min_ = tf.reduce_min(tensor)
+    max_ = tf.reduce_max(tensor)
+    res = OrderedDict()
+    if 'mean' in stat_types:
+        res['mean'] = mean
+    if 'variance' in stat_types:
+        res['variance'] = variance
+    if 'min' in stat_types:
+        res['min'] = min_
+    if 'max' in stat_types:
+        res['max'] = max_
+    return res
+
+
+def tensor_summary(tensor, summary_types):
     res = list()
+    stats = tensor_stats(tensor, summary_types)
     if 'mean' in summary_types:
-        mean = tf.reduce_mean(var)
         with tf.device('/cpu:0'):
-            res.append(tf.summary.scalar('mean', mean))
-    else:
-        mean = None
+            res.append(tf.summary.scalar('mean', stats['mean']))
     if 'stddev' in summary_types:
-        if mean is None:
-            mean = tf.reduce_mean(var)
-        with tf.name_scope('stddev'):
-            stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
         with tf.device('/cpu:0'):
-            res.append(tf.summary.scalar('stddev', stddev))
+            res.append(tf.summary.scalar('variance', stats['variance']))
     if 'max' in summary_types:
-        max = tf.reduce_max(var)
         with tf.device('/cpu:0'):
-            res.append(tf.summary.scalar('max', max))
+            res.append(tf.summary.scalar('max', stats['max']))
     if 'min' in summary_types:
-        min = tf.reduce_min(var)
         with tf.device('/cpu:0'):
-            res.append(tf.summary.scalar('min', min))
+            res.append(tf.summary.scalar('min', stats['min']))
     if 'histogram' in summary_types:
         with tf.device('/cpu:0'):
-            res.append(tf.summary.histogram('histogram', var))
+            res.append(tf.summary.histogram('histogram', tensor))
     return res
 
 
 def variable_summaries(var, summary_types, name_scope):
     """Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
     if name_scope is None:
-        return vsum(var, summary_types)
+        return tensor_summary(var, summary_types)
     else:
         with tf.name_scope(name_scope):
-            return vsum(var, summary_types)
+            return tensor_summary(var, summary_types)
 
 
 def get_elem_from_nested(nested, keys):
