@@ -513,7 +513,7 @@ class Environment(object):
             session_specs=dict(
                 allow_soft_placement=False,
                 gpu_memory=None,
-                allow_growth=False,
+                allow_growth=True,
                 log_device_placement=False,
                 visible_device_list=""
             ),
