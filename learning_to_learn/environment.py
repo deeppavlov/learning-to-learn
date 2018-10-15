@@ -83,7 +83,7 @@ class Controller(object):
             self._specifications = dict(self._specifications)
             self._specifications['num_points_since_best_res'] = 0
             self._specifications['value'] = self._specifications['init']
-            self._specifications['last_fire_line_length'] = -1
+            self._specifications['line_len_after_prev_get_call'] = -1
             self._init_ops_for_adaptive_controller()
         elif self._specifications['type'] == 'fire_at_best':
             self.get = self._fire_at_best
@@ -114,7 +114,12 @@ class Controller(object):
             self._storage,
             self._specifications['path_to_target_metric_storage']
         )
-        self._specifications['last_fire_line_length'] = -1
+        # Length of list of target values when get() was called last time.
+        # It is used to make controller do not change th value if no measurements were made.
+        # For instance 'should_continue' and 'learning_rate' are called frequently where as
+        # validations are rare. Changes in length of list with target values are used
+        # for detecting of new measurement and making a decision to increase impatience.
+        self._specifications['line_len_after_prev_get_call'] = -1
 
     @staticmethod
     def _comp_func_gen(comp):
@@ -172,47 +177,47 @@ class Controller(object):
             return False
 
     def _adaptive_change(self):
+        """Controller value does not change until specs['max_no_progress_points'] + 1
+        no progress points are collected."""
         specs = self._specifications
         if specs['comp_func'](specs['line']):
-            specs['num_points_since_best_res'] = 0
+            specs['impatience'] = 0
             return specs['value']
         else:
-            if specs['last_fire_line_length'] < len(specs['line']):
-                specs['num_points_since_best_res'] += 1
-                specs['last_fire_line_length'] = len(specs['line'])
-                if specs['num_points_since_best_res'] > specs['max_no_progress_points']:
+            if specs['line_len_after_prev_get_call'] < len(specs['line']):
+                specs['impatience'] += 1
+                specs['line_len_after_prev_get_call'] = len(specs['line'])
+                if specs['impatience'] > specs['max_no_progress_points']:
                     specs['value'] *= specs['decay']
-                    specs['num_points_since_best_res'] = 0
+                    specs['impatience'] = 0
             return specs['value']
 
     def _fire_at_best(self):
         specs = self._specifications
-        # print("(Controller._fire_at_best)specs['comp_func'](specs['line']):", specs['comp_func'](specs['line']))
-        # print("(Controller._fire_at_best)specs['line'][-1]:", specs['line'][-1])
-        # print("(Controller._fire_at_best)specs['last_fire_line_length']:", specs['last_fire_line_length'])
-        # print("(Controller._fire_at_best)len(specs['line']):", len(specs['line']))
-        if specs['comp_func'](specs['line']) and specs['last_fire_line_length'] < len(specs['line']):
-            specs['last_fire_line_length'] = len(specs['line'])
+        if specs['comp_func'](specs['line']) and specs['line_len_after_prev_get_call'] < len(specs['line']):
+            specs['line_len_after_prev_get_call'] = len(specs['line'])
             return True
         else:
             return False
 
     def _while_progress(self):  # for example if learning does not bring improvement return False
+        """Returns False if to values of target parameter (learning_rate) did not improve the results
+        or when previous parameter value did not bring improvement and specs['max_no_progress_points']
+        points on target metric no progress has been made."""
         specs = self._specifications
         value = specs['changing_parameter_controller'].get()
         if specs['current_value'] == value:
             if specs['comp_func'](specs['line']):
-                specs['num_points_since_best_res'] = 0
+                specs['impatience'] = 0
                 specs['cur_made_prog'] = True
                 ret = True
             else:
-                if not specs['prev_made_prog'] and \
-                                specs['num_points_since_best_res'] > \
-                                specs['max_no_progress_points']:
+                if not specs['prev_made_prog'] \
+                        and specs['impatience'] > specs['max_no_progress_points']:
                     ret = False
                 else:
-                    if specs['last_fire_line_length'] < len(specs['line']):
-                        specs['num_points_since_best_res'] += 1
+                    if specs['line_len_after_prev_get_call'] < len(specs['line']):
+                        specs['impatience'] += 1
                     ret = True
         else:
             if not specs['cur_made_prog'] and not specs['prev_made_prog']:
@@ -220,27 +225,27 @@ class Controller(object):
             else:
                 specs['prev_made_prog'] = specs['cur_made_prog']
                 specs['cur_made_prog'] = False
-                specs['num_points_since_best_res'] = 0
+                specs['impatience'] = 0
                 specs['current_value'] = value
                 ret = True
-        specs['last_fire_line_length'] = len(specs['line'])
+        specs['line_len_after_prev_get_call'] = len(specs['line'])
         return ret
 
     def _while_progress_no_changing_parameter(self):
         specs = self._specifications
-        # print("(Controller._while_progress_no_changing_parameter)specs['num_points_since_best_res']:",
-        #       specs['num_points_since_best_res'])
+        # print("(Controller._while_progress_no_changing_parameter)specs['impatience']:",
+        #       specs['impatience'])
         if specs['comp_func'](specs['line']):
-            specs['num_points_since_best_res'] = 0
+            specs['impatience'] = 0
             ret = True
         else:
-            if specs['num_points_since_best_res'] > specs['max_no_progress_points']:
+            if specs['impatience'] > specs['max_no_progress_points']:
                 ret = False
             else:
-                if specs['last_fire_line_length'] < len(specs['line']):
-                    specs['num_points_since_best_res'] += 1
+                if specs['line_len_after_prev_get_call'] < len(specs['line']):
+                    specs['impatience'] += 1
                 ret = True
-        specs['last_fire_line_length'] = len(specs['line'])
+        specs['line_len_after_prev_get_call'] = len(specs['line'])
         return ret
 
 
@@ -416,7 +421,8 @@ class Environment(object):
                     valid_batch_kwargs=dict(),
                     validate_tokens_by_chars=False,
                     no_validation=False,
-                    state_reset=None,
+                    state_reset_period=None,  # positive integer or None
+                    state_reset_method='randomize',  # zeros or randomize
                 ),
                 schedule=dict(
                     to_be_collected_while_training=construct(default_collected_while_training),
@@ -430,7 +436,7 @@ class Environment(object):
                     replicas=None,
                     random={'number_of_runs': 5, 'length': 80},
                     train_tensor_schedule=construct(tensor_schedule),
-                    validation_tensor_schedule=construct(valid_tensor_schedule)
+                    validation_tensor_schedule=construct(valid_tensor_schedule),
                 )
             )
         )
@@ -452,7 +458,7 @@ class Environment(object):
                 summary=False,
                 add_graph_to_summary=False,
                 batch_generator_class=self._default_batch_generator,
-                vocabulary=self._vocabulary
+                vocabulary=self._vocabulary,
             ),
             run=dict(
                 train_specs=dict(
@@ -474,7 +480,7 @@ class Environment(object):
                     train_batch_kwargs=dict(),
 
                     checkpoint_steps=None,
-                    debug=None
+                    debug=None,
                 ),
                 optimizer_inference=dict(
                     opt_inf_is_performed=False,
@@ -497,7 +503,7 @@ class Environment(object):
                     replicas=None,
                     random={'number_of_runs': 5, 'length': 80},
                     opt_inf_train_tensor_schedule=construct(tensor_schedule),
-                    opt_inf_validation_tensor_schedule=construct(valid_tensor_schedule)
+                    opt_inf_validation_tensor_schedule=construct(valid_tensor_schedule),
                 ),
                 schedule=dict(
                     to_be_collected_while_training=construct(default_collected_while_training),
@@ -515,7 +521,7 @@ class Environment(object):
                 gpu_memory=None,
                 allow_growth=True,
                 log_device_placement=False,
-                visible_device_list=""
+                visible_device_list="",
             ),
             start_specs=dict(
                 log_launch=False,
@@ -527,7 +533,7 @@ class Environment(object):
                 ),
                 verbose=True,
                 batch_generator_class=self._default_batch_generator,
-                vocabulary=self._vocabulary
+                vocabulary=self._vocabulary,
             ),
             work=dict(
                 additions_to_feed_dict=list(),
@@ -1171,6 +1177,7 @@ class Environment(object):
         return (
             train_specs['additions_to_feed_dict'],
             train_specs['stop'],
+            train_specs['state_reset_period'],
             schedule['to_be_collected_while_training']['results_collect_interval'],
             schedule['to_be_collected_while_training']['print_per_collected'],
             schedule['to_be_collected_while_training']['example_per_print'],
@@ -1178,32 +1185,24 @@ class Environment(object):
 
     def _prepare_controllers(
             self, train_specs, checkpoints_path, schedule, with_meta_optimizer, storage, init_step,):
-        train_feed_dict_additions, stop_specs, collect_interval, print_per_collected, example_per_print = \
-            self._unpack_instructions(train_specs, schedule)
-        # print('train_feed_dict_additions:', train_feed_dict_additions)
+        train_feed_dict_additions, stop_specs, state_reset_period, collect_interval, \
+            print_per_collected, example_per_print = self._unpack_instructions(train_specs, schedule)
+
         additional_controllers = list()
         for addition in train_feed_dict_additions:
-            # print("(Environment._train)addition:", addition)
             additional_controllers.append(Controller(storage, addition['value']))
 
         if train_specs['no_validation'] or collect_interval is None:
-            it_is_time_for_validation = Controller(storage,
-                                                   {'type': 'always_false'})
-            it_is_time_for_example = Controller(storage,
-                                                {'type': 'always_false'})
+            it_is_time_for_validation = Controller(storage, {'type': 'always_false'})
+            it_is_time_for_example = Controller(storage, {'type': 'always_false'})
         else:
             valid_period = collect_interval * print_per_collected
-            it_is_time_for_validation = Controller(storage,
-                                                   {'type': 'periodic_truth',
-                                                    'period': valid_period})
+            it_is_time_for_validation = Controller(storage, {'type': 'periodic_truth', 'period': valid_period})
             if example_per_print is None:
-                it_is_time_for_example = Controller(storage,
-                                                    {'type': 'always_false'})
+                it_is_time_for_example = Controller(storage, {'type': 'always_false'})
             else:
                 example_period = valid_period * example_per_print
-                it_is_time_for_example = Controller(storage,
-                                                    {'type': 'periodic_truth',
-                                                     'period': example_period})
+                it_is_time_for_example = Controller(storage, {'type': 'periodic_truth', 'period': example_period})
 
         batch_size_controller = Controller(storage, train_specs['batch_size'])
         batch_size_change_tracker_specs = Controller.create_change_tracking_specifications(train_specs['batch_size'])
@@ -1212,9 +1211,7 @@ class Environment(object):
         if train_specs['debug'] is not None:
             should_start_debugging = Controller(storage, train_specs['debug'])
         else:
-            should_start_debugging = Controller(storage,
-                                                {'type': 'true_on_steps',
-                                                 'steps': []})
+            should_start_debugging = Controller(storage, {'type': 'true_on_steps', 'steps': []})
 
         train_batch_kwargs = dict()
         train_batch_kwargs_controller_specs = list()
@@ -1227,6 +1224,7 @@ class Environment(object):
                     train_batch_kwargs[key] = batch_arg
             else:
                 train_batch_kwargs[key] = batch_arg
+
         change_tracker_specs = Controller.create_change_tracking_specifications(
             train_batch_kwargs_controller_specs)
         batch_generator_specs_should_change = Controller(storage, change_tracker_specs)
@@ -1238,10 +1236,7 @@ class Environment(object):
                         train_specs['checkpoint_steps']['steps'][idx] += init_step
                 it_is_time_to_create_checkpoint = Controller(storage, train_specs['checkpoint_steps'])
             else:
-                it_is_time_to_create_checkpoint = Controller(
-                    storage,
-                    {'type': 'always_false'}
-                )
+                it_is_time_to_create_checkpoint = Controller(storage, {'type': 'always_false'})
             storage_keys = list(storage.keys())
             if stop_specs['type'] == 'while_progress' or len(storage_keys) > 2:
                 if stop_specs['type'] == 'while_progress':
@@ -1254,37 +1249,33 @@ class Environment(object):
                     type='fire_at_best',
                     path_to_target_metric_storage=path_to_target_metric_storage
                 )
-                # print("(Environment._train)storage:", storage)
-                # print("(Environment._train)best_checkpoint_controller_specs:", best_checkpoint_controller_specs)
                 it_is_time_to_create_best_checkpoint = Controller(
                     storage,
                     best_checkpoint_controller_specs
                 )
             else:
-                it_is_time_to_create_best_checkpoint = Controller(
-                    storage,
-                    {'type': 'always_false'}
-                )
+                it_is_time_to_create_best_checkpoint = Controller(storage, {'type': 'always_false'})
         else:
-            it_is_time_to_create_checkpoint = Controller(
-                storage,
-                {'type': 'always_false'}
-            )
-            it_is_time_to_create_best_checkpoint = Controller(
-                storage,
-                {'type': 'always_false'}
-            )
+            it_is_time_to_create_checkpoint = Controller(storage, {'type': 'always_false'})
+            it_is_time_to_create_best_checkpoint = Controller(storage, {'type': 'always_false'})
+
         if not with_meta_optimizer:
             learning_rate_controller = Controller(storage, train_specs['learning_rate'])
         else:
             learning_rate_controller = None
+
+        if state_reset_period is not None:
+            it_is_time_to_reset_state = Controller(storage, {'type': 'periodic_truth', 'period': state_reset_period})
+        else:
+            it_is_time_to_reset_state = Controller(storage, {'type': 'always_false'})
+
         if stop_specs['type'] == 'limit_steps':
             stop_specs['limit'] += init_step
         elif stop_specs['type'] == 'while_progress':
-            # print("(Environment._train)stop_specs['changing_parameter_name']:", stop_specs['changing_parameter_name'])
             if stop_specs['changing_parameter_name'] == 'learning_rate':
                 stop_specs['changing_parameter_controller'] = learning_rate_controller
         should_continue = Controller(storage, stop_specs)
+
         ctrl = dict(
             additional=additional_controllers,
             it_is_time_for_validation=it_is_time_for_validation,
@@ -1296,6 +1287,7 @@ class Environment(object):
             batch_generator_specs_should_change=batch_generator_specs_should_change,
             it_is_time_to_create_checkpoint=it_is_time_to_create_checkpoint,
             it_is_time_to_create_best_checkpoint=it_is_time_to_create_best_checkpoint,
+            it_is_time_to_reset_state=it_is_time_to_reset_state,
             learning_rate=learning_rate_controller,
             should_continue=should_continue,
         )
@@ -1330,39 +1322,41 @@ class Environment(object):
         from train method (maybe several times)
         Args:
             kwargs should include all entries defined in self._pupil_default_training"""
-        # print("(Environment._train)self._hooks:", self._hooks)
-        # print("(Environment._train)cwd:", os.getcwd())
+
         train_specs = construct(run_specs['train_specs'])
-        # print("(Environment._train)train_specs['train_batch_kwargs']:", train_specs['train_batch_kwargs'])
-        schedule = construct(run_specs['schedule'])
+
         step = init_step
-
         storage = self._current_place_for_result_saving
-        # creating batch generator
-
-        # resetting step in control_storage
         storage['step'] = step
 
+        schedule = construct(run_specs['schedule'])
         self._handler.set_new_run_schedule(
             schedule,
             [dataset[1] for dataset in train_specs['validation_datasets']]
         )
+
         ctrl = self._prepare_controllers(
             train_specs, checkpoints_path,
             schedule, with_meta_optimizer,
             storage, init_step,
         )
+
         controllers = self._choose_ctrl_for_setting_in_handler(ctrl, with_meta_optimizer)
         self._handler.set_controllers(controllers)
 
         batch_size = ctrl['batch_size'].get()
         tb_kwargs = self._build_batch_kwargs(ctrl['train_batch_kwargs'])
-        # print("(Environment._train)tb_kwargs:", tb_kwargs)
         train_batches = batch_generator_class(train_specs['train_dataset'][0], batch_size, **tb_kwargs)
+
         feed_dict = dict()
-        # print("(Environment._train)cwd:", os.getcwd())
+
+        if train_specs['state_reset_method'] == 'zeros':
+            reset_op = self._hooks['reset_train_state']
+        elif train_specs['state_reset_method'] == 'randomize':
+            reset_op = self._hooks['randomize_train_state']
+
         while ctrl['should_continue'].get():
-            # print("(Environment._train)cwd:", os.getcwd())
+
             if ctrl['should_start_debugging'].get():
                 self._session = tf_debug.LocalCLIDebugWrapperSession(self._session)
                 self._session.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
@@ -1379,6 +1373,9 @@ class Environment(object):
                 self._create_checkpoint(str(step), checkpoints_path, subgraph_names=subgraphs_to_save)
             train_inputs, train_labels = train_batches.next()
 
+            if ctrl['it_is_time_to_reset_state'].get():
+                self._session.run(reset_op)
+
             if not with_meta_optimizer:
                 learning_rate = ctrl['learning_rate'].get()
                 feed_dict[self._hooks['learning_rate']] = learning_rate
@@ -1388,25 +1385,22 @@ class Environment(object):
                     feed_dict[input_tensor] = input_value
             else:
                 feed_dict[self._hooks['inputs']] = train_inputs
+
             if isinstance(self._hooks['labels'], list):
                 for label_tensor, label_value in zip(self._hooks['labels'], train_labels):
                     feed_dict[label_tensor] = label_value
             else:
                 feed_dict[self._hooks['labels']] = train_labels
+
             for addition, add_controller in zip(train_specs['additions_to_feed_dict'], ctrl['additional']):
-                # print("(Environment._train)self._hooks:", self._hooks)
-                # print("(Environment._train)addition['placeholder']:", addition['placeholder'])
                 feed_dict[self._hooks[addition['placeholder']]] = add_controller.get()
-            # print('(Environment._train)self._hooks:', self._hooks)
 
             train_operations = self._handler.get_tensors('train', step, with_meta_optimizer=with_meta_optimizer)
-            # print('train_operations:', train_operations)
-            # print('(Environment._train)feed_dict:', feed_dict)
 
             train_res = self._session.run(train_operations, feed_dict=feed_dict)
-            # here loss is given in bits per input (BPI)
+
             self._handler.process_results(step, train_res, time.clock() - train_start_time, regime='train')
-            # print("(Environment._train)train_specs['valid_batch_kwargs']:", train_specs['valid_batch_kwargs'])
+
             if ctrl['it_is_time_for_validation'].get():
                 if len(train_specs['validation_datasets']) > 0:
                     valid_add_feed_dict = self._form_validation_additional_feed_dict(
@@ -1416,7 +1410,6 @@ class Environment(object):
                     )
                 for validation_dataset in train_specs['validation_datasets']:
                     if train_specs['validate_tokens_by_chars']:
-                        # print('(Environment._train)ready to validate by chars')
                         _ = self._validate_by_chars(
                             batch_generator_class, validation_dataset, train_specs['validation_batch_size'],
                             train_specs['valid_batch_kwargs'], training_step=step,
