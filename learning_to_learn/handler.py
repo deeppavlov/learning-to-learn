@@ -1,4 +1,5 @@
 import os
+import time
 import datetime as dt
 
 import numpy as np
@@ -1060,6 +1061,7 @@ class Handler(object):
             print()
         if 'time_elapsed' in kwargs:
             print("time elapsed:", kwargs['time_elapsed'])
+        print("current time in seconds: %s; date: %s" % (time.clock(), str(dt.datetime.now())))
         if regime == 'train':
             if 'step' in kwargs:
                 print('step:', kwargs['step'])

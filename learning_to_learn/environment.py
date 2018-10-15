@@ -415,7 +415,8 @@ class Environment(object):
                     validation_batch_size=1,
                     valid_batch_kwargs=dict(),
                     validate_tokens_by_chars=False,
-                    no_validation=False
+                    no_validation=False,
+                    state_reset=None,
                 ),
                 schedule=dict(
                     to_be_collected_while_training=construct(default_collected_while_training),
@@ -1164,6 +1165,116 @@ class Environment(object):
         for addition in validation_additional_feed_dict:
             valid_add_feed_dict[self._hooks[addition['placeholder']]] = addition['value']
         return valid_add_feed_dict
+
+
+    def prepare_controllers(
+            self, train_specs, train_feed_dict_additions, stop_specs, checkpoints_path,
+            collect_interval, print_per_collected, example_per_print,
+            storage, init_step,
+    ):
+        # print('train_feed_dict_additions:', train_feed_dict_additions)
+        additional_controllers = list()
+        for addition in train_feed_dict_additions:
+            # print("(Environment._train)addition:", addition)
+            additional_controllers.append(Controller(storage, addition['value']))
+
+        if train_specs['no_validation'] or collect_interval is None:
+            it_is_time_for_validation = Controller(storage,
+                                                   {'type': 'always_false'})
+            it_is_time_for_example = Controller(storage,
+                                                {'type': 'always_false'})
+        else:
+            valid_period = collect_interval * print_per_collected
+            it_is_time_for_validation = Controller(storage,
+                                                   {'type': 'periodic_truth',
+                                                    'period': valid_period})
+            if example_per_print is None:
+                it_is_time_for_example = Controller(storage,
+                                                    {'type': 'always_false'})
+            else:
+                example_period = valid_period * example_per_print
+                it_is_time_for_example = Controller(storage,
+                                                    {'type': 'periodic_truth',
+                                                     'period': example_period})
+
+        batch_size_controller = Controller(storage, train_specs['batch_size'])
+        batch_size_change_tracker_specs = Controller.create_change_tracking_specifications(train_specs['batch_size'])
+        batch_size_should_change = Controller(storage, batch_size_change_tracker_specs)
+
+        if train_specs['debug'] is not None:
+            should_start_debugging = Controller(storage, train_specs['debug'])
+        else:
+            should_start_debugging = Controller(storage,
+                                                {'type': 'true_on_steps',
+                                                 'steps': []})
+
+        train_batch_kwargs = dict()
+        train_batch_kwargs_controller_specs = list()
+        for key, batch_arg in train_specs['train_batch_kwargs'].items():
+            if isinstance(batch_arg, dict):
+                if 'type' in batch_arg:
+                    train_batch_kwargs[key] = Controller(storage, batch_arg)
+                    train_batch_kwargs_controller_specs.append(batch_arg)
+                else:
+                    train_batch_kwargs[key] = batch_arg
+            else:
+                train_batch_kwargs[key] = batch_arg
+        change_tracker_specs = Controller.create_change_tracking_specifications(
+            train_batch_kwargs_controller_specs)
+        batch_generator_specs_should_change = Controller(storage, change_tracker_specs)
+
+        if checkpoints_path is not None:
+            if train_specs['checkpoint_steps'] is not None:
+                if train_specs['checkpoint_steps']['type'] == 'true_on_steps':
+                    for idx in range(len(train_specs['checkpoint_steps']['steps'])):
+                        train_specs['checkpoint_steps']['steps'][idx] += init_step
+                it_is_time_to_create_checkpoint = Controller(storage, train_specs['checkpoint_steps'])
+            else:
+                it_is_time_to_create_checkpoint = Controller(
+                    storage,
+                    {'type': 'always_false'}
+                )
+            storage_keys = list(storage.keys())
+            if stop_specs['type'] == 'while_progress' or len(storage_keys) > 2:
+                if stop_specs['type'] == 'while_progress':
+                    path_to_target_metric_storage = stop_specs['path_to_target_metric_storage']
+                else:
+                    storage_keys.remove('train')
+                    storage_keys.remove('step')
+                    path_to_target_metric_storage = (storage_keys[0], 'loss')
+                best_checkpoint_controller_specs = dict(
+                    type='fire_at_best',
+                    path_to_target_metric_storage=path_to_target_metric_storage
+                )
+                # print("(Environment._train)storage:", storage)
+                # print("(Environment._train)best_checkpoint_controller_specs:", best_checkpoint_controller_specs)
+                it_is_time_to_create_best_checkpoint = Controller(
+                    storage,
+                    best_checkpoint_controller_specs
+                )
+            else:
+                it_is_time_to_create_best_checkpoint = Controller(
+                    storage,
+                    {'type': 'always_false'}
+                )
+        else:
+            it_is_time_to_create_checkpoint = Controller(
+                storage,
+                {'type': 'always_false'}
+            )
+            it_is_time_to_create_best_checkpoint = Controller(
+                storage,
+                {'type': 'always_false'}
+            )
+        ctrl=dict(
+            additional_controllers=additional_controllers,
+            it_is_time_for_validation=it_is_time_for_validation,
+            it_is_time_for_example=it_is_time_for_example,
+            batch_size_controller=batch_size_controller,
+            batch_size_should_change=batch_size_should_change,
+            should_start_debugging=should_start_debugging,
+
+        )
 
     def _train(
             self,
@@ -3034,7 +3145,7 @@ class Environment(object):
             reset_state_after_model_answer,
             additions_to_feed_dict=None,
             gpu_memory=None,
-            allow_growth=False,
+            allow_growth=True,
             allow_soft_placement=False,
             log_device_placement=False,
             visible_device_list='',
@@ -3116,7 +3227,7 @@ class Environment(object):
         reset_state_after_model_answer,
         additions_to_feed_dict=None,
         gpu_memory=None,
-        allow_growth=False,
+        allow_growth=True,
         allow_soft_placement=False,
         log_device_placement=False,
         visible_device_list='',
