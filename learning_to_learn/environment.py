@@ -2988,7 +2988,9 @@ class Environment(object):
         self._handler.close()
 
     @staticmethod
-    def _prepare_replica(replica, batch_generator_class, bpe_codes, batch_gen_args):
+    def _prepare_replica(replica, preprocess_f, batch_generator_class, bpe_codes, batch_gen_args):
+        if preprocess_f is not None:
+            replica = preprocess_f(replica)
         if getattr(batch_generator_class, 'make_pairs', None) is not None:
             if bpe_codes is not None:
                 with open(bpe_codes, 'r') as codes:
@@ -3005,17 +3007,20 @@ class Environment(object):
         return replica
 
     @staticmethod
-    def _build_replica(replica):
+    def _build_replica(replica, postprocess_f):
         if isinstance(replica, str):
-            return replica
+            ret = replica
         if isinstance(replica, list):
             if len(replica) == 0:
-                return ''
+                ret = ''
             else:
                 if isinstance(replica[0], str):
-                    return ''.join(replica)
+                    ret = ''.join(replica)
                 if isinstance(replica[0], tuple):
-                    return ''.join([''.join(p) for p in replica])
+                    ret = ''.join([''.join(p) for p in replica])
+        if postprocess_f is None:
+            return ret
+        return postprocess_f(ret)
 
     def _start_inference(
             self,
@@ -3095,6 +3100,8 @@ class Environment(object):
             first_speaker='human',
             bpe_codes=None,
             batch_gen_args=None,
+            preprocess_f=None,
+            postprocess_f=None,
             randomize=False,
             answer_len_limit=500.,
     ):
@@ -3127,11 +3134,12 @@ class Environment(object):
             human_replica = input('Human: ')
         else:
             human_replica = ''
-        human_replica = self._prepare_replica(human_replica, batch_generator_class, bpe_codes, batch_gen_args)
 
-        while not self._build_replica(human_replica) == 'FINISH':
+        while not human_replica == 'FINISH':
             if len(human_replica) > 0:
-                print_and_log('Human: ' + self._build_replica(human_replica), _print=False, fn=log_file)
+                print_and_log('Human: ' + human_replica, _print=False, fn=log_file)
+                human_replica = self._prepare_replica(
+                    human_replica, preprocess_f, batch_generator_class, bpe_codes, batch_gen_args)
                 for char in human_replica:
                     _ = self._run_on_char(ld, char=char)
             prediction = self._run_on_char(ld, char='\n')
@@ -3146,13 +3154,13 @@ class Environment(object):
                 if char != '\n':
                     bot_replica += char
                 counter += 1
-            print_and_log('Bot: ' + self._build_replica(bot_replica), fn=log_file)
+            print_and_log('Bot: ' + self._build_replica(bot_replica, postprocess_f), fn=log_file)
             if reset_state_after_model_answer:
                 reset_op.run(session=self._session)
             _ = self._run_on_char(ld, char='\n')
             sys.stdout.flush()
             sys.stdin.flush()
-            human_replica = self._prepare_replica(input('Human: '), batch_generator_class, bpe_codes, batch_gen_args)
+            human_replica = input('Human: ')
         with open(log_file, 'a') as fd:
             fd.write('*********************\n\n\n')
         self._close_session()
@@ -3175,6 +3183,8 @@ class Environment(object):
         temperature=0.,
         bpe_codes=None,
         batch_gen_args=None,
+        preprocess_f=None,
+        postprocess_f=None,
         randomize=False,
         answer_len_limit=500.,
     ):
@@ -3206,7 +3216,7 @@ class Environment(object):
         while len(input_replicas[-1]) == 0:
             del input_replicas[-1]
         for ridx, replica in enumerate(input_replicas):
-            for char in self._prepare_replica(replica, batch_generator_class, bpe_codes, batch_gen_args):
+            for char in self._prepare_replica(replica, preprocess_f, batch_generator_class, bpe_codes, batch_gen_args):
                 _ = self._run_on_char(ld, char=char)
             prediction = self._run_on_char(ld, char='\n')
             char = vec2char_with_temperature(prediction, batch_generator_class, vocabulary, temperature)
@@ -3222,7 +3232,7 @@ class Environment(object):
                 counter += 1
             mode = 'w' if ridx == 0 else 'a'
             with open(result_file, mode) as f:
-                f.write(bot_replica + '\n')
+                f.write(self._build_replica(bot_replica, postprocess_f) + '\n')
             if reset_state_after_model_answer:
                 reset_op.run(session=self._session)
         self._close_session()
@@ -3230,7 +3240,7 @@ class Environment(object):
     def _feed_replica(self, replica, batch_generator_class,
                       character_positions_in_vocabulary, temperature,
                       feed_dict_base, speaker, bpe_codes, batch_gen_args):
-        replica = self._prepare_replica(replica, batch_generator_class, bpe_codes, batch_gen_args)
+        replica = self._prepare_replica(replica, None, batch_generator_class, bpe_codes, batch_gen_args)
         if speaker == 'bot':
             flag = 1
         else:
