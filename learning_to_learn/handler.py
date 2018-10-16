@@ -8,6 +8,7 @@ import tensorflow as tf
 from learning_to_learn.useful_functions import create_path, add_index_to_filename_if_needed, construct, nested2string, \
     WrongMethodCallError, extend_dictionary, flatten, check_if_line_is_header, parse_header_line, \
     hyperparameter_name_string, sort_hps, hp_name_2_hp_description, check_if_hp_description_is_in_list
+from learning_to_learn.controller import Controller
 
 
 class Handler(object):
@@ -473,6 +474,7 @@ class Handler(object):
             self._opt_inf_example_per_print = opt_inf_to_be_collected_while_training['opt_inf_example_per_print']
 
     def set_controllers(self, controllers):
+        # print("(Handler.set_controllers)controllers:", controllers)
         self._controllers = controllers
 
     def start_accumulation(self, dataset_name, training_step=None):
@@ -1040,14 +1042,13 @@ class Handler(object):
         if self._controllers is not None:
             for controller in self._controllers:
                 # if isinstance(controller, Controller):
-                #     print(controller.name)
+                #     print("(Handler._print_controllers)controller.name:", controller.name)
                 # if isinstance(controller, list):
                 #     for c in controller:
                 #         if isinstance(c, Controller):
-                #             print(c.name)
+                #             print("(Handler._print_controllers)c.name:", c.name)
                 #         else:
-                #             print(c)
-                # print('controller._specifications:', controller._specifications)
+                #             print("(Handler._print_controllers)c:", c)
                 if controller.name in self._printed_controllers:
                     print('%s:' % controller.name, controller.get())
 
