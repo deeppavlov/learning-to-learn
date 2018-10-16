@@ -1000,14 +1000,14 @@ def compose_reset_list(*args, name_scope='reset_list'):
         return reset_list
 
 
-def compose_randomize_list(*args, name_scope='randomize_list'):
+def compose_randomize_list(*args, name_scope='randomize_list', stddev=0.5):
     with tf.name_scope(name_scope):
         randomize_list = list()
         flattened = flatten(args)
         for variable in flattened:
             shape = tf.shape(variable)
             name = extract_op_name(variable.name)
-            assign_tensor = tf.truncated_normal(shape, stddev=1.)
+            assign_tensor = tf.truncated_normal(shape, stddev=stddev)
             assign_op = tf.assign(variable, assign_tensor, name='assign_randomize_%s' % name)
             # with tf.device('/cpu:0'):
             #     assign_op = tf.Print(

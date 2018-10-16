@@ -1141,6 +1141,7 @@ class Environment(object):
 
             if ctrl['it_is_time_to_create_checkpoint'].get():
                 self._create_checkpoint(str(step), checkpoints_path, subgraph_names=subgraphs_to_save)
+
             train_inputs, train_labels = train_batches.next()
 
             if ctrl['it_is_time_to_reset_state'].get():
