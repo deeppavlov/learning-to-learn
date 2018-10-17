@@ -27,6 +27,15 @@ class Controller(object):
         new_specs['type'] = 'changes_detector'
         return new_specs
 
+    @staticmethod
+    def spec_value_map():
+        return dict(
+            exponential_decay='init',
+            fixed='value',
+            linear='start',
+            adaptive_change='init',
+        )
+
     def __init__(self, storage, specifications):
         # print("(Controller.__init__)specifications:", specifications)
         self._storage = storage
@@ -56,7 +65,7 @@ class Controller(object):
         elif self._specifications['type'] == 'adaptive_change':
             self.get = self._adaptive_change
             self._specifications = dict(self._specifications)
-            self._specifications['num_points_since_best_res'] = 0
+            self._specifications['impatience'] = 0
             self._specifications['value'] = self._specifications['init']
             self._specifications['line_len_after_prev_get_call'] = -1
             self._init_ops_for_adaptive_controller()
@@ -66,7 +75,7 @@ class Controller(object):
         elif self._specifications['type'] == 'while_progress':
             self.get = self._while_progress
             self._specifications = dict(self._specifications)
-            self._specifications['num_points_since_best_res'] = 0
+            self._specifications['impatience'] = 0
             self._specifications['cur_made_prog'] = False
             self._specifications['prev_made_prog'] = True
             self._init_ops_for_adaptive_controller()
@@ -74,27 +83,44 @@ class Controller(object):
         elif self._specifications['type'] == 'while_progress_no_changing_parameter':
             self.get = self._while_progress_no_changing_parameter
             self._specifications = dict(self._specifications)
-            self._specifications['num_points_since_best_res'] = 0
+            self._specifications['impatience'] = 0
             self._init_ops_for_adaptive_controller()
 
     def _init_ops_for_adaptive_controller(self):
         if 'direction' not in self._specifications:
             self._specifications['direction'] = 'down'
-        if self._specifications['direction'] == 'down':
-            self._specifications['comp_func'] = self._comp_func_gen(min)
-        else:
-            self._specifications['comp_func'] = self._comp_func_gen(max)
+        # if self._specifications['direction'] == 'down':
+        #     self._specifications['comp_func'] = self._comp_func_gen(min)
+        # else:
+        #     self._specifications['comp_func'] = self._comp_func_gen(max)
         # print(self._storage)
+        if 'best' not in self._specifications:
+            if self._specifications['direction'] == 'down':
+                self._specifications['best'] = float('+inf')
+            else:
+                self._specifications['best'] = float('-inf')
         self._specifications['line'] = get_elem_from_nested(
             self._storage,
             self._specifications['path_to_target_metric_storage']
         )
+
         # Length of list of target values when get() was called last time.
-        # It is used to make controller do not change th value if no measurements were made.
-        # For instance 'should_continue' and 'learning_rate' are called frequently where as
+        # It is used to make controller do not change the value if no measurements were made.
+        # For instance 'should_continue' and 'learning_rate' are called frequently whereas
         # validations are rare. Changes in length of list with target values are used
         # for detecting of new measurement and making a decision to increase impatience.
         self._specifications['line_len_after_prev_get_call'] = -1
+
+    def _is_improved(self):
+        if self._specifications['direction'] is 'down':
+            return min(self._specifications['line'], default=float('+inf')) < self._specifications['best']
+        return max(self._specifications['line'], default=float('-inf')) > self._specifications['best']
+
+    def _update_best(self):
+        if self._specifications['direction'] is 'down':
+            self._specifications['best'] = min(self._specifications['line'], default=float('+inf'))
+        else:
+            self._specifications['best'] = max(self._specifications['line'], default=float('-inf'))
 
     @staticmethod
     def _comp_func_gen(comp):
@@ -156,8 +182,10 @@ class Controller(object):
         """Controller value does not change until specs['max_no_progress_points'] + 1
         no progress points are collected."""
         specs = self._specifications
-        if specs['comp_func'](specs['line']):
+        # if specs['comp_func'](specs['line']):
+        if self._is_improved():
             specs['impatience'] = 0
+            self._update_best()
             return specs['value']
         else:
             if specs['line_len_after_prev_get_call'] < len(specs['line']):
@@ -170,8 +198,10 @@ class Controller(object):
 
     def _fire_at_best(self):
         specs = self._specifications
-        if specs['comp_func'](specs['line']) and specs['line_len_after_prev_get_call'] < len(specs['line']):
-            specs['line_len_after_prev_get_call'] = len(specs['line'])
+        # if specs['comp_func'](specs['line']) and specs['line_len_after_prev_get_call'] < len(specs['line']):
+        if self._is_improved():
+            # specs['line_len_after_prev_get_call'] = len(specs['line'])
+            self._update_best()
             return True
         else:
             return False
@@ -183,9 +213,11 @@ class Controller(object):
         specs = self._specifications
         value = specs['changing_parameter_controller'].get()
         if specs['current_value'] == value:
-            if specs['comp_func'](specs['line']):
+            # if specs['comp_func'](specs['line']):
+            if self._is_improved():
                 specs['impatience'] = 0
                 specs['cur_made_prog'] = True
+                self._update_best()
                 ret = True
             else:
                 if not specs['prev_made_prog'] \
@@ -211,7 +243,9 @@ class Controller(object):
         specs = self._specifications
         # print("(Controller._while_progress_no_changing_parameter)specs['impatience']:",
         #       specs['impatience'])
-        if specs['comp_func'](specs['line']):
+        # if specs['comp_func'](specs['line']):
+        if self._is_improved():
+            self._update_best()
             specs['impatience'] = 0
             ret = True
         else:

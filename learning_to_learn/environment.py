@@ -164,6 +164,7 @@ class Environment(object):
             start_specs=dict(
                 log_launch=False,
                 restore_path=None,
+                lr_restore_saver_name=None,
                 with_meta_optimizer=False,
                 restore_optimizer_path=None,
                 save_path=None,
@@ -514,42 +515,81 @@ class Environment(object):
     def dataset_in_storage(self, dataset_name):
         return dataset_name in self._current_place_for_result_saving
 
-    def _create_checkpoint(self, name, path, subgraph_names=None, model_type='pupil'):
+    @staticmethod
+    def _make_checkpoint_paths(name, path, subgraph_names):
+        paths = dict()
+        subgraph_names = dict(subgraph_names)
+        if 'all_vars' in subgraph_names:
+            paths['all_vars'] = os.path.join(path, subgraph_names['all_vars'], name)
+            del subgraph_names['all_vars']
+        else:
+            paths['all_vars'] = os.path.join(path, 'all_vars', name)
+        for subgraph_name, subgraph_dir in subgraph_names.items():
+            paths[subgraph_name] = os.path.join(path, subgraph_dir, name)
+        return paths
+
+    @staticmethod
+    def _save_lr(lr, path):
+        with open(path, 'w') as f:
+            f.write(str(lr))
+
+    def _create_checkpoint(self, name, path, subgraph_names=None, model_type='pupil', lr=None):
         if model_type == 'pupil':
             if subgraph_names is not None:
-                subgraph_names = dict(subgraph_names)
-                if 'all_vars' in subgraph_names:
-                    all_vars_path = os.path.join(path, subgraph_names['all_vars'], name)
-                    del subgraph_names['all_vars']
-                else:
-                    all_vars_path = os.path.join(path, 'all_vars', name)
-                print('\nCreating %s %s checkpoint at %s' % (model_type, 'all_vars', all_vars_path))
-                self._hooks['saver'].save(self._session, all_vars_path)
-                for subgraph_name, subgraph_dir in subgraph_names.items():
-                    subgraph_path = os.path.join(path, subgraph_dir, name)
-                    print('\nCreating %s %s subgraph checkpoint at %s' % (model_type, subgraph_name, subgraph_path))
-                    self._hooks['subgraph_savers'][subgraph_name].save(
-                        self._session, subgraph_path)
+                paths = self._make_checkpoint_paths(name, path, subgraph_names)
+                learning_rate_paths = self._make_checkpoint_paths(name + '_learning_rate.txt', path, subgraph_names)
+                print('\nCreating %s %s checkpoint at %s' % (model_type, 'all_vars', paths['all_vars']))
+                self._hooks['saver'].save(self._session, paths['all_vars'])
+                if lr is not None:
+                    self._save_lr(lr, learning_rate_paths['all_vars'])
+                for subgraph_name in set(subgraph_names.keys()) - {'all_vars'}:
+                    print(
+                        '\nCreating %s %s subgraph checkpoint at %s'
+                        % (model_type, subgraph_name, paths[subgraph_name])
+                    )
+                    self._hooks['subgraph_savers'][subgraph_name].save(self._session, paths[subgraph_name])
+                    if lr is not None:
+                        self._save_lr(lr, learning_rate_paths[subgraph_name])
             else:
                 path = os.path.join(path, name)
                 print('\nCreating %s checkpoint at %s' % (model_type, path))
                 self._hooks['saver'].save(self._session, path)
         elif model_type == 'optimizer':
+            path = os.path.join(path, name)
             print('\nCreating %s checkpoint at %s' % (model_type, path))
             # print("(Environment._create_checkpoint)self._hooks['meta_optimizer_saver']:",
             #       self._hooks['meta_optimizer_saver'])
             self._hooks['meta_optimizer_saver'].save(self._session, path)
 
-    def _restore_pupil(self, restore_path, verbose=True):
+    @staticmethod
+    def _get_lr_from_checkpoint(restore_path):
+        folder, checkpoint_name = os.path.split(restore_path)
+        learning_rate_file_name = os.path.join(folder, checkpoint_name + '_learning_rate.txt')
+        with open(learning_rate_file_name, 'r') as f:
+            learning_rate = float(f.read())
+        return learning_rate
+
+    def _restore_pupil(self, restore_path, verbose=True, lr_restore_saver_name=None):
         # print("(Environment._restore_pupil)self._hooks:", self._hooks)
         if restore_path is not None:
             if verbose:
                 print('restoring pupil from %s' % restore_path)
             if isinstance(restore_path, dict):
-                for saver_name, path in restore_path.items():
+                for saver_name, path in sorted(restore_path.items(), key=lambda x: x[0]):
                     self._hooks['subgraph_savers'][saver_name].restore(self._session, path)
+                if lr_restore_saver_name is not None:
+                    learning_rate = self._get_lr_from_checkpoint(restore_path[lr_restore_saver_name])
+                else:
+                    learning_rate = None
             else:
                 self._hooks['saver'].restore(self._session, restore_path)
+                if lr_restore_saver_name is not None:
+                    learning_rate = self._get_lr_from_checkpoint(restore_path)
+                else:
+                    learning_rate = None
+        else:
+            learning_rate = None
+        return learning_rate
 
     def _restore_meta_optimizer(self, restore_path):
         if restore_path is not None:
@@ -1211,7 +1251,7 @@ class Environment(object):
                             training_step=step,
                             additional_feed_dict=valid_add_feed_dict)
             if ctrl['it_is_time_to_create_best_checkpoint'].get():
-                self._create_checkpoint('best', checkpoints_path, subgraph_names=subgraphs_to_save)
+                self._create_checkpoint('best', checkpoints_path, subgraph_names=subgraphs_to_save, lr=learning_rate)
             step += 1
             storage['step'] = step
         return step
@@ -1606,6 +1646,12 @@ class Environment(object):
             self._close_session()
         return train_time
 
+    @staticmethod
+    def _paste_saved_lr_in_run_specs(run_specs_set, saved_learning_rate):
+        controller_type = run_specs_set[0]['train_specs']['learning_rate']['type']
+        m = Controller.spec_value_map()
+        run_specs_set[0]['train_specs']['learning_rate'][m[controller_type]] = saved_learning_rate
+
     def _train_repeatedly(self, start_specs, run_specs_set):
         # initializing model
         self.flush_storage()
@@ -1613,7 +1659,11 @@ class Environment(object):
         # print("(Environment._train_repeatedly)tf.global_variables():\n", tf.global_variables())
         # print("(Environment._train_repeatedly)tf.local_variables():\n", tf.local_variables())
         self._session.run(tf.global_variables_initializer())
-        self._restore_pupil(start_specs['restore_path'])
+
+        saved_learning_rate = self._restore_pupil(start_specs['restore_path'], start_specs['lr_restore_saver_name'])
+        if saved_learning_rate is not None:
+            self._paste_saved_lr_in_run_specs(run_specs_set, saved_learning_rate)
+
         if start_specs['with_meta_optimizer']:
             self._restore_meta_optimizer(start_specs['restore_optimizer_path'])
             processing_type = 'train_with_meta'
