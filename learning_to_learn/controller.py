@@ -122,6 +122,12 @@ class Controller(object):
         else:
             self._specifications['best'] = max(self._specifications['line'], default=float('-inf'))
 
+    def get_best_target_metric_value(self):
+        return self._specifications.get('best', None)
+
+    def get_target_metric_storage_path(self):
+        return self._specifications.get('path_to_target_metric_storage', None)
+
     @staticmethod
     def _comp_func_gen(comp):
         def f(line):

@@ -605,7 +605,6 @@ def vec2char_with_temperature(predictions, bgencls, vocabulary, temperature):
     return bgencls.vec2char(np.reshape(predictions, (1, -1)), vocabulary)[0]
 
 
-
 def get_available_gpus():
     local_device_protos = device_lib.list_local_devices()
     gpu_names = [x.name for x in local_device_protos if x.device_type == 'GPU']

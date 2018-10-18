@@ -494,10 +494,13 @@ class Handler(object):
             answer = higher_bool
         return answer
 
-    def stop_accumulation(self,
-                          save_to_file=True,
-                          save_to_storage=True,
-                          print_results=True):
+    def stop_accumulation(
+            self,
+            save_to_file=True,
+            save_to_storage=True,
+            print_results=True,
+            file_open_mode='a',
+    ):
         save_to_file = self.decide(save_to_file, self._save_to_file)
         save_to_storage = self.decide(save_to_storage, self._save_to_storage)
         print_results = self.decide(print_results, self._print_results)
@@ -526,7 +529,7 @@ class Handler(object):
                         file_name = self._get_optimizer_inference_file_name('validation', key)
                     else:
                         file_name = self._file_names[self._name_of_dataset_on_which_accumulating]['results'][key]
-                    with open(file_name, 'a') as f:
+                    with open(file_name, file_open_mode) as f:
                         if self._training_step is not None:
                             f.write('%s %s\n' % (self._training_step, mean))
                         else:
@@ -545,8 +548,10 @@ class Handler(object):
             # else:
             for_storage = construct(means)
             for_storage['steps'] = self._training_step
-            self._environment_instance.append_to_storage(self._name_of_dataset_on_which_accumulating,
-                **dict([(key, for_storage[key]) for key in self._result_types + ['steps']]))
+            self._environment_instance.append_to_storage(
+                self._name_of_dataset_on_which_accumulating,
+                **dict([(key, for_storage[key]) for key in self._result_types + ['steps']])
+            )
         if print_results:
             self._print_standard_report(
                 regime='validation',

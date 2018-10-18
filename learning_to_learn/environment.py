@@ -164,7 +164,7 @@ class Environment(object):
             start_specs=dict(
                 log_launch=False,
                 restore_path=None,
-                lr_restore_saver_name=None,
+                ctrl_restore_saver_name=None,
                 with_meta_optimizer=False,
                 restore_optimizer_path=None,
                 save_path=None,
@@ -516,7 +516,7 @@ class Environment(object):
         return dataset_name in self._current_place_for_result_saving
 
     @staticmethod
-    def _make_checkpoint_paths(name, path, subgraph_names):
+    def _make_checkpoint_paths_for_1_name(name, path, subgraph_names):
         paths = dict()
         subgraph_names = dict(subgraph_names)
         if 'all_vars' in subgraph_names:
@@ -528,32 +528,75 @@ class Environment(object):
             paths[subgraph_name] = os.path.join(path, subgraph_dir, name)
         return paths
 
-    @staticmethod
-    def _save_lr(lr, path):
-        with open(path, 'w') as f:
-            f.write(str(lr))
+    def _make_checkpoint_paths(self, name, path, optional_fn, subgraph_names):
+        paths = dict(ckpt=self._make_checkpoint_paths_for_1_name(name, path, subgraph_names))
+        for param, fn in optional_fn.items():
+            if fn is not None:
+                paths[param] = self._make_checkpoint_paths_for_1_name(fn, path, subgraph_names)
+            else:
+                paths[param] = None
+        return paths
 
-    def _create_checkpoint(self, name, path, subgraph_names=None, model_type='pupil', lr=None):
+    @staticmethod
+    def _save_value(v, path):
+        with open(path, 'w') as f:
+            f.write(str(v))
+
+    @staticmethod
+    def _optional_file_names_in_checkpoint(name, target_metric_storage_path):
+        lr_name = name + '_learning_rate.txt'
+        if target_metric_storage_path is not None:
+            best_v_name = name + '_best_' + target_metric_storage_path[-1] \
+                          + '_on_' + target_metric_storage_path[0] + '.txt'
+        else:
+            best_v_name = None
+        step_name = name + '_step.txt'
+        return dict(lr=lr_name, best_v=best_v_name, step=step_name)
+
+    def _save_not_none_values(self, values, paths):
+        for v, p in zip(values, paths):
+            if v is not None:
+                self._save_value(v, p)
+
+    def _create_checkpoint(
+            self, name, path, subgraph_names=None,
+            model_type='pupil', lr=None, best_value=None, target_metric_storage_path=None, step=None,
+    ):
         if model_type == 'pupil':
+            optional_fn = self._optional_file_names_in_checkpoint(name, target_metric_storage_path)
             if subgraph_names is not None:
-                paths = self._make_checkpoint_paths(name, path, subgraph_names)
-                learning_rate_paths = self._make_checkpoint_paths(name + '_learning_rate.txt', path, subgraph_names)
-                print('\nCreating %s %s checkpoint at %s' % (model_type, 'all_vars', paths['all_vars']))
-                self._hooks['saver'].save(self._session, paths['all_vars'])
-                if lr is not None:
-                    self._save_lr(lr, learning_rate_paths['all_vars'])
+                paths = self._make_checkpoint_paths(name, path, optional_fn, subgraph_names)
+                print('\nCreating %s %s checkpoint at %s' % (model_type, 'all_vars', paths['ckpt']['all_vars']))
+                self._hooks['saver'].save(self._session, paths['ckpt']['all_vars'])
+                self._save_not_none_values(
+                    [lr, best_value, step],
+                    [paths['lr']['all_vars'],
+                     paths['best_v']['all_vars'] if paths['best_v'] is not None else None,
+                     paths['step']['all_vars']]
+                )
                 for subgraph_name in set(subgraph_names.keys()) - {'all_vars'}:
                     print(
                         '\nCreating %s %s subgraph checkpoint at %s'
-                        % (model_type, subgraph_name, paths[subgraph_name])
+                        % (model_type, subgraph_name, paths['ckpt'][subgraph_name])
                     )
-                    self._hooks['subgraph_savers'][subgraph_name].save(self._session, paths[subgraph_name])
-                    if lr is not None:
-                        self._save_lr(lr, learning_rate_paths[subgraph_name])
+                    self._hooks['subgraph_savers'][subgraph_name].save(self._session, paths['ckpt'][subgraph_name])
+                    self._save_not_none_values(
+                        [lr, best_value, step],
+                        [paths['lr'][subgraph_name],
+                         paths['best_v'][subgraph_name] if paths['best_v'] is not None else None,
+                         paths['step'][subgraph_name]]
+                    )
             else:
-                path = os.path.join(path, name)
-                print('\nCreating %s checkpoint at %s' % (model_type, path))
-                self._hooks['saver'].save(self._session, path)
+                ckpt_path = os.path.join(path, name)
+                print('\nCreating %s checkpoint at %s' % (model_type, ckpt_path))
+                self._hooks['saver'].save(self._session, ckpt_path)
+                self._save_not_none_values(
+                    [lr, best_value, step],
+                    [os.path.join(path, optional_fn['lr']),
+                     os.path.join(path, optional_fn['best_v']) if optional_fn['best_v'] is not None else None,
+                     os.path.join(path, optional_fn['step'])]
+                )
+
         elif model_type == 'optimizer':
             path = os.path.join(path, name)
             print('\nCreating %s checkpoint at %s' % (model_type, path))
@@ -562,14 +605,35 @@ class Environment(object):
             self._hooks['meta_optimizer_saver'].save(self._session, path)
 
     @staticmethod
-    def _get_lr_from_checkpoint(restore_path):
-        folder, checkpoint_name = os.path.split(restore_path)
-        learning_rate_file_name = os.path.join(folder, checkpoint_name + '_learning_rate.txt')
-        with open(learning_rate_file_name, 'r') as f:
-            learning_rate = float(f.read())
-        return learning_rate
+    def _get_value_from_file(file_name):
+        with open(file_name, 'r') as f:
+            value = float(f.read())
+        return value
 
-    def _restore_pupil(self, restore_path, verbose=True, lr_restore_saver_name=None):
+    def _restore_ctrl_from_checkpoint(self, restore_path, ctrl_restore_saver_name):
+        ctrl_params = dict()
+        if isinstance(restore_path, dict):
+            folder = os.path.split(restore_path[ctrl_restore_saver_name])[0]
+        else:
+            folder = os.path.split(restore_path)[0]
+        content = filter(lambda x: '_' in x and os.path.isfile(os.path.join(folder, x)), os.listdir(folder))
+        for file_name in content:
+            path = os.path.join(folder, file_name)
+            if 'learning_rate' in file_name:
+                ctrl_params['lr'] = self._get_value_from_file(path)
+            elif 'step' in file_name:
+                ctrl_params['step'] = self._get_value_from_file(path)
+            else:
+                ctrl_params['best_v'] = self._get_value_from_file(path)
+                # print("(Environment._restore_ctrl_from_checkpoint)file_name:", file_name)
+                metric_and_dataset = file_name.split('_best_')[1][:-4]
+                metric_name, dataset_name = metric_and_dataset.split('_on_')
+                ctrl_params['metric'] = metric_name
+                ctrl_params['dataset_name'] = dataset_name
+        return ctrl_params
+        
+    def _restore_pupil(self, restore_path, verbose=True, ctrl_restore_saver_name=None):
+        # print("(Environment._restore_pupil)ctrl_restore_saver_name:", ctrl_restore_saver_name)
         # print("(Environment._restore_pupil)self._hooks:", self._hooks)
         if restore_path is not None:
             if verbose:
@@ -577,19 +641,13 @@ class Environment(object):
             if isinstance(restore_path, dict):
                 for saver_name, path in sorted(restore_path.items(), key=lambda x: x[0]):
                     self._hooks['subgraph_savers'][saver_name].restore(self._session, path)
-                if lr_restore_saver_name is not None:
-                    learning_rate = self._get_lr_from_checkpoint(restore_path[lr_restore_saver_name])
-                else:
-                    learning_rate = None
             else:
+                # print("(Environment._restore_pupil)ctrl_restore_saver_name:", ctrl_restore_saver_name)
                 self._hooks['saver'].restore(self._session, restore_path)
-                if lr_restore_saver_name is not None:
-                    learning_rate = self._get_lr_from_checkpoint(restore_path)
-                else:
-                    learning_rate = None
+            ctrl = self._restore_ctrl_from_checkpoint(restore_path, ctrl_restore_saver_name)
         else:
-            learning_rate = None
-        return learning_rate
+            ctrl = dict()
+        return ctrl
 
     def _restore_meta_optimizer(self, restore_path):
         if restore_path is not None:
@@ -665,12 +723,16 @@ class Environment(object):
             if work['validate_tokens_by_chars']:
                 mean_metrics = self._validate_by_chars(
                     batch_generator_class, validation_dataset, work['validation_batch_size'],
-                    work['valid_batch_kwargs'], additional_feed_dict=add_feed_dict)
+                    work['valid_batch_kwargs'], additional_feed_dict=add_feed_dict,
+                    file_open_mode='w',
+                )
             else:
                 # print('(Environment.test)self._storage:', self._storage)
                 mean_metrics = self._validate(
                     batch_generator_class, validation_dataset, work['validation_batch_size'],
-                    work['valid_batch_kwargs'], additional_feed_dict=add_feed_dict)
+                    work['valid_batch_kwargs'], additional_feed_dict=add_feed_dict,
+                    file_open_mode='w',
+                )
             valid_res[validation_dataset[1]] = mean_metrics
         if work['example_length'] is not None:
             example_res = list()
@@ -788,7 +850,8 @@ class Environment(object):
             additional_feed_dict=None,
             save_to_file=None,
             save_to_storage=None,
-            print_results=None
+            print_results=None,
+            file_open_mode='a',
     ):
         if additional_feed_dict is None:
             additional_feed_dict = dict()
@@ -819,9 +882,12 @@ class Environment(object):
 
         # print("(Environment._validate/after loop)self._current_place_for_result_saving:",
         #       self._current_place_for_result_saving)
-        means = self._handler.stop_accumulation(save_to_file=save_to_file,
-                                                save_to_storage=save_to_storage,
-                                                print_results=print_results)
+        means = self._handler.stop_accumulation(
+            save_to_file=save_to_file,
+            save_to_storage=save_to_storage,
+            print_results=print_results,
+            file_open_mode=file_open_mode,
+        )
         return means
 
     def _validate_by_chars(
@@ -834,7 +900,9 @@ class Environment(object):
             additional_feed_dict=None,
             save_to_file=None,
             save_to_storage=None,
-            print_results=None):
+            print_results=None,
+            file_open_mode='a',
+    ):
         if additional_feed_dict is None:
             additional_feed_dict = dict()
         # print('valid_batch_kwargs:', valid_batch_kwargs)
@@ -857,9 +925,12 @@ class Environment(object):
             step += 1
             inputs, labels, correct_tokens = valid_batches.next_with_tokens()
 
-        means = self._handler.stop_accumulation(save_to_file=save_to_file,
-                                                save_to_storage=save_to_storage,
-                                                print_results=print_results)
+        means = self._handler.stop_accumulation(
+            save_to_file=save_to_file,
+            save_to_storage=save_to_storage,
+            print_results=print_results,
+            file_open_mode=file_open_mode,
+        )
         return means
 
     def _from_random_fuse(self):
@@ -1251,7 +1322,15 @@ class Environment(object):
                             training_step=step,
                             additional_feed_dict=valid_add_feed_dict)
             if ctrl['it_is_time_to_create_best_checkpoint'].get():
-                self._create_checkpoint('best', checkpoints_path, subgraph_names=subgraphs_to_save, lr=learning_rate)
+                self._create_checkpoint(
+                    'best',
+                    checkpoints_path,
+                    subgraph_names=subgraphs_to_save,
+                    lr=learning_rate,
+                    best_value=ctrl['learning_rate'].get_best_target_metric_value(),
+                    target_metric_storage_path=ctrl['learning_rate'].get_target_metric_storage_path(),
+                    step=step,
+                )
             step += 1
             storage['step'] = step
         return step
@@ -1647,10 +1726,22 @@ class Environment(object):
         return train_time
 
     @staticmethod
-    def _paste_saved_lr_in_run_specs(run_specs_set, saved_learning_rate):
-        controller_type = run_specs_set[0]['train_specs']['learning_rate']['type']
-        m = Controller.spec_value_map()
-        run_specs_set[0]['train_specs']['learning_rate'][m[controller_type]] = saved_learning_rate
+    def _paste_saved_ctrl_in_run_specs(run_specs_set, saved_ctrl):
+        if 'lr' in saved_ctrl:
+            controller_type = run_specs_set[0]['train_specs']['learning_rate']['type']
+            m = Controller.spec_value_map()
+            print("Restoring learning_rate:", saved_ctrl['lr'])
+            run_specs_set[0]['train_specs']['learning_rate'][m[controller_type]] = saved_ctrl['lr']
+        if 'best_v' in saved_ctrl:
+            controller_type = run_specs_set[0]['train_specs']['stop']['type']
+            if controller_type == 'while_progress':
+                dataset_name, metric_name = run_specs_set[0]['train_specs']['stop']['path_to_target_metric_storage']
+                if dataset_name == saved_ctrl['dataset_name'] and metric_name == saved_ctrl['metric']:
+                    print(
+                        "Restoring best %s value on %s dataset on step %s : %s"
+                        % (metric_name, dataset_name, saved_ctrl['step'], saved_ctrl['best_v'])
+                    )
+                    run_specs_set[0]['train_specs']['learning_rate']['best'] = saved_ctrl['best_v']
 
     def _train_repeatedly(self, start_specs, run_specs_set):
         # initializing model
@@ -1659,10 +1750,14 @@ class Environment(object):
         # print("(Environment._train_repeatedly)tf.global_variables():\n", tf.global_variables())
         # print("(Environment._train_repeatedly)tf.local_variables():\n", tf.local_variables())
         self._session.run(tf.global_variables_initializer())
-
-        saved_learning_rate = self._restore_pupil(start_specs['restore_path'], start_specs['lr_restore_saver_name'])
-        if saved_learning_rate is not None:
-            self._paste_saved_lr_in_run_specs(run_specs_set, saved_learning_rate)
+        # print("(Environment._train_repeatedly)start_specs['ctrl_restore_saver_name']:",
+        #       start_specs['ctrl_restore_saver_name'])
+        saved_ctrl = self._restore_pupil(
+            start_specs['restore_path'],
+            ctrl_restore_saver_name=start_specs['ctrl_restore_saver_name']
+        )
+        # print("(Environment._train_repeatedly)saved_learning_rate:", saved_learning_rate)
+        self._paste_saved_ctrl_in_run_specs(run_specs_set, saved_ctrl)
 
         if start_specs['with_meta_optimizer']:
             self._restore_meta_optimizer(start_specs['restore_optimizer_path'])
@@ -1686,10 +1781,14 @@ class Environment(object):
             create_path(checkpoints_path)
         else:
             checkpoints_path = None
-        init_step = 0
+
+        # + 1 is because weights modification for saved_ctrl['step'] is finished and
+        # and if training would have been continued after checkpoint creation the step
+        # would be first increased by one
+        init_step = saved_ctrl['step'] + 1 if 'step' in saved_ctrl else 0
         # if 'reset_pupil_train_state' in self._hooks:
         #     self._session.run(self._hooks['reset_pupil_train_state'])
-        if checkpoints_path is not None:
+        if checkpoints_path is not None and init_step == 0:
             self._create_checkpoint('start', checkpoints_path, subgraph_names=start_specs['subgraphs_to_save'])
         global train_start_time
         train_start_time = time.clock()
