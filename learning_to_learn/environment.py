@@ -613,6 +613,8 @@ class Environment(object):
     def _restore_ctrl_from_checkpoint(self, restore_path, ctrl_restore_saver_name):
         ctrl_params = dict()
         if isinstance(restore_path, dict):
+            if ctrl_restore_saver_name is None:
+                return ctrl_params
             folder = os.path.split(restore_path[ctrl_restore_saver_name])[0]
         else:
             folder = os.path.split(restore_path)[0]
@@ -622,7 +624,7 @@ class Environment(object):
             if 'learning_rate' in file_name:
                 ctrl_params['lr'] = self._get_value_from_file(path)
             elif 'step' in file_name:
-                ctrl_params['step'] = self._get_value_from_file(path)
+                ctrl_params['step'] = int(self._get_value_from_file(path))
             else:
                 ctrl_params['best_v'] = self._get_value_from_file(path)
                 # print("(Environment._restore_ctrl_from_checkpoint)file_name:", file_name)

@@ -1590,10 +1590,15 @@ def read_text_conf_file(file_name):
         with open(file_name, 'r') as f:
             config = json.load(f)
         for key in ['other_hyperparameters', 'build_hyperparameters']:
-            for hp_name, values_and_type in config[key].items():
-                hp_names.append(hp_name)
-                hp_types.append(values_and_type['dtype'])
-                hp_values.append(values_and_type['values'])
+            for hp_name, values_and_dtype in config[key].items():
+                hp_types.append(values_and_dtype['dtype'])
+                if 'type' in values_and_dtype:
+                    for inner_name, values in values_and_dtype['varying'].items():
+                        hp_names.append(hp_name + '/' + inner_name)
+                        hp_values.append(values)
+                else:
+                    hp_names.append(hp_name)
+                    hp_values.append(values_and_dtype['values'])
         num_repeats = config['num_repeats']
     else:
         with open(file_name, 'r') as f:
