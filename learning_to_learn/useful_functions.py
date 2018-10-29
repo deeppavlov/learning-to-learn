@@ -98,6 +98,13 @@ class HPLayoutMissingError(Exception):
         self.message = message
 
 
+class UnknownHPTypeError(Exception):
+    def __init__(self, hp_type, allowed_types, message):
+        self.hp_type = hp_type
+        self.allowed_types = allowed_types
+        self.message = message
+
+
 def create_vocabulary(text, with_unk=False):
     all_characters = list()
     for c in text:
@@ -1592,10 +1599,14 @@ def read_text_conf_file(file_name):
         for key in ['other_hyperparameters', 'build_hyperparameters']:
             for hp_name, values_and_dtype in config[key].items():
                 hp_types.append(values_and_dtype['dtype'])
-                if 'type' in values_and_dtype:
-                    for inner_name, values in values_and_dtype['varying'].items():
-                        hp_names.append(hp_name + '/' + inner_name)
-                        hp_values.append(values)
+                if 'varying' in values_and_dtype:
+                    if isinstance(values_and_dtype['varying'], dict):
+                        for inner_name, values in values_and_dtype['varying'].items():
+                            hp_names.append(hp_name + '/' + inner_name)
+                            hp_values.append(values)
+                    else:
+                        hp_names.append(hp_name + '/value')
+                        hp_values.append(values_and_dtype['varying'])
                 else:
                     hp_names.append(hp_name)
                     hp_values.append(values_and_dtype['values'])

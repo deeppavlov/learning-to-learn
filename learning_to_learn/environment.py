@@ -1338,273 +1338,6 @@ class Environment(object):
             storage['step'] = step
         return step
 
-    def _train_1(
-            self,
-            run_specs,
-            checkpoints_path,
-            batch_generator_class,
-            with_meta_optimizer,
-            init_step=0,
-            subgraphs_to_save=None,
-            # storage=None,
-    ):
-        """It is a method that does actual training and responsible for one training pass through dataset. It is called
-        from train method (maybe several times)
-        Args:
-            kwargs should include all entries defined in self._pupil_default_training"""
-        # print("(Environment._train)self._hooks:", self._hooks)
-        # print("(Environment._train)cwd:", os.getcwd())
-        train_specs = construct(run_specs['train_specs'])
-        # print("(Environment._train)train_specs['train_batch_kwargs']:", train_specs['train_batch_kwargs'])
-        schedule = construct(run_specs['schedule'])
-        step = init_step
-
-        storage = self._current_place_for_result_saving
-        # creating batch generator
-
-        # resetting step in control_storage
-        storage['step'] = step
-        # self.set_in_storage(step=step)
-        train_feed_dict_additions = train_specs['additions_to_feed_dict']
-        # print("(Environment._train)train_feed_dict_additions:", train_feed_dict_additions)
-        validation_additional_feed_dict = train_specs['validation_additions_to_feed_dict']
-        stop_specs = construct(train_specs['stop'])
-
-        # print('train_feed_dict_additions:', train_feed_dict_additions)
-        additional_controllers = list()
-        for addition in train_feed_dict_additions:
-            # print("(Environment._train)addition:", addition)
-            additional_controllers.append(Controller(storage, addition['value']))
-
-        to_be_collected_while_training = schedule['to_be_collected_while_training']
-        collect_interval = to_be_collected_while_training['results_collect_interval']
-        print_per_collected = to_be_collected_while_training['print_per_collected']
-        example_per_print = to_be_collected_while_training['example_per_print']
-
-        if train_specs['no_validation'] or collect_interval is None:
-            it_is_time_for_validation = Controller(storage,
-                                                   {'type': 'always_false'})
-            it_is_time_for_example = Controller(storage,
-                                                {'type': 'always_false'})
-        else:
-            valid_period = collect_interval * print_per_collected
-            it_is_time_for_validation = Controller(storage,
-                                                   {'type': 'periodic_truth',
-                                                    'period': valid_period})
-            if example_per_print is None:
-                it_is_time_for_example = Controller(storage,
-                                                    {'type': 'always_false'})
-            else:
-                example_period = valid_period * example_per_print
-                it_is_time_for_example = Controller(storage,
-                                                    {'type': 'periodic_truth',
-                                                     'period': example_period})
-
-        batch_size_controller = Controller(storage, train_specs['batch_size'])
-        batch_size_change_tracker_specs = Controller.create_change_tracking_specifications(train_specs['batch_size'])
-        batch_size_should_change = Controller(storage, batch_size_change_tracker_specs)
-
-        if train_specs['debug'] is not None:
-            should_start_debugging = Controller(storage, train_specs['debug'])
-        else:
-            should_start_debugging = Controller(storage,
-                                                {'type': 'true_on_steps',
-                                                 'steps': []})
-
-        train_batch_kwargs = dict()
-        train_batch_kwargs_controller_specs = list()
-        for key, batch_arg in train_specs['train_batch_kwargs'].items():
-            if isinstance(batch_arg, dict):
-                if 'type' in batch_arg:
-                    train_batch_kwargs[key] = Controller(storage, batch_arg)
-                    train_batch_kwargs_controller_specs.append(batch_arg)
-                else:
-                    train_batch_kwargs[key] = batch_arg
-            else:
-                train_batch_kwargs[key] = batch_arg
-        change_tracker_specs = Controller.create_change_tracking_specifications(
-            train_batch_kwargs_controller_specs)
-        batch_generator_specs_should_change = Controller(storage, change_tracker_specs)
-
-        # print("(Environment._train)schedule:", schedule)
-        # print(
-        #     "(Environment._train/before new schedule)self._current_place_for_result_saving",
-        #     self._current_place_for_result_saving
-        # )
-        # print("(Environment._train)[dataset[1] for dataset in train_specs['validation_datasets']:",
-        #       [dataset[1] for dataset in train_specs['validation_datasets']])
-        # print("(Environment._train)train_specs['validation_datasets']:", train_specs['validation_datasets'])
-        self._handler.set_new_run_schedule(
-            schedule,
-            [dataset[1] for dataset in train_specs['validation_datasets']]
-        )
-        # print("(Environment._train)cwd:", os.getcwd())
-        if checkpoints_path is not None:
-            if train_specs['checkpoint_steps'] is not None:
-                if train_specs['checkpoint_steps']['type'] == 'true_on_steps':
-                    for idx in range(len(train_specs['checkpoint_steps']['steps'])):
-                        train_specs['checkpoint_steps']['steps'][idx] += init_step
-                it_is_time_to_create_checkpoint = Controller(storage, train_specs['checkpoint_steps'])
-            else:
-                it_is_time_to_create_checkpoint = Controller(
-                    storage,
-                    {'type': 'always_false'}
-                )
-            storage_keys = list(storage.keys())
-            if stop_specs['type'] == 'while_progress' or len(storage_keys) > 2:
-                if stop_specs['type'] == 'while_progress':
-                    path_to_target_metric_storage = stop_specs['path_to_target_metric_storage']
-                else:
-                    storage_keys.remove('train')
-                    storage_keys.remove('step')
-                    path_to_target_metric_storage = (storage_keys[0], 'loss')
-                best_checkpoint_controller_specs = dict(
-                    type='fire_at_best',
-                    path_to_target_metric_storage=path_to_target_metric_storage
-                )
-                # print("(Environment._train)storage:", storage)
-                # print("(Environment._train)best_checkpoint_controller_specs:", best_checkpoint_controller_specs)
-                it_is_time_to_create_best_checkpoint = Controller(
-                    storage,
-                    best_checkpoint_controller_specs
-                )
-            else:
-                it_is_time_to_create_best_checkpoint = Controller(
-                    storage,
-                    {'type': 'always_false'}
-                )
-        else:
-            it_is_time_to_create_checkpoint = Controller(
-                storage,
-                {'type': 'always_false'}
-            )
-            it_is_time_to_create_best_checkpoint = Controller(
-                storage,
-                {'type': 'always_false'}
-            )
-
-        # print("(Environment._train)train_specs['learning_rate']:", train_specs['learning_rate'])
-        # print(
-        #     "(Environment._train/after new schedule)self._current_place_for_result_saving",
-        #     self._current_place_for_result_saving
-        # )
-        if not with_meta_optimizer:
-            # print("(Environment._train)storage:", storage)
-            learning_rate_controller = Controller(storage,
-                                                  train_specs['learning_rate'])
-            controllers = [learning_rate_controller]
-        else:
-            controllers = list()
-        # print("(Environment._train)cwd:", os.getcwd())
-        controllers.extend(additional_controllers)
-        controllers.append(batch_size_controller)
-        batch_kwargs_controllers = list()
-        for batch_kwarg in train_batch_kwargs.values():
-            if isinstance(batch_kwarg, Controller):
-                batch_kwargs_controllers.append(batch_kwarg)
-        controllers.extend(batch_kwargs_controllers)
-        self._handler.set_controllers(controllers)
-
-        batch_size = batch_size_controller.get()
-        tb_kwargs = self._build_batch_kwargs(train_batch_kwargs)
-        # print("(Environment._train)tb_kwargs:", tb_kwargs)
-        train_batches = batch_generator_class(train_specs['train_dataset'][0], batch_size, **tb_kwargs)
-        feed_dict = dict()
-        # print("(Environment._train)cwd:", os.getcwd())
-        if stop_specs['type'] == 'limit_steps':
-            stop_specs['limit'] += init_step
-        elif stop_specs['type'] == 'while_progress':
-            # print("(Environment._train)stop_specs['changing_parameter_name']:", stop_specs['changing_parameter_name'])
-            if stop_specs['changing_parameter_name'] == 'learning_rate':
-                stop_specs['changing_parameter_controller'] = learning_rate_controller             
-        should_continue = Controller(storage, stop_specs)
-        while should_continue.get():
-            # print("(Environment._train)cwd:", os.getcwd())
-            if should_start_debugging.get():
-                self._session = tf_debug.LocalCLIDebugWrapperSession(self._session)
-                self._session.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
-
-            if batch_size_should_change.get():
-                batch_size = batch_size_controller.get()
-                train_batches.change_batch_size(batch_size)
-
-            if batch_generator_specs_should_change.get():
-                tb_kwargs = self._build_batch_kwargs(train_batch_kwargs)
-                train_batches.change_specs(**tb_kwargs)
-
-            if it_is_time_to_create_checkpoint.get():
-                self._create_checkpoint(str(step), checkpoints_path, subgraph_names=subgraphs_to_save)
-            train_inputs, train_labels = train_batches.next()
-
-            if not with_meta_optimizer:
-                learning_rate = learning_rate_controller.get()
-                feed_dict[self._hooks['learning_rate']] = learning_rate
-
-            if isinstance(self._hooks['inputs'], list):
-                for input_tensor, input_value in zip(self._hooks['inputs'], train_inputs):
-                    feed_dict[input_tensor] = input_value
-            else:
-                feed_dict[self._hooks['inputs']] = train_inputs
-            if isinstance(self._hooks['labels'], list):
-                for label_tensor, label_value in zip(self._hooks['labels'], train_labels):
-                    feed_dict[label_tensor] = label_value
-            else:
-                feed_dict[self._hooks['labels']] = train_labels
-            for addition, add_controller in zip(train_feed_dict_additions, additional_controllers):
-                # print("(Environment._train)self._hooks:", self._hooks)
-                # print("(Environment._train)addition['placeholder']:", addition['placeholder'])
-                feed_dict[self._hooks[addition['placeholder']]] = add_controller.get()
-            # print('(Environment._train)self._hooks:', self._hooks)
-
-            train_operations = self._handler.get_tensors('train', step, with_meta_optimizer=with_meta_optimizer)
-            # print('train_operations:', train_operations)
-            # print('(Environment._train)feed_dict:', feed_dict)
-
-            train_res = self._session.run(train_operations, feed_dict=feed_dict)
-            # here loss is given in bits per input (BPI)
-            self._handler.process_results(step, train_res, time.clock() - train_start_time, regime='train')
-            # print("(Environment._train)train_specs['valid_batch_kwargs']:", train_specs['valid_batch_kwargs'])
-            if it_is_time_for_validation.get():
-                if len(train_specs['validation_datasets']) > 0:
-                    valid_add_feed_dict = self._form_validation_additional_feed_dict(train_feed_dict_additions,
-                                                                                     additional_controllers,
-                                                                                     validation_additional_feed_dict)
-                for validation_dataset in train_specs['validation_datasets']:
-                    if train_specs['validate_tokens_by_chars']:
-                        # print('(Environment._train)ready to validate by chars')
-                        _ = self._validate_by_chars(
-                            batch_generator_class, validation_dataset, train_specs['validation_batch_size'],
-                            train_specs['valid_batch_kwargs'], training_step=step,
-                            additional_feed_dict=valid_add_feed_dict)
-                    else:
-                        _ = self._validate(
-                            batch_generator_class, validation_dataset, train_specs['validation_batch_size'],
-                            train_specs['valid_batch_kwargs'], training_step=step,
-                            additional_feed_dict=valid_add_feed_dict)
-            if it_is_time_for_example.get():
-                valid_add_feed_dict = self._form_validation_additional_feed_dict(train_feed_dict_additions,
-                                                                                 additional_controllers,
-                                                                                 validation_additional_feed_dict)
-                if schedule['fuses'] is not None:
-                    _ = self._on_fuses(train_batches,
-                                       schedule['fuses'],
-                                       training_step=step,
-                                       additional_feed_dict=valid_add_feed_dict)
-                for validation_dataset in train_specs['validation_datasets']:
-                    if schedule['example_length'] is not None:
-                        _ = self._prediction_examples(
-                            batch_generator_class,
-                            validation_dataset,
-                            schedule['example_length'],
-                            train_specs['valid_batch_kwargs'],
-                            training_step=step,
-                            additional_feed_dict=valid_add_feed_dict)
-            if it_is_time_to_create_best_checkpoint.get():
-                self._create_checkpoint('best', checkpoints_path, subgraph_names=subgraphs_to_save)
-            step += 1
-            storage['step'] = step
-        return step
-
     def train(
             self,
             *args,
@@ -2412,6 +2145,7 @@ class Environment(object):
             additional_feed_dict,
             queue_
     ):
+        # print("(Environment._launch_and_put_in_queue)reached printing hps")
         self._handler.print_hyper_parameters(hp_comb, order)
         result = dict()
         self._train_repeatedly(start_specs, run_specs_set)
@@ -2679,6 +2413,7 @@ class Environment(object):
             hp_combination = construct(build_hp_comb)
             hp_combs.append(hp_combination)
         order = self._handler.order
+        # print("(Environment._spring_process_for_grid_search)order:", order)
         if rebuild_every_time:
             for hp_comb, (start_specs, run_specs_set) in zip(hp_combs, parsed):
                 # print("(Environment._spring_process_for_meta_grid_search)hp_comb:", hp_comb)
@@ -2738,7 +2473,7 @@ class Environment(object):
                     initial_experiment_counter_value=0,
                     **kwargs):
         """build_hyperparameters and other_hyperparameters are provided in the following format
-        build_hyperparameters and other_hyperparameters are a dictionaries which keys are kwargs for build or train
+        build_hyperparameters and other_hyperparameters are dictionaries which keys are kwargs for build or train
         Environment methods for corresponding hyper parameters and values are dictionaries of following format:
             hp_type ('build_hp', 'built-in', 'additional_placeholder', 'batch_kwarg')
                 can be omitted for build_hyperparameters and if omitted in other_hyperparameters it is set to
@@ -2749,7 +2484,7 @@ class Environment(object):
                 default is None
             controller
                 train kwargs specify parameters such as learning rate which may change during training.
-                controller entry is boolean and shows if controller is used
+                controller entry is boolean and shows if controller is used. True for all other hps.
             share
                 some parameters are shared between graph building and train methods (e. g. num_unrollings)
                 this entry is used in pupil build hps for specifying where to put hp in train method kwargs if
@@ -2759,26 +2494,31 @@ class Environment(object):
                     'controller' is boolean
             type
                 in case when controller is True type is Controller type. If controller is true and type is omitted
-                type is set to 'fixed
+                type is set to 'fixed'
             fixed
-                if parameter is inside dictionary it is likely that dictionary will have another entries. In such case
+                if parameter is inside dictionary, it is likely that dictionary will have another entries. In such case
                 fixed is to be used for passing them to model. fixed is a dictionary which entries are entries of
                 hp dictionary entries. default is None
             varying
                 is an entry for hyper parameter values to be tested.
-                varying can be a dictionary which keys are names of specs to be tested and values are list of tested hp
-                values. This format is used in cases when hp is a dictionary and and one of dictionary specs is varied,
+                varying can be a dictionary which keys are names of specs to be tested and values are lists of tested hp
+                values. This format is used in cases when hp is a dictionary and one of dictionary specs is varied,
                 e. g. learning_rate
                     {'init': [1., 2., 3.]}
-                if hyper parameter is not a dictionary varying is a list of values to be tested
+                If hyper parameter is not a dictionary, varying is a list of values to be tested. In this case
+                controller is assumed to have 'fixed' type.
                 Note that if list_indices is not None varying contains not list but list of lists where each inner list
                 corresponds to list index
         Abbreviations of this format are possible.
             1. you may omit list_indices, hp_type, controller, type, share
+                if 'direction' in 'share' is omitted it is set to 'batch_kwarg'
             2. for build_hyperparameters you can use following formats
                 {'build_hyper_param' = values_to_be_tested}
-                {'build_hyper_param[idx1,idx2,idx3]' = [values_list1, values_list2, values_list3]}
+                {'build_hyper_param[idx1,idx2,idx3]' = [value_list1, value_list2, value_list3]}
                 where idx1 and so on are list_indices
+            3. If other hp is an additional placeholder, values can be passed as list. 'type' will be set to fixed,
+                'fixed' will be empty, 'varying' will be a list of values, 'share' is None, 'controller' is True,
+                and list_indices are parsed from hp name as described in second bullet above.
         evaluation is an argument specifying how learned models are being tested. evaluation is a dictionary with
         entries:
             datasets: datasets on which model has to be validated
@@ -2813,7 +2553,7 @@ class Environment(object):
         # print('Environment.grid_search')
         # print('build_hp_combs:', build_hp_combs)
         # print('build_insertions:', build_insertions)
-        # print('other_hp_combs:', other_hp_combs)
+        # print("(Environment.grid_search)other_hp_combs:", other_hp_combs)
         # print("('Environment.grid_search')other_insertions:", other_insertions)
         # print("('Environment.grid_search')build_hp_combs:", build_hp_combs)
 
@@ -2826,6 +2566,7 @@ class Environment(object):
             hps.extend(list(build_hp_combs[0].keys()))
         if len(other_hp_combs) > 0:
             hps.extend(list(other_hp_combs[0].keys()))
+        # print("(Environment.grid_search)hps:", hps)
         self._handler = Handler(
             self,
             self._hooks,
@@ -2836,6 +2577,7 @@ class Environment(object):
             hyperparameters=hps,
             initial_experiment_counter_value=initial_experiment_counter_value
         )
+        # print("(Environment.grid_search)self._handler._order:", self._handler._order)
         self._handler.log_launch()
         # print('build_insertions:', build_insertions)
         # print('build_hp_combs:', build_hp_combs)

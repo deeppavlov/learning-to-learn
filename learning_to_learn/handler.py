@@ -235,7 +235,7 @@ class Handler(object):
             self._order = list(self._result_types)
             if self._hyperparameters is not None:
                 self._order.extend(sort_hps(self._hyperparameters))
-
+            # print("(Handler.__init__)self._order:", self._order)
             self._tmpl = '%s '*(len(self._order) - 1) + '%s\n'
             result_names = list()
             for result_type in self._order:
@@ -255,10 +255,12 @@ class Handler(object):
                     with open(self._file_names[dataset_name], 'a') as fd:
                         fd.write(self._tmpl % tuple(result_names))
                 else:
-                    with open(self._file_names[dataset_name], 'r') as fd:
-                        lines = fd.read().split('\n')
-                    metrics, hp_names = parse_header_line(lines[0])
-                    self._order = metrics + [hp_name_2_hp_description(n) for n in hp_names]
+                    print("NOT EMPTY EVAL FILE IS PRESENT self._order. MODIFICATION CODE WAS COMMENTED OUT!!!")
+                # else:
+                #     with open(self._file_names[dataset_name], 'r') as fd:
+                #         lines = fd.read().split('\n')
+                #     metrics, hp_names = parse_header_line(lines[0])
+                #     self._order = metrics + [hp_name_2_hp_description(n) for n in hp_names]
 
             self._environment_instance.set_in_storage(launches=list())
 
@@ -1010,10 +1012,12 @@ class Handler(object):
 
     @staticmethod
     def print_hyper_parameters(hp, order, indent=2):
-        # print("(Handler.print_hyper_parameters)self._processing_type:", self._processing_type)
+        # print("(Handler.print_hyper_parameters)hp:", hp)
         if indent != 0:
             print('\n' * (indent - 1))
         # print("(Handler.print_hyper_parameters)order:", order)
+        if len(hp) == 0:
+            print("(Handler.print_hyper_parameters)No hyper parameters!")
         for key in order:
             if any([list(key[1:]) == list(k[1:]) for k in hp.keys()]):
                 for k in hp.keys():

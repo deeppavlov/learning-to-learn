@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from learning_to_learn.useful_functions import InvalidArgumentError, search_in_nested_dictionary,\
-    construct, paste_into_nested_structure, unite_dicts, remove_keys_from_dictionary
+    construct, paste_into_nested_structure, unite_dicts, remove_keys_from_dictionary, UnknownHPTypeError
 
 
 # general args parsing. Used for test and train methods
@@ -749,7 +749,7 @@ def sort(hps, index, key_length):
         return unite_dicts(sorted_groups)
     # print('index=%s, hps:' % index, hps)
     return hps
-sort
+
 
 def sort_hps(hps):
     """alphabetically, than by index, and finally by controller specification key"""
@@ -955,7 +955,7 @@ def insert_not_build_hp(kwargs, one_hp_insertion):
             kwargs[one_hp_insertion['hp_name']] = one_hp_insertion['paste']
         else:
             kwargs[one_hp_insertion['hp_name']][one_hp_insertion['list_index']] = one_hp_insertion['paste']
-    if one_hp_insertion['hp_type'] == 'batch_kwarg':
+    elif one_hp_insertion['hp_type'] == 'batch_kwarg':
         if 'train_batch_kwargs' not in kwargs:
             kwargs['train_batch_kwargs'] = dict()
         if one_hp_insertion['list_index'] is None:
@@ -963,7 +963,7 @@ def insert_not_build_hp(kwargs, one_hp_insertion):
         else:
             kwargs['train_batch_kwargs'][one_hp_insertion['hp_name']][one_hp_insertion['list_index']] = \
                 one_hp_insertion['paste']
-    if one_hp_insertion['hp_type'] == 'additional_placeholder':
+    elif one_hp_insertion['hp_type'] == 'additional_placeholder':
         if 'additions_to_feed_dict' not in kwargs:
             kwargs['additions_to_feed_dict'] = list()
         present, indices = check_if_additional_placeholder_is_present(
@@ -976,6 +976,12 @@ def insert_not_build_hp(kwargs, one_hp_insertion):
                 kwargs['additions_to_feed_dict'] = kwargs['additions_to_feed_dict'][:idx] + \
                                                    kwargs['additions_to_feed_dict'][idx+1:]
         kwargs['additions_to_feed_dict'].append(one_hp_insertion['paste'])
+    else:
+        raise UnknownHPTypeError(
+            one_hp_insertion['hp_type'], ['built-in', 'batch_kwarg', 'additional_placeholder'],
+            "Not allowed hp type %s. Allowed types are %s" %
+            (one_hp_insertion['hp_type'], str(['built-in', 'batch_kwarg', 'additional_placeholder']))
+        )
     return kwargs
 
 
