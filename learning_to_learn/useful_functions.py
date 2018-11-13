@@ -2369,7 +2369,11 @@ def broadcast_many_lists(lists, n):
 def split_strings_by_char(strings, char):
     res = list()
     for string in strings:
-        res.append(string.split(char))
+        if string is None:
+            to_append = None
+        else:
+            to_append = string.split(char)
+        res.append(to_append)
     return res
 
 
