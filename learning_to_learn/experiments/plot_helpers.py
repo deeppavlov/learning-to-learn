@@ -224,14 +224,16 @@ def plot_outer_legend(
             f.write(description)
 
 
-def get_parameter_names(conf_file):
-    old_dir = os.getcwd()
-    abspath = os.path.abspath(__file__)
-    dname = os.path.dirname(abspath)
-    os.chdir(dname)
+def get_parameter_names(conf_file, search_same_dir=True):
+    if search_same_dir:
+        old_dir = os.getcwd()
+        abspath = os.path.abspath(__file__)
+        dname = os.path.dirname(abspath)
+        os.chdir(dname)
     with open(conf_file, 'r') as f:
         t = f.read()
-    os.chdir(old_dir)
+    if search_same_dir:
+        os.chdir(old_dir)
     lines = t.split('\n')
     idx = 0
     num_lines = len(lines)
