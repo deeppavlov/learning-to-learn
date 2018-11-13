@@ -108,7 +108,12 @@ def plot_outer_legend(
     for label, line_data in plot_data.items():
         for_plotlib[0].append(label)
         for_plotlib[1].append(line_data)
-    for_plotlib = synchronous_sort(for_plotlib, 0, lambda_func=lambda x: float(x) if isnumber(x) else x)
+
+    def sort_func(x):
+        if x is None:
+            return float('-inf')
+        return float(x) if isnumber(x) else x
+    for_plotlib = synchronous_sort(for_plotlib, 0, lambda_func=sort_func)
     lines = list()
     labels = list()
     if style['no_line']:
@@ -275,8 +280,14 @@ def launch_plotting(data, line_label_format, fixed_hp_tmpl, path, xlabel, ylabel
     on_descriptions = dict()
     for fixed_hps_tuple, plot_data in data.items():
         plot_data_on_labels = dict()
+        # print("(plot_helpers.launch_plotting)plot_data:", plot_data)
         for line_hp_value, line_data in plot_data.items():
-            label = line_label_format.format(line_hp_value)
+            # print("(plot_helpers.launch_plotting)line_label_format:", line_label_format)
+            # print("(plot_helpers.launch_plotting)line_hp_value:", line_hp_value)
+            if line_hp_value is None:
+                label = None
+            else:
+                label = line_label_format.format(line_hp_value)
             if label in plot_data_on_labels:
                 print("WARNING: specified formatting does not allow to distinguish '%s' in legend\n"
                       "fixed_hps_tuple: %s\n"
@@ -290,7 +301,7 @@ def launch_plotting(data, line_label_format, fixed_hp_tmpl, path, xlabel, ylabel
                         "fixed_hps_tuple: %s\n"
                         "String formatting failed to fix the problem" % (line_hp_value, fixed_hps_tuple)
                     )
-            plot_data_on_labels[line_label_format.format(line_hp_value)] = line_data
+            plot_data_on_labels[label] = line_data
         on_descriptions[fixed_hp_tmpl % fixed_hps_tuple] = plot_data_on_labels
         # print("(plot_helpers.plot_hp_search)plot_data:", plot_data)
 
