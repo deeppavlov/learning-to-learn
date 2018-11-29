@@ -1,6 +1,7 @@
 import random
 import sys
 import os
+import copy
 from matplotlib import pyplot as plt, rc
 from matplotlib.legend_handler import HandlerLine2D
 from matplotlib import container
@@ -96,6 +97,8 @@ def plot_outer_legend(
         file_name_without_ext,
         style,
         shifts=None,
+        xticks=None,
+        yticks=None,
 ):
     if shifts is None:
         shifts = [0, 0]
@@ -178,7 +181,7 @@ def plot_outer_legend(
         scale_kwargs['linthreshx'] = linthreshx
     plt.xscale(xscale, **scale_kwargs)
     plt.yscale(yscale)
-
+    plt.grid(True)
     there_is_labels = False
     for label in labels:
         if len(label) > 0:
@@ -189,6 +192,7 @@ def plot_outer_legend(
         ax = plt.gca()
         handles, labels = ax.get_legend_handles_labels()
         handles = [h[0] if isinstance(h, container.ErrorbarContainer) else h for h in handles]
+        # fig = plt.figure()
         lgd = ax.legend(
             handles,
             labels,
@@ -196,7 +200,7 @@ def plot_outer_legend(
             loc=2,
             borderaxespad=0.,
             handler_map=handler_map,
-
+            # bbox_transform=fig.transFigure,
         )
         bbox_extra_artists = [lgd]
     else:
@@ -207,7 +211,13 @@ def plot_outer_legend(
     #     borderaxespad=0.,
     #     handler_map=handler_map,
     # )
-
+    if xticks is not None:
+        plt.xticks(
+            ticks=xticks['positions'], labels=xticks['labels'],
+            fontsize=xticks['fontsize'], rotation=xticks['rotation']
+        )
+    if yticks is not None:
+        plt.yticks(ticks=yticks['positions'], labels=yticks['labels'], fontsize=yticks['fontsize'])
     for format in FORMATS:
         if format == 'pdf':
             fig_path = os.path.join(file_name_without_ext + '.pdf')
@@ -216,7 +226,11 @@ def plot_outer_legend(
         else:
             fig_path = None
         create_path(fig_path, file_name_is_in_path=True)
-        r = plt.savefig(fig_path, bbox_extra_artists=bbox_extra_artists, bbox_inches='tight')
+        r = plt.savefig(
+            fig_path, bbox_extra_artists=bbox_extra_artists,
+            bbox_inches='tight'
+        )
+        # plt.show()
         # print("%s %s %s %s:" % (pupil_name, res_type, regime, format), r)
     if description is not None:
         description_file = os.path.join(file_name_without_ext + '.txt')
@@ -276,6 +290,16 @@ def get_y_specs(res_type, plot_parameter_names, metric_scales):
     return ylabel, yscale
 
 
+def prepare_x_list2_plot_data(plot_data):
+    plot_data = copy.deepcopy(plot_data)
+    xticks = {'labels': [], 'positions': [], 'fontsize': 'small', 'rotation': 'vertical'}
+    for line_data in plot_data.values():
+        xticks['labels'].extend(map(str, line_data[0]))
+        line_data[0] = list(zip(*line_data[0]))[0]
+        xticks['positions'].extend(line_data[0])
+    return plot_data, xticks
+
+
 def launch_plotting(data, line_label_format, fixed_hp_tmpl, path, xlabel, ylabel, xscale, yscale, style, select):
     if select is not None:
         data = select_for_plot(data, select)
@@ -310,8 +334,15 @@ def launch_plotting(data, line_label_format, fixed_hp_tmpl, path, xlabel, ylabel
     counter = 0
     for description, plot_data in on_descriptions.items():
         file_name_without_ext = os.path.join(path, str(counter))
+        if len(list(plot_data.values())[0][0][0]) == 2:
+            plot_data, xticks = prepare_x_list2_plot_data(plot_data)
+        else:
+            xticks = None
+        print("(plot_helpers.launch_plotting)xticks:", xticks)
         plot_outer_legend(
-            plot_data, description, xlabel, ylabel, xscale, yscale, file_name_without_ext, style
+            plot_data, description, xlabel, ylabel,
+            xscale, yscale, file_name_without_ext, style,
+            xticks=xticks,
         )
         counter += 1
 

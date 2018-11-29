@@ -28,7 +28,7 @@ escape_sequences_replacements = {'\\': '\\\\',
 METRICS = ['accuracy', 'bpc', 'loss', 'perplexity']
 DIGITS = list('0123456789')
 NUMBER_CHARS = DIGITS + ['e', '+', '-', '.']
-LINE_WITH_NUMBERS_CHARS = NUMBER_CHARS + [' ']
+LINE_WITH_NUMBERS_CHARS = NUMBER_CHARS + [' ', '[', ']', ',']
 METRIC_IMPROVEMENT_DIRECTIONS = dict(
     accuracy='up',
     bpc='down',
@@ -1395,6 +1395,8 @@ def convert(value, type_):
         module, type_ = type_.rsplit(".", 1)
         module = importlib.import_module(module)
         cls = getattr(module, type_)
+    if type_ in ['list', 'tuple', 'dict']:
+        return eval(value)
     return cls(value)
 
 
@@ -1481,7 +1483,11 @@ def check_if_line_is_header(line):
 
 
 def get_type_simple(value):
-    if '.' in value or 'e' in value:
+    if '[' in value:
+        value_type = 'list'
+    elif '(' in value:
+        value_type = 'tuple'
+    elif '.' in value or 'e' in value:
         value_type = 'float'
     else:
         value_type = 'int'
@@ -1490,10 +1496,32 @@ def get_type_simple(value):
 
 def extract_hp_set(line, hp_names):
     hp_set = dict()
-    hp_values = line.split()[-len(hp_names):]
+    line = list(filter(lambda x: len(x) > 0, re.split('([[\]])', line)))
+    # print("(useful_functions.extract_hp_set)line:", line)
+    nline = []
+    accumulated = ''
+    for s in line:
+        if len(accumulated) == 0:
+            if s == '[':
+                accumulated = s
+            else:
+                nline.append(s)
+        else:
+
+            accumulated += s
+            if s == ']':
+                nline.append(accumulated)
+                accumulated = ''
+    # print("(useful_functions.extract_hp_set)nline:", nline)
+    hp_values = []
+    for s in nline:
+        if '[' in s:
+            hp_values.append(s)
+        else:
+            hp_values.extend(s.split())
     # print("(useful_functions.extract_hp_set)hp_values:", hp_values)
     # print("(useful_functions.extract_hp_set)hp_names:", hp_names)
-    for hp_name, hp_value in zip(hp_names, hp_values):
+    for hp_name, hp_value in zip(hp_names, hp_values[-len(hp_names):]):
         hp_set[hp_name] = convert(hp_value, get_type_simple(hp_value))
     return hp_set
 
@@ -1501,8 +1529,8 @@ def extract_hp_set(line, hp_names):
 def extract_metrics(line, metric_names):
     res_set = dict()
     hp_values = line.split()[:len(metric_names)]
-    # print("(useful_functions.extract_hp_set)hp_values:", hp_values)
-    # print("(useful_functions.extract_hp_set)hp_names:", hp_names)
+    # print("(useful_functions.extract_metrics)hp_values:", hp_values)
+    # print("(useful_functions.extract_metrics)hp_names:", hp_names)
     for name, value in zip(metric_names, hp_values):
         res_set[name] = convert(value, get_type_simple(value))
     return res_set
@@ -2257,6 +2285,8 @@ def get_pupil_evaluation_results(eval_dir, hp_order):
                     line_hp = hp_values[-2]
                 else:
                     line_hp = None
+                print("(useful_functions.get_pupil_evaluation_results)hp_set:", hp_set)
+                print("(useful_functions.get_pupil_evaluation_results)hp_values:", hp_values)
                 for metric, m_value in res.items():
                     d = for_plotting[dataset_name][metric]
                     if fixed_hps not in d:
@@ -2276,7 +2306,15 @@ def get_pupil_evaluation_results(eval_dir, hp_order):
             for fixed_hps_res in metric_res.values():
                 for line_key, line_res in fixed_hps_res.items():
                     fixed_hps_res[line_key] = add_stddev(line_res)
-    for_plotting = apply_func_to_nested(for_plotting, lambda x: synchronous_sort(x, 0), (dict,))
+    for_plotting = apply_func_to_nested(
+        for_plotting,
+        lambda x: synchronous_sort(
+            x, 0,
+            lambda_func=lambda x: x[0] if isinstance(x, (list, tuple)) else x,
+        ),
+        (dict,)
+    )
+    print("(useful_functions.get_pupil_evaluation_results)for_plotting:", for_plotting)
     return for_plotting
 
 
