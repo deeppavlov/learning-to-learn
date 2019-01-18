@@ -213,7 +213,7 @@ class Controller(object):
             return False
 
     def _while_progress(self):  # for example if learning does not bring improvement return False
-        """Returns False if to values of target parameter (learning_rate) did not improve the results
+        """Returns False if two values of target parameter (learning_rate) did not improve the results
         or when previous parameter value did not bring improvement and specs['max_no_progress_points']
         points on target metric no progress has been made."""
         specs = self._specifications

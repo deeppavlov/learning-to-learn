@@ -27,6 +27,7 @@ from learning_to_learn.useful_functions import construct, add_index_to_filename_
 from learning_to_learn.handler import Handler
 from learning_to_learn.controller import Controller
 from subword_nmt.apply_bpe import BPE
+import learning_to_learn.util as util
 
 
 class Environment(object):
@@ -638,14 +639,19 @@ class Environment(object):
     def _restore_pupil(self, restore_path, verbose=True, ctrl_restore_saver_name=None):
         # print("(Environment._restore_pupil)ctrl_restore_saver_name:", ctrl_restore_saver_name)
         # print("(Environment._restore_pupil)self._hooks:", self._hooks)
+        # print("(Environment._restore_pupil)os.getcwd():", os.getcwd())
         if restore_path is not None:
             if verbose:
                 print('restoring pupil from %s' % restore_path)
             if isinstance(restore_path, dict):
+                # print("(Environment._restore_pupil)restore_path:", restore_path)
                 for saver_name, path in sorted(restore_path.items(), key=lambda x: x[0]):
+                    print('restoring using saver {} from {}'.format(saver_name, path))
+                    path = util.prepend_cephfs(path)
                     self._hooks['subgraph_savers'][saver_name].restore(self._session, path)
             else:
                 # print("(Environment._restore_pupil)ctrl_restore_saver_name:", ctrl_restore_saver_name)
+                restore_path = util.prepend_cephfs(restore_path)
                 self._hooks['saver'].restore(self._session, restore_path)
             ctrl = self._restore_ctrl_from_checkpoint(restore_path, ctrl_restore_saver_name)
         else:
