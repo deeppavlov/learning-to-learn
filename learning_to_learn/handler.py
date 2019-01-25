@@ -393,7 +393,7 @@ class Handler(object):
             self._environment_instance.init_storage(dataset_name, **init_dict)
 
     def set_new_run_schedule(self, schedule, validation_dataset_names, save_direction='main'):
-        # print("(Handler.set_new_run_schedule)validation_dataset_names:", validation_dataset_names)
+        print("(Handler.set_new_run_schedule)validation_dataset_names:", validation_dataset_names)
         self._results_collect_interval = schedule['to_be_collected_while_training']['results_collect_interval']
         if self._results_collect_interval is not None:
             if self._result_types is not None:
