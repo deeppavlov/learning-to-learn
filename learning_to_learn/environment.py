@@ -116,7 +116,9 @@ class Environment(object):
         )
 
         valid_tensor_schedule = {'valid_print_tensors': dict(),
-                                 'valid_save_text_tensors': dict()}
+                                 'valid_save_text_tensors': dict(),
+                                 'valid_pickle_mean_tensors': dict(),
+                                 'valid_pickle_all_tensors': dict()}
 
         fuse_tensors = {'fuse_print_tensors': dict(), 'fuse_save_tensors': dict()}
         example_tensors = {'example_print_tensors': dict(), 'example_save_tensors': dict()}

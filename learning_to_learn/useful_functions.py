@@ -1674,7 +1674,7 @@ def сreate_grids_after_file_parsing(
     else:
         tested_combs, num_exps = get_combs_and_num_exps_pupil(eval_dir_or_file, hp_names)
         last_exp_file_name = None
-        # print("(useful_functions.сreate_grids_after_file_parsing)tested_combs:", tested_combs)
+        print("(useful_functions.сreate_grids_after_file_parsing)tested_combs:", tested_combs)
     if num_exps > 0 and chop_last_experiment and model == 'optimizer':
         os.remove(os.path.join(eval_dir_or_file, last_exp_file_name))
         shutil.rmtree(os.path.join(eval_dir_or_file, last_exp_file_name[:-4]))

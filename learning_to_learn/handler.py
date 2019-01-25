@@ -2,6 +2,7 @@ import os
 import time
 import datetime as dt
 
+import pickle
 import numpy as np
 import tensorflow as tf
 
@@ -19,9 +20,9 @@ class Handler(object):
         res = ''
         # print('(Handler._compose_prefix)self._save_path:', self._save_path)
         if len(self._save_path) > 0:
-            res = res + self._save_path + '/'
+            res += self._save_path + '/'
         if len(prefix) > 0:
-            res = res + prefix + '/'
+            res += prefix + '/'
         return res
 
     def _add_results_file_name_set(self, result_types, prefix='', key_path=None, postfix='train'):
@@ -34,6 +35,28 @@ class Handler(object):
             file_name = prefix + 'results/%s_' % res_type + postfix + '.txt'
             create_path(file_name, file_name_is_in_path=True)
             res[res_type] = file_name
+
+    def _add_tensor_pickle_file_name_set(
+            self, valid_pickle_mean_tensors, valid_pickle_all_tensors, prefix='', key_path=None, postfix='valid'):
+        prefix = self._compose_prefix(prefix)
+        d = extend_dictionary(self._file_names, key_path)
+        if 'tensors' not in d:
+            d['tensors'] = dict()
+        res = d['tensors']
+        if 'valid_pickle_mean_tensors' not in res:
+            res['valid_pickle_mean_tensors'] = dict()
+        mean = res['valid_pickle_mean_tensors']
+        if 'valid_pickle_all_tensors' not in res:
+            res['valid_pickle_all_tensors'] = dict()
+        all_ = res['valid_pickle_all_tensors']
+        for tensor_name in valid_pickle_mean_tensors:
+            file_name = prefix + 'tensors/valid_pickle_mean_tensors/%s_' % tensor_name + postfix + '.pickle'
+            create_path(file_name, file_name_is_in_path=True)
+            mean[tensor_name] = file_name
+        for tensor_name in valid_pickle_all_tensors:
+            template = prefix + 'tensors/valid_pickle_all_tensors/%s_' % tensor_name + postfix + '_step%s.pickle'
+            create_path(template, file_name_is_in_path=True)
+            all_[tensor_name] = {'template': template, 'file_names': []}
 
     def _add_opt_inf_results_file_name_templates(self, prefix='', key_path=None, postfix='train'):
         prefix = self._compose_prefix(prefix)
@@ -180,6 +203,7 @@ class Handler(object):
             if self._save_path is not None:
                 self._add_results_file_name_set(self._result_types, key_path=['train'])
                 self._add_example_file_names(fuse_file_name=fuse_file_name, example_file_name=example_file_name)
+
             self._environment_instance.init_storage('train',
                                                     steps=list(),
                                                     loss=list(),
@@ -194,10 +218,11 @@ class Handler(object):
             for dataset_name in self._validation_dataset_names:
                 self._add_validation_experiment_instruments(dataset_name)
             self._printed_result_types = printed_result_types
-            self._accumulated_tensors = dict(
-                valid_print_tensors=dict(),
-                valid_save_text_tensors=dict()
-            )
+            self._accumulated_tensors = dict()
+            for tensor_use, tensor_instructions in self._validation_tensor_schedule.items():
+                self._accumulated_tensors[tensor_use] = dict()
+                for tensor_alias, step_schedule in tensor_instructions.items():
+                    self._accumulated_tensors[tensor_use][tensor_alias] = {'values': list(), 'steps': step_schedule}
             # self._accumulated = dict(loss=None, perplexity=None, accuracy=None)
             # if self._bpc:
             #     self._accumulated['bpc'] = None
@@ -354,6 +379,12 @@ class Handler(object):
     def _add_validation_experiment_instruments(self, dataset_name):
         if self._save_path is not None:
             self._add_results_file_name_set(self._result_types, key_path=[dataset_name], postfix=dataset_name)
+            self._add_tensor_pickle_file_name_set(
+                self._validation_tensor_schedule['valid_pickle_mean_tensors'],
+                self._validation_tensor_schedule['valid_pickle_all_tensors'],
+                prefix='', key_path=[dataset_name],
+                postfix='valid'
+            )
         init_dict = dict()
         for key in self._result_types + ['steps']:
             init_dict[key] = list()
@@ -563,9 +594,9 @@ class Handler(object):
             valid_print_tensors = self._accumulated_tensors['valid_print_tensors']
             if len(valid_print_tensors) > 0:
                 self._print_validation_tensors(valid_print_tensors)
+        self._save_accumulated_tensors()
         self._training_step = None
         self._name_of_dataset_on_which_accumulating = None
-        self._save_accumulated_tensors()
         return means
 
     def set_processed_fuse_index(self, fuse_idx):
@@ -874,7 +905,31 @@ class Handler(object):
                 self._save_datum(descriptor, step, datum, processing_type, dataset_name)
 
     def _save_accumulated_tensors(self):
-        pass
+        print("(Handler._save_accumulated_tensors)self._accumulated_tensors:", self._accumulated_tensors)
+        if 'valid_pickle_mean_tensors' in self._accumulated_tensors:
+            res = self._accumulated_tensors['valid_pickle_mean_tensors']
+            file_names = self._file_names[self._name_of_dataset_on_which_accumulating] \
+                ['tensors']['valid_pickle_mean_tensors']
+            print("(Handler._save_accumulated_tensors)res:", res)
+            for tensor_name, values_and_steps in res.items():
+                file_name = file_names[tensor_name]
+                print("(Handler._save_accumulated_tensors)file_name:", file_name)
+                mean = np.mean(values_and_steps['values'], axis=0)
+                with open(file_name, 'ab') as f:
+                    pickle.dump(mean, f)
+                values_and_steps['values'] = []
+        if 'valid_pickle_all_tensors' in self._accumulated_tensors:
+            res = self._accumulated_tensors['valid_pickle_all_tensors']
+            file_names = self._file_names[self._name_of_dataset_on_which_accumulating] \
+                ['tensors']['valid_pickle_all_tensors']
+            for tensor_name, values_and_steps in res.items():
+                template = file_names[tensor_name]['template']
+                file_name = template % self._training_step
+                file_names[tensor_name]['file_names'].append(file_name)
+                with open(file_name, 'ab') as f:
+                    for t in values_and_steps['values']:
+                        pickle.dump(t, f)
+                values_and_steps['values'] = []
 
     def _accumulate_several_data(self, descriptors, data):
         for descriptor, datum in zip(descriptors, data):
