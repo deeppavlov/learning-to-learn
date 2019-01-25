@@ -905,15 +905,15 @@ class Handler(object):
                 self._save_datum(descriptor, step, datum, processing_type, dataset_name)
 
     def _save_accumulated_tensors(self):
-        print("(Handler._save_accumulated_tensors)self._accumulated_tensors:", self._accumulated_tensors)
+        # print("(Handler._save_accumulated_tensors)self._accumulated_tensors:", self._accumulated_tensors)
         if 'valid_pickle_mean_tensors' in self._accumulated_tensors:
             res = self._accumulated_tensors['valid_pickle_mean_tensors']
             file_names = self._file_names[self._name_of_dataset_on_which_accumulating] \
                 ['tensors']['valid_pickle_mean_tensors']
-            print("(Handler._save_accumulated_tensors)res:", res)
+            # print("(Handler._save_accumulated_tensors)res:", res)
             for tensor_name, values_and_steps in res.items():
                 file_name = file_names[tensor_name]
-                print("(Handler._save_accumulated_tensors)file_name:", file_name)
+                # print("(Handler._save_accumulated_tensors)file_name:", file_name)
                 mean = np.mean(values_and_steps['values'], axis=0)
                 with open(file_name, 'ab') as f:
                     pickle.dump(mean, f)
