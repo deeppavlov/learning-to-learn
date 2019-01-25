@@ -1222,7 +1222,7 @@ class Environment(object):
         storage['step'] = step
 
         schedule = construct(run_specs['schedule'])
-        print("(Environment._train)_train method is launched")
+        # print("(Environment._train)_train method is launched")
         self._handler.set_new_run_schedule(
             schedule,
             [dataset[1] for dataset in train_specs['validation_datasets']]

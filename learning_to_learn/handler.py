@@ -393,7 +393,7 @@ class Handler(object):
             self._environment_instance.init_storage(dataset_name, **init_dict)
 
     def set_new_run_schedule(self, schedule, validation_dataset_names, save_direction='main'):
-        print("(Handler.set_new_run_schedule)validation_dataset_names:", validation_dataset_names)
+        # print("(Handler.set_new_run_schedule)validation_dataset_names:", validation_dataset_names)
         self._results_collect_interval = schedule['to_be_collected_while_training']['results_collect_interval']
         if self._results_collect_interval is not None:
             if self._result_types is not None:
@@ -594,7 +594,8 @@ class Handler(object):
             valid_print_tensors = self._accumulated_tensors['valid_print_tensors']
             if len(valid_print_tensors) > 0:
                 self._print_validation_tensors(valid_print_tensors)
-        self._save_accumulated_tensors()
+        if self._save_path is not None:
+            self._save_accumulated_tensors()
         self._training_step = None
         self._name_of_dataset_on_which_accumulating = None
         return means
