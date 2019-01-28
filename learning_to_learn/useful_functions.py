@@ -6,6 +6,7 @@ import re
 import numpy as np
 from functools import reduce
 import os
+import sys
 import shutil
 import ast
 from collections import OrderedDict
@@ -173,8 +174,10 @@ def pred2vec_fast(pred):
 
 
 def vec2char(pred, vocabulary):
+    # print("(useful_functions.vec2char)pred:", pred, file=sys.stderr)
     char_list = list()
     ids = np.argmax(pred, 1)
+    # print("(useful_functions.vec2char)ids:", ids, file=sys.stderr)
     for id in np.nditer(ids):
         char_list.append(id2char(id, vocabulary))
     if len(char_list) > 1:

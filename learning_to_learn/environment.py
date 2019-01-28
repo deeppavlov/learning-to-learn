@@ -3154,11 +3154,12 @@ class Environment(object):
         for char in replica:
             feed = batch_generator_class.char2vec(char, character_positions_in_vocabulary, flag, 2)
             # print('feed.shape:', feed.shape)
-            feed_dict = dict(feed_dict_base.items())
+            feed_dict = feed_dict_base.copy()
             feed_dict[sample_input] = expand_or_reduce_dims(feed, sample_ndims)
+            # print("(Environment._feed_replica)feed_dict:", feed_dict, file=sys.stderr)
             _ = sample_prediction.eval(feed_dict=feed_dict, session=self._session)
         feed = batch_generator_class.char2vec('\n', character_positions_in_vocabulary, flag, 2)
-        feed_dict = dict(feed_dict_base.items())
+        feed_dict = feed_dict_base.copy()
         feed_dict[sample_input] = expand_or_reduce_dims(feed, sample_ndims)
         prediction = sample_prediction.eval(feed_dict=feed_dict, session=self._session)
         if temperature != 0.:
@@ -3181,25 +3182,27 @@ class Environment(object):
         # print('ord(\'\\n\'):', ord('\n'))
         while char != '\n' and counter < 250:
             feed = batch_generator_class.pred2vec(prediction, flag, 2, batch_gen_args)
-            # print('prediction after sampling:', prediction)
-            # print('feed:', feed)
+            # print('(Environment._generate_replica)prediction after sampling:', prediction, file=sys.stderr)
+            # print('(Environment._generate_replica)feed:', feed, file=sys.stderr)
             feed_dict = dict(feed_dict_base.items())
             feed_dict[sample_input] = expand_or_reduce_dims(feed, sample_ndims)
+            # print('(Environment._generate_replica)feed_dict:', feed_dict, file=sys.stderr)
+            char = batch_generator_class.vec2char(np.reshape(prediction, (1, -1)), vocabulary)[0]
+            if char != '\n':
+                # print('char != \'\\n\', counter = %s' % counter)
+                # print('ord(char):', ord(char))
+                bot_replica += char
+            # print('(Environment._generate_replica)bot_replica:', bot_replica, file=sys.stderr)
             prediction = sample_prediction.eval(feed_dict=feed_dict, session=self._session)
             # print('prediction before sampling:', prediction)
             if temperature != 0.:
                 prediction = apply_temperature(prediction, -1, temperature)
                 # print('prediction after temperature:', prediction)
                 prediction = sample(prediction, -1)
-            char = batch_generator_class.vec2char(np.reshape(feed, (1, -1)), vocabulary)[0]
-            if char != '\n':
-                # print('char != \'\\n\', counter = %s' % counter)
-                # print('ord(char):', ord(char))
-                bot_replica += char
             counter += 1
         feed = batch_generator_class.char2vec('\n', character_positions_in_vocabulary, flag, 2)
         feed_dict = dict(feed_dict_base.items())
-        feed_dict[sample_input] = feed
+        feed_dict[sample_input] = expand_or_reduce_dims(feed, sample_ndims)
         _ = sample_prediction.eval(feed_dict=feed_dict, session=self._session)
         return bot_replica, prediction
 
@@ -3218,20 +3221,27 @@ class Environment(object):
             bpe_codes,
             batch_gen_args,
             inq,
-            outq):
-        # print('entered _one_chat')
-        self._build_pupil(kwargs_for_building)
+            outq,
+            build=True
+    ):
+        # print('entered one_chat method', file=sys.stderr, )
+        # print('(Environment._one_chat)kwargs_for_building', kwargs_for_building, file=sys.stderr, )
+        if build:
+            self._build_pupil(kwargs_for_building)
+
         if additions_to_feed_dict is None:
             feed_dict_base = dict()
         else:
             feed_dict_base = dict()
             for addition in additions_to_feed_dict:
                 feed_dict_base[self._hooks[addition['placeholder']]] = addition['value']
-        self._start_session(False,
-                            False,
-                            gpu_memory,
-                            allow_growth,
-                            '')
+        self._start_session(
+            False,
+            False,
+            gpu_memory,
+            allow_growth,
+            ''
+        )
         self._session.run(tf.global_variables_initializer())
         self._restore_pupil(restore_path)
         self._hooks['reset_validation_state'].run(session=self._session)
@@ -3251,7 +3261,7 @@ class Environment(object):
         except queue.Empty:
             human_replica = ''
             pass
-
+        # print('(Environment._one_chat)human_replica:', human_replica, file=sys.stderr, )
         while not human_replica == '/end' and time.time() - timeshot < 290:
             # print('(start while)time.time() - timeshot =', time.time() - timeshot)
             # print('(start while)time.time() =', time.time())
@@ -3279,19 +3289,22 @@ class Environment(object):
         # print('reached -1')
         outq.put(-1)
 
-    def telegram(self,
-                 kwargs_for_building,
-                 restore_path,
-                 log_path,
-                 vocabulary,
-                 character_positions_in_vocabulary,
-                 batch_generator_class,
-                 additions_to_feed_dict=None,
-                 gpu_memory=None,
-                 allow_growth=True,
-                 temperature=0.,
-                 bpe_codes=None,
-                 batch_gen_args=None):
+    def telegram(
+        self,
+        kwargs_for_building,
+        restore_path,
+        log_path,
+        vocabulary,
+        character_positions_in_vocabulary,
+        batch_generator_class,
+        additions_to_feed_dict=None,
+        gpu_memory=None,
+        allow_growth=True,
+        temperature=0.,
+        bpe_codes=None,
+        batch_gen_args=None,
+        build=True,
+    ):
         if len(log_path) > 4 and log_path[-4:] == '.txt':
             create_path(log_path, file_name_is_in_path=True)
         else:
@@ -3304,44 +3317,47 @@ class Environment(object):
 
         writer = csv.writer(sys.stdout, quoting=csv.QUOTE_NONNUMERIC)
         read_list = [sys.stdin]
+        # print('before_try\n')
         try:
             while read_list:
-                # print('entered while loop')
                 ready = select.select(read_list, [], [], 0)[0]
                 if ready:
-                    # print('ready:', ready)
                     text = ready[0].readline()
-                    # print('text:', text)
+                    # print('(Environment.telegram)text:', text, file=sys.stderr)
                     row = csv.reader([text]).__next__()
+                    # print('(Environment.telegram)row:', row, file=sys.stderr)
                     chat_id_has_corr_format = is_int(row[0])
                     if chat_id_has_corr_format:
-                        chat_id, question = int(row[0]), row[1]
+                        chat_id, question = int(row[0]), row[3]
                         if chat_id not in inqs:
-                            # print('chat_id not in inqs')
-                            if len(log_path) > 4 and log_path[-4:] == '.txt':
-                                file_name = add_index_to_filename_if_needed(log_path, index=0)
-                            else:
-                                file_name = add_index_to_filename_if_needed(log_path + '/chat.txt', index=0)
-                            file_names[chat_id] = file_name
-                            inqs[chat_id] = mp.Queue()
-                            # print('(Environment.telegram)inqs[chat_id]:', inqs[chat_id])
-                            outqs[chat_id] = mp.Queue()
-                            ps[chat_id] = mp.Process(target=self._one_chat,
-                                                     args=(kwargs_for_building, restore_path, vocabulary,
-                                                           character_positions_in_vocabulary,
-                                                           batch_generator_class, additions_to_feed_dict, gpu_memory,
-                                                           allow_growth, temperature, bpe_codes, batch_gen_args,
-                                                           inqs[chat_id], outqs[chat_id]))
-                            # print('(Environment.telegram)question:', question)
-                            inqs[chat_id].put(question)
-                            # print('(Environment.telegram)inqs[chat_id]:', inqs[chat_id])
-                            ps[chat_id].start()
-                            # print('ps:', ps)
+                            if question == '/start':
+                                # print('chat_id not in inqs')
+                                if len(log_path) > 4 and log_path[-4:] == '.txt':
+                                    file_name = add_index_to_filename_if_needed(log_path, index=0)
+                                else:
+                                    file_name = add_index_to_filename_if_needed(log_path + '/chat.txt', index=0)
+                                file_names[chat_id] = file_name
+                                inqs[chat_id] = mp.Queue()
+                                # print('(Environment.telegram)inqs[chat_id]:', inqs[chat_id])
+                                outqs[chat_id] = mp.Queue()
+                                ps[chat_id] = mp.Process(
+                                    target=self._one_chat,
+                                    args=(
+                                        kwargs_for_building, restore_path, vocabulary,
+                                        character_positions_in_vocabulary, batch_generator_class,
+                                        additions_to_feed_dict, gpu_memory, allow_growth, temperature, bpe_codes,
+                                        batch_gen_args, inqs[chat_id], outqs[chat_id], build
+                                    )
+                                )
+                                # print('(Environment.telegram)question:', question)
+                                inqs[chat_id].put(question)
+                                # print('(Environment.telegram)inqs[chat_id]:', inqs[chat_id])
+                                ps[chat_id].start()
+                                # print('ps:', ps)
                         else:
                             inqs[chat_id].put(question)
 
-
-                        if question != '/start' and question != '/end':
+                        if question not in {'/start', '/end'} and chat_id in inqs:
                             print_and_log('Human: ' + question, _print=False, fn=file_names[chat_id])
                 # print('reached outqs loop')
                 for chat_id in list(outqs.keys()):
@@ -3353,7 +3369,7 @@ class Environment(object):
                         # print(-1)
                         ps[chat_id].join()
                         if ps[chat_id].is_alive():
-                            print('WARNING! Could not join process for chat %s' % chat_id)
+                            print('WARNING! Could not join process for chat %s' % chat_id, file=sys.stderr)
                             ps[chat_id].terminate()
                             ps[chat_id].join()
                         del ps[chat_id]
@@ -3362,6 +3378,11 @@ class Environment(object):
                         del file_names[chat_id]
                     elif bot_replica != -2:
                         print_and_log('Bot: ' + bot_replica, _print=False, fn=file_names[chat_id])
+                        # print(
+                        #     "(Environment.telegram)row:",
+                        #     [chat_id, bot_replica, "", "/start", "Ты дурак.", "/end"],
+                        #     file=sys.stderr
+                        # )
                         writer.writerow([chat_id, bot_replica, "", "/start", "Ты дурак.", "/end"])
                         sys.stdout.flush()
 
@@ -3376,10 +3397,10 @@ class Environment(object):
                         flag = outq.get(timeout=.01)
                         # print('another try')
                 except queue.Empty:
-                    print('WARNING! Process termination flag was not received for chat %s' % chat_id)
+                    print('WARNING! Process termination flag was not received for chat %s' % chat_id, file=sys.stderr)
                 ps[chat_id].join(timeout=.01)
                 if ps[chat_id].is_alive():
-                    print('WARNING! Could not join process for chat %s' % chat_id)
+                    print('WARNING! Could not join process for chat %s' % chat_id, file=sys.stderr)
                     ps[chat_id].terminate()
                     ps[chat_id].join()
 
