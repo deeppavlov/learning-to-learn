@@ -219,10 +219,11 @@ class Handler(object):
                 self._add_validation_experiment_instruments(dataset_name)
             self._printed_result_types = printed_result_types
             self._accumulated_tensors = dict()
-            for tensor_use, tensor_instructions in self._validation_tensor_schedule.items():
-                self._accumulated_tensors[tensor_use] = dict()
-                for tensor_alias, step_schedule in tensor_instructions.items():
-                    self._accumulated_tensors[tensor_use][tensor_alias] = {'values': list(), 'steps': step_schedule}
+            if self._validation_tensor_schedule is not None:
+                for tensor_use, tensor_instructions in self._validation_tensor_schedule.items():
+                    self._accumulated_tensors[tensor_use] = dict()
+                    for tensor_alias, step_schedule in tensor_instructions.items():
+                        self._accumulated_tensors[tensor_use][tensor_alias] = {'values': list(), 'steps': step_schedule}
             # self._accumulated = dict(loss=None, perplexity=None, accuracy=None)
             # if self._bpc:
             #     self._accumulated['bpc'] = None
@@ -415,10 +416,11 @@ class Handler(object):
             self._print_examples = False
         self._train_tensor_schedule = schedule['train_tensor_schedule']
         self._validation_tensor_schedule = schedule['validation_tensor_schedule']
-        for tensor_use, tensor_instructions in self._validation_tensor_schedule.items():
-            self._accumulated_tensors[tensor_use] = dict()
-            for tensor_alias, step_schedule in tensor_instructions.items():
-                self._accumulated_tensors[tensor_use][tensor_alias] = {'values': list(), 'steps': step_schedule}
+        if self._validation_tensor_schedule is not None:
+            for tensor_use, tensor_instructions in self._validation_tensor_schedule.items():
+                self._accumulated_tensors[tensor_use] = dict()
+                for tensor_alias, step_schedule in tensor_instructions.items():
+                    self._accumulated_tensors[tensor_use][tensor_alias] = {'values': list(), 'steps': step_schedule}
         self._printed_result_types = schedule['printed_result_types']
 
         self._fuses = schedule['fuses']
