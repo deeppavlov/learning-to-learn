@@ -3380,10 +3380,10 @@ class Environment(object):
                         print_and_log('Bot: ' + bot_replica, _print=False, fn=file_names[chat_id])
                         # print(
                         #     "(Environment.telegram)row:",
-                        #     [chat_id, bot_replica, "", "/start", "Ты дурак.", "/end"],
+                        #     [chat_id, bot_replica, "", "/start", "Скажи что-нибудь.", "/end"],
                         #     file=sys.stderr
                         # )
-                        writer.writerow([chat_id, bot_replica, "", "/start", "Ты дурак.", "/end"])
+                        writer.writerow([chat_id, bot_replica, "", "/start", "Скажи что-нибудь.", "/end"])
                         sys.stdout.flush()
 
         except KeyboardInterrupt:
