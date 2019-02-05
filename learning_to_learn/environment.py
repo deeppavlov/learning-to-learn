@@ -3280,7 +3280,7 @@ class Environment(object):
                 # print_and_log('Bot: ' + bot_replica, _print=False, fn=log_path)
                 outq.put(bot_replica)
                 timeshot = time.time()
-                print("{} {}".format(chat_id, timeshot), file=sys.stderr)
+                print("BOT REPLICA IN CHAT {}. TIME {}".format(chat_id, timeshot), file=sys.stderr)
             try:
                 human_replica = inq.get(timeout=300)
                 print("{} human replica is received or TIMEOUT. TIME: {}".format(chat_id, time.time()), file=sys.stderr)
@@ -3290,7 +3290,7 @@ class Environment(object):
             # print('(end while)time.time() =', time.time())
             # print('(end while)timeshot =', timeshot)
         # print('reached -1')
-        print("TERMINATING {}".format(chat_id), file=sys.stderr)
+        print("TERMINATING CHAT {}".format(chat_id), file=sys.stderr)
         outq.put(-1)
 
     def telegram(
@@ -3371,7 +3371,7 @@ class Environment(object):
                         bot_replica = -2
                     if bot_replica == -1:
                         # print(-1)
-                        print("JOINING {}".format(chat_id), file=sys.stderr)
+                        print("JOINING CHAT {}".format(chat_id), file=sys.stderr)
                         ps[chat_id].join()
                         if ps[chat_id].is_alive():
                             print('WARNING! Could not join process for chat %s' % chat_id, file=sys.stderr)
