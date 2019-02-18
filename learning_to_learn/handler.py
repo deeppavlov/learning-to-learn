@@ -38,6 +38,7 @@ class Handler(object):
 
     def _add_tensor_pickle_file_name_set(
             self, valid_pickle_mean_tensors, valid_pickle_all_tensors, prefix='', key_path=None, postfix='valid'):
+        # print("(Handler._add_tensor_pickle_file_name_set)valid_pickle_mean_tensors:", valid_pickle_mean_tensors)
         prefix = self._compose_prefix(prefix)
         d = extend_dictionary(self._file_names, key_path)
         if 'tensors' not in d:
@@ -51,10 +52,12 @@ class Handler(object):
         all_ = res['valid_pickle_all_tensors']
         for tensor_name in valid_pickle_mean_tensors:
             file_name = prefix + 'tensors/valid_pickle_mean_tensors/%s_' % tensor_name + postfix + '.pickle'
+            # print("(Handler._add_tensor_pickle_file_name_set)file_name:", file_name)
             create_path(file_name, file_name_is_in_path=True)
             mean[tensor_name] = file_name
         for tensor_name in valid_pickle_all_tensors:
             template = prefix + 'tensors/valid_pickle_all_tensors/%s_' % tensor_name + postfix + '_step%s.pickle'
+            # print("(Handler._add_tensor_pickle_file_name_set)template:", template)
             create_path(template, file_name_is_in_path=True)
             all_[tensor_name] = {'template': template, 'file_names': []}
 
@@ -378,11 +381,14 @@ class Handler(object):
         self._opt_inf_print_has_already_been_performed = oiphabp
 
     def _add_validation_experiment_instruments(self, dataset_name):
+        # print("(Handler._add_validation_experiment_instruments)self._save_path:", self._save_path)
         if self._save_path is not None:
             self._add_results_file_name_set(self._result_types, key_path=[dataset_name], postfix=dataset_name)
             self._add_tensor_pickle_file_name_set(
-                self._validation_tensor_schedule['valid_pickle_mean_tensors'],
-                self._validation_tensor_schedule['valid_pickle_all_tensors'],
+                self._validation_tensor_schedule['valid_pickle_mean_tensors'] \
+                    if 'valid_pickle_mean_tensors' in self._validation_tensor_schedule else {},
+                self._validation_tensor_schedule['valid_pickle_all_tensors'] \
+                    if 'valid_pickle_all_tensors' in self._validation_tensor_schedule else {},
                 prefix='', key_path=[dataset_name],
                 postfix='valid'
             )
@@ -442,6 +448,7 @@ class Handler(object):
                 self._print_results = True
         self._printed_controllers = schedule['printed_controllers']
         for dataset_name in validation_dataset_names:
+            # print("(Handler.set_new_run_schedule)dataset_name:", dataset_name)
             self._add_validation_experiment_instruments(dataset_name)
 
     def set_optimizer_train_schedule(

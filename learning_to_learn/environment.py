@@ -153,7 +153,7 @@ class Environment(object):
         _, gens = zip(*sorted(self._batch_generator_classes.items()))
         self._default_batch_generator = gens[0]
         # additions_to_feed_dict have following format
-        # It is a dictionary which keys are 'placeholder' and 'value'
+        # It is a list of dictionaries which keys are 'placeholder' and 'value'
         # 'placeholder' points to tensor alias and 'value' points to Controller specs
         # When providing additions_to_feed_dict to train method abbreviation of 'value' entry is allowed
         # if tensor does not change during learning. It is possible to pass tensor value in 'value' entry.
@@ -1200,6 +1200,70 @@ class Environment(object):
         controllers.extend(batch_kwargs_controllers)
         return controllers
 
+    def _test_and_save_training_model(
+            self,
+            step,
+            ctrl,
+            learning_rate,
+            train_specs,
+            batch_generator_class,
+            schedule,
+            checkpoints_path,
+            subgraphs_to_save,
+            train_batch_gen,
+    ):
+        if ctrl['it_is_time_to_create_checkpoint'].get():
+            self._create_checkpoint(str(step), checkpoints_path, subgraph_names=subgraphs_to_save)
+
+        if ctrl['it_is_time_for_validation'].get():
+            if len(train_specs['validation_datasets']) > 0:
+                valid_add_feed_dict = self._form_validation_additional_feed_dict(
+                    train_specs['additions_to_feed_dict'],
+                    ctrl['additional'],
+                    train_specs['validation_additions_to_feed_dict']
+                )
+            for validation_dataset in train_specs['validation_datasets']:
+                if train_specs['validate_tokens_by_chars']:
+                    _ = self._validate_by_chars(
+                        batch_generator_class, validation_dataset, train_specs['validation_batch_size'],
+                        train_specs['valid_batch_kwargs'], training_step=step,
+                        additional_feed_dict=valid_add_feed_dict)
+                else:
+                    _ = self._validate(
+                        batch_generator_class, validation_dataset, train_specs['validation_batch_size'],
+                        train_specs['valid_batch_kwargs'], training_step=step,
+                        additional_feed_dict=valid_add_feed_dict)
+        if ctrl['it_is_time_for_example'].get():
+            valid_add_feed_dict = self._form_validation_additional_feed_dict(
+                train_specs['additions_to_feed_dict'],
+                ctrl['additional'],
+                train_specs['validation_additions_to_feed_dict']
+            )
+            if schedule['fuses'] is not None:
+                _ = self._on_fuses(train_batch_gen,
+                                   schedule['fuses'],
+                                   training_step=step,
+                                   additional_feed_dict=valid_add_feed_dict)
+            for validation_dataset in train_specs['validation_datasets']:
+                if schedule['example_length'] is not None:
+                    _ = self._prediction_examples(
+                        batch_generator_class,
+                        validation_dataset,
+                        schedule['example_length'],
+                        train_specs['valid_batch_kwargs'],
+                        training_step=step,
+                        additional_feed_dict=valid_add_feed_dict)
+        if ctrl['it_is_time_to_create_best_checkpoint'].get():
+            self._create_checkpoint(
+                'best',
+                checkpoints_path,
+                subgraph_names=subgraphs_to_save,
+                lr=learning_rate,
+                best_value=ctrl['learning_rate'].get_best_target_metric_value(),
+                target_metric_storage_path=ctrl['learning_rate'].get_target_metric_storage_path(),
+                step=step,
+            )
+
     def _train(
             self,
             run_specs,
@@ -1239,7 +1303,7 @@ class Environment(object):
 
         batch_size = ctrl['batch_size'].get()
         tb_kwargs = self._build_batch_kwargs(ctrl['train_batch_kwargs'])
-        train_batches = batch_generator_class(train_specs['train_dataset'][0], batch_size, **tb_kwargs)
+        train_batch_gen = batch_generator_class(train_specs['train_dataset'][0], batch_size, **tb_kwargs)
 
         feed_dict = dict()
 
@@ -1256,23 +1320,32 @@ class Environment(object):
 
             if ctrl['batch_size_should_change'].get():
                 batch_size = ctrl['batch_size'].get()
-                train_batches.change_batch_size(batch_size)
+                train_batch_gen.change_batch_size(batch_size)
 
             if ctrl['batch_generator_specs_should_change'].get():
                 tb_kwargs = self._build_batch_kwargs(ctrl['train_batch_kwargs'])
-                train_batches.change_specs(**tb_kwargs)
-
-            if ctrl['it_is_time_to_create_checkpoint'].get():
-                self._create_checkpoint(str(step), checkpoints_path, subgraph_names=subgraphs_to_save)
-
-            train_inputs, train_labels = train_batches.next()
-
-            if ctrl['it_is_time_to_reset_state'].get():
-                self._session.run(reset_op)
+                train_batch_gen.change_specs(**tb_kwargs)
 
             if not with_meta_optimizer:
                 learning_rate = ctrl['learning_rate'].get()
                 feed_dict[self._hooks['learning_rate']] = learning_rate
+
+            self._test_and_save_training_model(
+                step,
+                ctrl,
+                learning_rate,
+                train_specs,
+                batch_generator_class,
+                schedule,
+                checkpoints_path,
+                subgraphs_to_save,
+                train_batch_gen,
+            )
+
+            train_inputs, train_labels = train_batch_gen.next()
+
+            if ctrl['it_is_time_to_reset_state'].get():
+                self._session.run(reset_op)
 
             if isinstance(self._hooks['inputs'], list):
                 for input_tensor, input_value in zip(self._hooks['inputs'], train_inputs):
@@ -1293,58 +1366,20 @@ class Environment(object):
 
             train_res = self._session.run(train_operations, feed_dict=feed_dict)
 
-            self._handler.process_results(step, train_res, time.clock() - train_start_time, regime='train')
-
-            if ctrl['it_is_time_for_validation'].get():
-                if len(train_specs['validation_datasets']) > 0:
-                    valid_add_feed_dict = self._form_validation_additional_feed_dict(
-                        train_specs['additions_to_feed_dict'],
-                        ctrl['additional'],
-                        train_specs['validation_additions_to_feed_dict']
-                    )
-                for validation_dataset in train_specs['validation_datasets']:
-                    if train_specs['validate_tokens_by_chars']:
-                        _ = self._validate_by_chars(
-                            batch_generator_class, validation_dataset, train_specs['validation_batch_size'],
-                            train_specs['valid_batch_kwargs'], training_step=step,
-                            additional_feed_dict=valid_add_feed_dict)
-                    else:
-                        _ = self._validate(
-                            batch_generator_class, validation_dataset, train_specs['validation_batch_size'],
-                            train_specs['valid_batch_kwargs'], training_step=step,
-                            additional_feed_dict=valid_add_feed_dict)
-            if ctrl['it_is_time_for_example'].get():
-                valid_add_feed_dict = self._form_validation_additional_feed_dict(
-                    train_specs['additions_to_feed_dict'],
-                    ctrl['additional'],
-                    train_specs['validation_additions_to_feed_dict']
-                )
-                if schedule['fuses'] is not None:
-                    _ = self._on_fuses(train_batches,
-                                       schedule['fuses'],
-                                       training_step=step,
-                                       additional_feed_dict=valid_add_feed_dict)
-                for validation_dataset in train_specs['validation_datasets']:
-                    if schedule['example_length'] is not None:
-                        _ = self._prediction_examples(
-                            batch_generator_class,
-                            validation_dataset,
-                            schedule['example_length'],
-                            train_specs['valid_batch_kwargs'],
-                            training_step=step,
-                            additional_feed_dict=valid_add_feed_dict)
-            if ctrl['it_is_time_to_create_best_checkpoint'].get():
-                self._create_checkpoint(
-                    'best',
-                    checkpoints_path,
-                    subgraph_names=subgraphs_to_save,
-                    lr=learning_rate,
-                    best_value=ctrl['learning_rate'].get_best_target_metric_value(),
-                    target_metric_storage_path=ctrl['learning_rate'].get_target_metric_storage_path(),
-                    step=step,
-                )
             step += 1
             storage['step'] = step
+            self._handler.process_results(step, train_res, time.clock() - train_start_time, regime='train')
+        self._test_and_save_training_model(
+            step,
+            ctrl,
+            learning_rate,
+            train_specs,
+            batch_generator_class,
+            schedule,
+            checkpoints_path,
+            subgraphs_to_save,
+            train_batch_gen,
+        )
         return step
 
     def train(
@@ -2140,6 +2175,7 @@ class Environment(object):
             eval_batch_gen_class = evaluation['batch_gen_class']
 
         additional_feed_dict = self._form_validation_additional_feed_dict([], [], evaluation['additional_feed_dict'])
+        # print("(Environment._preparations_for_launch)additional_feed_dict:", additional_feed_dict)
         return additional_feed_dict, eval_batch_gen_class, datasets
 
     def _launch_and_put_in_queue(
@@ -2208,6 +2244,7 @@ class Environment(object):
             evaluation,
             meta_optimizer_build_kwargs
         )
+        # print("(Environment._several_launches_without_rebuilding)additional_feed_dict:", additional_feed_dict)
         for hp_comb, (start_specs, run_specs_set) in zip(hp_combs, args_for_launches):
             self._launch_and_put_in_queue(
                 hp_comb,
@@ -2406,6 +2443,8 @@ class Environment(object):
             meta_optimizer_build_kwargs=None,
             rebuild_every_time=True
     ):
+        # print("(Environment._spring_process_for_grid_search)evaluation['additional_feed_dict']:",
+        #       evaluation['additional_feed_dict'])
         parsed = configure_args_for_launches(self, args_for_launches, shares, model='pupil')
         self.mp_debug_flag += 1
 
@@ -2570,6 +2609,7 @@ class Environment(object):
         # print("('Environment.grid_search')args_for_launches[0]['additions_to_feed_dict']:",
         #       args_for_launches[0]['additions_to_feed_dict'])
 
+        # print("(Environment.grid_search)evaluation['additional_feed_dict']:", evaluation['additional_feed_dict'])
         hps = list()
         if len(build_hp_combs) > 0:
             hps.extend(list(build_hp_combs[0].keys()))
