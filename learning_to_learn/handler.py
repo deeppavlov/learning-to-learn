@@ -41,8 +41,6 @@ class Handler(object):
             res['valid_pickle_all_tensors'] = dict()
         all_ = res['valid_pickle_all_tensors']
 
-        if len(postfix) > 0:
-            postfix = '_' + postfix
         for tensor_name in tensors_one_per_step:
             file_name = os.path.join(
                 self._save_path,
@@ -60,7 +58,7 @@ class Handler(object):
                 prefix,
                 'tensors',
                 dataset_name,
-                'pickle_all_tensors/%s_' % tensor_name + postfix + '_step%s.pickle'
+                'pickle_all_tensors/%s' % tensor_name + postfix + '_step%s.pickle'
             )
             # print("(Handler._add_set_of_file_names_for_pickled_tensors)template:", template)
             create_path(template, file_name_is_in_path=True)
@@ -395,7 +393,6 @@ class Handler(object):
                 dataset_name,
                 prefix='',
                 key_path=[dataset_name],
-                postfix='valid'
             )
         init_dict = dict()
         for key in self._result_types + ['steps']:
