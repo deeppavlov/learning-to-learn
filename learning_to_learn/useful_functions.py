@@ -1138,7 +1138,7 @@ def remove_keys_from_dictionary(d, keys):
     return d
 
 
-def extend_dictionary(dictionary, key_path):
+def follow_key_path(dictionary, key_path):
     d = dictionary
     if key_path is None:
         key_path = []

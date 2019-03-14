@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 
 from learning_to_learn.useful_functions import create_path, add_index_to_filename_if_needed, construct, nested2string, \
-    WrongMethodCallError, extend_dictionary, flatten, check_if_line_is_header, parse_header_line, \
+    WrongMethodCallError, follow_key_path, flatten, check_if_line_is_header, parse_header_line, \
     hyperparameter_name_string, sort_hps, hp_name_2_hp_description, check_if_hp_description_is_in_list
 from learning_to_learn.controller import Controller
 
@@ -16,72 +16,75 @@ class Handler(object):
 
     _stars = '*'*30
 
-    def _compose_prefix(self, prefix):
-        res = ''
-        # print('(Handler._compose_prefix)self._save_path:', self._save_path)
-        if len(self._save_path) > 0:
-            res += self._save_path + '/'
-        if len(prefix) > 0:
-            res += prefix + '/'
-        return res
-
     def _add_results_file_name_set(self, result_types, prefix='', key_path=None, postfix='train'):
-        prefix = self._compose_prefix(prefix)
-        d = extend_dictionary(self._file_names, key_path)
+        d = follow_key_path(self._file_names, key_path)
         if 'results' not in d:
             d['results'] = dict()
         res = d['results']
         for res_type in result_types:
-            file_name = prefix + 'results/%s_' % res_type + postfix + '.txt'
+            file_name = os.path.join(self._save_path, prefix, 'results/%s_' % res_type + postfix + '.txt')
             create_path(file_name, file_name_is_in_path=True)
             res[res_type] = file_name
 
-    def _add_tensor_pickle_file_name_set(
-            self, valid_pickle_mean_tensors, valid_pickle_all_tensors, prefix='', key_path=None, postfix='valid'):
-        # print("(Handler._add_tensor_pickle_file_name_set)valid_pickle_mean_tensors:", valid_pickle_mean_tensors)
-        prefix = self._compose_prefix(prefix)
-        d = extend_dictionary(self._file_names, key_path)
+    def _add_set_of_file_names_for_pickled_tensors(
+            self, tensors_one_per_step, tensors_many_per_step, dataset_name, prefix='', key_path=None, postfix=''):
+        # print("(Handler._add_set_of_file_names_for_pickled_tensors)valid_pickle_mean_tensors:", valid_pickle_mean_tensors)
+        d = follow_key_path(self._file_names, key_path)
         if 'tensors' not in d:
             d['tensors'] = dict()
         res = d['tensors']
+
         if 'valid_pickle_mean_tensors' not in res:
             res['valid_pickle_mean_tensors'] = dict()
         mean = res['valid_pickle_mean_tensors']
         if 'valid_pickle_all_tensors' not in res:
             res['valid_pickle_all_tensors'] = dict()
         all_ = res['valid_pickle_all_tensors']
-        for tensor_name in valid_pickle_mean_tensors:
-            file_name = prefix + 'tensors/valid_pickle_mean_tensors/%s_' % tensor_name + postfix + '.pickle'
-            # print("(Handler._add_tensor_pickle_file_name_set)file_name:", file_name)
+
+        if len(postfix) > 0:
+            postfix = '_' + postfix
+        for tensor_name in tensors_one_per_step:
+            file_name = os.path.join(
+                self._save_path,
+                prefix,
+                'tensors',
+                dataset_name,
+                'pickle_mean_tensors/%s_' % tensor_name + postfix + '.pickle'
+            )
+            # print("(Handler._add_set_of_file_names_for_pickled_tensors)file_name:", file_name)
             create_path(file_name, file_name_is_in_path=True)
             mean[tensor_name] = file_name
-        for tensor_name in valid_pickle_all_tensors:
-            template = prefix + 'tensors/valid_pickle_all_tensors/%s_' % tensor_name + postfix + '_step%s.pickle'
-            # print("(Handler._add_tensor_pickle_file_name_set)template:", template)
+        for tensor_name in tensors_many_per_step:
+            template = os.path.join(
+                self._save_path,
+                prefix,
+                'tensors',
+                dataset_name,
+                'pickle_all_tensors/%s_' % tensor_name + postfix + '_step%s.pickle'
+            )
+            # print("(Handler._add_set_of_file_names_for_pickled_tensors)template:", template)
             create_path(template, file_name_is_in_path=True)
             all_[tensor_name] = {'template': template, 'file_names': []}
 
     def _add_opt_inf_results_file_name_templates(self, prefix='', key_path=None, postfix='train'):
-        prefix = self._compose_prefix(prefix)
-        d = extend_dictionary(self._file_names, key_path)
+        d = follow_key_path(self._file_names, key_path)
         if 'results' not in d:
             d['results'] = dict()
         res = d['results']
         for res_type in self._result_types:
-            file_name = prefix + 'results/%s_' % res_type + postfix + '/step%s.txt'
+            file_name = os.path.join(self._save_path, prefix, 'results/%s_' % res_type + postfix, 'step%s.txt')
             res[res_type] = file_name
             create_path(file_name, file_name_is_in_path=True)
 
     def _add_example_file_names(self, prefix='', key_path=None, fuse_file_name=None, example_file_name=None):
-        prefix = self._compose_prefix(prefix)
-        d = extend_dictionary(self._file_names, key_path)
+        d = follow_key_path(self._file_names, key_path)
         if fuse_file_name is not None:
-            file_name = prefix + fuse_file_name
+            file_name = os.path.join(self._save_path, prefix, fuse_file_name)
             create_path(file_name, file_name_is_in_path=True)
             d['fuses'] = file_name
 
         if example_file_name is not None:
-            file_name = prefix + example_file_name
+            file_name = os.path.join(self._save_path, prefix, example_file_name)
             create_path(file_name, file_name_is_in_path=True)
             d['examples'] = file_name
 
@@ -384,12 +387,14 @@ class Handler(object):
         # print("(Handler._add_validation_experiment_instruments)self._save_path:", self._save_path)
         if self._save_path is not None:
             self._add_results_file_name_set(self._result_types, key_path=[dataset_name], postfix=dataset_name)
-            self._add_tensor_pickle_file_name_set(
-                self._validation_tensor_schedule['valid_pickle_mean_tensors'] \
+            self._add_set_of_file_names_for_pickled_tensors(
+                self._validation_tensor_schedule['valid_pickle_mean_tensors']
                     if 'valid_pickle_mean_tensors' in self._validation_tensor_schedule else {},
-                self._validation_tensor_schedule['valid_pickle_all_tensors'] \
+                self._validation_tensor_schedule['valid_pickle_all_tensors']
                     if 'valid_pickle_all_tensors' in self._validation_tensor_schedule else {},
-                prefix='', key_path=[dataset_name],
+                dataset_name,
+                prefix='',
+                key_path=[dataset_name],
                 postfix='valid'
             )
         init_dict = dict()
