@@ -41,7 +41,7 @@ class Handler(object):
             res['valid_pickle_all_tensors'] = dict()
         all_ = res['valid_pickle_all_tensors']
 
-        if len(postfix) == 0:
+        if len(postfix) > 0:
             postfix = '_' + postfix
 
         for tensor_name in tensors_one_per_step:
