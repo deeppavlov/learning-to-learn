@@ -1010,7 +1010,7 @@ class Handler(object):
             if self._train_tensor_schedule is not None:
                 additional_tensors = self._get_additional_tensors(self._train_tensor_schedule, step, pointer)
                 tensors.extend(additional_tensors)
-        if regime == 'validation':
+        elif regime == 'validation':
             tensors.append(self._hooks['validation_predictions'])
             current['tensors']['validation_predictions'] = [pointer, pointer + 1]
             pointer += 1
@@ -1023,7 +1023,7 @@ class Handler(object):
             if self._validation_tensor_schedule is not None:
                 additional_tensors = self._get_additional_tensors(self._validation_tensor_schedule, step, pointer)
                 tensors.extend(additional_tensors)
-        if regime == 'fuse':
+        elif regime == 'fuse':
             tensors.append(self._hooks['validation_predictions'])
             current['tensors']['validation_predictions'] = [pointer, pointer + 1]
             pointer += 1
@@ -1031,7 +1031,7 @@ class Handler(object):
             if self._fuse_tensor_schedule is not None:
                 additional_tensors = self._get_additional_tensors(self._fuse_tensor_schedule, step, pointer)
                 tensors.extend(additional_tensors)
-        if regime == 'example':
+        elif regime == 'example':
             tensors.append(self._hooks['validation_predictions'])
             current['tensors']['validation_predictions'] = [pointer, pointer + 1]
             pointer += 1
@@ -1039,7 +1039,7 @@ class Handler(object):
             if self._example_tensor_schedule is not None:
                 additional_tensors = self._get_additional_tensors(self._example_tensor_schedule, step, pointer)
                 tensors.extend(additional_tensors)
-        if regime == 'train_meta_optimizer':
+        elif regime == 'train_meta_optimizer':
             tensors.append(self._hooks['optimizer_train_op'])
             current['tensors']['optimizer_train_op'] = [pointer, pointer + 1]
             pointer += 1
