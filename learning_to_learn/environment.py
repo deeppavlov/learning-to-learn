@@ -1340,8 +1340,8 @@ class Environment(object):
                 tb_kwargs = self._build_batch_kwargs(ctrl['train_batch_kwargs'])
                 train_batch_gen.change_specs(**tb_kwargs)
 
+            learning_rate = ctrl['learning_rate'].get()
             if not with_meta_optimizer:
-                learning_rate = ctrl['learning_rate'].get()
                 feed_dict[self._hooks['learning_rate']] = learning_rate
 
             self._test_and_save_training_model(
@@ -1383,10 +1383,11 @@ class Environment(object):
             step += 1
             storage['step'] = step
             self._handler.process_results(step, train_res, time.clock() - train_start_time, regime='train')
+
         self._test_and_save_training_model(
             step,
             ctrl,
-            learning_rate,
+            ctrl['learning_rate'].get(),
             train_specs,
             batch_generator_class,
             schedule,
