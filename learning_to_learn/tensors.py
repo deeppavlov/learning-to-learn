@@ -138,3 +138,41 @@ def log_and_sign(inp, p):
     less = tf.stack([less_first, less_second], axis=-1)
     res = mask * greater + (1. - mask) * less
     return res
+
+
+def discretize_100(activations):
+    with tf.name_scope('discretize_100'):
+        boundaries = [-0.98 + 0.02 * i for i in range(99)]
+        return tf.feature_column.bucketized_column(activations, boundaries)
+
+
+def entropy_MM(probabilities, n, m):
+    with tf.name_scope('entropy_MM'):
+        log_prob = tf.log(probabilities) / np.log(2)
+        products = probabilities * log_prob
+        return -tf.reduce_sum(products, -1) + (m - 1) / (2 * n)
+
+
+def count(buckets):
+    with tf.name_scope('count'):
+        buckets = tf.unstack(buckets)
+        counts = []
+        for b in buckets:
+            counts.append(tf.bincount(b))
+        return tf.cast(tf.stack(counts), tf.float32)
+
+
+def compute_probabilities(buckets, n):
+    with tf.name_scope('compute_probabilities'):
+        counts = count(buckets)
+        probabilities = counts / tf.cast(n, tf.float32)
+        return probabilities
+
+
+def mean_neuron_entropy_100_tf(activations):
+    with tf.name_scope('mean_neuron_entropy_100_tf'):
+        buckets = discretize_100(activations)
+        n = tf.shape(activations)[-1]
+        probabilities = compute_probabilities(buckets, n)
+        entropy = entropy_MM(probabilities, n, 100)
+

@@ -12,6 +12,7 @@ from learning_to_learn.useful_functions import create_path, add_index_to_filenam
     hyperparameter_name_string, sort_hps, hp_name_2_hp_description, check_if_hp_description_is_in_list
 from learning_to_learn.controller import Controller
 import learning_to_learn.data_structures as data_structures
+import learning_to_learn.metrics as metrics
 
 
 class Handler(object):
@@ -29,7 +30,16 @@ class Handler(object):
             res[res_type] = file_name
 
     def _add_set_of_file_names_for_pickled_tensors(
-            self, mean_tensors, all_tensors, count_tensors, dataset_name, prefix='', key_path=None, postfix=''):
+            self,
+            mean_tensors,
+            all_tensors,
+            count_tensors,
+            post_processed_tensors,
+            dataset_name,
+            prefix='',
+            key_path=None,
+            postfix=''
+    ):
         # print("(Handler._add_set_of_file_names_for_pickled_tensors)valid_pickle_mean_tensors:", valid_pickle_mean_tensors)
         d = follow_key_path(self._file_names, key_path)
         if 'tensors' not in d:
@@ -45,6 +55,9 @@ class Handler(object):
         if 'counts_of_values' not in res:
             res['valid_counts_of_values'] = dict()
         counts = res['valid_counts_of_values']
+        if 'valid_tensor_post_processing' not in res:
+            res['valid_tensor_post_processing'] = dict()
+        post_processed = res['valid_tensor_post_processing']
 
         if len(postfix) > 0:
             postfix = '_' + postfix
@@ -82,6 +95,21 @@ class Handler(object):
             # print("(Handler._add_set_of_file_names_for_pickled_tensors)file_name:", file_name)
             create_path(file_name, file_name_is_in_path=True)
             counts[tensor_name] = file_name
+        for tensor_name in post_processed_tensors:
+            for method in self._validation_tensor_schedule['valid_tensor_post_processing'][tensor_name]['post_processing']:
+                file_name = os.path.join(
+                    self._save_path,
+                    prefix,
+                    'tensors',
+                    dataset_name,
+                    'post_processed',
+                    method,
+                    tensor_name + postfix + '.pickle'
+                )
+                create_path(file_name, file_name_is_in_path=True)
+                if method not in post_processed:
+                    post_processed[method] = {}
+                post_processed[method][tensor_name] = file_name
 
     def _add_opt_inf_results_file_name_templates(self, prefix='', key_path=None, postfix='train'):
         d = follow_key_path(self._file_names, key_path)
@@ -408,6 +436,8 @@ class Handler(object):
                     if 'valid_pickle_all_tensors' in self._validation_tensor_schedule else {},
                 self._validation_tensor_schedule['valid_counts_of_values']
                     if 'valid_counts_of_values' in self._validation_tensor_schedule else {},
+                self._validation_tensor_schedule['valid_tensor_post_processing']
+                    if 'valid_tensor_post_processing' in self._validation_tensor_schedule else {},
                 dataset_name,
                 prefix='',
                 key_path=[dataset_name],
@@ -942,7 +972,6 @@ class Handler(object):
                 self._save_datum(descriptor, step, datum, processing_type, dataset_name)
 
     def _save_accumulated_tensors(self):
-        # print("(Handler._save_accumulated_tensors)self._accumulated_tensors:", self._accumulated_tensors)
         if 'valid_pickle_mean_tensors' in self._accumulated_tensors:
             res = self._accumulated_tensors['valid_pickle_mean_tensors']
             file_names = self._file_names[self._name_of_dataset_on_which_accumulating] \
@@ -978,6 +1007,20 @@ class Handler(object):
                 with open(file_name, 'ab') as f:
                     pickle.dump(counter, f)
                 res[tensor_name] = Counter()
+        if 'valid_tensor_post_processing' in self._accumulated_tensors:
+            res = self._accumulated_tensors['valid_tensor_post_processing']
+            file_names = self._file_names[self._name_of_dataset_on_which_accumulating] \
+                ['tensors']['valid_tensor_post_processing']
+            for tensor_name, values_and_steps in res.items():
+                for post_processing in \
+                        self._validation_tensor_schedule \
+                            ['valid_tensor_post_processing'][tensor_name]['post_processing']:
+                    file_name = file_names[post_processing][tensor_name]
+                    func = getattr(metrics, post_processing)
+                    value = func(values_and_steps['values'])
+                    with open(file_name, 'ab') as f:
+                        pickle.dump(value, f)
+                values_and_steps['values'] = []
 
     def _accumulate_several_data(self, descriptors, data):
         for descriptor, datum in zip(descriptors, data):
@@ -1070,6 +1113,9 @@ class Handler(object):
             start = pointer
             if isinstance(tensors_schedule, dict):
                 for tensor_alias, tensor_schedule in tensors_schedule.items():
+                    print(tensor_schedule)
+                    if isinstance(tensor_schedule, dict):
+                        tensor_schedule = tensor_schedule['schedule']
                     if isinstance(tensor_schedule, list):
                         if step in tensor_schedule:
                             add_tensors, counter = self._cope_with_tensor_alias(tensor_alias)
@@ -1261,6 +1307,27 @@ class Handler(object):
             d[res_type] = r
         return d
 
+    @staticmethod
+    def _check_step_for_printing(step, collect_interval, print_per_collected):
+        if isinstance(collect_interval, int):
+            return step % (collect_interval * print_per_collected) == 0
+        elif isinstance(collect_interval, (list, tuple)):
+            print_steps = [s for i, s in enumerate(collect_interval) if i % print_per_collected == 0]
+            return step in print_steps
+        else:
+            raise NotImplementedError(
+                "Collect intervals of type {} are not supported".format(type(collect_interval)))
+
+    @staticmethod
+    def _check_step_for_saving(step, collect_interval):
+        if isinstance(collect_interval, int):
+            return step % collect_interval == 0
+        elif isinstance(collect_interval, (list, tuple)):
+            return step in collect_interval
+        else:
+            raise NotImplementedError(
+                "Collect intervals of type {} are not supported".format(type(collect_interval)))
+
     def _process_train_results(self,
                                step,
                                train_res,
@@ -1280,7 +1347,7 @@ class Handler(object):
         to_print['time_elapsed'] = time_elapsed
         if self._printed_result_types is not None:
             if results_collect_interval is not None:
-                if step % (results_collect_interval * print_per_collected) == 0:
+                if self._check_step_for_printing(step, results_collect_interval, print_per_collected):
                     if self._meta_optimizer_inference_is_performed and \
                             not self._opt_inf_print_has_already_been_performed:
                         indents = [0, 0]
@@ -1295,7 +1362,7 @@ class Handler(object):
                         **to_print
                     )
         if results_collect_interval is not None:
-            if step % results_collect_interval == 0:
+            if self._check_step_for_saving(step, results_collect_interval):
                 if self._save_path is not None:
                     self._save_several_data(result_types,
                                             step,
@@ -1319,7 +1386,8 @@ class Handler(object):
                 print_instructions = self._form_train_tensor_print_instructions(step,
                                                                                 train_res,
                                                                                 self._last_run_tensor_order)
-                other_stuff_is_printed = (step % (results_collect_interval * print_per_collected) == 0)
+                other_stuff_is_printed = self._check_step_for_printing(
+                    step, results_collect_interval, print_per_collected)
                 if other_stuff_is_printed:
                     indent = 0
                 else:

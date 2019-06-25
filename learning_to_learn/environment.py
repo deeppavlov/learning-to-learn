@@ -1088,13 +1088,27 @@ class Environment(object):
             it_is_time_for_validation = Controller(storage, {'type': 'always_false'})
             it_is_time_for_example = Controller(storage, {'type': 'always_false'})
         else:
-            valid_period = collect_interval * print_per_collected
-            it_is_time_for_validation = Controller(storage, {'type': 'periodic_truth', 'period': valid_period})
+            if isinstance(collect_interval, int):
+                valid_period = collect_interval * print_per_collected
+                it_is_time_for_validation = Controller(storage, {'type': 'periodic_truth', 'period': valid_period})
+            elif isinstance(collect_interval, (list, tuple)):
+                valid_period = [s for i, s in enumerate(collect_interval) if i % print_per_collected == 0]
+                it_is_time_for_validation = Controller(storage, {'type':'true_on_steps', 'steps': valid_period})
+            else:
+                raise NotImplementedError(
+                    "Collect intervals of type {} are not supported".format(type(collect_interval)))
             if example_per_print is None:
                 it_is_time_for_example = Controller(storage, {'type': 'always_false'})
             else:
-                example_period = valid_period * example_per_print
-                it_is_time_for_example = Controller(storage, {'type': 'periodic_truth', 'period': example_period})
+                if isinstance(valid_period, int):
+                    example_period = valid_period * example_per_print
+                    it_is_time_for_example = Controller(storage, {'type': 'periodic_truth', 'period': example_period})
+                elif isinstance(valid_period, list):
+                    example_steps = [s for i, s in enumerate(collect_interval) if i % example_per_print == 0]
+                    it_is_time_for_example = Controller(storage, {'type': 'true_on_steps', 'steps': example_steps})
+                else:
+                    raise NotImplementedError(
+                        "Validation periods of type {} are not supported".format(type(valid_period)))
 
         batch_size_controller = Controller(storage, train_specs['batch_size'])
         batch_size_change_tracker_specs = Controller.create_change_tracking_specifications(train_specs['batch_size'])
@@ -1390,90 +1404,6 @@ class Environment(object):
             set_passed_parameters_as_default=False,
             **kwargs
     ):
-        """The method responsible for model training. User may specify what intermediate results he wishes to
-        collect. He may regulate learning process (see arguments). It is also possible to start learning from a check
-        point. User may choose if he wishes to limit number of steps
-        Args:
-            args: A list of arbitrary number of dictionaries which entries are similar to structure of kwargs. It is
-                used if user wishes to train model consequently on several datasets. If any dictionary in list contains
-                less entries than the previous one, missing entries are taken from previous. If the first doesn't have
-                all entries missing entries are filled with default values
-            start_session: shows if new session should be created or already opened should be used
-            close_session: shows if session should be closed at the end of training
-            set_passed_parameters_as_default: if True parameters of launch are saved to self._pupil_default_training.
-                If args are provided the first args[0] is used for self._pupil_default_training resetting
-            kwargs:
-                This argument specifies the learning should be performed. There are many options and it is not
-                necessary to provide all kwargs - missing will be filled with default values specified in
-                _default_train_method_args atribute
-                allow_soft_placement: if True tensorflow is allowed to override device assignments specified by user and
-                    put ops on available devices
-                gpu_memory: memory fraction tensorflow allowed to allocate. If None all available memory is allocated
-                log_device_placement: If True device placements are printed to console
-                restore_path: If provided graph will be restored from checkpoint
-                save_path: path to directory where all results are saved
-                result_types: specifies what types of results should be collected. loss, perplexity, accuracy, bpc are
-                    available
-                summary: If True summary writing is activated
-                add_graph_to_summary: If True graph is added to summary
-                batch_generator_class: class of batch generator. It has to have certain methods for correct functioning
-                meta_optimizer: If meta learning is used for model training it is name of meta_optimizer network
-                learning_rate: specifications for learning_rate control. If it is a float learning rate will not change
-                    while learning. Otherwise it should be a dictionary. Now only exponential decay option is availbale.
-                    Below dictionary entries are described
-                    exponential decay:
-                        type: str 'exponential_decay'
-                        init: float, initial learning rate
-                        decay: a factor on which learning rate is multiplied every period of steps
-                        period: number of steps after which learning rate is being decreased
-                additions_to_feed_dict: If your model requires some special placeholders filling (e. g. probability
-                    distribution for a stochastic node) it is provided through additions_to_feed_dict. It is a
-                    dictionary which keys are tensor aliases in _pupil_hooks attribute and values are dictionaries
-                    of the same structure as learning_rate
-                stop: specifies when learning should be stopped. It is either an integer (number of steps after which
-                    learning is being stopped) or a dictionary of the same structure as learning_rate where you may
-                    specify custom way of learning interruption
-                train_dataset: A dataset on which model will be trained. It can be a name of dataset provided earlier to
-                    Environment constructor or just something what you wish to pass to batch generator (file name, str,
-                    etc.)
-                batch_size: integer or dictionary of the same type as learning_rate if you wish to somehow change batch
-                    size during learning
-                train_batch_kwargs: If your batch generator requires some specific arguments they can be provided
-                    through this dictionary (for example num_unrollings). This dictionary is used for batch generator
-                    construction for training (any of batch generator parameters can be provided as key word args
-                    separately if their processing is described in _process_batch_kwargs_shortcut method. Now it is only
-                    'vocabulary' and 'num_unrollings')
-                checkpoint_steps: list of steps on which checpoints should be created
-                debug: step on which tfdbg should be activated. Default is None
-                validation_dataset_names: list of dataset names used for validation (datasets have to provided to
-                    Environment instance separately. Now only through constructor
-                validation_dataset_texts: list of texts (type str) used for validation
-                validation_dataset_filenames: file names of datasets used for validation
-                  (if validation_dataset_names, validation_dataset_texts, validation_dataset_filenames provided together
-                   all of them are used)
-                validation_batch_size: batch size for validation
-                valid_batch_kwargs: same as train_batch_kwargs
-                to_be_collected_while_training: a dictionary with 3 entries (all of them can be provided independently)
-                    results_collect_interval: number of steps after which data is collected
-                    print_per_collected: every print_per_collected-th point collected with results_collect_interval
-                        schedule is printed
-                    example_per_print: every example_per_print print examples of model functioning are printed
-                        (continuing from random letter, from specified fuse, responding on user specified replicas)
-                printed_result_types: what model should print. Default is loss. perplexity, accuracy, bpc are also
-                    available
-                printed_controllers: if during learning some hyperparameters are changing you may print them to
-                    console. Default printed is learning rate
-                fuses: specifies fuses from which model should periodically generate text. This option is not
-                    available yet
-                fuse_tensors: tensor aliases from _pupil_hooks attribute which should be either saved or printed.
-                    not available
-                replicas: If dialog agent is trained it can be tested with consequently feeding it with few user
-                    specified replicas. It can be used to check if agent is capable of dialog context accumulating
-                random: NLP agents can be tested on text generating task. It is provided with first character and
-                    then tries to generate text. This argument is responsible for specifying how many times it will
-                    be performed and specifying length of generated sequences (not available)
-                train_tensor_schedule: If user wishes he may print or save any tensor in the graph (not available)
-                valid_tensor_schedule: same as train_tensor_schedule"""
         self._store_launch_parameters(
             'pupil',
             args=args,
