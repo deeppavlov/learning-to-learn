@@ -140,12 +140,6 @@ def log_and_sign(inp, p):
     return res
 
 
-def discretize_100(activations):
-    with tf.name_scope('discretize_100'):
-        boundaries = [-0.98 + 0.02 * i for i in range(99)]
-        return tf.feature_column.bucketized_column(activations, boundaries)
-
-
 def entropy_MM(probabilities, n, m):
     with tf.name_scope('entropy_MM'):
         log_prob = tf.log(probabilities) / np.log(2)
@@ -155,6 +149,7 @@ def entropy_MM(probabilities, n, m):
 
 def count(buckets):
     with tf.name_scope('count'):
+        counts = tf.zeros([])
         buckets = tf.unstack(buckets)
         counts = []
         for b in buckets:
@@ -162,17 +157,39 @@ def count(buckets):
         return tf.cast(tf.stack(counts), tf.float32)
 
 
-def compute_probabilities(buckets, n):
+class AxisThereAndBack:
+    def __init__(self, tensor, axis):
+        self._tensor = tensor
+        self._axis = axis
+
+    def __getattr__(self, item):
+        if item not in ['_tensor', '_axis']:
+            return getattr(self._tensor, item)
+
+    def __enter__(self):
+        pass
+
+
+
+
+def hist_1d(values, num_bins, range_, axis):
+    with tf.name_scope('hist_1d'):
+        histograms = tf.zeros(tf.stack([0, num_bins]))
+
+
+def compute_probabilities(activations, num_bins, range_, axis):
     with tf.name_scope('compute_probabilities'):
-        counts = count(buckets)
-        probabilities = counts / tf.cast(n, tf.float32)
+        n = tf.shape(activations)[axis]
+        histograms = hist_1d(activations, num_bins, range_, axis)
+        probabilities = histograms / tf.cast(n, tf.float32)
         return probabilities
 
 
 def mean_neuron_entropy_100_tf(activations):
     with tf.name_scope('mean_neuron_entropy_100_tf'):
-        buckets = discretize_100(activations)
         n = tf.shape(activations)[-1]
-        probabilities = compute_probabilities(buckets, n)
-        entropy = entropy_MM(probabilities, n, 100)
+        num_bins = 100
+        range_ = [-1., 1.]
+        probabilities = compute_probabilities(activations, num_bins, range_, -1)
+        entropy = entropy_MM(probabilities, n, num_bins)
 
