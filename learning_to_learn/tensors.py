@@ -147,34 +147,78 @@ def entropy_MM(probabilities, n, m):
         return -tf.reduce_sum(products, -1) + (m - 1) / (2 * n)
 
 
-def count(buckets):
-    with tf.name_scope('count'):
-        counts = tf.zeros([])
-        buckets = tf.unstack(buckets)
-        counts = []
-        for b in buckets:
-            counts.append(tf.bincount(b))
-        return tf.cast(tf.stack(counts), tf.float32)
-
-
-class AxisThereAndBack:
+class AxisToTheBack:
     def __init__(self, tensor, axis):
-        self._tensor = tensor
-        self._axis = axis
-
-    def __getattr__(self, item):
-        if item not in ['_tensor', '_axis']:
-            return getattr(self._tensor, item)
+        self.tensor = tensor
+        self.axis = axis
+        self._num_dims = None
+        self._permutation = None
 
     def __enter__(self):
-        pass
+        self._num_dims = tf.shape(tf.shape(self.tensor))[0]
+        range_ = tf.range(self._num_dims)
+        false_value = tf.concat(
+            [
+                range_[:self.axis],
+                tf.reshape(self._num_dims - 1, [1]),
+                range_[self.axis + 1:-1],
+                tf.reshape(self.axis, [1]),
+            ],
+            0
+        )
+        self._permutation = tf.cond(
+            tf.equal(self._num_dims - 1, self.axis),
+            true_fn=lambda: range_,
+            false_fn=lambda: false_value,
+        )
+        self.tensor = tf.transpose(self.tensor, perm=self._permutation)
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        self.tensor = tf.transpose(self.tensor, perm=self._permutation)
 
 
+class TensorToMatrix:
+    def __init__(self, tensor):
+        self.tensor = tensor
+        self._old_shape = None
+
+    def __enter__(self):
+        self._old_shape = tf.shape(self.tensor)
+        self.tensor = tf.reshape(self.tensor, tf.stack([-1, self._old_shape[-1]]))
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        self.tensor = tf.reshape(self.tensor, tf.concat([self._old_shape[:-1], [-1]], 0))
 
 
 def hist_1d(values, num_bins, range_, axis):
     with tf.name_scope('hist_1d'):
+        def hist_1_vec(histograms, vec_idx, tensor):
+            with tf.name_scope('hist_1_vec'):
+                hist = tf.histogram_fixed_width(tensor[vec_idx], range_, nbins=num_bins)
+                hist = hist[tf.newaxis, :]
+                histograms = tf.concat([histograms, hist], 0)
+                vec_idx += 1
+                return histograms, vec_idx, tensor
+
         histograms = tf.zeros(tf.stack([0, num_bins]))
+        vec_idx = tf.constant(0)
+        with AxisToTheBack(values, axis) as axis_ctx:
+            with TensorToMatrix(axis_ctx.tensor) as shape_ctx:
+                tensor = shape_ctx.tensor
+                histograms, _, _ = tf.while_loop(
+                    lambda x, y, z: y < tf.shape(z)[-1],
+                    hist_1_vec,
+                    [histograms, vec_idx, tensor],
+                    shape_invarivants=(
+                        tf.TensorShape([None, None]),
+                        [],
+                        tensor.get_shape(),
+                    ),
+                    back_prop=False,
+                )
+        return histograms
 
 
 def compute_probabilities(activations, num_bins, range_, axis):
@@ -191,5 +235,5 @@ def mean_neuron_entropy_100_tf(activations):
         num_bins = 100
         range_ = [-1., 1.]
         probabilities = compute_probabilities(activations, num_bins, range_, -1)
-        entropy = entropy_MM(probabilities, n, num_bins)
+        return entropy_MM(probabilities, n, num_bins)
 
