@@ -1113,7 +1113,6 @@ class Handler(object):
             start = pointer
             if isinstance(tensors_schedule, dict):
                 for tensor_alias, tensor_schedule in tensors_schedule.items():
-                    print(tensor_schedule)
                     if isinstance(tensor_schedule, dict):
                         tensor_schedule = tensor_schedule['schedule']
                     if isinstance(tensor_schedule, list):
