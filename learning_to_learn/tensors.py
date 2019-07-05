@@ -573,6 +573,24 @@ def squeeze_tf(tensor, axis):
         return tf.reshape(tensor, new_shape)
 
 
+def mutual_information_from_hists(
+        cross_hist,
+        hist,
+        value_axis_2d,
+        value_axis,
+        cross_axis,
+        keepdims=False,
+):
+    with tf.name_scope('mutual_information_from_hists'):
+        entropy = entropy_MM_from_hist(hist, value_axis, keepdims=True)
+        entropy_sum = self_cross_sum(entropy, cross_axis)
+        joint_entropy = entropy_MM_from_hist(cross_hist, value_axis_2d, keepdims=True)
+        mutual_info = entropy_sum - joint_entropy
+        if keepdims:
+            return mutual_info
+        return squeeze_tf(mutual_info, value_axis_2d)
+
+
 def mutual_information_and_min_nonzero_count(
         activations,
         value_axis,
@@ -587,8 +605,6 @@ def mutual_information_and_min_nonzero_count(
         value_axis %= num_dims
         cross_axis %= num_dims
         histograms = hist_1d_loop(activations, num_bins, range_, value_axis, 10 ** 6)
-        entropy = entropy_MM_from_hist(histograms, value_axis, keepdims=True)
-        entropy_sum = self_cross_sum(entropy, cross_axis)
         cross_histograms = get_self_cross_histograms(
             activations,
             value_axis,
@@ -597,9 +613,15 @@ def mutual_information_and_min_nonzero_count(
             range_,
             max_sample_size_per_iteration=max_sample_size_per_iteration,
         )
-        value_axis = tf.cast(value_axis > cross_axis, tf.int32) + value_axis
-        joint_entropy = entropy_MM_from_hist(cross_histograms, value_axis, keepdims=True)
-        mutual_info = entropy_sum - joint_entropy
+        value_axis_2d = tf.cast(value_axis > cross_axis, tf.int32) + value_axis
+        mutual_info = mutual_information_from_hists(
+            cross_histograms,
+            histograms,
+            value_axis_2d,
+            value_axis,
+            cross_axis,
+            keepdims=True,
+        )
         min_nonzero = get_min_nonzero(cross_histograms)
         if keepdims:
             return mutual_info, min_nonzero

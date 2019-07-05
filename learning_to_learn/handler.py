@@ -35,6 +35,7 @@ class Handler(object):
             all_tensors,
             count_tensors,
             post_processed_tensors,
+            accumulator_tensors,
             dataset_name,
             prefix='',
             key_path=None,
@@ -58,6 +59,9 @@ class Handler(object):
         if 'valid_tensor_post_processing' not in res:
             res['valid_tensor_post_processing'] = dict()
         post_processed = res['valid_tensor_post_processing']
+        if 'accumulator_postprocessing' not in res:
+            res['accumulator_postprocessing'] = dict()
+        accumulators = res['accumulator_postprocessing']
 
         if len(postfix) > 0:
             postfix = '_' + postfix
@@ -96,7 +100,8 @@ class Handler(object):
             create_path(file_name, file_name_is_in_path=True)
             counts[tensor_name] = file_name
         for tensor_name in post_processed_tensors:
-            for method in self._validation_tensor_schedule['valid_tensor_post_processing'][tensor_name]['post_processing']:
+            for method in self._validation_tensor_schedule \
+                    ['valid_tensor_post_processing'][tensor_name]['post_processing']:
                 file_name = os.path.join(
                     self._save_path,
                     prefix,
@@ -110,6 +115,17 @@ class Handler(object):
                 if method not in post_processed:
                     post_processed[method] = {}
                 post_processed[method][tensor_name] = file_name
+        for tensor_name in accumulator_tensors:
+            file_name = os.path.join(
+                self._save_path,
+                prefix,
+                'tensors',
+                dataset_name,
+                'accumulator_postprocessing/%s' % tensor_name + postfix + '.pickle'
+            )
+            create_path(file_name, file_name_is_in_path=True)
+            accumulators[tensor_name] = file_name
+
 
     def _add_opt_inf_results_file_name_templates(self, prefix='', key_path=None, postfix='train'):
         d = follow_key_path(self._file_names, key_path)
@@ -438,6 +454,8 @@ class Handler(object):
                     if 'valid_counts_of_values' in self._validation_tensor_schedule else {},
                 self._validation_tensor_schedule['valid_tensor_post_processing']
                     if 'valid_tensor_post_processing' in self._validation_tensor_schedule else {},
+                self._validation_tensor_schedule['accumulator_postprocessing']
+                    if 'accumulator_postprocessing' in self._validation_tensor_schedule else [],
                 dataset_name,
                 prefix='',
                 key_path=[dataset_name],
@@ -455,6 +473,8 @@ class Handler(object):
             if tensor_use == 'valid_counts_of_values':
                 for tensor_alias, step_schedule in tensor_instructions.items():
                     self._accumulated_tensors[tensor_use][tensor_alias] = Counter()
+            elif tensor_use in ['accumulate_on_validation_ops', 'accumulator_postprocessing']:
+                pass
             else:
                 for tensor_alias, step_schedule in tensor_instructions.items():
                     self._accumulated_tensors[tensor_use][tensor_alias] = {'values': list(), 'steps': step_schedule}
@@ -875,6 +895,7 @@ class Handler(object):
                                 alias):
         # print("(Handler._cope_with_tensor_alias)alias:", alias)
         # print("(Handler._cope_with_tensor_alias)self._hooks[alias]:", self._hooks[alias])
+        # print("(Handler._cope_with_tensor_alias)self._hooks:", self._hooks)
         if not isinstance(self._hooks[alias], list):
             return [self._hooks[alias]], 1
         add_tensors = list()
@@ -971,6 +992,15 @@ class Handler(object):
             if datum is not None:
                 self._save_datum(descriptor, step, datum, processing_type, dataset_name)
 
+    def _get_and_save_inference_accumulators(self):
+        file_names = self._file_names[self._name_of_dataset_on_which_accumulating] \
+            ['tensors']['accumulator_postprocessing']
+        for hook_name in self._validation_tensor_schedule['accumulator_postprocessing']:
+            result = self._hooks[hook_name].eval(session=self._environment_instance._session)
+            file_name = file_names[hook_name]
+            with open(file_name, 'ab') as f:
+                pickle.dump(result, f)
+
     def _save_accumulated_tensors(self):
         if 'valid_pickle_mean_tensors' in self._accumulated_tensors:
             res = self._accumulated_tensors['valid_pickle_mean_tensors']
@@ -1021,6 +1051,8 @@ class Handler(object):
                     with open(file_name, 'ab') as f:
                         pickle.dump(value, f)
                 values_and_steps['values'] = []
+        if 'accumulator_postprocessing' in self._validation_tensor_schedule:
+            self._get_and_save_inference_accumulators()
 
     def _accumulate_several_data(self, descriptors, data):
         for descriptor, datum in zip(descriptors, data):
@@ -1105,11 +1137,13 @@ class Handler(object):
         # print('_get_additional_tensors method. schedule:', schedule)
         additional_tensors = list()
         pointer = start_pointer
-        for tensors_use, tensors_schedule in schedule.items():
-            # print('(Handler._get_additional_tensors)tensors_use:', tensors_use)
+        for tensor_use, tensors_schedule in schedule.items():
+            # print('(Handler._get_additional_tensors)tensor_use:', tensor_use)
             # print('(Handler._get_additional_tensors)tensor_schedule:', tensors_schedule)
-            self._last_run_tensor_order[tensors_use] = dict()
-            self._last_run_tensor_order[tensors_use]['tensors'] = dict()
+            if tensor_use == 'accumulator_postprocessing':
+                continue
+            self._last_run_tensor_order[tensor_use] = dict()
+            self._last_run_tensor_order[tensor_use]['tensors'] = dict()
             start = pointer
             if isinstance(tensors_schedule, dict):
                 for tensor_alias, tensor_schedule in tensors_schedule.items():
@@ -1119,24 +1153,24 @@ class Handler(object):
                         if step in tensor_schedule:
                             add_tensors, counter = self._cope_with_tensor_alias(tensor_alias)
                             additional_tensors.extend(add_tensors)
-                            self._last_run_tensor_order[tensors_use]['tensors'][tensor_alias] = [pointer,
+                            self._last_run_tensor_order[tensor_use]['tensors'][tensor_alias] = [pointer,
                                                                                                  pointer + counter]
                             pointer += counter
                     elif isinstance(tensor_schedule, int):
                         if step % tensor_schedule == 0:
                             add_tensors, counter = self._cope_with_tensor_alias(tensor_alias)
                             additional_tensors.extend(add_tensors)
-                            self._last_run_tensor_order[tensors_use]['tensors'][tensor_alias] = [pointer,
+                            self._last_run_tensor_order[tensor_use]['tensors'][tensor_alias] = [pointer,
                                                                                                  pointer + counter]
                             pointer += counter
             elif isinstance(tensors_schedule, list):
                 for tensor_alias in tensors_schedule:
                     add_tensors, counter = self._cope_with_tensor_alias(tensor_alias)
                     additional_tensors.extend(add_tensors)
-                    self._last_run_tensor_order[tensors_use]['tensors'][tensor_alias] = [pointer,
+                    self._last_run_tensor_order[tensor_use]['tensors'][tensor_alias] = [pointer,
                                                                                          pointer + counter]
                     pointer += counter
-            self._last_run_tensor_order[tensors_use]['borders'] = [start, pointer]
+            self._last_run_tensor_order[tensor_use]['borders'] = [start, pointer]
         return additional_tensors
 
     @staticmethod
@@ -1187,6 +1221,8 @@ class Handler(object):
         tensor_order = construct(self._last_run_tensor_order)
         del tensor_order['basic']
         for tensor_use, instructions_1_use in tensor_order.items():
+            if tensor_use == 'accumulate_on_validation_ops':
+                continue
             current = self._accumulated_tensors[tensor_use]
             extracted = self._extract_results(tensor_order, tensor_use, tensors)
             if tensor_use == 'valid_counts_of_values':

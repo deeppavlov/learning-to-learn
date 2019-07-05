@@ -780,6 +780,8 @@ class Environment(object):
                     self._session.run(self._hooks['randomize_sample_state'])
                 elif 'reset_validation_state' in self._hooks:
                     self._session.run(self._hooks['reset_validation_state'])
+                if 'accumulator_reset_op' in self._hooks:
+                    self._session.runt(self._hooks['accumulator_reset_op'])
                 # print("fuse['text']:", [fuse['text']])
                 for char_idx, char in enumerate(fuse['text']):
                     vec = batch_generator.char2vec(char, batch_generator.character_positions_in_vocabulary, None, None)
@@ -869,6 +871,8 @@ class Environment(object):
         # print('valid_batch_kwargs:', valid_batch_kwargs)
         if 'reset_validation_state' in self._hooks:
             self._session.run(self._hooks['reset_validation_state'])
+        if 'accumulator_reset_op' in self._hooks:
+            self._session.runt(self._hooks['accumulator_reset_op'])
         # print('batch_generator_class:', batch_generator_class)
         valid_batches = batch_generator_class(validation_dataset[0], validation_batch_size, **valid_batch_kwargs)
         num_batches = valid_batches.get_num_batches()
@@ -919,6 +923,8 @@ class Environment(object):
         # print('valid_batch_kwargs:', valid_batch_kwargs)
         if 'reset_validation_state' in self._hooks:
             self._session.run(self._hooks['reset_validation_state'])
+        if 'accumulator_reset_op' in self._hooks:
+            self._session.runt(self._hooks['accumulator_reset_op'])
         # print('batch_generator_class:', batch_generator_class)
         valid_batches = batch_generator_class(validation_dataset[0], validation_batch_size, **valid_batch_kwargs)
         length = valid_batches.get_num_batches()
@@ -2935,6 +2941,8 @@ class Environment(object):
             reset_op = self._hooks['reset_validation_state']
         # print("(Environment._start_inference)reset_op:", reset_op)
         reset_op.run(session=self._session)
+        if 'accumulator_reset_op' in self._hooks:
+            self._session.runt(self._hooks['accumulator_reset_op'])
         sample_prediction = self._hooks['validation_predictions']
         sample_input = self._hooks['validation_inputs']
         sample_ndims = sample_input.shape.ndims
@@ -3217,6 +3225,8 @@ class Environment(object):
         self._session.run(tf.global_variables_initializer())
         self._restore_pupil(restore_path)
         self._hooks['reset_validation_state'].run(session=self._session)
+        if 'accumulator_reset_op' in self._hooks:
+            self._session.runt(self._hooks['accumulator_reset_op'])
         greeting = 'Здравствуйте, я бот.'
         # print_and_log('Bot: ' + greeting, _print=False, fn=log_path)
         # print('(Environment.one_chat)inq:', inq)
