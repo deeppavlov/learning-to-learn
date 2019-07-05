@@ -356,14 +356,14 @@ def compute_probabilities(activations, num_bins, range_, axis):
         return probabilities
 
 
-def mean_neuron_entropy_with_binarization(activations, axis, num_bins, range_):
-    with tf.name_scope('mean_neuron_entropy_with_binarization'):
+def mean_neuron_entropy_with_digitalization(activations, axis, num_bins, range_):
+    with tf.name_scope('mean_neuron_entropy_with_digitalization'):
         histograms = hist_1d(activations, num_bins, range_, axis)
         return tf.reduce_mean(entropy_MM_from_hist(histograms, axis))
 
 
-def neuron_entropy_with_binarization(activations, axis, num_bins, range_):
-    with tf.name_scope('neuron_entropy_with_binarization'):
+def neuron_entropy_with_digitalization(activations, axis, num_bins, range_):
+    with tf.name_scope('neuron_entropy_with_digitalization'):
         histograms = hist_1d(activations, num_bins, range_, axis)
         return entropy_MM_from_hist(histograms, axis)
 

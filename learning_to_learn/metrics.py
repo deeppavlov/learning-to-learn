@@ -9,7 +9,7 @@ import learning_to_learn.tensors as tensors
 def _mean_neuron_entropy_100(values):
     values = values.reshape((-1, values.shape[-1]))
     activations = tf.placeholder(tf.float32)
-    entropy = tensors.mean_neuron_entropy_with_binarization(activations, 0, 100, [-1., 1.])
+    entropy = tensors.mean_neuron_entropy_with_digitalization(activations, 0, 100, [-1., 1.])
     config = tf.ConfigProto(allow_soft_placement=True)
     config.gpu_options.allow_growth = True
     with tf.Session(config=config) as sess:
@@ -45,7 +45,7 @@ def mean_mutual_information_100(values):
 def _entropy_metrics_100(values):
     values = values.reshape((-1, values.shape[-1]))
     activations = tf.placeholder(tf.float32)
-    entropy = tensors.neuron_entropy_with_binarization(
+    entropy = tensors.neuron_entropy_with_digitalization(
         activations,
         0,
         100,
