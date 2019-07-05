@@ -662,3 +662,6 @@ def mean_mutual_information_and_min_nonzero_count(
         s = tf.reduce_sum(mutual_info_reshaped) - tf.reduce_sum(diag)
         return mutual_info, s / tf.cast(N - n, tf.float32), min_nonzero
 
+
+def identity(tensor):
+    return tensor
