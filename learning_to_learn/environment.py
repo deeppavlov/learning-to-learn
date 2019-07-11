@@ -1279,7 +1279,7 @@ class Environment(object):
                 checkpoints_path,
                 subgraph_names=subgraphs_to_save,
                 lr=learning_rate,
-                best_value=ctrl['learning_rate'].get_best_target_metric_value(),
+                best_value=ctrl['it_is_time_to_create_best_checkpoint'].get_best_target_metric_value(),
                 target_metric_storage_path=ctrl['learning_rate'].get_target_metric_storage_path(),
                 step=step,
             )
