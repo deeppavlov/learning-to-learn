@@ -626,7 +626,7 @@ def mutual_information_and_min_nonzero_count(
         if keepdims:
             return mutual_info, min_nonzero
         else:
-            return squeeze_tf(mutual_info, value_axis), min_nonzero
+            return squeeze_tf(mutual_info, value_axis_2d), min_nonzero
 
 
 def mean_mutual_information_and_min_nonzero_count(
@@ -665,3 +665,43 @@ def mean_mutual_information_and_min_nonzero_count(
 
 def identity(tensor):
     return tensor
+
+
+def sample_from_distribution(distr):
+    n = len(distr)
+    u = np.random.uniform()
+    start = 0
+    cumulative = []
+    for p in distr:
+        start += p
+        cumulative.append(start)
+    i = 0
+    while True:
+        if i >= n:
+            raise ValueError(
+                "random variable `u` and has not larger than 1.0"
+                " and sum of probabilities in distribution has to be equal to 1.0"
+            )
+        if cumulative[i] > u:
+            return i
+        i += 1
+
+
+def sample_from_distribution_continuous(distr, borders):
+    n = len(distr)
+    u = np.random.uniform()
+    start = 0
+    cumulative = []
+    for p in distr:
+        start += p
+        cumulative.append(start)
+    i = 0
+    while True:
+        if i >= n:
+            raise ValueError(
+                "random variable `u` and has not larger than 1.0"
+                " and sum of probabilities in distribution has to be equal to 1.0"
+            )
+        if cumulative[i] > u:
+            return np.random.uniform(borders[i][0], borders[i][1])
+        i += 1
