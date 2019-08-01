@@ -180,6 +180,7 @@ class Environment(object):
                 batch_generator_class=self._default_batch_generator,
                 vocabulary=self._vocabulary,
                 create_start_checkpoint=False,
+                create_final_checkpoint=False,
             ),
             run=dict(
                 train_specs=dict(
@@ -1518,7 +1519,7 @@ class Environment(object):
                                     init_step=init_step,
                                     subgraphs_to_save=start_specs['subgraphs_to_save'])
         train_time = time.clock() - train_start_time
-        if checkpoints_path is not None:
+        if checkpoints_path is not None and start_specs['create_final_checkpoint']:
             self._create_checkpoint('final', checkpoints_path, subgraph_names=start_specs['subgraphs_to_save'])
         self._handler.log_finish_time()
         self._handler.close()
