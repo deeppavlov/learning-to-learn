@@ -178,7 +178,8 @@ class Environment(object):
                 summary=False,
                 add_graph_to_summary=False,
                 batch_generator_class=self._default_batch_generator,
-                vocabulary=self._vocabulary
+                vocabulary=self._vocabulary,
+                create_start_checkpoint=False,
             ),
             run=dict(
                 train_specs=dict(
@@ -1505,7 +1506,7 @@ class Environment(object):
         init_step = saved_ctrl['step'] + 1 if 'step' in saved_ctrl else 0
         # if 'reset_pupil_train_state' in self._hooks:
         #     self._session.run(self._hooks['reset_pupil_train_state'])
-        if checkpoints_path is not None and init_step == 0:
+        if checkpoints_path is not None and init_step == 0 and start_specs['create_start_checkpoint']:
             self._create_checkpoint('start', checkpoints_path, subgraph_names=start_specs['subgraphs_to_save'])
         global train_start_time
         train_start_time = time.clock()
