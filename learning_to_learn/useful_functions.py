@@ -1389,17 +1389,20 @@ def nth_element_of_sequence_of_sequences(s, n):
 
 
 def convert(value, type_):
+    # print("(useful_functions.convert)value, type_:", value, type_)
+    # print("(useful_functions.convert)repr(value), repr(type_):", repr(value), repr(type_))
     try:
         # Check if it's a builtin type
         module = importlib.import_module('builtins')
         cls = getattr(module, type_)
+        # print("(useful_functions.convert)found in built ins")
     except AttributeError:
         # if not, separate module and class
         module, type_ = type_.rsplit(".", 1)
         module = importlib.import_module(module)
         cls = getattr(module, type_)
-    if type_ in ['list', 'tuple', 'dict']:
-        return eval(value)
+    # if type_ in ['list', 'tuple', 'dict']:
+    #     return eval(value)
     return cls(value)
 
 
