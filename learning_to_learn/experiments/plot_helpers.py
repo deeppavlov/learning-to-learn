@@ -16,7 +16,7 @@ except ValueError:  # Already removed
 
 from learning_to_learn.useful_functions import synchronous_sort, create_path, get_pupil_evaluation_results, \
     BadFormattingError, all_combs, get_optimizer_evaluation_results, select_for_plot, convert, retrieve_lines, \
-    add_index_to_filename_if_needed, nested2string, isnumber, shift_list
+    add_index_to_filename_if_needed, nested2string, isnumber, add_scalar_iterable
 
 COLORS = [
     'r', 'g', 'b', 'k', 'c', 'magenta', 'brown',
@@ -160,8 +160,8 @@ def plot_outer_legend(
         # print("(plot_helpers.plot_outer_legend)line_data:", line_data)
         lines.append(
             plt.errorbar(
-                shift_list(line_data[0], shifts[0]),
-                shift_list(line_data[1], shifts[1]),
+                add_scalar_iterable(line_data[0], shifts[0]),
+                add_scalar_iterable(line_data[1], shifts[1]),
                 yerr=yerr,
                 marker=style['marker'],
                 color=color,

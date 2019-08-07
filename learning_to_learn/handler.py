@@ -1,84 +1,151 @@
 import os
 import time
 import datetime as dt
+from collections import Counter
 
 import pickle
 import numpy as np
 import tensorflow as tf
 
 from learning_to_learn.useful_functions import create_path, add_index_to_filename_if_needed, construct, nested2string, \
-    WrongMethodCallError, extend_dictionary, flatten, check_if_line_is_header, parse_header_line, \
+    WrongMethodCallError, follow_key_path, flatten, check_if_line_is_header, parse_header_line, \
     hyperparameter_name_string, sort_hps, hp_name_2_hp_description, check_if_hp_description_is_in_list
 from learning_to_learn.controller import Controller
+import learning_to_learn.data_structures as data_structures
+import learning_to_learn.metrics as metrics
 
 
 class Handler(object):
 
     _stars = '*'*30
 
-    def _compose_prefix(self, prefix):
-        res = ''
-        # print('(Handler._compose_prefix)self._save_path:', self._save_path)
-        if len(self._save_path) > 0:
-            res += self._save_path + '/'
-        if len(prefix) > 0:
-            res += prefix + '/'
-        return res
-
     def _add_results_file_name_set(self, result_types, prefix='', key_path=None, postfix='train'):
-        prefix = self._compose_prefix(prefix)
-        d = extend_dictionary(self._file_names, key_path)
+        d = follow_key_path(self._file_names, key_path)
         if 'results' not in d:
             d['results'] = dict()
         res = d['results']
         for res_type in result_types:
-            file_name = prefix + 'results/%s_' % res_type + postfix + '.txt'
+            file_name = os.path.join(self._save_path, prefix, 'results/%s_' % res_type + postfix + '.txt')
             create_path(file_name, file_name_is_in_path=True)
             res[res_type] = file_name
 
-    def _add_tensor_pickle_file_name_set(
-            self, valid_pickle_mean_tensors, valid_pickle_all_tensors, prefix='', key_path=None, postfix='valid'):
-        prefix = self._compose_prefix(prefix)
-        d = extend_dictionary(self._file_names, key_path)
+    def _add_set_of_file_names_for_pickled_tensors(
+            self,
+            mean_tensors,
+            all_tensors,
+            count_tensors,
+            post_processed_tensors,
+            accumulator_tensors,
+            dataset_name,
+            prefix='',
+            key_path=None,
+            postfix=''
+    ):
+        # print("(Handler._add_set_of_file_names_for_pickled_tensors)valid_pickle_mean_tensors:", valid_pickle_mean_tensors)
+        d = follow_key_path(self._file_names, key_path)
         if 'tensors' not in d:
             d['tensors'] = dict()
         res = d['tensors']
+
         if 'valid_pickle_mean_tensors' not in res:
             res['valid_pickle_mean_tensors'] = dict()
         mean = res['valid_pickle_mean_tensors']
         if 'valid_pickle_all_tensors' not in res:
             res['valid_pickle_all_tensors'] = dict()
         all_ = res['valid_pickle_all_tensors']
-        for tensor_name in valid_pickle_mean_tensors:
-            file_name = prefix + 'tensors/valid_pickle_mean_tensors/%s_' % tensor_name + postfix + '.pickle'
+        if 'counts_of_values' not in res:
+            res['valid_counts_of_values'] = dict()
+        counts = res['valid_counts_of_values']
+        if 'valid_tensor_post_processing' not in res:
+            res['valid_tensor_post_processing'] = dict()
+        post_processed = res['valid_tensor_post_processing']
+        if 'accumulator_postprocessing' not in res:
+            res['accumulator_postprocessing'] = dict()
+        accumulators = res['accumulator_postprocessing']
+
+        if len(postfix) > 0:
+            postfix = '_' + postfix
+
+        for tensor_name in mean_tensors:
+            file_name = os.path.join(
+                self._save_path,
+                prefix,
+                'tensors',
+                dataset_name,
+                'pickle_mean_tensors/%s' % tensor_name + postfix + '.pickle'
+            )
+            # print("(Handler._add_set_of_file_names_for_pickled_tensors)file_name:", file_name)
             create_path(file_name, file_name_is_in_path=True)
             mean[tensor_name] = file_name
-        for tensor_name in valid_pickle_all_tensors:
-            template = prefix + 'tensors/valid_pickle_all_tensors/%s_' % tensor_name + postfix + '_step%s.pickle'
+        for tensor_name in all_tensors:
+            template = os.path.join(
+                self._save_path,
+                prefix,
+                'tensors',
+                dataset_name,
+                'pickle_all_tensors/%s' % tensor_name + postfix + '_step%s.pickle'
+            )
+            # print("(Handler._add_set_of_file_names_for_pickled_tensors)template:", template)
             create_path(template, file_name_is_in_path=True)
             all_[tensor_name] = {'template': template, 'file_names': []}
+        for tensor_name in count_tensors:
+            file_name = os.path.join(
+                self._save_path,
+                prefix,
+                'tensors',
+                dataset_name,
+                'counts_of_values/%s' % tensor_name + postfix + '.pickle'
+            )
+            # print("(Handler._add_set_of_file_names_for_pickled_tensors)file_name:", file_name)
+            create_path(file_name, file_name_is_in_path=True)
+            counts[tensor_name] = file_name
+        for tensor_name in post_processed_tensors:
+            for method in self._validation_tensor_schedule \
+                    ['valid_tensor_post_processing'][tensor_name]['post_processing']:
+                file_name = os.path.join(
+                    self._save_path,
+                    prefix,
+                    'tensors',
+                    dataset_name,
+                    'post_processed',
+                    method,
+                    tensor_name + postfix + '.pickle'
+                )
+                create_path(file_name, file_name_is_in_path=True)
+                if method not in post_processed:
+                    post_processed[method] = {}
+                post_processed[method][tensor_name] = file_name
+        for tensor_name in accumulator_tensors:
+            file_name = os.path.join(
+                self._save_path,
+                prefix,
+                'tensors',
+                dataset_name,
+                'accumulator_postprocessing/%s' % tensor_name + postfix + '.pickle'
+            )
+            create_path(file_name, file_name_is_in_path=True)
+            accumulators[tensor_name] = file_name
+
 
     def _add_opt_inf_results_file_name_templates(self, prefix='', key_path=None, postfix='train'):
-        prefix = self._compose_prefix(prefix)
-        d = extend_dictionary(self._file_names, key_path)
+        d = follow_key_path(self._file_names, key_path)
         if 'results' not in d:
             d['results'] = dict()
         res = d['results']
         for res_type in self._result_types:
-            file_name = prefix + 'results/%s_' % res_type + postfix + '/step%s.txt'
+            file_name = os.path.join(self._save_path, prefix, 'results/%s_' % res_type + postfix, 'step%s.txt')
             res[res_type] = file_name
             create_path(file_name, file_name_is_in_path=True)
 
     def _add_example_file_names(self, prefix='', key_path=None, fuse_file_name=None, example_file_name=None):
-        prefix = self._compose_prefix(prefix)
-        d = extend_dictionary(self._file_names, key_path)
+        d = follow_key_path(self._file_names, key_path)
         if fuse_file_name is not None:
-            file_name = prefix + fuse_file_name
+            file_name = os.path.join(self._save_path, prefix, fuse_file_name)
             create_path(file_name, file_name_is_in_path=True)
             d['fuses'] = file_name
 
         if example_file_name is not None:
-            file_name = prefix + example_file_name
+            file_name = os.path.join(self._save_path, prefix, example_file_name)
             create_path(file_name, file_name_is_in_path=True)
             d['examples'] = file_name
 
@@ -220,10 +287,7 @@ class Handler(object):
             self._printed_result_types = printed_result_types
             self._accumulated_tensors = dict()
             if self._validation_tensor_schedule is not None:
-                for tensor_use, tensor_instructions in self._validation_tensor_schedule.items():
-                    self._accumulated_tensors[tensor_use] = dict()
-                    for tensor_alias, step_schedule in tensor_instructions.items():
-                        self._accumulated_tensors[tensor_use][tensor_alias] = {'values': list(), 'steps': step_schedule}
+                self._init_accumulated_tensors(self._validation_tensor_schedule)
             # self._accumulated = dict(loss=None, perplexity=None, accuracy=None)
             # if self._bpc:
             #     self._accumulated['bpc'] = None
@@ -378,13 +442,23 @@ class Handler(object):
         self._opt_inf_print_has_already_been_performed = oiphabp
 
     def _add_validation_experiment_instruments(self, dataset_name):
+        # print("(Handler._add_validation_experiment_instruments)self._save_path:", self._save_path)
         if self._save_path is not None:
             self._add_results_file_name_set(self._result_types, key_path=[dataset_name], postfix=dataset_name)
-            self._add_tensor_pickle_file_name_set(
-                self._validation_tensor_schedule['valid_pickle_mean_tensors'],
-                self._validation_tensor_schedule['valid_pickle_all_tensors'],
-                prefix='', key_path=[dataset_name],
-                postfix='valid'
+            self._add_set_of_file_names_for_pickled_tensors(
+                self._validation_tensor_schedule['valid_pickle_mean_tensors']
+                    if 'valid_pickle_mean_tensors' in self._validation_tensor_schedule else {},
+                self._validation_tensor_schedule['valid_pickle_all_tensors']
+                    if 'valid_pickle_all_tensors' in self._validation_tensor_schedule else {},
+                self._validation_tensor_schedule['valid_counts_of_values']
+                    if 'valid_counts_of_values' in self._validation_tensor_schedule else {},
+                self._validation_tensor_schedule['valid_tensor_post_processing']
+                    if 'valid_tensor_post_processing' in self._validation_tensor_schedule else {},
+                self._validation_tensor_schedule['accumulator_postprocessing']
+                    if 'accumulator_postprocessing' in self._validation_tensor_schedule else [],
+                dataset_name,
+                prefix='',
+                key_path=[dataset_name],
             )
         init_dict = dict()
         for key in self._result_types + ['steps']:
@@ -392,6 +466,18 @@ class Handler(object):
         # print("(Handler._add_validation_experiment_instruments)dataset_name:", dataset_name)
         if not self._environment_instance.dataset_in_storage(dataset_name):
             self._environment_instance.init_storage(dataset_name, **init_dict)
+
+    def _init_accumulated_tensors(self, tensor_schedule):
+        for tensor_use, tensor_instructions in tensor_schedule.items():
+            self._accumulated_tensors[tensor_use] = dict()
+            if tensor_use == 'valid_counts_of_values':
+                for tensor_alias, step_schedule in tensor_instructions.items():
+                    self._accumulated_tensors[tensor_use][tensor_alias] = Counter()
+            elif tensor_use in ['accumulate_on_validation_ops', 'accumulator_postprocessing']:
+                pass
+            else:
+                for tensor_alias, step_schedule in tensor_instructions.items():
+                    self._accumulated_tensors[tensor_use][tensor_alias] = {'values': list(), 'steps': step_schedule}
 
     def set_new_run_schedule(self, schedule, validation_dataset_names, save_direction='main'):
         # print("(Handler.set_new_run_schedule)validation_dataset_names:", validation_dataset_names)
@@ -417,10 +503,7 @@ class Handler(object):
         self._train_tensor_schedule = schedule['train_tensor_schedule']
         self._validation_tensor_schedule = schedule['validation_tensor_schedule']
         if self._validation_tensor_schedule is not None:
-            for tensor_use, tensor_instructions in self._validation_tensor_schedule.items():
-                self._accumulated_tensors[tensor_use] = dict()
-                for tensor_alias, step_schedule in tensor_instructions.items():
-                    self._accumulated_tensors[tensor_use][tensor_alias] = {'values': list(), 'steps': step_schedule}
+            self._init_accumulated_tensors(self._validation_tensor_schedule)
         self._printed_result_types = schedule['printed_result_types']
 
         self._fuses = schedule['fuses']
@@ -442,6 +525,7 @@ class Handler(object):
                 self._print_results = True
         self._printed_controllers = schedule['printed_controllers']
         for dataset_name in validation_dataset_names:
+            # print("(Handler.set_new_run_schedule)dataset_name:", dataset_name)
             self._add_validation_experiment_instruments(dataset_name)
 
     def set_optimizer_train_schedule(
@@ -811,6 +895,7 @@ class Handler(object):
                                 alias):
         # print("(Handler._cope_with_tensor_alias)alias:", alias)
         # print("(Handler._cope_with_tensor_alias)self._hooks[alias]:", self._hooks[alias])
+        # print("(Handler._cope_with_tensor_alias)self._hooks:", self._hooks)
         if not isinstance(self._hooks[alias], list):
             return [self._hooks[alias]], 1
         add_tensors = list()
@@ -907,8 +992,16 @@ class Handler(object):
             if datum is not None:
                 self._save_datum(descriptor, step, datum, processing_type, dataset_name)
 
+    def _get_and_save_inference_accumulators(self):
+        file_names = self._file_names[self._name_of_dataset_on_which_accumulating] \
+            ['tensors']['accumulator_postprocessing']
+        for hook_name in self._validation_tensor_schedule['accumulator_postprocessing']:
+            result = self._hooks[hook_name].eval(session=self._environment_instance._session)
+            file_name = file_names[hook_name]
+            with open(file_name, 'ab') as f:
+                pickle.dump(result, f)
+
     def _save_accumulated_tensors(self):
-        # print("(Handler._save_accumulated_tensors)self._accumulated_tensors:", self._accumulated_tensors)
         if 'valid_pickle_mean_tensors' in self._accumulated_tensors:
             res = self._accumulated_tensors['valid_pickle_mean_tensors']
             file_names = self._file_names[self._name_of_dataset_on_which_accumulating] \
@@ -933,6 +1026,33 @@ class Handler(object):
                     for t in values_and_steps['values']:
                         pickle.dump(t, f)
                 values_and_steps['values'] = []
+        if 'valid_counts_of_values' in self._accumulated_tensors:
+            res = self._accumulated_tensors['valid_counts_of_values']
+            file_names = self._file_names[self._name_of_dataset_on_which_accumulating] \
+                ['tensors']['valid_counts_of_values']
+            for tensor_name, counter in res.items():
+                file_name = file_names[tensor_name]
+                if not data_structures.is_sparse_counter(counter, 4):
+                    counter = data_structures.counter_to_array(counter)
+                with open(file_name, 'ab') as f:
+                    pickle.dump(counter, f)
+                res[tensor_name] = Counter()
+        if 'valid_tensor_post_processing' in self._accumulated_tensors:
+            res = self._accumulated_tensors['valid_tensor_post_processing']
+            file_names = self._file_names[self._name_of_dataset_on_which_accumulating] \
+                ['tensors']['valid_tensor_post_processing']
+            for tensor_name, values_and_steps in res.items():
+                for post_processing in \
+                        self._validation_tensor_schedule \
+                            ['valid_tensor_post_processing'][tensor_name]['post_processing']:
+                    file_name = file_names[post_processing][tensor_name]
+                    func = getattr(metrics, post_processing)
+                    value = func(values_and_steps['values'])
+                    with open(file_name, 'ab') as f:
+                        pickle.dump(value, f)
+                values_and_steps['values'] = []
+        if 'accumulator_postprocessing' in self._validation_tensor_schedule:
+            self._get_and_save_inference_accumulators()
 
     def _accumulate_several_data(self, descriptors, data):
         for descriptor, datum in zip(descriptors, data):
@@ -965,7 +1085,7 @@ class Handler(object):
             if self._train_tensor_schedule is not None:
                 additional_tensors = self._get_additional_tensors(self._train_tensor_schedule, step, pointer)
                 tensors.extend(additional_tensors)
-        if regime == 'validation':
+        elif regime == 'validation':
             tensors.append(self._hooks['validation_predictions'])
             current['tensors']['validation_predictions'] = [pointer, pointer + 1]
             pointer += 1
@@ -978,7 +1098,7 @@ class Handler(object):
             if self._validation_tensor_schedule is not None:
                 additional_tensors = self._get_additional_tensors(self._validation_tensor_schedule, step, pointer)
                 tensors.extend(additional_tensors)
-        if regime == 'fuse':
+        elif regime == 'fuse':
             tensors.append(self._hooks['validation_predictions'])
             current['tensors']['validation_predictions'] = [pointer, pointer + 1]
             pointer += 1
@@ -986,7 +1106,7 @@ class Handler(object):
             if self._fuse_tensor_schedule is not None:
                 additional_tensors = self._get_additional_tensors(self._fuse_tensor_schedule, step, pointer)
                 tensors.extend(additional_tensors)
-        if regime == 'example':
+        elif regime == 'example':
             tensors.append(self._hooks['validation_predictions'])
             current['tensors']['validation_predictions'] = [pointer, pointer + 1]
             pointer += 1
@@ -994,7 +1114,7 @@ class Handler(object):
             if self._example_tensor_schedule is not None:
                 additional_tensors = self._get_additional_tensors(self._example_tensor_schedule, step, pointer)
                 tensors.extend(additional_tensors)
-        if regime == 'train_meta_optimizer':
+        elif regime == 'train_meta_optimizer':
             tensors.append(self._hooks['optimizer_train_op'])
             current['tensors']['optimizer_train_op'] = [pointer, pointer + 1]
             pointer += 1
@@ -1017,36 +1137,40 @@ class Handler(object):
         # print('_get_additional_tensors method. schedule:', schedule)
         additional_tensors = list()
         pointer = start_pointer
-        for tensors_use, tensors_schedule in schedule.items():
-            # print('(Handler._get_additional_tensors)tensors_use:', tensors_use)
+        for tensor_use, tensors_schedule in schedule.items():
+            # print('(Handler._get_additional_tensors)tensor_use:', tensor_use)
             # print('(Handler._get_additional_tensors)tensor_schedule:', tensors_schedule)
-            self._last_run_tensor_order[tensors_use] = dict()
-            self._last_run_tensor_order[tensors_use]['tensors'] = dict()
+            if tensor_use == 'accumulator_postprocessing':
+                continue
+            self._last_run_tensor_order[tensor_use] = dict()
+            self._last_run_tensor_order[tensor_use]['tensors'] = dict()
             start = pointer
             if isinstance(tensors_schedule, dict):
                 for tensor_alias, tensor_schedule in tensors_schedule.items():
+                    if isinstance(tensor_schedule, dict):
+                        tensor_schedule = tensor_schedule['schedule']
                     if isinstance(tensor_schedule, list):
                         if step in tensor_schedule:
                             add_tensors, counter = self._cope_with_tensor_alias(tensor_alias)
                             additional_tensors.extend(add_tensors)
-                            self._last_run_tensor_order[tensors_use]['tensors'][tensor_alias] = [pointer,
+                            self._last_run_tensor_order[tensor_use]['tensors'][tensor_alias] = [pointer,
                                                                                                  pointer + counter]
                             pointer += counter
                     elif isinstance(tensor_schedule, int):
                         if step % tensor_schedule == 0:
                             add_tensors, counter = self._cope_with_tensor_alias(tensor_alias)
                             additional_tensors.extend(add_tensors)
-                            self._last_run_tensor_order[tensors_use]['tensors'][tensor_alias] = [pointer,
+                            self._last_run_tensor_order[tensor_use]['tensors'][tensor_alias] = [pointer,
                                                                                                  pointer + counter]
                             pointer += counter
             elif isinstance(tensors_schedule, list):
                 for tensor_alias in tensors_schedule:
                     add_tensors, counter = self._cope_with_tensor_alias(tensor_alias)
                     additional_tensors.extend(add_tensors)
-                    self._last_run_tensor_order[tensors_use]['tensors'][tensor_alias] = [pointer,
+                    self._last_run_tensor_order[tensor_use]['tensors'][tensor_alias] = [pointer,
                                                                                          pointer + counter]
                     pointer += counter
-            self._last_run_tensor_order[tensors_use]['borders'] = [start, pointer]
+            self._last_run_tensor_order[tensor_use]['borders'] = [start, pointer]
         return additional_tensors
 
     @staticmethod
@@ -1097,10 +1221,20 @@ class Handler(object):
         tensor_order = construct(self._last_run_tensor_order)
         del tensor_order['basic']
         for tensor_use, instructions_1_use in tensor_order.items():
+            if tensor_use == 'accumulate_on_validation_ops':
+                continue
             current = self._accumulated_tensors[tensor_use]
             extracted = self._extract_results(tensor_order, tensor_use, tensors)
-            for tensor_alias, value in extracted.items():
-                current[tensor_alias]['values'].append(value)
+            if tensor_use == 'valid_counts_of_values':
+                for tensor_alias, value in extracted.items():
+                    if isinstance(value, (list, tuple)):
+                        for tensor in value:
+                            current[tensor_alias] += Counter(np.reshape(tensor, [-1]))
+                    else:
+                        current[tensor_alias] += Counter(np.reshape(value, [-1]))
+            else:
+                for tensor_alias, value in extracted.items():
+                    current[tensor_alias]['values'].append(value)
 
     def _save_tensors(self, tensors):
         pass
@@ -1208,6 +1342,27 @@ class Handler(object):
             d[res_type] = r
         return d
 
+    @staticmethod
+    def _check_step_for_printing(step, collect_interval, print_per_collected):
+        if isinstance(collect_interval, int):
+            return step % (collect_interval * print_per_collected) == 0
+        elif isinstance(collect_interval, (list, tuple)):
+            print_steps = [s for i, s in enumerate(collect_interval) if i % print_per_collected == 0]
+            return step in print_steps
+        else:
+            raise NotImplementedError(
+                "Collect intervals of type {} are not supported".format(type(collect_interval)))
+
+    @staticmethod
+    def _check_step_for_saving(step, collect_interval):
+        if isinstance(collect_interval, int):
+            return step % collect_interval == 0
+        elif isinstance(collect_interval, (list, tuple)):
+            return step in collect_interval
+        else:
+            raise NotImplementedError(
+                "Collect intervals of type {} are not supported".format(type(collect_interval)))
+
     def _process_train_results(self,
                                step,
                                train_res,
@@ -1227,7 +1382,7 @@ class Handler(object):
         to_print['time_elapsed'] = time_elapsed
         if self._printed_result_types is not None:
             if results_collect_interval is not None:
-                if step % (results_collect_interval * print_per_collected) == 0:
+                if self._check_step_for_printing(step, results_collect_interval, print_per_collected):
                     if self._meta_optimizer_inference_is_performed and \
                             not self._opt_inf_print_has_already_been_performed:
                         indents = [0, 0]
@@ -1242,7 +1397,7 @@ class Handler(object):
                         **to_print
                     )
         if results_collect_interval is not None:
-            if step % results_collect_interval == 0:
+            if self._check_step_for_saving(step, results_collect_interval):
                 if self._save_path is not None:
                     self._save_several_data(result_types,
                                             step,
@@ -1266,7 +1421,8 @@ class Handler(object):
                 print_instructions = self._form_train_tensor_print_instructions(step,
                                                                                 train_res,
                                                                                 self._last_run_tensor_order)
-                other_stuff_is_printed = (step % (results_collect_interval * print_per_collected) == 0)
+                other_stuff_is_printed = self._check_step_for_printing(
+                    step, results_collect_interval, print_per_collected)
                 if other_stuff_is_printed:
                     indent = 0
                 else:

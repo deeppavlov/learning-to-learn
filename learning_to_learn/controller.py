@@ -164,7 +164,7 @@ class Controller(object):
             return end
 
     def _limit_steps(self):
-        if self._storage['step'] > self._specifications['limit']:
+        if self._storage['step'] >= self._specifications['limit']:
             return False
         else:
             return True

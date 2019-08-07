@@ -1138,7 +1138,7 @@ def remove_keys_from_dictionary(d, keys):
     return d
 
 
-def extend_dictionary(dictionary, key_path):
+def follow_key_path(dictionary, key_path):
     d = dictionary
     if key_path is None:
         key_path = []
@@ -2090,11 +2090,10 @@ def all_combs(list_of_lists):
     return combs
 
 
-def add_stddev(data):
+def form_sets_of_y_values(x_vals, y_vals):
     x_values = list()
     y_value_sets = list()
-    # print("(useful_functions.add_stddev)data:", data)
-    for x, y in zip(*data):
+    for x, y in zip(x_vals, y_vals):
         # print("(useful_functions.add_stddev)x:", x)
         # print("(useful_functions.add_stddev)y:", y)
         if x in x_values:
@@ -2102,6 +2101,16 @@ def add_stddev(data):
         else:
             x_values.append(x)
             y_value_sets.append([y])
+    return x_values, y_value_sets
+
+
+def add_stddev(data):
+    if isinstance(data, (list, tuple)):
+        x_values, y_value_sets = form_sets_of_y_values(*data)
+    elif isinstance(data, dict):
+        x_values, y_value_sets = form_sets_of_y_values(data['x'], data['y'])
+    else:
+        raise TypeError("data can dict or list or tuple")
     # print("(useful_functions.add_stddev)x_values:", x_values)
     # print("(useful_functions.add_stddev)y_value_sets:", y_value_sets)
     means = [sum(value_set) / len(value_set) for value_set in y_value_sets]
@@ -2114,7 +2123,12 @@ def add_stddev(data):
         else:
             stddev = None
         stddevs.append(stddev)
-    return [x_values, means, stddevs]
+    if isinstance(data, (list, tuple)):
+        return [x_values, means, stddevs]
+    elif isinstance(data, dict):
+        return {'x': x_values, 'y': means, 'y_err': stddevs}
+    else:
+        raise TypeError("data can dict or list or tuple")
 
 
 def get_optimizer_evaluation_results(eval_dir, hp_order, averaging_number):
@@ -2215,7 +2229,7 @@ def get_optimizer_evaluation_results(eval_dir, hp_order, averaging_number):
                         d[fixed_hps_tuple] = dict()
                     d = d[fixed_hps_tuple]
                     if line_hp_value not in d:
-                        d[line_hp_value] = [list(), list()]
+                        d[line_hp_value] = {'x': list(), 'y': list()}
                     r = d[line_hp_value]
                     file_name = res_type + '_' + regime + '.txt'
                     file_with_data = os.path.join(eval_dir, result_dir, pupil_name, file_name)
@@ -2229,8 +2243,8 @@ def get_optimizer_evaluation_results(eval_dir, hp_order, averaging_number):
                         s += float(lines[-i].split()[-1])
                     mean = s / averaging_number
                     # print(pupil_name, res_type, regime, fixed_hps_tuple, line_hp_value, changing_hp_value)
-                    r[0].append(changing_hp_value)
-                    r[1].append(mean)
+                    r['x'].append(changing_hp_value)
+                    r['y'].append(mean)
     for pupil_res in for_plotting.values():
         for metric_res in pupil_res.values():
             for regime_res in metric_res.values():
@@ -2300,10 +2314,10 @@ def get_pupil_evaluation_results(eval_dir, hp_order):
                         d[fixed_hps] = dict()
                     d = d[fixed_hps]
                     if line_hp not in d:
-                        d[line_hp] = [list(), list()]
+                        d[line_hp] = {'x': list(), 'y': list()}
                     xy = d[line_hp]
-                    xy[0].append(hp_values[-1])
-                    xy[1].append(m_value)
+                    xy['x'].append(hp_values[-1])
+                    xy['y'].append(m_value)
             else:
                 print(
                     "WARNING: %s line '%s' in '%s' can not be parsed" % (idx, line, path_to_res)
@@ -2353,7 +2367,7 @@ def check_in_ranges(x, ranges):
     return in_ranges
 
 
-def select_by_x(line_data, x_select):
+def select_by_x(line_data, x_select, format='dict'):
     if x_select is None:
         return line_data
     else:
@@ -2363,7 +2377,10 @@ def select_by_x(line_data, x_select):
                 selected_x.append(x)
                 selected_y.append(y)
                 selected_stddev.append(stddev)
-        return [selected_x, selected_y, selected_stddev]
+        if format == 'list':
+            return [selected_x, selected_y, selected_stddev]
+        elif format == 'dict':
+            return dict(x=selected_x, y=selected_y, y_err=selected_stddev)
 
 
 def select_for_plot(data, select):
@@ -2478,11 +2495,10 @@ def retrieve_lines(retrieve_inf, x_select, model, averaging_number):
 
 
 def isnumber(string):
-    if len(string) == 0:
+    try:
+        n = float(string)
+    except ValueError:
         return False
-    for c in string:
-        if c not in LINE_WITH_NUMBERS_CHARS:
-            return False
     return True
 
 
@@ -3149,7 +3165,7 @@ def save_lines(lines, dir_):
                     f.write('\n')
 
 
-def shift_list(l, sh):
+def add_scalar_iterable(l, sh):
     ll = list()
     for v in l:
         ll.append(v+sh)

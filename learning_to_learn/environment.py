@@ -153,7 +153,7 @@ class Environment(object):
         _, gens = zip(*sorted(self._batch_generator_classes.items()))
         self._default_batch_generator = gens[0]
         # additions_to_feed_dict have following format
-        # It is a dictionary which keys are 'placeholder' and 'value'
+        # It is a list of dictionaries which keys are 'placeholder' and 'value'
         # 'placeholder' points to tensor alias and 'value' points to Controller specs
         # When providing additions_to_feed_dict to train method abbreviation of 'value' entry is allowed
         # if tensor does not change during learning. It is possible to pass tensor value in 'value' entry.
@@ -178,7 +178,9 @@ class Environment(object):
                 summary=False,
                 add_graph_to_summary=False,
                 batch_generator_class=self._default_batch_generator,
-                vocabulary=self._vocabulary
+                vocabulary=self._vocabulary,
+                create_start_checkpoint=False,
+                create_final_checkpoint=False,
             ),
             run=dict(
                 train_specs=dict(
@@ -780,6 +782,8 @@ class Environment(object):
                     self._session.run(self._hooks['randomize_sample_state'])
                 elif 'reset_validation_state' in self._hooks:
                     self._session.run(self._hooks['reset_validation_state'])
+                if 'accumulator_reset_op' in self._hooks:
+                    self._session.runt(self._hooks['accumulator_reset_op'])
                 # print("fuse['text']:", [fuse['text']])
                 for char_idx, char in enumerate(fuse['text']):
                     vec = batch_generator.char2vec(char, batch_generator.character_positions_in_vocabulary, None, None)
@@ -869,6 +873,8 @@ class Environment(object):
         # print('valid_batch_kwargs:', valid_batch_kwargs)
         if 'reset_validation_state' in self._hooks:
             self._session.run(self._hooks['reset_validation_state'])
+        if 'accumulator_reset_op' in self._hooks:
+            self._session.runt(self._hooks['accumulator_reset_op'])
         # print('batch_generator_class:', batch_generator_class)
         valid_batches = batch_generator_class(validation_dataset[0], validation_batch_size, **valid_batch_kwargs)
         num_batches = valid_batches.get_num_batches()
@@ -919,6 +925,8 @@ class Environment(object):
         # print('valid_batch_kwargs:', valid_batch_kwargs)
         if 'reset_validation_state' in self._hooks:
             self._session.run(self._hooks['reset_validation_state'])
+        if 'accumulator_reset_op' in self._hooks:
+            self._session.runt(self._hooks['accumulator_reset_op'])
         # print('batch_generator_class:', batch_generator_class)
         valid_batches = batch_generator_class(validation_dataset[0], validation_batch_size, **valid_batch_kwargs)
         length = valid_batches.get_num_batches()
@@ -1088,13 +1096,27 @@ class Environment(object):
             it_is_time_for_validation = Controller(storage, {'type': 'always_false'})
             it_is_time_for_example = Controller(storage, {'type': 'always_false'})
         else:
-            valid_period = collect_interval * print_per_collected
-            it_is_time_for_validation = Controller(storage, {'type': 'periodic_truth', 'period': valid_period})
+            if isinstance(collect_interval, int):
+                valid_period = collect_interval * print_per_collected
+                it_is_time_for_validation = Controller(storage, {'type': 'periodic_truth', 'period': valid_period})
+            elif isinstance(collect_interval, (list, tuple)):
+                valid_period = [s for i, s in enumerate(collect_interval) if i % print_per_collected == 0]
+                it_is_time_for_validation = Controller(storage, {'type':'true_on_steps', 'steps': valid_period})
+            else:
+                raise NotImplementedError(
+                    "Collect intervals of type {} are not supported".format(type(collect_interval)))
             if example_per_print is None:
                 it_is_time_for_example = Controller(storage, {'type': 'always_false'})
             else:
-                example_period = valid_period * example_per_print
-                it_is_time_for_example = Controller(storage, {'type': 'periodic_truth', 'period': example_period})
+                if isinstance(valid_period, int):
+                    example_period = valid_period * example_per_print
+                    it_is_time_for_example = Controller(storage, {'type': 'periodic_truth', 'period': example_period})
+                elif isinstance(valid_period, list):
+                    example_steps = [s for i, s in enumerate(collect_interval) if i % example_per_print == 0]
+                    it_is_time_for_example = Controller(storage, {'type': 'true_on_steps', 'steps': example_steps})
+                else:
+                    raise NotImplementedError(
+                        "Validation periods of type {} are not supported".format(type(valid_period)))
 
         batch_size_controller = Controller(storage, train_specs['batch_size'])
         batch_size_change_tracker_specs = Controller.create_change_tracking_specifications(train_specs['batch_size'])
@@ -1200,6 +1222,70 @@ class Environment(object):
         controllers.extend(batch_kwargs_controllers)
         return controllers
 
+    def _test_and_save_training_model(
+            self,
+            step,
+            ctrl,
+            learning_rate,
+            train_specs,
+            batch_generator_class,
+            schedule,
+            checkpoints_path,
+            subgraphs_to_save,
+            train_batch_gen,
+    ):
+        if ctrl['it_is_time_to_create_checkpoint'].get():
+            self._create_checkpoint(str(step), checkpoints_path, subgraph_names=subgraphs_to_save)
+
+        if ctrl['it_is_time_for_validation'].get():
+            if len(train_specs['validation_datasets']) > 0:
+                valid_add_feed_dict = self._form_validation_additional_feed_dict(
+                    train_specs['additions_to_feed_dict'],
+                    ctrl['additional'],
+                    train_specs['validation_additions_to_feed_dict']
+                )
+            for validation_dataset in train_specs['validation_datasets']:
+                if train_specs['validate_tokens_by_chars']:
+                    _ = self._validate_by_chars(
+                        batch_generator_class, validation_dataset, train_specs['validation_batch_size'],
+                        train_specs['valid_batch_kwargs'], training_step=step,
+                        additional_feed_dict=valid_add_feed_dict)
+                else:
+                    _ = self._validate(
+                        batch_generator_class, validation_dataset, train_specs['validation_batch_size'],
+                        train_specs['valid_batch_kwargs'], training_step=step,
+                        additional_feed_dict=valid_add_feed_dict)
+        if ctrl['it_is_time_for_example'].get():
+            valid_add_feed_dict = self._form_validation_additional_feed_dict(
+                train_specs['additions_to_feed_dict'],
+                ctrl['additional'],
+                train_specs['validation_additions_to_feed_dict']
+            )
+            if schedule['fuses'] is not None:
+                _ = self._on_fuses(train_batch_gen,
+                                   schedule['fuses'],
+                                   training_step=step,
+                                   additional_feed_dict=valid_add_feed_dict)
+            for validation_dataset in train_specs['validation_datasets']:
+                if schedule['example_length'] is not None:
+                    _ = self._prediction_examples(
+                        batch_generator_class,
+                        validation_dataset,
+                        schedule['example_length'],
+                        train_specs['valid_batch_kwargs'],
+                        training_step=step,
+                        additional_feed_dict=valid_add_feed_dict)
+        if ctrl['it_is_time_to_create_best_checkpoint'].get():
+            self._create_checkpoint(
+                'best',
+                checkpoints_path,
+                subgraph_names=subgraphs_to_save,
+                lr=learning_rate,
+                best_value=ctrl['it_is_time_to_create_best_checkpoint'].get_best_target_metric_value(),
+                target_metric_storage_path=ctrl['learning_rate'].get_target_metric_storage_path(),
+                step=step,
+            )
+
     def _train(
             self,
             run_specs,
@@ -1239,7 +1325,7 @@ class Environment(object):
 
         batch_size = ctrl['batch_size'].get()
         tb_kwargs = self._build_batch_kwargs(ctrl['train_batch_kwargs'])
-        train_batches = batch_generator_class(train_specs['train_dataset'][0], batch_size, **tb_kwargs)
+        train_batch_gen = batch_generator_class(train_specs['train_dataset'][0], batch_size, **tb_kwargs)
 
         feed_dict = dict()
 
@@ -1256,23 +1342,32 @@ class Environment(object):
 
             if ctrl['batch_size_should_change'].get():
                 batch_size = ctrl['batch_size'].get()
-                train_batches.change_batch_size(batch_size)
+                train_batch_gen.change_batch_size(batch_size)
 
             if ctrl['batch_generator_specs_should_change'].get():
                 tb_kwargs = self._build_batch_kwargs(ctrl['train_batch_kwargs'])
-                train_batches.change_specs(**tb_kwargs)
+                train_batch_gen.change_specs(**tb_kwargs)
 
-            if ctrl['it_is_time_to_create_checkpoint'].get():
-                self._create_checkpoint(str(step), checkpoints_path, subgraph_names=subgraphs_to_save)
+            learning_rate = ctrl['learning_rate'].get()
+            if not with_meta_optimizer:
+                feed_dict[self._hooks['learning_rate']] = learning_rate
 
-            train_inputs, train_labels = train_batches.next()
+            self._test_and_save_training_model(
+                step,
+                ctrl,
+                learning_rate,
+                train_specs,
+                batch_generator_class,
+                schedule,
+                checkpoints_path,
+                subgraphs_to_save,
+                train_batch_gen,
+            )
+
+            train_inputs, train_labels = train_batch_gen.next()
 
             if ctrl['it_is_time_to_reset_state'].get():
                 self._session.run(reset_op)
-
-            if not with_meta_optimizer:
-                learning_rate = ctrl['learning_rate'].get()
-                feed_dict[self._hooks['learning_rate']] = learning_rate
 
             if isinstance(self._hooks['inputs'], list):
                 for input_tensor, input_value in zip(self._hooks['inputs'], train_inputs):
@@ -1293,58 +1388,21 @@ class Environment(object):
 
             train_res = self._session.run(train_operations, feed_dict=feed_dict)
 
-            self._handler.process_results(step, train_res, time.clock() - train_start_time, regime='train')
-
-            if ctrl['it_is_time_for_validation'].get():
-                if len(train_specs['validation_datasets']) > 0:
-                    valid_add_feed_dict = self._form_validation_additional_feed_dict(
-                        train_specs['additions_to_feed_dict'],
-                        ctrl['additional'],
-                        train_specs['validation_additions_to_feed_dict']
-                    )
-                for validation_dataset in train_specs['validation_datasets']:
-                    if train_specs['validate_tokens_by_chars']:
-                        _ = self._validate_by_chars(
-                            batch_generator_class, validation_dataset, train_specs['validation_batch_size'],
-                            train_specs['valid_batch_kwargs'], training_step=step,
-                            additional_feed_dict=valid_add_feed_dict)
-                    else:
-                        _ = self._validate(
-                            batch_generator_class, validation_dataset, train_specs['validation_batch_size'],
-                            train_specs['valid_batch_kwargs'], training_step=step,
-                            additional_feed_dict=valid_add_feed_dict)
-            if ctrl['it_is_time_for_example'].get():
-                valid_add_feed_dict = self._form_validation_additional_feed_dict(
-                    train_specs['additions_to_feed_dict'],
-                    ctrl['additional'],
-                    train_specs['validation_additions_to_feed_dict']
-                )
-                if schedule['fuses'] is not None:
-                    _ = self._on_fuses(train_batches,
-                                       schedule['fuses'],
-                                       training_step=step,
-                                       additional_feed_dict=valid_add_feed_dict)
-                for validation_dataset in train_specs['validation_datasets']:
-                    if schedule['example_length'] is not None:
-                        _ = self._prediction_examples(
-                            batch_generator_class,
-                            validation_dataset,
-                            schedule['example_length'],
-                            train_specs['valid_batch_kwargs'],
-                            training_step=step,
-                            additional_feed_dict=valid_add_feed_dict)
-            if ctrl['it_is_time_to_create_best_checkpoint'].get():
-                self._create_checkpoint(
-                    'best',
-                    checkpoints_path,
-                    subgraph_names=subgraphs_to_save,
-                    lr=learning_rate,
-                    best_value=ctrl['learning_rate'].get_best_target_metric_value(),
-                    target_metric_storage_path=ctrl['learning_rate'].get_target_metric_storage_path(),
-                    step=step,
-                )
             step += 1
             storage['step'] = step
+            self._handler.process_results(step, train_res, time.clock() - train_start_time, regime='train')
+
+        self._test_and_save_training_model(
+            step,
+            ctrl,
+            ctrl['learning_rate'].get(),
+            train_specs,
+            batch_generator_class,
+            schedule,
+            checkpoints_path,
+            subgraphs_to_save,
+            train_batch_gen,
+        )
         return step
 
     def train(
@@ -1355,90 +1413,6 @@ class Environment(object):
             set_passed_parameters_as_default=False,
             **kwargs
     ):
-        """The method responsible for model training. User may specify what intermediate results he wishes to
-        collect. He may regulate learning process (see arguments). It is also possible to start learning from a check
-        point. User may choose if he wishes to limit number of steps
-        Args:
-            args: A list of arbitrary number of dictionaries which entries are similar to structure of kwargs. It is
-                used if user wishes to train model consequently on several datasets. If any dictionary in list contains
-                less entries than the previous one, missing entries are taken from previous. If the first doesn't have
-                all entries missing entries are filled with default values
-            start_session: shows if new session should be created or already opened should be used
-            close_session: shows if session should be closed at the end of training
-            set_passed_parameters_as_default: if True parameters of launch are saved to self._pupil_default_training.
-                If args are provided the first args[0] is used for self._pupil_default_training resetting
-            kwargs:
-                This argument specifies the learning should be performed. There are many options and it is not
-                necessary to provide all kwargs - missing will be filled with default values specified in
-                _default_train_method_args atribute
-                allow_soft_placement: if True tensorflow is allowed to override device assignments specified by user and
-                    put ops on available devices
-                gpu_memory: memory fraction tensorflow allowed to allocate. If None all available memory is allocated
-                log_device_placement: If True device placements are printed to console
-                restore_path: If provided graph will be restored from checkpoint
-                save_path: path to directory where all results are saved
-                result_types: specifies what types of results should be collected. loss, perplexity, accuracy, bpc are
-                    available
-                summary: If True summary writing is activated
-                add_graph_to_summary: If True graph is added to summary
-                batch_generator_class: class of batch generator. It has to have certain methods for correct functioning
-                meta_optimizer: If meta learning is used for model training it is name of meta_optimizer network
-                learning_rate: specifications for learning_rate control. If it is a float learning rate will not change
-                    while learning. Otherwise it should be a dictionary. Now only exponential decay option is availbale.
-                    Below dictionary entries are described
-                    exponential decay:
-                        type: str 'exponential_decay'
-                        init: float, initial learning rate
-                        decay: a factor on which learning rate is multiplied every period of steps
-                        period: number of steps after which learning rate is being decreased
-                additions_to_feed_dict: If your model requires some special placeholders filling (e. g. probability
-                    distribution for a stochastic node) it is provided through additions_to_feed_dict. It is a
-                    dictionary which keys are tensor aliases in _pupil_hooks attribute and values are dictionaries
-                    of the same structure as learning_rate
-                stop: specifies when learning should be stopped. It is either an integer (number of steps after which
-                    learning is being stopped) or a dictionary of the same structure as learning_rate where you may
-                    specify custom way of learning interruption
-                train_dataset: A dataset on which model will be trained. It can be a name of dataset provided earlier to
-                    Environment constructor or just something what you wish to pass to batch generator (file name, str,
-                    etc.)
-                batch_size: integer or dictionary of the same type as learning_rate if you wish to somehow change batch
-                    size during learning
-                train_batch_kwargs: If your batch generator requires some specific arguments they can be provided
-                    through this dictionary (for example num_unrollings). This dictionary is used for batch generator
-                    construction for training (any of batch generator parameters can be provided as key word args
-                    separately if their processing is described in _process_batch_kwargs_shortcut method. Now it is only
-                    'vocabulary' and 'num_unrollings')
-                checkpoint_steps: list of steps on which checpoints should be created
-                debug: step on which tfdbg should be activated. Default is None
-                validation_dataset_names: list of dataset names used for validation (datasets have to provided to
-                    Environment instance separately. Now only through constructor
-                validation_dataset_texts: list of texts (type str) used for validation
-                validation_dataset_filenames: file names of datasets used for validation
-                  (if validation_dataset_names, validation_dataset_texts, validation_dataset_filenames provided together
-                   all of them are used)
-                validation_batch_size: batch size for validation
-                valid_batch_kwargs: same as train_batch_kwargs
-                to_be_collected_while_training: a dictionary with 3 entries (all of them can be provided independently)
-                    results_collect_interval: number of steps after which data is collected
-                    print_per_collected: every print_per_collected-th point collected with results_collect_interval
-                        schedule is printed
-                    example_per_print: every example_per_print print examples of model functioning are printed
-                        (continuing from random letter, from specified fuse, responding on user specified replicas)
-                printed_result_types: what model should print. Default is loss. perplexity, accuracy, bpc are also
-                    available
-                printed_controllers: if during learning some hyperparameters are changing you may print them to
-                    console. Default printed is learning rate
-                fuses: specifies fuses from which model should periodically generate text. This option is not
-                    available yet
-                fuse_tensors: tensor aliases from _pupil_hooks attribute which should be either saved or printed.
-                    not available
-                replicas: If dialog agent is trained it can be tested with consequently feeding it with few user
-                    specified replicas. It can be used to check if agent is capable of dialog context accumulating
-                random: NLP agents can be tested on text generating task. It is provided with first character and
-                    then tries to generate text. This argument is responsible for specifying how many times it will
-                    be performed and specifying length of generated sequences (not available)
-                train_tensor_schedule: If user wishes he may print or save any tensor in the graph (not available)
-                valid_tensor_schedule: same as train_tensor_schedule"""
         self._store_launch_parameters(
             'pupil',
             args=args,
@@ -1533,7 +1507,7 @@ class Environment(object):
         init_step = saved_ctrl['step'] + 1 if 'step' in saved_ctrl else 0
         # if 'reset_pupil_train_state' in self._hooks:
         #     self._session.run(self._hooks['reset_pupil_train_state'])
-        if checkpoints_path is not None and init_step == 0:
+        if checkpoints_path is not None and init_step == 0 and start_specs['create_start_checkpoint']:
             self._create_checkpoint('start', checkpoints_path, subgraph_names=start_specs['subgraphs_to_save'])
         global train_start_time
         train_start_time = time.clock()
@@ -1545,7 +1519,7 @@ class Environment(object):
                                     init_step=init_step,
                                     subgraphs_to_save=start_specs['subgraphs_to_save'])
         train_time = time.clock() - train_start_time
-        if checkpoints_path is not None:
+        if checkpoints_path is not None and start_specs['create_final_checkpoint']:
             self._create_checkpoint('final', checkpoints_path, subgraph_names=start_specs['subgraphs_to_save'])
         self._handler.log_finish_time()
         self._handler.close()
@@ -2140,6 +2114,7 @@ class Environment(object):
             eval_batch_gen_class = evaluation['batch_gen_class']
 
         additional_feed_dict = self._form_validation_additional_feed_dict([], [], evaluation['additional_feed_dict'])
+        # print("(Environment._preparations_for_launch)additional_feed_dict:", additional_feed_dict)
         return additional_feed_dict, eval_batch_gen_class, datasets
 
     def _launch_and_put_in_queue(
@@ -2208,6 +2183,7 @@ class Environment(object):
             evaluation,
             meta_optimizer_build_kwargs
         )
+        # print("(Environment._several_launches_without_rebuilding)additional_feed_dict:", additional_feed_dict)
         for hp_comb, (start_specs, run_specs_set) in zip(hp_combs, args_for_launches):
             self._launch_and_put_in_queue(
                 hp_comb,
@@ -2406,6 +2382,8 @@ class Environment(object):
             meta_optimizer_build_kwargs=None,
             rebuild_every_time=True
     ):
+        # print("(Environment._spring_process_for_grid_search)evaluation['additional_feed_dict']:",
+        #       evaluation['additional_feed_dict'])
         parsed = configure_args_for_launches(self, args_for_launches, shares, model='pupil')
         self.mp_debug_flag += 1
 
@@ -2570,6 +2548,7 @@ class Environment(object):
         # print("('Environment.grid_search')args_for_launches[0]['additions_to_feed_dict']:",
         #       args_for_launches[0]['additions_to_feed_dict'])
 
+        # print("(Environment.grid_search)evaluation['additional_feed_dict']:", evaluation['additional_feed_dict'])
         hps = list()
         if len(build_hp_combs) > 0:
             hps.extend(list(build_hp_combs[0].keys()))
@@ -2964,6 +2943,8 @@ class Environment(object):
             reset_op = self._hooks['reset_validation_state']
         # print("(Environment._start_inference)reset_op:", reset_op)
         reset_op.run(session=self._session)
+        if 'accumulator_reset_op' in self._hooks:
+            self._session.runt(self._hooks['accumulator_reset_op'])
         sample_prediction = self._hooks['validation_predictions']
         sample_input = self._hooks['validation_inputs']
         sample_ndims = sample_input.shape.ndims
@@ -3222,7 +3203,8 @@ class Environment(object):
             batch_gen_args,
             inq,
             outq,
-            build=True
+            build=True,
+            chat_id=None,
     ):
         # print('entered one_chat method', file=sys.stderr, )
         # print('(Environment._one_chat)kwargs_for_building', kwargs_for_building, file=sys.stderr, )
@@ -3245,6 +3227,8 @@ class Environment(object):
         self._session.run(tf.global_variables_initializer())
         self._restore_pupil(restore_path)
         self._hooks['reset_validation_state'].run(session=self._session)
+        if 'accumulator_reset_op' in self._hooks:
+            self._session.runt(self._hooks['accumulator_reset_op'])
         greeting = 'Здравствуйте, я бот.'
         # print_and_log('Bot: ' + greeting, _print=False, fn=log_path)
         # print('(Environment.one_chat)inq:', inq)
@@ -3279,14 +3263,17 @@ class Environment(object):
                 # print_and_log('Bot: ' + bot_replica, _print=False, fn=log_path)
                 outq.put(bot_replica)
                 timeshot = time.time()
+                print("BOT REPLICA IN CHAT {}. TIME {}".format(chat_id, timeshot), file=sys.stderr)
             try:
                 human_replica = inq.get(timeout=300)
+                print("{} human replica is received or TIMEOUT. TIME: {}".format(chat_id, time.time()), file=sys.stderr)
             except queue.Empty:
                 human_replica = ''
             # print('(end while)time.time() - timeshot =', time.time() - timeshot)
             # print('(end while)time.time() =', time.time())
             # print('(end while)timeshot =', timeshot)
         # print('reached -1')
+        print("TERMINATING CHAT {}".format(chat_id), file=sys.stderr)
         outq.put(-1)
 
     def telegram(
@@ -3346,7 +3333,7 @@ class Environment(object):
                                         kwargs_for_building, restore_path, vocabulary,
                                         character_positions_in_vocabulary, batch_generator_class,
                                         additions_to_feed_dict, gpu_memory, allow_growth, temperature, bpe_codes,
-                                        batch_gen_args, inqs[chat_id], outqs[chat_id], build
+                                        batch_gen_args, inqs[chat_id], outqs[chat_id], build, chat_id,
                                     )
                                 )
                                 # print('(Environment.telegram)question:', question)
@@ -3367,6 +3354,7 @@ class Environment(object):
                         bot_replica = -2
                     if bot_replica == -1:
                         # print(-1)
+                        print("JOINING CHAT {}".format(chat_id), file=sys.stderr)
                         ps[chat_id].join()
                         if ps[chat_id].is_alive():
                             print('WARNING! Could not join process for chat %s' % chat_id, file=sys.stderr)
@@ -3380,10 +3368,10 @@ class Environment(object):
                         print_and_log('Bot: ' + bot_replica, _print=False, fn=file_names[chat_id])
                         # print(
                         #     "(Environment.telegram)row:",
-                        #     [chat_id, bot_replica, "", "/start", "Ты дурак.", "/end"],
+                        #     [chat_id, bot_replica, "", "/start", "Скажи что-нибудь.", "/end"],
                         #     file=sys.stderr
                         # )
-                        writer.writerow([chat_id, bot_replica, "", "/start", "Ты дурак.", "/end"])
+                        writer.writerow([chat_id, bot_replica, "", "/start", "Скажи что-нибудь.", "/end"])
                         sys.stdout.flush()
 
         except KeyboardInterrupt:
