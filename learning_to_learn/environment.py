@@ -1102,8 +1102,11 @@ class Environment(object):
             elif isinstance(collect_interval, (list, tuple)):
                 valid_period = [s for i, s in enumerate(collect_interval) if i % print_per_collected == 0]
                 it_is_time_for_validation = Controller(storage, {'type':'true_on_steps', 'steps': valid_period})
+            elif isinstance(collect_interval, dict):
+                valid_period = Controller.get_logarithmic_truth_steps(collect_interval)
+                it_is_time_for_validation = Controller(storage, collect_interval)
             else:
-                raise NotImplementedError(
+                raise ValueError(
                     "Collect intervals of type {} are not supported".format(type(collect_interval)))
             if example_per_print is None:
                 it_is_time_for_example = Controller(storage, {'type': 'always_false'})
@@ -1115,7 +1118,7 @@ class Environment(object):
                     example_steps = [s for i, s in enumerate(collect_interval) if i % example_per_print == 0]
                     it_is_time_for_example = Controller(storage, {'type': 'true_on_steps', 'steps': example_steps})
                 else:
-                    raise NotImplementedError(
+                    raise ValueError(
                         "Validation periods of type {} are not supported".format(type(valid_period)))
 
         batch_size_controller = Controller(storage, train_specs['batch_size'])
@@ -1234,9 +1237,6 @@ class Environment(object):
             subgraphs_to_save,
             train_batch_gen,
     ):
-        if ctrl['it_is_time_to_create_checkpoint'].get():
-            self._create_checkpoint(str(step), checkpoints_path, subgraph_names=subgraphs_to_save)
-
         if ctrl['it_is_time_for_validation'].get():
             if len(train_specs['validation_datasets']) > 0:
                 valid_add_feed_dict = self._form_validation_additional_feed_dict(
@@ -1275,6 +1275,8 @@ class Environment(object):
                         train_specs['valid_batch_kwargs'],
                         training_step=step,
                         additional_feed_dict=valid_add_feed_dict)
+        if ctrl['it_is_time_to_create_checkpoint'].get():
+            self._create_checkpoint(str(step), checkpoints_path, subgraph_names=subgraphs_to_save)
         if ctrl['it_is_time_to_create_best_checkpoint'].get():
             self._create_checkpoint(
                 'best',

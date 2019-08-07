@@ -1,3 +1,5 @@
+import copy
+
 from learning_to_learn.useful_functions import construct, get_elem_from_nested
 
 
@@ -39,7 +41,7 @@ class Controller(object):
     def __init__(self, storage, specifications):
         # print("(Controller.__init__)specifications:", specifications)
         self._storage = storage
-        self._specifications = specifications
+        self._specifications = copy.deepcopy(specifications)
         if self._specifications['type'] == 'limit_steps':
             self.get = self._limit_steps
         elif self._specifications['type'] == 'exponential_decay':
@@ -85,6 +87,12 @@ class Controller(object):
             self._specifications = dict(self._specifications)
             self._specifications['impatience'] = 0
             self._init_ops_for_adaptive_controller()
+        elif self._specifications['type'] == 'logarithmic_truth':
+            self.get = self._logarithmic_truth
+        else:
+            raise ValueError(
+                "Not supported controller type {}".format(repr(self._specifications['type']))
+            )
 
     def _init_ops_for_adaptive_controller(self):
         if 'direction' not in self._specifications:
@@ -174,6 +182,26 @@ class Controller(object):
 
     def _periodic_truth(self):
         if self._storage['step'] % self._specifications['period'] == 0:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def _next_in_log_truth(start, factor):
+        new_value = int(round(start * factor))
+        if new_value <= start:
+            return start + 1
+        else:
+            return new_value
+
+    def _logarithmic_truth(self):
+        while self._storage['step'] > self._specifications['start']:
+            self._specifications['start'] = self._next_in_log_truth(
+                self._specifications['start'],
+                self._specifications['factor']
+            )
+        if self._storage['step'] == self._specifications['start'] \
+                and self._specifications['start'] < self._specifications['end']:
             return True
         else:
             return False
@@ -271,3 +299,18 @@ class Controller(object):
     @property
     def name(self):
         return self._specifications['name']
+
+    @classmethod
+    def get_logarithmic_truth_steps(cls, spec):
+        steps = []
+        step = spec['start']
+        while True:
+            step = cls._next_in_log_truth(
+                step,
+                spec['factor']
+            )
+            if step > spec['end']:
+                steps.append(spec['end'])
+                break
+            steps.append(step)
+        return steps

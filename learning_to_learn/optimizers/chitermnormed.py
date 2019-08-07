@@ -151,7 +151,7 @@ class ChiTermNormed(Meta):
             pass
         else:
             print('Only inference regime is supported')
-            raise NotImplementedError
+            raise ValueError
 
         self._inference_graph()
 

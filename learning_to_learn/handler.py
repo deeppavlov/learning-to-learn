@@ -1349,8 +1349,14 @@ class Handler(object):
         elif isinstance(collect_interval, (list, tuple)):
             print_steps = [s for i, s in enumerate(collect_interval) if i % print_per_collected == 0]
             return step in print_steps
+        elif isinstance(collect_interval, dict):
+            print_steps = [
+                s for i, s in enumerate(Controller.get_logarithmic_truth_steps(collect_interval))
+                if i % print_per_collected == 0
+            ]
+            return step in print_steps
         else:
-            raise NotImplementedError(
+            raise ValueError(
                 "Collect intervals of type {} are not supported".format(type(collect_interval)))
 
     @staticmethod
@@ -1359,8 +1365,13 @@ class Handler(object):
             return step % collect_interval == 0
         elif isinstance(collect_interval, (list, tuple)):
             return step in collect_interval
+        elif isinstance(collect_interval, dict):
+            print_steps = [
+                s for i, s in enumerate(Controller.get_logarithmic_truth_steps(collect_interval))
+            ]
+            return step in print_steps
         else:
-            raise NotImplementedError(
+            raise ValueError(
                 "Collect intervals of type {} are not supported".format(type(collect_interval)))
 
     def _process_train_results(self,
