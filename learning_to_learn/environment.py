@@ -561,7 +561,7 @@ class Environment(object):
 
     def _save_not_none_values(self, values, paths):
         for v, p in zip(values, paths):
-            if v is not None:
+            if v is not None and p is not None:
                 self._save_value(v, p)
 
     def _create_checkpoint(
