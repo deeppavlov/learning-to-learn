@@ -223,9 +223,6 @@ class Controller(object):
         specs = self._specifications
         # if specs['comp_func'](specs['line']):
         if self._is_improved():
-            print("(controller.Controller._adaptive_change)improved!")
-            print("(controller.Controller._adaptive_change)specs['value']:", specs['value'])
-            print("(controller.Controller._adaptive_change)self._specifications:", self._specifications)
             specs['impatience'] = 0
             self._update_best()
             return specs['value']
@@ -257,16 +254,6 @@ class Controller(object):
         if specs['current_value'] == value:
             # if specs['comp_func'](specs['line']):
             if self._is_improved():
-                print(
-                    "(controller.Controller._while_progress)specs['changing_parameter_controller']"
-                    "._specifications:",
-                    specs['changing_parameter_controller']._specifications
-                )
-                print("(controller.Controller._while_progress)improved!")
-                print(
-                    "(controller.Controller._while_progress)specs['current_value'], value:",
-                    specs['current_value'], value
-                )
                 specs['impatience'] = 0
                 specs['cur_made_prog'] = True
                 self._update_best()
@@ -280,9 +267,6 @@ class Controller(object):
                         specs['impatience'] += 1
                     ret = True
         else:
-            print("(controller.Controller._while_progress)learning rate changed!")
-            print("(controller.Controller._while_progress)specs['cur_made_prog']:", specs['cur_made_prog'])
-            print("(controller.Controller._while_progress)specs['prev_made_prog']:", specs['prev_made_prog'])
             if not specs['cur_made_prog'] and not specs['prev_made_prog']:
                 return False
             else:
