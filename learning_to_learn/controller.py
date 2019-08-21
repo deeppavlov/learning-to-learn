@@ -41,7 +41,11 @@ class Controller(object):
     def __init__(self, storage, specifications):
         # print("(Controller.__init__)specifications:", specifications)
         self._storage = storage
+        if 'changing_parameter_controller' in specifications:
+            changing_parameter_controller = specifications['changing_parameter_controller']
         self._specifications = copy.deepcopy(specifications)
+        if 'changing_parameter_controller' in specifications:
+            self._specifications['changing_parameter_controller'] = changing_parameter_controller
         if self._specifications['type'] == 'limit_steps':
             self.get = self._limit_steps
         elif self._specifications['type'] == 'exponential_decay':
@@ -120,6 +124,7 @@ class Controller(object):
         self._specifications['line_len_after_prev_get_call'] = -1
 
     def _is_improved(self):
+        # print("(controller.Controller._is_improved)self._specifications:", self._specifications)
         if self._specifications['direction'] is 'down':
             return min(self._specifications['line'], default=float('+inf')) < self._specifications['best']
         return max(self._specifications['line'], default=float('-inf')) > self._specifications['best']
@@ -218,6 +223,9 @@ class Controller(object):
         specs = self._specifications
         # if specs['comp_func'](specs['line']):
         if self._is_improved():
+            print("(controller.Controller._adaptive_change)improved!")
+            print("(controller.Controller._adaptive_change)specs['value']:", specs['value'])
+            print("(controller.Controller._adaptive_change)self._specifications:", self._specifications)
             specs['impatience'] = 0
             self._update_best()
             return specs['value']
@@ -249,6 +257,16 @@ class Controller(object):
         if specs['current_value'] == value:
             # if specs['comp_func'](specs['line']):
             if self._is_improved():
+                print(
+                    "(controller.Controller._while_progress)specs['changing_parameter_controller']"
+                    "._specifications:",
+                    specs['changing_parameter_controller']._specifications
+                )
+                print("(controller.Controller._while_progress)improved!")
+                print(
+                    "(controller.Controller._while_progress)specs['current_value'], value:",
+                    specs['current_value'], value
+                )
                 specs['impatience'] = 0
                 specs['cur_made_prog'] = True
                 self._update_best()
@@ -262,6 +280,9 @@ class Controller(object):
                         specs['impatience'] += 1
                     ret = True
         else:
+            print("(controller.Controller._while_progress)learning rate changed!")
+            print("(controller.Controller._while_progress)specs['cur_made_prog']:", specs['cur_made_prog'])
+            print("(controller.Controller._while_progress)specs['prev_made_prog']:", specs['prev_made_prog'])
             if not specs['cur_made_prog'] and not specs['prev_made_prog']:
                 return False
             else:
